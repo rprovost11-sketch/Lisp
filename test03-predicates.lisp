@@ -1,19 +1,19 @@
->>> (isNull? 1)
+>>> (isNil? 1)
 ...
 
 ==> 0
 
->>> (isNull? 6.7)
+>>> (isNil? 6.7)
 ...
 
 ==> 0
 
->>> (isNull? null)
+>>> (isNil? nil)
 ...
 
 ==> 1
 
->>> (isNull? nan)
+>>> (isNil? nan)
 ...
 
 ==> 0
@@ -58,7 +58,7 @@
 
 ==> 0
 
->>> (isSymbol? null)
+>>> (isSymbol? nil)
 ...
 
 ==> 0
@@ -73,7 +73,7 @@
 
 ==> 1
 
->>> (isAtom? null)
+>>> (isAtom? nil)
 ...
 
 ==> 0
@@ -88,7 +88,7 @@
 
 ==> 1
 
->>> (isNumber? null)
+>>> (isNumber? nil)
 ...
 
 ==> 0
@@ -128,7 +128,7 @@
 
 ==> 0
 
->>> (isAtom? null)
+>>> (isAtom? nil)
 ...
 
 ==> 0
@@ -168,7 +168,7 @@
 
 ==> 0
 
->>> (isList? null)
+>>> (isList? nil)
 ...
 
 ==> 1
@@ -198,7 +198,7 @@
 
 ==> 1
 
->>> (isMap? null)
+>>> (isMap? nil)
 ...
 
 ==> 0
@@ -238,7 +238,7 @@
 
 ==> 0
 
->>> (isString? null)
+>>> (isString? nil)
 ...
 
 ==> 0
@@ -283,7 +283,7 @@
 
 ==> 0
 
->>> (isFunction? null)
+>>> (isFunction? nil)
 ...
 
 ==> 0

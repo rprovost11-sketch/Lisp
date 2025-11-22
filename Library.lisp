@@ -5,7 +5,7 @@
 ...                    `(def!! ',fnName (lambda (,@argList) ,@body)))
 ...
 >>> (defun!! apply (aFn aList)
-...          (if (isNull? aList)
+...          (if (isNil? aList)
 ...              '( )
 ...              (cons (aFn (first aList))
 ...                    (apply aFn (rest aList)))))
@@ -38,7 +38,7 @@
 ... ;; (remove '<symbol> '<list>)
 ... (defun!! remove (sym lst)
 ...          (cond
-...             ((isNull? lst)        null)
+...             ((isNil? lst)        nil)
 ...             ((= sym (first lst))                    (rest lst))
 ...             (1                    (cons (first lst) (remove sym (rest lst))))))
 ...
@@ -46,7 +46,7 @@
 ... ;;
 ... ;; (length '<list>)
 ... (defun!! length (lst)
-...          (if (isNull? lst)
+...          (if (isNil? lst)
 ...              0
 ...              (+ 1 (length (rest lst)))))
 ...
@@ -57,7 +57,7 @@
 ...          (reverse-aux '() lst))
 ...
 >>> (defun!! reverse-aux (destLst srcLst)
-...          (if (isNull? srcLst)
+...          (if (isNil? srcLst)
 ...              destLst
 ...              (reverse-aux (cons (first srcLst) destLst) (rest srcLst))))
 ...
@@ -72,7 +72,7 @@
 ... ;; (deepCopy <list>)
 ...
 ... (defun!! deepCopy (expr)
-...          (cond ((isNull?   expr)  '( ))
+...          (cond ((isNil?   expr)  '( ))
 ...                 ((isAtom?   expr)  expr)
 ...                 ((isString? expr)  expr)
 ...                 ((isList?   expr)  (cons (deepcopy (first expr))
@@ -84,7 +84,7 @@
 ... ;; a depth-first traversal down aPath - a list of map keys and list inidies.
 ... ;; returns the object in that location.
 ... (defun!! dig (aTree aPath)
-...          (if (isNull? aPath)
+...          (if (isNil? aPath)
 ...              aTree
 ...              (dig (at aTree (first aPath)) (rest aPath)) ))
 ...
@@ -93,7 +93,7 @@
 ... ;; (equal? '<expr-1> '<expr-2>)
 ... (defun!! equal? (expr1 expr2)
 ...          (cond ((or (isAtom? expr1)
-...                     (isNull? expr1))
+...                     (isNil? expr1))
 ...                                       (= expr1 expr2))
 ...                    ((and (isList? expr1)
 ...                          (isList? expr2))
@@ -101,7 +101,7 @@
 ...                                       (and (equal? (first expr1) (first expr2))
 ...                                            (equal? (rest expr1) (rest expr2)))))
 ...                    (1
-...                                  null)))
+...                                  nil)))
 ...
 >>> ;; Compute the factorial
 ... ;;

@@ -6,7 +6,7 @@
 >>> (first '())
 ...
 
-==> NULL
+==> NIL
 
 >>> (rest '(a b c))
 ...
@@ -16,7 +16,7 @@
 >>> (rest '())
 ...
 
-==> NULL
+==> NIL
 
 >>> (cons "yes" '(a b c))
 ...
@@ -51,7 +51,7 @@
 >>> (rest '(c))
 ...
 
-==> NULL
+==> NIL
 
 >>> (first '((a b) (c d)))
 ...

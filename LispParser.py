@@ -26,7 +26,7 @@ Lexemes
                       { 'a..zA..Z+-~!$%^&*_=\\:/?<>0..9' }
 
    Reserved Symbols
-         'null', 'e', 'pi', 'inf', 'nan'
+         'nil', 'e', 'pi', 'inf', 'nan'
 
 Grammar
    Start:

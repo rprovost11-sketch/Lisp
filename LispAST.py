@@ -55,7 +55,7 @@ class LList( object ):
 
    def __str__( self ) -> str:
       if len(self._list) == 0:
-         return 'NULL'
+         return 'NIL'
 
       mbrList = [ prettyPrintSExpr(mbr) for mbr in self._list ]
       mbrListStr = ' '.join(mbrList)
@@ -64,7 +64,7 @@ class LList( object ):
 
    def __repr__( self ) -> str:
       if len(self._list) == 0:
-         return 'NULL'
+         return 'NIL'
 
       mbrList = [ prettyPrintSExpr(mbr) for mbr in self._list ]
       mbrListStr = ' '.join(mbrList)
@@ -75,7 +75,7 @@ class LList( object ):
       '''
       (defun!! '(equal? expr1 expr2)
                '(cond '( ((or (isAtom? expr1)
-                              (isNull? expr1))
+                              (isNil? expr1))
                                        (= expr1 expr2))
                          ((and (isList? expr1)
                                (isList? expr2))
@@ -83,7 +83,7 @@ class LList( object ):
                                             (and (equal? (first expr1) (first expr2))
                                                  (equal? (rest expr1) (rest expr2)))))
                          (1
-                                       null))))
+                                       nil))))
       '''
       if not isinstance(other, LList):
          return False

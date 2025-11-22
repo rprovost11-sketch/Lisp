@@ -16,12 +16,12 @@
 >>> (first '())
 ...
 
-==> NULL
+==> NIL
 
 >>> (rest '(donkey))
 ...
 
-==> NULL
+==> NIL
 
 >>> (cons 'apple '(banana orange pear))
 ...
@@ -98,7 +98,7 @@
 
 ==> 1
 
->>> (length null)
+>>> (length nil)
 ...
 
 ==> 0

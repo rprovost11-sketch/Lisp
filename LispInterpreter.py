@@ -24,7 +24,7 @@ class LispRuntimeFuncError( LispRuntimeError ):
       super().__init__( errStr )
 
 
-LNULL = LList( )
+LNIL = LList( )
 L_NUMBER = (int,float,fractions.Fraction)
 L_ATOM   = (int,float,fractions.Fraction,str)
 
@@ -48,13 +48,13 @@ class LispInterpreter( Listener.Interpreter ):
 
    def testFileList( self ) -> List[str]:
       return [ 'test01-constants.lisp',
-               'test02-calculations.lisp',          # Test primitive operations
+               'test02-calculations.lisp',
                'test03-predicates.lisp',
                'test04-relationals.lisp',
                'test05-logical.lisp',
                'test06-conversions.lisp',
                'test07-listops.lisp',
-               'test08-variables.lisp',             # Test variables and blocks
+               'test08-variables.lisp',
                #'test09-functions.lisp',
                'test10-dataTypes.lisp',
                'test11-controlStructs.lisp',
@@ -254,15 +254,15 @@ class LispInterpreter( Listener.Interpreter ):
 
    @staticmethod
    def constructPrimitives( parseLispString: Callable[[str], Any] ) -> Dict[str, Any]:
-      global LNULL
+      global LNIL
       primitiveDict: Dict[str, Any] = { }
       INSIDE_BACKQUOTE = False
 
       # ###################################
       # Lisp Object & Primitive Definitions
       # ###################################
-      LNULL = LList( )
-      primitiveDict[ 'NULL' ] = LNULL
+      LNIL = LList( )
+      primitiveDict[ 'NIL' ] = LNIL
       primitiveDict[ 'PI'   ] = math.pi
       primitiveDict[ 'E'    ] = math.e
       primitiveDict[ 'INF'  ] = math.inf
@@ -291,7 +291,7 @@ class LispInterpreter( Listener.Interpreter ):
       # =================
       # Symbol Definition
       # -----------------
-      @LDefPrimitive( 'def!', '\'<symbol> <object>' )                          # (def! '<symbol> <expr> )  ;; Define a var in the local symbol table
+      @LDefPrimitive( 'def!', '\'<symbol> <object>' )                          # (def! '<symbol> <expr> )  ;; Define a var in the local scope.
       def LP_defLocal( env, *args, **kwargs ):
          try:
             key,val = args
@@ -306,7 +306,7 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_defLocal, 'Unknown error.' )
 
-      @LDefPrimitive( 'def!!', '\'<symbol> <object>' )                         # (def!! '<symbol> <expr> ) ;; Define a var in the global symbol table
+      @LDefPrimitive( 'def!!', '\'<symbol> <object>' )                         # (def!! '<symbol> <expr> ) ;; Define a var in the global scope.
       def LP_defGlobal( env, *args, **kwargs ):
          try:
             key,val = args
@@ -395,7 +395,7 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_set, 'Unknown error.' )
 
-      @LDefPrimitive( 'undef!', '\'<symbol>' )                                 # (undef! '<symbol>)   ;; undefine the most local definition for <name>
+      @LDefPrimitive( 'undef!', '\'<symbol>' )                                 # (undef! '<symbol>)   ;; undefine the most local definition for a symbol.
       def LP_undef( env, *args, **kwargs ):
          if len(args) == 1:
             key = args[0]
@@ -404,11 +404,11 @@ class LispInterpreter( Listener.Interpreter ):
 
          try:
             env.undef( str(key) )
-            return LNULL
+            return LNIL
          except Exception as ex:
             raise LispRuntimeFuncError( LP_undef, 'Unknown error.' )
 
-      @LDefPrimitive( 'symtab!', '')                                           # (symtab!)
+      @LDefPrimitive( 'symtab!', '')                                           # (symtab!) ;; print the symbol table.
       def LP_symtab( env, *args, **kwargs ):
          print( 'Symbol Table Dump:  Inner-Most Scope First')
          print( '------------------------------------------')
@@ -420,7 +420,7 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             pass
 
-         return LNULL
+         return LNIL
 
       # ==================
       # Control Structures
@@ -441,7 +441,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          env = env.openScope( )
 
-         lastResult = LNULL
+         lastResult = LNIL
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
 
@@ -454,7 +454,7 @@ class LispInterpreter( Listener.Interpreter ):
          if len(args) < 1:
             raise LispRuntimeFuncError( LP_block, '1 or more arguments expected.' )
 
-         lastResult = LNULL
+         lastResult = LNIL
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
 
@@ -474,7 +474,7 @@ class LispInterpreter( Listener.Interpreter ):
          elif numArgs == 3:
             return LispInterpreter._lEval( env, rest[1])    # The ELSE part
          else:
-            return LNULL
+            return LNIL
 
       @LDefPrimitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>)', specialOperation=True )     # (cond (<cond1> <expr1>) (<cond2> <expr2>) ...)
       def LP_cond( env, *args, **kwargs ):
@@ -522,7 +522,7 @@ class LispInterpreter( Listener.Interpreter ):
                   latestResult = LispInterpreter._lEval( env, sexpr )
                return latestResult
 
-         return LNULL
+         return LNIL
 
       @LDefPrimitive( 'quote', '<expr>', specialOperation=True )                                        # (quote <expr>)                     ;; return <expr> without evaluating it
       def LP_quote( env, *args, **kwargs ):
@@ -659,7 +659,7 @@ class LispInterpreter( Listener.Interpreter ):
                latestResult = LispInterpreter._lEval( env, sexpr )
             return latestResult
 
-         return LNULL
+         return LNIL
 
       @LDefPrimitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env, *args, **kwargs ):
@@ -789,7 +789,7 @@ class LispInterpreter( Listener.Interpreter ):
             if isinstance(alist, LList):
                alist._list.append( value )
             else:
-               alist = LNULL
+               alist = LNIL
          except:
             raise LispRuntimeFuncError( LP_push, 'Invalid argument.' )
 
@@ -1024,17 +1024,6 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_pow, 'Invalid argument.' )
 
-      @LDefPrimitive( 'sqrt', '<number>' )
-      def LP_sqrt( env, *args, **kwargs ):
-         if len(args) != 1:
-            raise LispRuntimeFuncError( LP_sqrt, '1 numerical argument expected.' )
-
-         num = args[0]
-         try:
-            return math.sqrt(num)
-         except:
-            raise LispRuntimeFuncError( LP_sqrt, 'Invalid argument.' )
-
       @LDefPrimitive( 'sin', '<radians>')                                      # (sin <radians>)
       def LP_sin( env, *args, **kwargs ):
          if len(args) != 1:
@@ -1098,10 +1087,10 @@ class LispInterpreter( Listener.Interpreter ):
       # ==========
       # Predicates
       # ----------
-      @LDefPrimitive( 'isNull?', '<expr>')                                     # (isNull? <expr>)
-      def LP_isNull( env, *args, **kwargs ):
+      @LDefPrimitive( 'isNil?', '<expr>')                                     # (isNil? <expr>)
+      def LP_isNil( env, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isNull, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_isNil, '1 argument expected.' )
 
          arg1 = args[0]
          return 1 if (isinstance(arg1,LList) and (len(arg1) == 0)) else 0
@@ -1319,7 +1308,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_and, '2 or more arguments exptected.' )
 
          for arg in args:
-            if (arg == 0) or (arg is LNULL) or (arg is None):
+            if (arg == 0) or (arg is LNIL) or (arg is None):
                return 0
 
          return 1
@@ -1330,7 +1319,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_or, '2 or more arguments exptected.' )
 
          for arg in args:
-            if (arg != 0) and (arg is not LNULL) and (arg is not None):
+            if (arg != 0) and (arg is not LNIL) and (arg is not None):
                return 1
 
          return 0

@@ -31,7 +31,7 @@ Lexical Elements
                       { 'a..zA..Z+-~!@$%^&*_=\:/?<>0..9' }
 
    Reserved Symbols
-         'null', 'pi', 'e', 'inf', 'nan'
+         'nil', 'pi', 'e', 'inf', 'nan'
 
 Grammar
 -------
@@ -48,7 +48,7 @@ Grammar
 #######################
 
 ### Values ###
-NULL                                    ;; defined as an empty list.
+NIL                                     ;; defined as an empty list.
 PI                                      ;; the constant pi.
 E                                       ;; the constant e.
 INF                                     ;; the constant positive infinity.
@@ -109,7 +109,7 @@ NAN                                     ;; the constant not a number.
                                         ;;    ever evaluates to false, while
                                         ;;    returns the result of the most
                                         ;;    recent body evaluation, or it
-                                        ;;    returns NULL.
+                                        ;;    returns NIL.
 (doTimes (<variable> <countExpr>) <sexpr1> <sexpr2> ...)
                                         ;; Performs a loop countExpr times.
                                         ;;    For each iternation of the loop
@@ -188,7 +188,7 @@ NAN                                     ;; the constant not a number.
 (max <val1> <val2> ...)                 ;; Returns the highest of the values.
 
 ### Predicates ###
-(isNull? <expr>)                        ;; Returns 1 if expr is NULL.
+(isNil? <expr>)                         ;; Returns 1 if expr is NIL.
 (isNumber?  <expr>)                     ;; Returns 1 if expr is a number.
 (isSymbol?  <expr>)                     ;; Returns 1 if expr is a symbol.
 (isAtom? <expr>)                        ;; Returns 1 if expr in { int, float,

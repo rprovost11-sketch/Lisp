@@ -419,7 +419,7 @@ class Listener( object ):
             resultStr = self._interp.eval( exprStr )
             print( f'\n==> {resultStr}' )
 
-   def _sessionLog_test( self, inputText: str, verbosity: int=0 ) -> None:
+   def _sessionLog_test( self, inputText: str, verbosity: int=3 ) -> None:
       numPassed = 0
 
       if verbosity >= 3:
@@ -431,18 +431,21 @@ class Listener( object ):
 
          # Test Return Value
          if (actualRetValStr is None) and (expectedRetValStr is not None):
-            retValTest_reason = 'Failed!  Returned <Code>None</Code>; expected <i>value</i>.'
+            passFail = 'Failed!  Returned <Code>None</Code>; expected <i>value</i>.'
          elif (actualRetValStr is not None) and (expectedRetValStr is None):
-            retValTest_reason = 'Failed!  Returned a value; expected <Code>None</Code>'
+            passFail = 'Failed!  Returned a value; expected <Code>None</Code>'
          elif (actualRetValStr is not None) and (expectedRetValStr is not None):
             if actualRetValStr == expectedRetValStr:
-               retValTest_reason = 'PASSED!'
+               passFail = 'PASSED!'
                numPassed += 1
             else:
-               retValTest_reason = 'Failed!  Return value doesn\'t equal expected value.'
+               passFail = 'Failed!  Return value doesn\'t equal expected value.'
 
-         if verbosity >= 3:
-            print( f'     {str(exprNum).rjust(6)}. {retValTest_reason}' )
+         if verbosity == 2:
+            print( f'{str(exprNum).rjust(8)}. {passFail}' )
+         elif verbosity == 3:
+            print( f'{str(exprNum).rjust(8)}> {exprStr}         {passFail}\n' )
+
 
       numTests = exprNum + 1
       numFailed = numTests - numPassed

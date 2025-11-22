@@ -158,7 +158,7 @@ TRUE
 >>> (undef! 'var3)
 ...
 
-==> NULL
+==> NIL
 
 >>> (block
 ...    (writeLn! var1)
@@ -191,9 +191,9 @@ Symbol Table Dump:  Inner-Most Scope First
 ------------------------------------------
 []
 ['VAR3']
-['*', '+', '-', '-INF', '/', '//', '<', '<=', '<>', '=', '>', '>=', 'ABS', 'AND', 'APPLY', 'APPLYANDFLATTEN', 'AT', 'ATSET!', 'BLOCK', 'CASE', 'CONCAT', 'CONCAT-AUX', 'COND', 'CONS', 'CONSEQ1', 'CONSEQ2', 'COPY', 'COS', 'D', 'DEEPCOPY', 'DEF!', 'DEF!!', 'DEFUN!', 'DEFUN!!', 'DIG', 'E', 'EQUAL?', 'EVAL', 'EX', 'EXI', 'EXP', 'FACT', 'FIB', 'FIRST', 'FLOAT', 'FM', 'FMI', 'FOREACH', 'FORMAT', 'HASKEY?', 'HASVALUE?', 'IF', 'INF', 'IS?', 'ISATOM?', 'ISEVEN?', 'ISFUNCTION?', 'ISLIST?', 'ISMAP?', 'ISNULL?', 'ISNUMBER?', 'ISODATE', 'ISODD?', 'ISSTRING?', 'ISSYMBOL?', 'JOIN', 'LAM', 'LIST', 'LOG', 'MAP', 'MAX', 'MIN', 'MOD', 'NAN', 'NOT', 'NULL', 'OR', 'PI', 'POP!', 'POW', 'PUSH!', 'QUOTE', 'READ!', 'READLN!', 'READ_PROMPT', 'REMOVE', 'REST', 'REVERSE', 'REVERSE-AUX', 'SET!', 'SIN', 'SIZE', 'STRING', 'SYMTAB!', 'TAN', 'TRUNC', 'UNDEF!', 'UPDATE!', 'VAR1', 'VAR2', 'WRITE!', 'WRITELN!']
+['*', '+', '-', '-INF', '/', '//', '<', '<=', '<>', '=', '>', '>=', 'ABS', 'AND', 'APPLY', 'APPLYANDFLATTEN', 'AT', 'ATSET!', 'BLOCK', 'CASE', 'CONCAT', 'CONCAT-AUX', 'COND', 'CONS', 'CONSEQ1', 'CONSEQ2', 'COPY', 'COS', 'D', 'DEEPCOPY', 'DEF!', 'DEF!!', 'DEFUN!', 'DEFUN!!', 'DIG', 'E', 'EQUAL?', 'EVAL', 'EX', 'EXI', 'EXP', 'FACT', 'FIB', 'FIRST', 'FLOAT', 'FM', 'FMI', 'FOREACH', 'FORMAT', 'HASKEY?', 'HASVALUE?', 'IF', 'INF', 'IS?', 'ISATOM?', 'ISEVEN?', 'ISFUNCTION?', 'ISLIST?', 'ISMAP?', 'ISNIL?', 'ISNUMBER?', 'ISODATE', 'ISODD?', 'ISSTRING?', 'ISSYMBOL?', 'JOIN', 'LAM', 'LIST', 'LOG', 'MAP', 'MAX', 'MIN', 'MOD', 'NAN', 'NOT', 'NIL', 'OR', 'PI', 'POP!', 'POW', 'PUSH!', 'QUOTE', 'READ!', 'READLN!', 'READ_PROMPT', 'REMOVE', 'REST', 'REVERSE', 'REVERSE-AUX', 'SET!', 'SIN', 'SIZE', 'STRING', 'SYMTAB!', 'TAN', 'TRUNC', 'UNDEF!', 'UPDATE!', 'VAR1', 'VAR2', 'WRITE!', 'WRITELN!']
 
-==> NULL
+==> NIL
 
 >>> var1
 ...
