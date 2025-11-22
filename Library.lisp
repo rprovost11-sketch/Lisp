@@ -20,6 +20,9 @@
 ...                                    (foreach sym (rest lst) expr))
 ...                  ))
 ...
+>>> (defun sqrt (num)
+...    (pow num 1/2))
+...
 >>> ;; Prompt the user for input on the command line.
 ... ;;
 ... (defun!! read_prompt (promptStr)
@@ -38,8 +41,8 @@
 ... ;; (remove '<symbol> '<list>)
 ... (defun!! remove (sym lst)
 ...          (cond
-...             ((isNil? lst)        nil)
-...             ((= sym (first lst))                    (rest lst))
+...             ((isNil? lst)         nil)
+...             ((= sym (first lst))  (rest lst))
 ...             (1                    (cons (first lst) (remove sym (rest lst))))))
 ...
 >>> ;; List - compute the length of the list
