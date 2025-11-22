@@ -117,6 +117,12 @@ NAN                                     ;; the constant not a number.
                                         ;;    starting with 0 for the first loop
                                         ;;    The value of the last sexpr
                                         ;;    evaluated is returned.
+(doList (<variable> <list>) <sexpr1> <sexpr2> ...)
+                                        ;; Loop over the body.  Before each
+                                        ;;    iteration variable is assigned
+                                        ;;    the next element in list.
+                                        ;;    The result of the last body expr
+                                        ;;    evaluated is returned.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
 (backquote <expr>)                      ;; Similar to quote, but allows comma
                                         ;;    and comma-at expressions within
@@ -130,6 +136,8 @@ NAN                                     ;; the constant not a number.
                                         ;;    result must be a list.  Inserts
                                         ;;    the elements of the resulting list
                                         ;;    into the enclosing list.
+(funcall <fnNameSym> <fnArg1> <fnArg2> ...)
+                                        ;; Call a function with the args provided
 (eval '<expr>)                          ;; Evaluate <expr> in the current scope.
 (parse <string>)                        ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
@@ -252,7 +260,7 @@ routine.  So, they work identically.  Generally params are just names for
 positional arguments in a call to the function or macro.  There is one exception
 to the standard binding order of first parameter gets first argument, second
 parameter gets second, etc.  The final parameter may be preceded by the symbol
-&body.  If this is the case, the final paramer is bound to a list of the
+&rest.  If this is the case, the final paramer is bound to a list of the
 remaining arguments passed in.  With all the remaining arguments collected into
 a list bound to the final parameter, there is now a way to handle variable
 argument lists for function.

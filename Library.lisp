@@ -1,7 +1,7 @@
->>> (defmacro!! defun! (fnName argList &body body)
+>>> (defmacro!! defun! (fnName argList &rest body)
 ...                    `(def! ',fnName (lambda (,@argList) ,@body)))
 ...
->>> (defmacro!! defun!! (fnName argList &body body)
+>>> (defmacro!! defun!! (fnName argList &rest body)
 ...                    `(def!! ',fnName (lambda (,@argList) ,@body)))
 ...
 >>> (defun!! apply (aFn aList)

@@ -48,10 +48,10 @@
 
 ==> 0
 
->>> (defmacro!! foo (a &body b) `(a ,a ,@b))
+>>> (defmacro!! foo (a &rest b) `(a ,a ,@b))
 ...
 
-==> (Macro FOO (A &BODY B) ... )
+==> (Macro FOO (A &REST B) ... )
 
 >>> (macroexpand '(foo 1 (a b c) (x y z)))
 ...

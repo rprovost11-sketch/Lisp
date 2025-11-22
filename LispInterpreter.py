@@ -47,12 +47,18 @@ class LispInterpreter( Listener.Interpreter ):
       return [ 'Library.lisp' ]
 
    def testFileList( self ) -> List[str]:
-      return [ 'test01-calculations.lisp',          # Test primitive operations
-               'test02-variables.lisp',             # Test variables and blocks
-               #'test03-functions.lisp',
-               'test04-dataTypes.lisp',
-               'test05-controlStructs.lisp',
-               'test06-macros.lisp',
+      return [ 'test01-constants.lisp',
+               'test02-calculations.lisp',          # Test primitive operations
+               'test03-predicates.lisp',
+               'test04-relationals.lisp',
+               'test05-logical.lisp',
+               'test06-conversions.lisp',
+               'test07-listops.lisp',
+               'test08-variables.lisp',             # Test variables and blocks
+               #'test09-functions.lisp',
+               'test10-dataTypes.lisp',
+               'test11-controlStructs.lisp',
+               'test12-macros.lisp',
                #'test99-misc.lisp',
                ]
 
@@ -136,19 +142,67 @@ class LispInterpreter( Listener.Interpreter ):
          raise LispRuntimeError( 'Unknown lisp expression type.' )
 
    @staticmethod
-   def bindArguments( env: Environment, paramsList: List[LSymbol], argsList: List[Any] ):
-      inBodyTag = False
-      for paramName in paramsList:
+   def bindArguments( env: Environment, paramList: List[Any], argsList: List[Any] ):
+      paramNum = 0
+      while paramNum < len(paramList):
+         param = paramList[paramNum]
          if len(argsList) == 0:
             raise LispRuntimeError( 'Too few arguments.' )
-         elif paramName == LSymbol('&BODY'):
-            inBodyTag = True
-         elif inBodyTag:
+
+         paramName = param
+         if not isinstance(paramName, LSymbol):
+            raise LispRuntimeError( 'Param {paramNum} expected to be a symbol.' )
+
+         if paramName == LSymbol( '&REST' ):
+            paramNum += 1
+            try:
+               paramName = paramList[paramNum]
+            except IndexError:
+               raise LispRuntimeError( 'Symbol expected after &REST' )
+
             env.setLocal( str(paramName), LList(*argsList))
             argsList = [ ]
+            paramNum += 1
+
+            if paramNum < len(paramList):
+               raise LispRuntimeError( 'Symbol after &REST must be last parameter.' )
+
+         elif paramName == LSymbol( '&OPTIONAL' ):
+            paramNum += 1
+            try:
+               paramSpec = paramList[paramNum]
+            except IndexError:
+               raise LispRuntimeError( 'Parameter spec expected after &OPTIONAL.' )
+
+            if isinstance(paramSpec, LSymbol):
+               paramName = paramSpec
+               paramDefVal = LList( )
+            elif isinstance(paramSpec, LList):
+               try:
+                  paramName, defaultValExpr = paramSpec
+               except:
+                  raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
+
+               if not isinstance(paramName, LSymbol):
+                  raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
+
+               # evaluate the defaultValExpr
+               paramDefVal = LispInterpreter._lEval( env, defaultValExpr )
+
+            if len(argsList) != 0:
+               argVal = argsList[0]
+               argsList = argsList[1:]
+            else:
+               argVal = paramDefVal
+
+            env.setLocal( str(paramName), argVal )
+            paramNum += 1
+         elif paramName == LSymbol( '&KEY' ):
+            raise LispRuntimeError( '&KEY parameters not implemented' )
          else:
             env.setLocal( str(paramName), argsList[0] )
             argsList = argsList[1:]
+            paramNum += 1
 
       if len(argsList) != 0:
          raise LispRuntimeError( 'Too many arguments passed in.' )
@@ -266,42 +320,6 @@ class LispInterpreter( Listener.Interpreter ):
             return env.setGlobal( str(key), val)
          except:
             raise LispRuntimeFuncError( LP_defGlobal, 'Unknown error.' )
-
-      #@LDefPrimitive( 'defun!', '<symbol> (<param1> <param2> ...) <expr1> <expr2> ...', standardEvalOrder=False )
-      #def LP_defunLocal( env, *args, **keys ):
-         #try:
-            #fnName, funcParams, *funcBody = args
-         #except:
-            #raise LispRuntimeFuncError( LP_defunLocal, "3 or more arguments expected." )
-
-         #if not isinstance( fnName, LSymbol ):
-            #raise LispRuntimeFuncError( LP_defunLocal, "Argument 1 expected to be a symbol." )
-
-         #if not isinstance( funcParams, LList ):
-            #raise LispRuntimeFuncError( LP_defunLocal, "Argument 2 expected to be a list of symbols." )
-
-         #theFunc = LFunction( fnName, funcParams, funcBody )
-         #assert isinstance( env, Environment )
-         #env.defLocal( str(fnName), theFunc )
-         #return theFunc
-
-      #@LDefPrimitive( 'defun!!', '<symbol> (<param1> <param2> ...) <expr1> <expr2> ...', standardEvalOrder=False )
-      #def LP_defunGlobal( env, *args, **keys ):
-         #try:
-            #fnName, funcParams, *funcBody = args
-         #except:
-            #raise LispRuntimeFuncError( LP_defunGlobal, "3 or more arguments expected." )
-
-         #if not isinstance( fnName, LSymbol ):
-            #raise LispRuntimeFuncError( LP_defunGlobal, "Argument 1 expected to be a symbol." )
-
-         #if not isinstance( funcParams, LList ):
-            #raise LispRuntimeFuncError( LP_defunGlobal, "Argument 2 expected to be a list of symbols." )
-
-         #theFunc = LFunction( fnName, funcParams, funcBody )
-         #assert isinstance( env, Environment )
-         #env.defGlobal( str(fnName), theFunc )
-         #return theFunc
 
       @LDefPrimitive( 'defmacro!!', '<symbol> (<param1> <param2> ...) <expr1> <expr2> ...', specialOperation=True )
       def LP_defmacro( env, *args, **kwargs ):
@@ -614,6 +632,46 @@ class LispInterpreter( Listener.Interpreter ):
                latestResult = LispInterpreter._lEval( env, sexpr )
 
          return latestResult
+
+      @LDefPrimitive( 'dolist', '(<variable> <list>) <sexpr1> <sexpr2> ...' )
+      def LP_dolist( env, *args, **kwargs ):
+         try:
+            controlInfo, *body = args
+         except:
+            raise LispRuntimeFuncError( LP_dolist, "2 or more arguments exptected." )
+
+         try:
+            controlVar, controlLst = controlInfo
+         except:
+            raise LispRuntimeFuncError( LP_dolist, "Control list exptects two arguments." )
+
+         if not isinstance( controlVar, LSymbol ):
+            raise LispRuntimeFuncError( LP_dolist, "Control variable expcted to be a symbol." )
+
+         controlLst = LispInterpreter._lEval( env, controlLst )
+         if not isinstance( controlLst, LList ):
+            raise LispRuntimeFuncError( LP_dolist, "Control expected to be a list." )
+
+         for element in controlLst._list:
+            env.setLocal( str(controlVar), element )
+            latestResult = None
+            for sexpr in body:
+               latestResult = LispInterpreter._lEval( env, sexpr )
+            return latestResult
+
+         return LNULL
+
+      @LDefPrimitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
+      def LP_funcall( env, *args, **kwargs ):
+         try:
+            fnNameSymbol, *fnArgs = args
+         except:
+            raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
+
+         newExpr = LList( fnNameSymbol, *fnArgs )
+
+         result = LispInterpreter._lEval( env, newExpr )
+         return result
 
       @LDefPrimitive( 'eval', '<expr>' )                                       # (eval '<expr>)                     ;; evaluate <expr>
       def LP_eval( env, *args, **kwargs ):
