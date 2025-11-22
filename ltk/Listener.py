@@ -145,6 +145,8 @@ class Listener( object ):
       Test the interpreter using a log file.
       Read and execute a log file;
       comparing the return value to the log file return value.
+      If no test file is specified the listener will run the full standard set
+      of tests for the interpreter.
       '''
       numArgs = len(args)
       if numArgs not in ( 0, 1 ):

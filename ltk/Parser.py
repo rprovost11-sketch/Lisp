@@ -181,11 +181,15 @@ class Scanner( ABC ):
 
    @abstractmethod
    def _scanNextToken( self ) -> int:
-      """Consume the next token (i.e. scan past it).
-      Type:          Mutator - Abstract
-      Returns:       Token (usually an int)
-      Preconditions: determined by the implementation.
-      Side Effects:  Scans the next token from the source string.
+      """Consume the next token (i.e. scan past it).  At the end of this method
+      the scanner should be in the following state:
+      ScannerBuffer._point should be on position past the last character of the
+                           lexeme in the scanner buffer.
+      ScannerBuffer._mark  should be on position of the first character of the
+                           next lexeme in the scanner buffer.
+
+      return value         the integer token value of the next token in the
+                           scanner buffer.
       """
       pass
 

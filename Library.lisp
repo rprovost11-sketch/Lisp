@@ -12,14 +12,12 @@
 ...
 >>> (defun!! foreach (sym lst expr)
 ...          (cond
-...              ((= (size lst) 0)  '())
-...              ((= (size lst) 1)   (block
-...                                      (def! sym (first lst))
-...                                      (eval expr)))
-...              (1                  (block
-...                                      (def! sym (first lst))
-...                                      (eval expr)
-...                                      (foreach sym (rest lst) expr)))
+...              ((= (length lst) 0)  '())
+...              ((= (length lst) 1)   (def! sym (first lst))
+...                                    (eval expr))
+...              (1                    (def! sym (first lst))
+...                                    (eval expr)
+...                                    (foreach sym (rest lst) expr))
 ...                  ))
 ...
 >>> ;; Prompt the user for input on the command line.
@@ -46,11 +44,11 @@
 ...
 >>> ;; List - compute the length of the list
 ... ;;
-... ;; (size '<list>)
-... (defun!! size (lst)
+... ;; (length '<list>)
+... (defun!! length (lst)
 ...          (if (isNull? lst)
 ...              0
-...              (+ 1 (size (rest lst)))))
+...              (+ 1 (length (rest lst)))))
 ...
 >>> ;; List - reverse the order of the top level elements
 ... ;;

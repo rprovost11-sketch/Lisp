@@ -81,6 +81,9 @@ NAN                                     ;; the constant not a number.
 (block <expr1> <expr2> ...)             ;; Execute the sequence of expr's in a
                                         ;;    nested scope.  Returns the result
                                         ;;    of the last expr evaluated.
+(progn <sexpr1> <sexpr2> ...)           ;; Evaluate each sexpression in turn.
+                                        ;;    Returns the result of the last
+                                        ;;    sexpr.
 (if <cond> <conseq> [<alt>])            ;; If cond evaluates to true evaluates
                                         ;;    conseq otherwise evaluates alt.
 (cond (<cond> <expr>) (<cond> <expr>) ...)
@@ -107,6 +110,13 @@ NAN                                     ;; the constant not a number.
                                         ;;    returns the result of the most
                                         ;;    recent body evaluation, or it
                                         ;;    returns NULL.
+(doTimes (<variable> <countExpr>) <sexpr1> <sexpr2> ...)
+                                        ;; Performs a loop countExpr times.
+                                        ;;    For each iternation of the loop
+                                        ;;    variable is set to the loop number
+                                        ;;    starting with 0 for the first loop
+                                        ;;    The value of the last sexpr
+                                        ;;    evaluated is returned.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
 (backquote <expr>)                      ;; Similar to quote, but allows comma
                                         ;;    and comma-at expressions within
@@ -141,8 +151,8 @@ NAN                                     ;; the constant not a number.
                                         ;; Update the key/index in the given
                                         ;;    list/map with value.  Returns
                                         ;;    value.
-(join '<list-1> '<list-2>)              ;; Return a new list with the two lists
-                                        ;; merged.  Order is retained.
+(append '<list-1> '<list-2>)            ;; Return a new list with the two lists
+                                        ;;    merged.  Order is retained.
 (hasValue? '<listOrMap> '<value>)       ;; Returns 1 if the list/map contains
                                         ;;    value.
 (map '( (<key1> <val1>) (<key2> <val>2) ...))
@@ -158,7 +168,6 @@ NAN                                     ;; the constant not a number.
 (/ <expr1> <expr2> ...)                 ;; Returns the quotient.
 (// <expr1> <expr2>)                    ;; Returns the integer division.
 (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
-(trunc <expr>)                          ;; Returns expr as an integer.
 (abs <expr>)                            ;; Returns the absolute value.
 (log <x> [<base>])                      ;; Returns the log of x.  If base if not
                                         ;;    provided, 10 is used.
@@ -196,7 +205,12 @@ NAN                                     ;; the constant not a number.
 (or  <val1> <val2> ...)                 ;; Returns the logical or of vals.
 
 ### Type Conversion ###
-(float <val>)                           ;; Returns val as a float.
+(float <val>)                           ;; Returns val as a float.  val can be
+                                        ;;    any number type or a string
+                                        ;;    containing a lisp float.
+(int <val>)                             ;; Returns val as an int.  val can be
+                                        ;;    any number type or a string
+                                        ;;    containing a lisp integer.
 (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
                                         ;;    string results of the arguments.
 
@@ -217,7 +231,7 @@ Library Functions
 (isEven? intVal)                        ;; Is the intval even?
 (isOdd? intVal)                         ;; Is the intval odd?
 (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
-(size '<list>)                          ;; Return the length of a list.
+(length '<list>)                        ;; Return the length of a list.
 (reverse '<list>)                       ;; Return a new list with list reversed.
 (copy <list>)                           ;; Return a copy of a list.
 (deepCopy <list>)                       ;; Return a deepcopy of a list.

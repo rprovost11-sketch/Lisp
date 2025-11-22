@@ -89,7 +89,7 @@
 
 ==> ("a" 1 "c" "d")
 
->>> (join mylist '(pi e))
+>>> (append mylist '(pi e))
 ...
 
 ==> ("a" 1 "c" "d" PI E)
@@ -104,12 +104,12 @@
 
 ==> 1
 
->>> (size null)
+>>> (length null)
 ...
 
 ==> 0
 
->>> (size '(a b c d))
+>>> (length '(a b c d))
 ...
 
 ==> 4

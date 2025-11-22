@@ -155,7 +155,7 @@ class LFunction( object ):
       self._name: LSymbol   = name
       self._params: LList = params
       self._body: LList   = bodyExprLst
-      self._stdEvalOrd:bool = True
+      self._specialOp:bool = False
 
       self.setName( name )
 
@@ -165,8 +165,8 @@ class LFunction( object ):
    def __repr__( self ) -> str:
       return self._reprStr
 
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **keys ) -> Any:
-      return sExprEvaluator( env, self, *args, **keys )
+   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
+      return sExprEvaluator( env, self, *args, **kwargs )
 
    def setName( self, name: LSymbol ) -> None:
       self._name = name
@@ -176,14 +176,14 @@ class LFunction( object ):
 
 
 class LPrimitive( object ):
-   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, stdEvalOrd: bool=True ) -> None:
+   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialOp: bool=False ) -> None:
       self._fn:Callable[[Environment], Any] = fn
       self._name:str = name
       self._usage:str = usage
-      self._stdEvalOrd:bool = stdEvalOrd
+      self._specialOp:bool = specialOp
 
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **keys ) -> Any:
-      return self._fn( env, *args, **keys )
+   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
+      return self._fn( env, *args, **kwargs )
 
 
 class LMacro( object ):
@@ -191,7 +191,7 @@ class LMacro( object ):
       self._name: LSymbol = name
       self._params: LList = params
       self._body: LList = bodyExprList
-      self._stdEvalOrd: bool = False
+      self._specialOp: bool = True
 
       self.setName( name )
 
@@ -201,8 +201,8 @@ class LMacro( object ):
    def __repr__( self ) -> str:
       return self._reprStr
 
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **keys ) -> Any:
-      listOfExpandedExprs = sExprEvaluator( env, self, *args, **keys )
+   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
+      listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )
       latestResult = None
       for expr in listOfExpandedExprs:
          latestResult = sExprEvaluator( env, expr )

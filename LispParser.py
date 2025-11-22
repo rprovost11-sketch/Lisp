@@ -187,7 +187,7 @@ class LispScanner( Parser.Scanner ):
 
       if nextChar in LispScanner.SIGN:
          secondChar = buf.peek( )
-         if (secondChar is None) or (secondChar not in LispScanner.DIGIT):
+         if secondChar not in LispScanner.DIGIT:
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
 
@@ -199,7 +199,7 @@ class LispScanner( Parser.Scanner ):
          buf.consume( )
 
          nextChar = buf.peek( )
-         if (nextChar is None) or (nextChar not in LispScanner.DIGIT):
+         if nextChar not in LispScanner.DIGIT:
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
 

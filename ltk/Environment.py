@@ -15,11 +15,11 @@ class Environment( object ):
       root._locals = initialNameValDict.copy()
       return root
 
-   def defLocal( self, key: str, value: Any ) -> Any:
+   def setLocal( self, key: str, value: Any ) -> Any:
       self._locals[ key ] = value
       return value
 
-   def defGlobal( self, key: str, value: Any ) -> Any:
+   def setGlobal( self, key: str, value: Any ) -> Any:
       assert isinstance(Environment.GLOBAL_SCOPE, Environment)
       Environment.GLOBAL_SCOPE._locals[ key ] = value
       return value
