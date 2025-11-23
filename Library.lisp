@@ -28,6 +28,9 @@
 ...       (* -1 num)
 ...       num))
 ...
+>>> (defun!! exp (num)
+...    (pow e num))
+...
 >>> ; Prompt the user for input on the command line.
 ... ;
 ... (defun!! read_prompt (promptStr)

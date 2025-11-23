@@ -40,77 +40,39 @@ class LSymbol( object ):
          return True
 
 
-class LList( object ):
+class LList( list ):
    def __init__( self, *elements ) -> None:
-      self._list = list(elements)
-
-   def __getitem__( self, index: int ) -> Any:
-      return self._list[ index ]
-
-   def __len__( self ) -> int:
-      return len(self._list)
-
-   def __iter__( self ):
-      return iter( self._list )
+      super().__init__( elements )
 
    def __str__( self ) -> str:
-      if len(self._list) == 0:
+      if len(self) == 0:
          return 'NIL'
 
-      mbrList = [ prettyPrintSExpr(mbr) for mbr in self._list ]
+      mbrList = [ prettyPrintSExpr(mbr) for mbr in self ]
       mbrListStr = ' '.join(mbrList)
       resultStr = f'({mbrListStr})'
       return resultStr
 
    def __repr__( self ) -> str:
-      if len(self._list) == 0:
+      if len(self) == 0:
          return 'NIL'
 
-      mbrList = [ prettyPrintSExpr(mbr) for mbr in self._list ]
+      mbrList = [ prettyPrintSExpr(mbr) for mbr in self ]
       mbrListStr = ' '.join(mbrList)
       resultStr = f'({mbrListStr})'
       return resultStr
 
-   def __eq__( self, other: Any ) -> bool:
-      '''
-      (defun!! '(equal? expr1 expr2)
-               '(cond '( ((or (isAtom? expr1)
-                              (isNil? expr1))
-                                       (= expr1 expr2))
-                         ((and (isList? expr1)
-                               (isList? expr2))
-                                       (and (isList? expr2)
-                                            (and (equal? (first expr1) (first expr2))
-                                                 (equal? (rest expr1) (rest expr2)))))
-                         (1
-                                       nil))))
-      '''
-      if not isinstance(other, LList):
-         return False
-
-      if len(self) != len(other):
-         return False
-
-      for subSelf, subOther in zip( self, other ):
-         if subSelf != subOther:
-            return False
-
-      return True
-
    def copy( self ) -> LList:
-      return LList( *self._list[:] )
-
-   def insert( self, index: int, value: Any ) -> None:
-      self._list.insert( index, value )
+      return LList( *self[:] )
 
    def first( self ) -> Any:
-      return self._list[ 0 ]
+      return self[ 0 ]
 
    def rest( self ) -> LList:
-      if len(self._list) < 2:
+      if len(self) < 2:
          return LList( )
       else:
-         return LList( *self._list[ 1 : ])
+         return LList( *self[ 1 : ])
 
 
 class LMap( object ):

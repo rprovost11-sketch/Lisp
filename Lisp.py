@@ -3,9 +3,9 @@ from LispInterpreter import LispInterpreter
 
 def main( ) -> None:
    interp = LispInterpreter( )
-   theListener = Listener.Listener( interp, language='Lisp',
-                                            version='0.1',
-                                            author='Ronald Provost' )
+   theListener = Listener.Listener( interp, language='Python\'s Lisp',
+                                            version='0.1.5',
+                                            author='Ronald Provost/Longo' )
    theListener.readEvalPrintLoop( )
 
 if __name__ == '__main__':
