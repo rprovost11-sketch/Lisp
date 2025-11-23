@@ -15,11 +15,11 @@ The Language
 Lexical Elements
 ----------------
    Comments
-      Comments extend from ';;' through '\n'.
+      Comments extend from ';' through '\n'.
       All text between and including these two delimiters is ignored.
 
    Delimiters:
-      ';', '#', '(', ')', '|', '[', ']', ';;', '\n'
+      '#', '(', ')', '|', '[', ']', ';', '\n'
 
    Literals
       NumberLiteral:  ('+'|'-')('0' .. '9')+

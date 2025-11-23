@@ -9,11 +9,11 @@ The Language
 ------------
 Lexemes
    Comments
-      Comments extend from ';;' through '\n'.
+      Comments extend from ';' through '\n'.
       All text between and including these two delimiters is ignored.
 
    Delimiters:
-      ';', '#', '(', ')', '|', '[', ']', ';;', '\n'
+      '#', '(', ')', '|', '[', ']', ';', '\n'
 
    Literals
       NumberLiteral:  ['+'|'-'] ('0' .. '9')+
@@ -65,7 +65,6 @@ class LispScanner( Parser.Scanner ):
    OPEN_PAREN_TOK     = 211
    CLOSE_PAREN_TOK    = 212
 
-   SEMI_COLON_TOK     = 500    # Other Symbols
    POUND_SIGN_TOK     = 501
    PIPE_TOK           = 502
    COLON_TOK          = 503
@@ -83,7 +82,7 @@ class LispScanner( Parser.Scanner ):
       try:
          self._skipWhitespaceAndComments( )
 
-         nextChar = buf.peek( )
+         nextChar = buf.peekNextChar( )
          if nextChar == '':
             return LispScanner.EOF_TOK
          elif nextChar == '[':
@@ -102,10 +101,6 @@ class LispScanner( Parser.Scanner ):
             buf.markStartOfLexeme( )
             buf.consume( )
             return LispScanner.CLOSE_PAREN_TOK
-         elif nextChar == ';':
-            buf.markStartOfLexeme( )
-            buf.consume( )
-            return LispScanner.SEMI_COLON_TOK
          elif nextChar == '#':
             buf.markStartOfLexeme( )
             buf.consume( )
@@ -117,25 +112,25 @@ class LispScanner( Parser.Scanner ):
          elif nextChar == ':':
             buf.markStartOfLexeme( )
             buf.consume( )
-            nextChar = buf.peek( )
+            nextChar = buf.peekNextChar( )
             return LispScanner.COLON_TOK
          elif nextChar == "'":
             buf.markStartOfLexeme( )
             buf.consume( )
-            nextChar = buf.peek( )
+            nextChar = buf.peekNextChar( )
             return LispScanner.SINGLE_QUOTE_TOK
          elif nextChar == '`':
             buf.markStartOfLexeme( )
             buf.consume( )
-            nextChar = buf.peek( )
+            nextChar = buf.peekNextChar( )
             return LispScanner.BACK_QUOTE_TOK
          elif nextChar == ',':
             buf.markStartOfLexeme( )
             buf.consume( )
-            nextChar = buf.peek( )
+            nextChar = buf.peekNextChar( )
             if nextChar == '@':
                buf.consume( )
-               nextChar = buf.peek( )
+               nextChar = buf.peekNextChar( )
                return LispScanner.COMMA_AT_TOK
             else:
                return LispScanner.COMMA_TOK
@@ -157,7 +152,7 @@ class LispScanner( Parser.Scanner ):
    def _scanStringLiteral( self ) -> int:
       buf = self.buffer
 
-      nextChar = buf.peek( )
+      nextChar = buf.peekNextChar( )
       if nextChar != '"':
          raise Parser.ParseError( self, '\'"\' expected.' )
       buf.markStartOfLexeme( )
@@ -178,7 +173,7 @@ class LispScanner( Parser.Scanner ):
       buf = self.buffer
 
       SAVE = Parser.ScannerState( )
-      nextChar = buf.peek( )
+      nextChar = buf.peekNextChar( )
 
       buf.markStartOfLexeme( )
       self.saveState( SAVE )                  # Save the scanner state
@@ -186,19 +181,19 @@ class LispScanner( Parser.Scanner ):
       buf.consume( )
 
       if nextChar in LispScanner.SIGN:
-         secondChar = buf.peek( )
+         secondChar = buf.peekNextChar( )
          if secondChar not in LispScanner.DIGIT:
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
 
       buf.consumePast( LispScanner.DIGIT )
-      nextChar = buf.peek()
+      nextChar = buf.peekNextChar()
 
       if nextChar == '/':
          # Possibly a Fraction number
          buf.consume( )
 
-         nextChar = buf.peek( )
+         nextChar = buf.peekNextChar( )
          if nextChar not in LispScanner.DIGIT:
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
@@ -210,14 +205,14 @@ class LispScanner( Parser.Scanner ):
          # Exponentiation case
          buf.consume( )
 
-         nextChar = buf.peek( )
+         nextChar = buf.peekNextChar( )
          if (nextChar not in LispScanner.SIGN) and (nextChar not in LispScanner.DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
          if nextChar in LispScanner.SIGN:
             buf.consume( )
-            nextChar = buf.peek( )
+            nextChar = buf.peekNextChar( )
 
          if (nextChar not in LispScanner.DIGIT):
             self.restoreState( SAVE )
@@ -231,20 +226,20 @@ class LispScanner( Parser.Scanner ):
          # '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]    # <-- decimal/exponentiation case
          #self.saveState( SAVE )
          buf.consume()
-         nextChar = buf.peek()
+         nextChar = buf.peekNextChar()
          if nextChar not in LispScanner.DIGIT:
             # Integer
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
          buf.consumePast( LispScanner.DIGIT )
-         nextChar = buf.peek( )
+         nextChar = buf.peekNextChar( )
 
          if nextChar not in ('e', 'E'):
             return LispScanner.FLOAT_TOK
 
          buf.consume( )
-         nextChar = buf.peek( )
+         nextChar = buf.peekNextChar( )
 
          if (nextChar not in LispScanner.SIGN) and (nextChar not in LispScanner.DIGIT):
             self.restoreState( SAVE )
@@ -252,7 +247,7 @@ class LispScanner( Parser.Scanner ):
 
          if nextChar in LispScanner.SIGN:
             buf.consume( )
-            nextChar = buf.peek( )
+            nextChar = buf.peekNextChar( )
 
          if (nextChar not in LispScanner.DIGIT):
             self.restoreState( SAVE )
@@ -267,7 +262,7 @@ class LispScanner( Parser.Scanner ):
       buf = self.buffer
 
       buf.markStartOfLexeme( )
-      nextChar = buf.peek()
+      nextChar = buf.peekNextChar()
       if nextChar not in LispScanner.SYMBOL_FIRST:
          raise Parser.ParseError( self, 'Invalid symbol character' )
       buf.consume( )
@@ -279,21 +274,12 @@ class LispScanner( Parser.Scanner ):
    def _skipWhitespaceAndComments( self ) -> None:
       buf = self.buffer
 
-      SAVE = Parser.ScannerState( )
-
-      nextChar = buf.peek()
+      nextChar = buf.peekNextChar()
       while (nextChar in '; \t\n\r') and (nextChar != ''):
-         buf.consumePast( ' \t\n\r' )
-
-         if buf.peek() == ';':
-            self.saveState( SAVE )
-            buf.consume()
-            if buf.peek() == ';':
-               buf.consumeUpTo( '\n\r' )
-            else:
-               self.restoreState( SAVE )
-               return
-         nextChar = buf.peek()
+         if nextChar == ';':
+            buf.consumeUpTo( '\n\r' )
+         buf.consume( )
+         nextChar = buf.peekNextChar()
 
 
 class LispParser( Parser.Parser ):

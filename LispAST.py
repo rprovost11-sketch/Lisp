@@ -6,7 +6,7 @@ from typing import Any, Dict, Callable
 # #################
 # Lisp Function API
 def prettyPrintSExpr( sExpr: Any ) -> str:
-   '''Return a printable, formatted python string representation
+   '''Return a printable, formatted string representation
    of a lisp object.'''
    if isinstance(sExpr, str):
       return f'\"{sExpr}\"'
@@ -150,6 +150,17 @@ class LMap( object ):
          return self._dict[ key ]
 
 
+class LPrimitive( object ):
+   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialOp: bool=False ) -> None:
+      self._fn:Callable[[Environment], Any] = fn
+      self._name:str = name
+      self._usage:str = usage
+      self._specialOp:bool = specialOp
+
+   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
+      return self._fn( env, *args, **kwargs )
+
+
 class LFunction( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
       self._name: LSymbol   = name
@@ -173,17 +184,6 @@ class LFunction( object ):
       paramList = [ x._val for x in self._params ]
       paramListStr = ' '.join(paramList)
       self._reprStr = f"(Function {self._name} ({paramListStr}) ... )"
-
-
-class LPrimitive( object ):
-   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialOp: bool=False ) -> None:
-      self._fn:Callable[[Environment], Any] = fn
-      self._name:str = name
-      self._usage:str = usage
-      self._specialOp:bool = specialOp
-
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
-      return self._fn( env, *args, **kwargs )
 
 
 class LMacro( object ):

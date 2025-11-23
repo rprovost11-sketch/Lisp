@@ -20,11 +20,16 @@
 ...                                    (foreach sym (rest lst) expr))
 ...                  ))
 ...
->>> (defun sqrt (num)
+>>> (defun!! sqrt (num)
 ...    (pow num 1/2))
 ...
->>> ;; Prompt the user for input on the command line.
-... ;;
+>>> (defun!! abs (num)
+...    (if (<= num 0)
+...       (* -1 num)
+...       num))
+...
+>>> ; Prompt the user for input on the command line.
+... ;
 ... (defun!! read_prompt (promptStr)
 ...          (block
 ...             (write! promptStr)
@@ -36,26 +41,26 @@
 >>> (defun!! isOdd? (intVal)
 ...          (= (mod intVal 2) 1))
 ...
->>> ;; List - remove a symbol from a list - destructive
-... ;;
-... ;; (remove '<symbol> '<list>)
+>>> ; List - remove a symbol from a list - destructive
+... ;
+... ; (remove '<symbol> '<list>)
 ... (defun!! remove (sym lst)
 ...          (cond
 ...             ((isNil? lst)         nil)
 ...             ((= sym (first lst))  (rest lst))
 ...             (1                    (cons (first lst) (remove sym (rest lst))))))
 ...
->>> ;; List - compute the length of the list
-... ;;
-... ;; (length '<list>)
+>>> ; List - compute the length of the list
+... ;
+... ; (length '<list>)
 ... (defun!! length (lst)
 ...          (if (isNil? lst)
 ...              0
 ...              (+ 1 (length (rest lst)))))
 ...
->>> ;; List - reverse the order of the top level elements
-... ;;
-... ;; (reverse '<list>)
+>>> ; List - reverse the order of the top level elements
+... ;
+... ; (reverse '<list>)
 ... (defun!! reverse (lst)
 ...          (reverse-aux '() lst))
 ...
@@ -64,15 +69,15 @@
 ...              destLst
 ...              (reverse-aux (cons (first srcLst) destLst) (rest srcLst))))
 ...
->>> ;; List - make a copy of the argument list
-... ;;
-... ;; (copy <list>)
+>>> ; List - make a copy of the argument list
+... ;
+... ; (copy <list>)
 ... (defun!! copy (lst)
 ...          (reverse (reverse lst)))
 ...
->>> ;; List - make a deepCopy fo the argument list
-... ;;
-... ;; (deepCopy <list>)
+>>> ; List - make a deepCopy fo the argument list
+... ;
+... ; (deepCopy <list>)
 ...
 ... (defun!! deepCopy (expr)
 ...          (cond ((isNil?   expr)  '( ))
@@ -81,19 +86,19 @@
 ...                 ((isList?   expr)  (cons (deepcopy (first expr))
 ...                                          (deepcopy (rest  expr)))) ))
 ...
->>> ;; (dig aTree aPath)
-... ;;
-... ;; Given a nested structure of lists and maps, this function will execute
-... ;; a depth-first traversal down aPath - a list of map keys and list inidies.
-... ;; returns the object in that location.
+>>> ; (dig aTree aPath)
+... ;
+... ; Given a nested structure of lists and maps, this function will execute
+... ; a depth-first traversal down aPath - a list of map keys and list inidies.
+... ; returns the object in that location.
 ... (defun!! dig (aTree aPath)
 ...          (if (isNil? aPath)
 ...              aTree
 ...              (dig (at aTree (first aPath)) (rest aPath)) ))
 ...
->>> ;; Compare two lists for deep equality - deep comparison
-... ;;
-... ;; (equal? '<expr-1> '<expr-2>)
+>>> ; Compare two lists for deep equality - deep comparison
+... ;
+... ; (equal? '<expr-1> '<expr-2>)
 ... (defun!! equal? (expr1 expr2)
 ...          (cond ((or (isAtom? expr1)
 ...                     (isNil? expr1))
@@ -106,17 +111,17 @@
 ...                    (1
 ...                                  nil)))
 ...
->>> ;; Compute the factorial
-... ;;
-... ;; (fact n)
+>>> ; Compute the factorial
+... ;
+... ; (fact n)
 ... (defun!! fact (n)
 ...          (if (= n 0)
 ...              1
 ...              (* n (fact (- n 1)))))
 ...
->>> ;; Compute the Fibonacci number
-... ;;
-... ;; (fib n)
+>>> ; Compute the Fibonacci number
+... ;
+... ; (fib n)
 ... (defun!! fib (n)
 ...          (if (<= n 2)
 ...              1

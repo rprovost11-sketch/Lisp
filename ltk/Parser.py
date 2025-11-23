@@ -24,8 +24,8 @@ class ScannerBuffer( object ):
       self._mark     = 0
       self._lineNum  = 1
 
-   def peek( self ) -> str:
-      '''Return the next character in the buffer.'''
+   def peekNextChar( self ) -> str:
+      '''Return the next character in the buffer or an empty string if eof.'''
       try:
          return self._source[ self._point ]        # raises on EOF
       except IndexError:
@@ -38,7 +38,7 @@ class ScannerBuffer( object ):
             self._lineNum += 1
          self._point += 1
       except IndexError:
-         pass          # Scanned past eof
+         pass          # Scanned past eof.  Return gracefully.
 
    def consumeIf( self, aCharSet: str ) -> None:
       '''Consume the next character if it's in aCharSet.'''
@@ -46,7 +46,7 @@ class ScannerBuffer( object ):
          if self._source[ self._point ] in aCharSet:   # raises on EOF
             self.consume( )
       except IndexError:
-         pass          # Scanned past eof
+         pass          # Scanned past eof.  Return gracefully.
 
    def consumeIfNot( self, aCharSet: str ) -> None:
       '''Consume the next character if it's NOT in aCharSet.'''
@@ -54,7 +54,7 @@ class ScannerBuffer( object ):
          if self._source[ self._point ] not in aCharSet:   # raises on EOF
             self.consume( )
       except IndexError:
-         pass
+         pass               # scanned past eof.  return gracefully.
 
    def consumePast( self, aCharSet: str ) -> None:
       '''Consume up to the first character NOT in aCharSet.'''
@@ -62,7 +62,7 @@ class ScannerBuffer( object ):
          while self._source[ self._point ] in aCharSet:   # raises on EOF
             self.consume( )
       except IndexError:
-         pass
+         pass             # scanned past eof.  Return gracefully.
 
    def consumeUpTo( self, aCharSet: str ) -> None:
       '''Consume up to the first character in aCharSet.'''
@@ -70,7 +70,7 @@ class ScannerBuffer( object ):
          while self._source[ self._point ] not in aCharSet:   # raises on EOF
             self.consume( )
       except IndexError:
-         pass
+         pass                # scanned past eof.  Return gracefully.
 
    def saveState( self, stateInst: ScannerState ) -> None:
       stateInst.buffer_source   = self._source
@@ -85,7 +85,7 @@ class ScannerBuffer( object ):
       self._lineNum  = stateInst.buffer_lineNum
 
    def markStartOfLexeme( self ) -> None:
-      '''Indicate the start of a lexeme by setting the mark to the current vlaue of point.'''
+      '''Set mark to the current vlaue of point to record the start of a lex.'''
       self._mark = self._point
 
    def getLexeme( self ) -> str:
@@ -117,14 +117,13 @@ class ScannerBuffer( object ):
 class Scanner( ABC ):
    def __init__( self ) -> None:
       '''Initialize a Scanner instance.'''
-      self.buffer:ScannerBuffer       = ScannerBuffer( )
-      self._tok:int         = -1               # The next token
+      self.buffer:ScannerBuffer  = ScannerBuffer( )
+      self._tok:int = -1               # The next token
 
-   def reset( self, sourceString: str ) -> None:
+   def reset( self, newSourceString: str ) -> None:
       '''Re-initialize the instance over a new string.'''
-      self.buffer.reset( sourceString )
-      self._tok         = -1
-      self.consume( )
+      self.buffer.reset( newSourceString )
+      self._tok = self._scanNextToken( )  # prime the scanner object.
 
    def peekToken( self ) -> int:
       '''Return the next (look ahead) token, but do not consume it.'''
@@ -183,13 +182,9 @@ class Scanner( ABC ):
    def _scanNextToken( self ) -> int:
       """Consume the next token (i.e. scan past it).  At the end of this method
       the scanner should be in the following state:
-      ScannerBuffer._point should be on position past the last character of the
-                           lexeme in the scanner buffer.
-      ScannerBuffer._mark  should be on position of the first character of the
-                           next lexeme in the scanner buffer.
-
-      return value         the integer token value of the next token in the
-                           scanner buffer.
+      ScannerBuffer._point, set one char past the last char of the lexeme.
+      ScannerBuffer._mark,  set to the first character of the lexeme.
+      return value,         the int value of the next token in the buffer
       """
       pass
 
@@ -208,7 +203,7 @@ class LineScanner( object ):
       self._point += 1
 
    def currentLineNumber( self ) -> int:
-      return self._point
+      return self._point + 1
 
 class ParseError( Exception ):
    def __init__( self, aScanner: Scanner, errorMessage: str, filename: str='' ) -> None:

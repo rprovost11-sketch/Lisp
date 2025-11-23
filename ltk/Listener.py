@@ -73,7 +73,7 @@ class Listener( object ):
       if self._logFile and ((len(inputStr) == 0) or (inputStr[0] != ']')):
          self._logFile.write( f'{prompt}{inputStr}\n' )
 
-      return inputStr.strip( )
+      return inputStr
 
    def do_reboot( self, args: List[str] ) -> None:
       '''Usage: reboot
