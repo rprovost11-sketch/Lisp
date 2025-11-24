@@ -7,7 +7,7 @@ To Do
 - make evaluations of undefined variables raise LypsRuntimeError instead of
   evaluating to themselves.
 - promote the block primitive to let and let*.
-- remove def!, def!! and set!.
+- remove def!, def!!.
 - continue to bring other primitives into alignment with common lisp.
 - implement stream IO primitives.
 - implement lisp structs.
@@ -16,6 +16,7 @@ To Do
   a package (lisp source file).  For any symbol y in the package p, this
   can be accessed with the notation p::y.
 - Produce more test files including error testing and listener command testing.
+- Implement &key parameters for functions and macros.
 
 Completed
 ---------
@@ -25,5 +26,6 @@ Completed
 - define a new global symbol t which stands for true and evaluates to itself.
 - make all primitives use t and nil as the boolean values instead of 0 and nil.
 - make nil the exclusive value for false.
+- remove set!.  Fully replace with setf
 
 

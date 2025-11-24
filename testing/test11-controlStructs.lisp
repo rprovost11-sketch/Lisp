@@ -1,4 +1,4 @@
->>> (set! 'val1 3)
+>>> (setf val1 3)
 ...
 
 ==> 3
@@ -30,7 +30,7 @@
 ...    (while (> num 0)
 ...       (block
 ...          (writeLn! num)
-...          (set! 'num (- num 1))
+...          (setf num (- num 1))
 ...          )
 ...       )
 ...    )
@@ -52,7 +52,7 @@
 ...    (while (> num 0)
 ...       (block
 ...          (writeLn! num)
-...          (set! 'num (- num 1))
+...          (setf num (- num 1))
 ...          )
 ...    )
 ... )

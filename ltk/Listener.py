@@ -421,6 +421,9 @@ class Listener( object ):
 
       numPassed = 0
       exprNum = -1
+      actualRetValStr = ''
+      actualOutputStr = ''
+      actualErrorStr = ''
       for exprNum,exprPackage in enumerate(self.parseLog(inputText)):
          exprStr,expectedOutputStr,expectedRetValStr,expectedErrStr = exprPackage
          if verbosity == 2:

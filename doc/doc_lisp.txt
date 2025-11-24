@@ -57,8 +57,6 @@ NAN                                     ;; the constant not a number.
                                         ;; Perform the expansion of the macro
                                         ;;    and returns the result of those
                                         ;;    expansions in a list.
-(set! '<symbol> <expr> )                ;; Update a variable's value.  If isn't
-                                        ;;    bound, defines a local.
 (setf <symbol> <expr> )                 ;; Update a variable's value.  The
                                         ;;    search for the variable begins
                                         ;;    locally and proceeds to search

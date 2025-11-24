@@ -76,8 +76,8 @@ class Environment( object ):
       scope: (Environment | None) = self
       while scope:
          if key in scope._locals:
-            return scope
+            break
 
          scope = scope._parent
 
-      return None
+      return scope          # Returns None if the key isn't located.

@@ -358,32 +358,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          return LList( *listOfExpandedMacroBodyExprs)
 
-      @LDefPrimitive( 'set!', '\'<symbol> <object>' )                          # (set! '<symbol> <expr> )  ;; Set a variable.  If doesn't already exist make a local.
-      def LP_set( env, *args, **kwargs ):
-         assert isinstance( env, Environment )
-
-         try:
-            key,val = args
-         except:
-            raise LispRuntimeFuncError( LP_set, '2 arguments expected.' )
-
-         key = str(key)
-         try:
-            if isinstance( val, LFunction ):
-               val.setName( key )
-
-            # If key exists somewhere in the symbol table hierarchy, set its
-            # value to val.  If it doesn't exist, define it in the local-most
-            # symbol table and set its value to val.
-            theSymTab = env.findDef( str(key) )
-            if not theSymTab:
-               theSymTab = env    # set theSymTab to the local-most scope
-            theSymTab.setLocal( str(key), val )
-            return val
-         except:
-            raise LispRuntimeFuncError( LP_set, 'Unknown error.' )
-
-      @LDefPrimitive( 'setf', '<symbol> <sexpr>' )                             # (setf '<symbol> <expr> )  ;; Update a variable.  If doesn't already exist make a global.
+      @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialOperation=True )      # (setf '<symbol> <expr> )  ;; Update a variable.  If doesn't already exist make a global.
       def LP_setf( env, *args, **kwargs ):
          assert isinstance( env, Environment )
 
@@ -392,19 +367,20 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_setf, '2 arguments expected.' )
 
+         val = LispInterpreter._lEval(env, val)
          key = str(key)
-         try:
-            if isinstance( val, LFunction ):
-               val.setName( key )
+         if isinstance( val, LFunction ):
+            val.setName( key )
 
+         try:
             # If key exists somewhere in the symbol table hierarchy, set its
             # value to val.  If it doesn't exist, define it in the local-most
             # symbol table and set its value to val.
             theSymTab = env.findDef( str(key) )
-            if not theSymTab:
-               env.setGlobal( key, val )
-            else:
+            if theSymTab:
                theSymTab.setLocal( key, val )
+            else:
+               env.setGlobal( key, val )
             return val
          except:
             raise LispRuntimeFuncError( LP_setf, 'Unknown error.' )
