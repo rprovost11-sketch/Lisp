@@ -44,6 +44,8 @@ class LispScanner( Parser.Scanner ):
    WHITESPACE     = ' \t\n\r'
    SIGN           = '+-'
    DIGIT          = '0123456789'
+   OCTAL_DIGIT    = '01234567'
+   HEX_DIGIT      = DIGIT + 'ABCDEFabcdef'
    SIGN_OR_DIGIT  = SIGN + DIGIT
    ALPHA_LOWER    = 'abcdefghijklmnopqrstuvwxyz'
    ALPHA_UPPER    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -69,9 +71,9 @@ class LispScanner( Parser.Scanner ):
    PIPE_TOK           = 502
    COLON_TOK          = 503
    SINGLE_QUOTE_TOK   = 504
-   COMMA_TOK = 505
-   COMMA_AT_TOK = 506
-   BACK_QUOTE_TOK = 507
+   COMMA_TOK          = 505
+   COMMA_AT_TOK       = 506
+   BACK_QUOTE_TOK     = 507
 
    def __init__( self, ) -> None:
       super( ).__init__( )
@@ -154,18 +156,77 @@ class LispScanner( Parser.Scanner ):
    def _scanStringLiteral( self ) -> int:
       buf = self.buffer
 
+      # Scan in the initial quote
       nextChar = buf.peekNextChar( )
       if nextChar != '"':
          raise Parser.ParseError( self, '\'"\' expected.' )
       buf.markStartOfLexeme( )
       buf.consume( )
-      buf.consumeUpTo( '"' )
-      nextChar = buf.peekNextChar( )
+
+      nextChar =  buf.peekNextChar( )
+      while (nextChar != '"') and (nextChar != ''):  # Loop until we reach the end quote.
+         if nextChar == '\\':
+            self._consumeStringEscapeSequence( )
+         else:
+            buf.consume( )
+
+         nextChar = buf.peekNextChar( )
+
+      # Scan past the final quote
       if nextChar != '"':
          raise Parser.ParseError( self, '\'"\' expected.  A string literal may be unterminated.' )
       buf.consume( )
 
       return LispScanner.STRING_TOK
+
+   def _consumeStringEscapeSequence( self ) -> None:
+      buf = self.buffer
+
+      nextChar = buf.peekNextChar( )
+      if nextChar != '\\':
+         raise Parser.ParseError( self,  '\\ expected.' )
+      buf.consume( )             # Consume the \
+
+      nextChar = buf.peekNextChar( )
+      if nextChar in LispScanner.OCTAL_DIGIT:
+         # consume an octal number up to a 3 digits
+         numCharsConsumed = buf.consumePast( LispScanner.OCTAL_DIGIT )
+         if (numCharsConsumed < 0) or (numCharsConsumed > 3):
+            raise Parser.ParseError( self, '1 to 3 octacl digits expected following escape character \\.' )
+      elif nextChar == 'x':
+         buf.consume( )    # consume the x
+         # consume 2 digit hex number
+         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT )
+         if numDigitsConsumed != 2:
+            raise Parser.ParseError( self, 'Expected exactly two hex digits in escape sequence following \\x.' )
+      elif nextChar == 'N':
+         buf.consume( )    # consume the N
+         # consume unicode character name
+         nextChar = buf.peekNextChar( )
+         if nextChar != '{':
+            raise Parser.ParseError( self, 'Expected { following escape sequence \\N.' )
+         buf.consumeUpTo( '}' )
+         nextChar = buf.peekNextChar( )
+         if nextChar != '}':
+            raise Parser.ParseError( self, 'Escape sequence \\N{ must be terminated by }.' )
+         buf.consume( )
+      elif nextChar == 'u':
+         buf.consume( )    # consume the u
+         # consume 4 hex digits
+         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT )
+         if numDigitsConsumed != 4:
+            raise Parser.ParseError( self, 'Escape sequence expects exactly 4 hex digits following \\u.' )
+      elif nextChar == 'U':
+         buf.consume( )    # consume the U
+         # consume 8 hex digits
+         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT )
+         if numDigitsConsumed != 8:
+            raise Parser.ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\u.' )
+      elif nextChar in '\\\'\"abfnrtv':
+         # consume 1 character
+         buf.consume( )
+      else:
+         raise Parser.ParseError( self,  'invalid escape sequence.' )
 
    def _scanNumOrSymbol( self ) -> int:
       '''
@@ -300,7 +361,7 @@ class LispParser( Parser.Parser ):
       if self._scanner.peekToken( ) != LispScanner.EOF_TOK:
          raise Parser.ParseError( self._scanner, 'EOF Expected.' )
 
-      self._scanner.consume( )
+      #self._scanner.consume( )
 
       return syntaxTree
 

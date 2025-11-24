@@ -187,7 +187,7 @@ class LispInterpreter( Listener.Interpreter ):
             env.setLocal( str(paramName), argVal )
             paramNum += 1
          elif paramName == LSymbol( '&KEY' ):
-            raise LispRuntimeError( '&KEY parameters not implemented' )
+            raise LispRuntimeError( '&KEY parameters not implemented at this time.' )
          else:
             env.setLocal( str(paramName), argsList[0] )
             argsList = argsList[1:]
@@ -1368,9 +1368,10 @@ class LispInterpreter( Listener.Interpreter ):
          if numArgs != 1:
             raise LispRuntimeFuncError( LP_write, '1 argument expected' )
 
-         value  = args[0]
-
-         print( prettyPrintSExpr(value), sep='', end='', file=LispInterpreter.outStrm )
+         value = args[0]
+         valueStr = prettyPrintSExpr(value)
+         valueStr = bytes( valueStr, "utf-8" ).decode( "unicode_escape" ) # decode escape sequences
+         print( valueStr, sep='', end='', file=LispInterpreter.outStrm )
 
          return value
 
@@ -1381,8 +1382,9 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_writeln, '1 argument expected' )
 
          value  = args[0]
-
-         print( prettyPrintSExpr(value), sep='', end='\n', file=LispInterpreter.outStrm )
+         valueStr = prettyPrintSExpr(value)
+         valueStr = bytes( valueStr, "utf-8" ).decode( "unicode_escape" ) # decode escape sequences
+         print( valueStr, sep='', end='\n', file=LispInterpreter.outStrm )
 
          return value
 

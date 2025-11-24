@@ -235,7 +235,7 @@ class Listener( object ):
          raise ListenerCommandError( self.do_exit.__doc__ )
 
       self.writeLn( 'Bye.' )
-      raise Exception( )
+      raise StopIteration( )
 
    def do_help(self, args: List[str] ) -> None:
       '''Usage: help [<command>]
@@ -346,7 +346,8 @@ class Listener( object ):
    def readEvalPrintLoop( self ) -> None:
       inputExprLineList: List[str] = [ ]
 
-      while True:
+      keepLooping = True
+      while keepLooping:
          if len(inputExprLineList) == 0:
             lineInput = self.prompt( '>>> ' ).strip()
          else:
@@ -367,6 +368,9 @@ class Listener( object ):
             except Parser.ParseError as ex:
                self._exceptInfo = sys.exc_info( )
                self.writeErrorMsg( ex.generateVerboseErrorString() )
+
+            except StopIteration:
+               keepLooping = False
 
             except Exception as ex:
                self._exceptInfo = sys.exc_info( )
@@ -528,6 +532,7 @@ class Listener( object ):
       return parsedLog
 
    def retrieveFileList( self, dirname: str='' ) -> List[str]:
+      "Returns a list of all the filenames in the specified directory."
       testFileList = os.listdir( dirname )
       testFileList.sort()
       testFileList = [ f'{dirname}/' + testFileName for testFileName in testFileList ]

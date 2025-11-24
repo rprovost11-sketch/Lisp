@@ -40,37 +40,31 @@ class ScannerBuffer( object ):
       except IndexError:
          pass          # Scanned past eof.  Return gracefully.
 
-   def consumeIf( self, aCharSet: str ) -> None:
-      '''Consume the next character if it's in aCharSet.'''
+   def consumePast( self, aCharSet: str ) -> int:
+      '''Consume up to the first character NOT in aCharSet.  Returns the number
+      of characters consumed.'''
+      numCharsConsumed = 0
       try:
-         if self._source[ self._point ] in aCharSet:   # raises on EOF
+         while self._source[self._point] in aCharSet:   # raises on EOF
             self.consume( )
+            numCharsConsumed += 1
       except IndexError:
-         pass          # Scanned past eof.  Return gracefully.
+         pass    # scanned past eof.  Return gracefully.  Eof will be reported by
 
-   def consumeIfNot( self, aCharSet: str ) -> None:
-      '''Consume the next character if it's NOT in aCharSet.'''
-      try:
-         if self._source[ self._point ] not in aCharSet:   # raises on EOF
-            self.consume( )
-      except IndexError:
-         pass               # scanned past eof.  return gracefully.
+      return numCharsConsumed
 
-   def consumePast( self, aCharSet: str ) -> None:
-      '''Consume up to the first character NOT in aCharSet.'''
+   def consumeUpTo( self, aCharSet: str ) -> int:
+      '''Consume up to the first character in aCharSet.  Returns the number
+      of characters consumed.'''
+      numCharsConsumed = 0
       try:
-         while self._source[ self._point ] in aCharSet:   # raises on EOF
+         while self._source[self._point] not in aCharSet:   # raises on EOF
             self.consume( )
-      except IndexError:
-         pass             # scanned past eof.  Return gracefully.
-
-   def consumeUpTo( self, aCharSet: str ) -> None:
-      '''Consume up to the first character in aCharSet.'''
-      try:
-         while self._source[ self._point ] not in aCharSet:   # raises on EOF
-            self.consume( )
+            numCharsConsumed += 1
       except IndexError:
          pass                # scanned past eof.  Return gracefully.
+
+      return numCharsConsumed
 
    def saveState( self, stateInst: ScannerState ) -> None:
       stateInst.buffer_source   = self._source

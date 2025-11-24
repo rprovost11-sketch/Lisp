@@ -1,14 +1,35 @@
+Development Tasks
+=================
+
+To Do
+-----
+- define a new global symbol t which stands for true and evaluates to itself.
+- make nil the exclusive value for false.
+- make all primitives use t and nil as the boolean values instead of 0 and nil.
+- make evaluations of undefined variables raise LypsRuntimeError instead of
+  evaluating to themselves.
+- promote the block primitive to let and let*.
+- remove def!, def!! and set!.
+- continue to bring other primitives into alignment with common lisp.
+- implement stream IO primitives.
+- implement lisp structs.
+- implement packages.  A package x is a symbol in the global namespace which
+  refers to another Environment instance which contains all the symbols of
+  a package (lisp source file).  For any symbol y in the package p, this
+  can be accessed with the notation p::y.
+- Produce more test files including error testing.
+
+Completed
+---------
+2025.11.25
+- Update the lisp scanner to accept strings that include python style escape
+  sequences.
+
+
 Lisp Documentation
 ==================
 
 Lisp is a dialect of Lisp.
-
-Goals
------
-- Minimize the number of special forms
-
-   Special Forms
-   quote  - necessary because it alters normal evaluation order.
 
 The Language
 ============
@@ -275,6 +296,13 @@ argument lists for function.
 
 
 
+Goals
+
+   Implement a signigicant portion of common lisp.
+
+   Regardless this is still a toy.  Not optimized.  No debugging capabilities.
+   No compiler.
+
 Features
 - A full featured listener with session logging and restoration, interpreter
   reboot, and interpreter testing.
@@ -297,3 +325,4 @@ Some Design Features
 - Prioritize readability over performance; explicit over implicit.
 - Prioritize implementing something in library.lisp over in python.
 - Full suite of tests.
+- Strings support the full range of python escape sequences.
