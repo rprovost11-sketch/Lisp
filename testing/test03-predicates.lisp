@@ -1,331 +1,331 @@
 >>> (isNil? 1)
 ...
 
-==> 0
+==> NIL
 
 >>> (isNil? 6.7)
 ...
 
-==> 0
+==> NIL
 
 >>> (isNil? nil)
 ...
 
-==> 1
+==> T
 
 >>> (isNil? nan)
 ...
 
-==> 0
+==> NIL
 
 >>> (isNumber? 15)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? -3.8)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? pi)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? 2/3)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? aRandomSymbol)
 ...
 
-==> 0
+==> NIL
 
 >>> (isNumber? "hello")
 ...
 
-==> 0
+==> NIL
 
 >>> (isSymbol? x)
 ...
 
-==> 1
+==> T
 
 >>> (isSymbol? 13)
 ...
 
-==> 0
+==> NIL
 
 >>> (isSymbol? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isSymbol? e)
 ...
 
-==> 0
+==> NIL
 
 >>> (isSymbol? xy)
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isAtom? 0)
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? 3/4)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isNumber? pi)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? e)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? -2/3)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? 5.8)
 ...
 
-==> 1
+==> T
 
 >>> (isNumber? "junky string")
 ...
 
-==> 0
+==> NIL
 
 >>> (isNumber? randomSymbol)
 ...
 
-==> 0
+==> NIL
 
 >>> (isNumber? '())
 ...
 
-==> 0
+==> NIL
 
 >>> (isAtom? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isAtom? e)
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? pi)
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? 1/2)
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? 2.8)
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? aSymbol)
 ...
 
-==> 0
+==> NIL
 
 >>> (isAtom? "hello")
 ...
 
-==> 1
+==> T
 
 >>> (isAtom? '())
 ...
 
-==> 0
+==> NIL
 
 >>> (isList? nil)
 ...
 
-==> 1
+==> T
 
 >>> (isList? 0)
 ...
 
-==> 0
+==> NIL
 
 >>> (isList? pi)
 ...
 
-==> 0
+==> NIL
 
 >>> (isList? -5/7)
 ...
 
-==> 0
+==> NIL
 
 >>> (isList? 62.3)
 ...
 
-==> 0
+==> NIL
 
 >>> (isList? '())
 ...
 
-==> 1
+==> T
 
 >>> (isMap? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? 0)
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? 0)
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? pi)
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? 7)
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? 52/3)
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? '())
 ...
 
-==> 0
+==> NIL
 
 >>> (isMap? "something")
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? 1)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? pi)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? 3)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? 4.7)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? 8/9)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? someSymbol)
 ...
 
-==> 0
+==> NIL
 
 >>> (isString? "some string")
 ...
 
-==> 1
+==> T
 
 >>> (isString? '())
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? nil)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? 0)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? e)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? 2)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? -8.49)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? 7/8)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? aSymbol)
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? "a string")
 ...
 
-==> 0
+==> NIL
 
 >>> (isFunction? '())
 ...
 
-==> 0
+==> NIL
 
 

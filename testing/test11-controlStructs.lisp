@@ -27,7 +27,7 @@
 ==> "three"
 
 >>> (defun!! countdown1 (num)
-...    (while num
+...    (while (> num 0)
 ...       (block
 ...          (writeLn! num)
 ...          (set! 'num (- num 1))

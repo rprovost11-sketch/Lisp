@@ -4,9 +4,6 @@ Development Tasks
 
 To Do
 -----
-- define a new global symbol t which stands for true and evaluates to itself.
-- make nil the exclusive value for false.
-- make all primitives use t and nil as the boolean values instead of 0 and nil.
 - make evaluations of undefined variables raise LypsRuntimeError instead of
   evaluating to themselves.
 - promote the block primitive to let and let*.
@@ -18,12 +15,15 @@ To Do
   refers to another Environment instance which contains all the symbols of
   a package (lisp source file).  For any symbol y in the package p, this
   can be accessed with the notation p::y.
-- Produce more test files including error testing.
+- Produce more test files including error testing and listener command testing.
 
 Completed
 ---------
 2025.11.25
 - Update the lisp scanner to accept strings that include python style escape
   sequences.
+- define a new global symbol t which stands for true and evaluates to itself.
+- make all primitives use t and nil as the boolean values instead of 0 and nil.
+- make nil the exclusive value for false.
 
 

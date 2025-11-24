@@ -91,12 +91,12 @@
 >>> (hasvalue? '(a b c d) pi)
 ...
 
-==> 0
+==> NIL
 
 >>> (hasvalue? '(a b c d) 'c)
 ...
 
-==> 1
+==> T
 
 >>> (length nil)
 ...
@@ -153,12 +153,12 @@
 >>> (hasValue? mymap 1)
 ...
 
-==> 1
+==> T
 
 >>> (hasValue? mymap 10)
 ...
 
-==> 0
+==> NIL
 
 >>> (update! mymap (map ("b" 5) ("d" 10)))
 ...
@@ -183,9 +183,9 @@
 >>> (hasKey? mymap "a")
 ...
 
-==> 1
+==> T
 
 >>> (hasKey? mymap 3)
 ...
 
-==> 0
+==> NIL

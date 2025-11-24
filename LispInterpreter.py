@@ -55,8 +55,6 @@ class LispInterpreter( Listener.Interpreter ):
    def _lTrue( sExpr: Any ) -> bool:
       if isinstance(sExpr, (LList, list)):
          return len(sExpr) != 0
-      elif isinstance(sExpr, int):
-         return sExpr != 0
       else:
          return True
 
@@ -249,8 +247,10 @@ class LispInterpreter( Listener.Interpreter ):
       # ###################################
       # Lisp Object & Primitive Definitions
       # ###################################
-      LNIL = LList( )
-      primitiveDict[ 'NIL' ] = LNIL
+      L_NIL = LList( )
+      L_T  = LSymbol( 'T' )
+      primitiveDict[ 'T'    ] = L_T
+      primitiveDict[ 'NIL'  ] = L_NIL
       primitiveDict[ 'PI'   ] = math.pi
       primitiveDict[ 'E'    ] = math.e
       primitiveDict[ 'INF'  ] = math.inf
@@ -418,7 +418,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          try:
             env.undef( str(key) )
-            return LNIL
+            return L_NIL
          except Exception as ex:
             print(ex)
             raise LispRuntimeFuncError( LP_undef, 'Unknown error.' )
@@ -438,7 +438,7 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             pass
 
-         return LNIL
+         return L_NIL
 
       # ==================
       # Control Structures
@@ -459,7 +459,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          env = env.openScope( )
 
-         lastResult = LNIL
+         lastResult = L_NIL
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
 
@@ -472,7 +472,7 @@ class LispInterpreter( Listener.Interpreter ):
          if len(args) < 1:
             raise LispRuntimeFuncError( LP_progn, '1 or more arguments expected.' )
 
-         lastResult = LNIL
+         lastResult = L_NIL
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
 
@@ -492,7 +492,7 @@ class LispInterpreter( Listener.Interpreter ):
          elif numArgs == 3:
             return LispInterpreter._lEval( env, rest[1])    # The ELSE part
          else:
-            return LNIL
+            return L_NIL
 
       @LDefPrimitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>)', specialOperation=True )     # (cond (<cond1> <expr1>) (<cond2> <expr2>) ...)
       def LP_cond( env, *args, **kwargs ):
@@ -540,7 +540,7 @@ class LispInterpreter( Listener.Interpreter ):
                   latestResult = LispInterpreter._lEval( env, sexpr )
                return latestResult
 
-         return LNIL
+         return L_NIL
 
       @LDefPrimitive( 'quote', '<expr>', specialOperation=True )                                        # (quote <expr>)                     ;; return <expr> without evaluating it
       def LP_quote( env, *args, **kwargs ):
@@ -686,7 +686,7 @@ class LispInterpreter( Listener.Interpreter ):
                latestResult = LispInterpreter._lEval( env, sexpr )
             return latestResult
 
-         return LNIL
+         return L_NIL
 
       @LDefPrimitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env, *args, **kwargs ):
@@ -816,7 +816,7 @@ class LispInterpreter( Listener.Interpreter ):
             if isinstance(alist, LList):
                alist.append( value )
             else:
-               alist = LNIL
+               alist = L_NIL
          except:
             raise LispRuntimeFuncError( LP_push, 'Invalid argument.' )
 
@@ -913,7 +913,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.  Argument 1 expected to be a list or map.')
 
          try:
-            return 1 if aVal in keyed else 0
+            return L_T if aVal in keyed else L_NIL    # T or NIL
          except:
             raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.')
 
@@ -946,7 +946,7 @@ class LispInterpreter( Listener.Interpreter ):
             aKey = aKey._val
 
          try:
-            return 1 if aKey in aMap else 0
+            return L_T if aKey in aMap else L_NIL   # T or NIL
          except:
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument.' )
 
@@ -1090,56 +1090,56 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_isNil, '1 argument expected.' )
 
          arg1 = args[0]
-         return 1 if (isinstance(arg1,LList) and (len(arg1) == 0)) else 0
+         return L_T if (isinstance(arg1,LList) and (len(arg1) == 0)) else L_NIL  # T or NIL
 
       @LDefPrimitive( 'isNumber?', '<expr>')                                   # (isNumber?  <expr>)
       def LP_isNumber( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isNumber, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], L_NUMBER ) else 0
+         return L_T if isinstance( args[0], L_NUMBER ) else L_NIL
 
       @LDefPrimitive( 'isSymbol?', '<expr>')                                   # (isSymbol?  <expr>)
       def LP_isSym( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isSym, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], LSymbol ) else 0
+         return L_T if isinstance( args[0], LSymbol ) else L_NIL
 
       @LDefPrimitive( 'isAtom?', '<expr>')                                     # (isAtom? <expr>) -> 1 if expr in { int, float, fraction, string }
       def LP_isAtom( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isAtom, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], L_ATOM ) else 0
+         return L_T if isinstance( args[0], L_ATOM ) else L_NIL
 
       @LDefPrimitive( 'isList?', '<expr>')                                     # (isList? <expr>)
       def LP_isList( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isList, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], LList ) else 0
+         return L_T if isinstance( args[0], LList ) else L_NIL
 
       @LDefPrimitive( 'isMap?', '<expr>')                                      # (isMap?  <expr>)
       def LP_isMap( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isMap, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], LMap ) else 0
+         return L_T if isinstance( args[0], LMap ) else L_NIL
 
       @LDefPrimitive( 'isString?', '<expr>')                                   # (isString?  <expr>)
       def LP_isStr( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isStr, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], str ) else 0
+         return L_T if isinstance( args[0], str ) else L_NIL
 
       @LDefPrimitive( 'isFunction?', '<expr>')                                 # (isFunction? <expr>)
       def LP_isCall( env, *args, **kwargs ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_isCall, '1 argument expected.' )
 
-         return 1 if isinstance( args[0], (LPrimitive,LFunction) ) else 0
+         return L_T if isinstance( args[0], (LPrimitive,LFunction) ) else L_NIL
 
       # ====================
       # Relational Operators
@@ -1152,9 +1152,9 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_is, '2 arguments exptected.' )
 
          if isinstance(arg1, (int,float,str)):
-            return 1 if (arg1 == arg2) else 0
+            return L_T if (arg1 == arg2) else L_NIL
          else:
-            return 1 if (arg1 is arg2) else 0
+            return L_T if (arg1 is arg2) else L_NIL
 
       @LDefPrimitive( '=', '<expr1> <expr2> ...')                              # (=   <val1> <val2> ...)    Are all the values equal?
       def LP_equal( env, *args, **kwargs ):
@@ -1172,9 +1172,9 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             for arg1,arg2 in pairs:
                if not( arg1 == arg2 ):
-                  return 0
+                  return L_NIL
 
-            return 1
+            return L_T
          except:
             raise LispRuntimeFuncError( LP_equal, 'Unknown error.' )
 
@@ -1194,9 +1194,9 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             for arg1,arg2 in pairs:
                if not( arg1 != arg2 ):
-                  return 0
+                  return L_NIL
 
-            return 1
+            return L_T
          except:
             raise LispRuntimeFuncError( LP_notEqual, 'Unknown error.' )
 
@@ -1216,9 +1216,9 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             for arg1,arg2 in pairs:
                if not( arg1 < arg2 ):
-                  return 0
+                  return L_NIL
 
-            return 1
+            return L_T
          except:
             raise LispRuntimeFuncError( LP_less, 'Unknown error.' )
 
@@ -1238,9 +1238,9 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             for arg1,arg2 in pairs:
                if not( arg1 <= arg2 ):
-                  return 0
+                  return L_NIL
 
-            return 1
+            return L_T
          except:
             raise LispRuntimeFuncError( LP_lessOrEqual, 'Unknown error.' )
 
@@ -1260,9 +1260,9 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             for arg1,arg2 in pairs:
                if not( arg1 > arg2 ):
-                  return 0
+                  return L_NIL
 
-            return 1
+            return L_T
          except:
             raise LispRuntimeFuncError( LP_greater, 'Unknown error.' )
 
@@ -1282,9 +1282,9 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             for arg1,arg2 in pairs:
                if not( arg1 >= arg2 ):
-                  return 0
+                  return L_NIL
 
-            return 1
+            return L_T
          except:
             raise LispRuntimeFuncError( LP_greaterOrEqual, 'Unknown error.' )
 
@@ -1297,7 +1297,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_not, '1 argument exptected.' )
 
          arg1 = args[0]
-         return 1 if ((arg1 == 0) or ((isinstance(arg1,LList) and len(arg1)==0)) or (arg1 is None)) else 0
+         return L_T if ((arg1 == 0) or ((isinstance(arg1,LList) and len(arg1)==0)) or (arg1 is None)) else L_NIL
 
       @LDefPrimitive( 'and', '<expr1> <expr2> ...' )                           # (and <val1> <val2> ...)
       def LP_and( env, *args, **kwargs ):
@@ -1305,10 +1305,10 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_and, '2 or more arguments exptected.' )
 
          for arg in args:
-            if (arg == 0) or (arg is LNIL) or (arg is None):
-               return 0
+            if (arg == 0) or (arg is L_NIL) or (arg is None):
+               return L_NIL
 
-         return 1
+         return L_T
 
       @LDefPrimitive( 'or', '<expr1> <expr2> ...' )                            # (or  <val1> <val2> ...)
       def LP_or( env, *args, **kwargs ):
@@ -1316,10 +1316,10 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_or, '2 or more arguments exptected.' )
 
          for arg in args:
-            if (arg != 0) and (arg is not LNIL) and (arg is not None):
-               return 1
+            if (arg != 0) and (arg is not L_NIL) and (arg is not None):
+               return L_T
 
-         return 0
+         return L_NIL
 
       # ===============
       # Type Conversion

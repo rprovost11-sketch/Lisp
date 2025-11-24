@@ -162,7 +162,7 @@ class Listener( object ):
       print( '\n\nTest Report' )
       print( '===========')
       for filename, testSummary in testSummaryList:
-         print( f'{filename:35} {testSummary}' )
+         print( f'{filename:45} {testSummary}' )
 
    def do_continue( self, args: List[str] ) -> None:
       '''Usage:  continue <filename> [V|v]
@@ -415,11 +415,12 @@ class Listener( object ):
          raise ListenerCommandError( 'Unable to read file {filename}.\n' )
 
       print( f'   Test file: {filename}... ', end='' )
-      numPassed = 0
 
       if verbosity >= 3:
          print()
 
+      numPassed = 0
+      exprNum = -1
       for exprNum,exprPackage in enumerate(self.parseLog(inputText)):
          exprStr,expectedOutputStr,expectedRetValStr,expectedErrStr = exprPackage
          if verbosity == 2:
@@ -527,7 +528,8 @@ class Listener( object ):
          except StopIteration:
             eof = True
 
-         parsedLog.append( (expr,output.rstrip(),retVal.rstrip(),errMsg) )
+         if expr != '':
+            parsedLog.append( (expr,output.rstrip(),retVal.rstrip(),errMsg) )
 
       return parsedLog
 
