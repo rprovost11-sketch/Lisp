@@ -98,7 +98,7 @@ class ScannerBuffer( object ):
 
    def scanColNum( self ) -> int:
       '''Return the column numm (first column is 1) of point.'''
-      return self._point - self._linePos( ) + 1
+      return self._point - self._linePos( )
 
    def scanLineTxt( self ) -> str:
       '''Return the complete text of the line currently pointed to by point.'''

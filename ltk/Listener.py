@@ -1,10 +1,16 @@
 import ltk.Parser as Parser
 
+import io
+import os
 import sys
 import datetime
 import time
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Any
+
+class ListenerCommandError( Exception ):
+   def __init__( self, message, *args, **kwargs ):
+      super().__init__( message )
 
 class Interpreter( ABC ):
    '''Interpreter interface used by Listener.
@@ -16,7 +22,7 @@ class Interpreter( ABC ):
       pass
 
    @abstractmethod
-   def eval( self, anExprStr: str ):
+   def eval( self, anExprStr: str, file=None ):
       '''Evaluate an expression string of the target language and return a
       string expr representing the result of the evaluation.
 
@@ -32,19 +38,6 @@ class Interpreter( ABC ):
       '''
       pass
 
-   @abstractmethod
-   def runtimeLibraries( self ):
-      '''Returns a list of filenames which are the intepreter runtime
-      libraries.
-      '''
-      pass
-
-   @abstractmethod
-   def testFileList( self ):
-      '''Returns a list of filenames which are the intepreter tests.
-      '''
-      pass
-
 
 class Listener( object ):
    '''A generic Listener environment for dynamic languages.
@@ -53,20 +46,27 @@ class Listener( object ):
    prompt1 = '... '
    ruler = '='
 
-   def __init__( self, anInterpreter: Interpreter, **keys ) -> None:
+   def __init__( self, anInterpreter: Interpreter, testdir: str='', libdir: str='', **kwargs ) -> None:
       super().__init__( )
 
-      self._interp     = anInterpreter
-      self._logFile: Any   = None
+      self._interp          = anInterpreter
+      self._logFile: Any    = None
+      self._testdir         = testdir
+      self._libdir          = libdir
       self._exceptInfo: Any = None
-      self.writeLn( '{language:s} {version:s}'.format(**keys) )
+      self.writeLn( '{language:s} {version:s}'.format(**kwargs) )
       self.writeLn( '- Execution environment initialized.' )
       self.do_reboot( [ ] )
 
-   def writeLn( self, value: str='' ) -> None:
-      print( value )
+   def writeLn( self, value: str='', file=None ) -> None:
+      print( value, file=file )
       if self._logFile:
          self._logFile.write( value + '\n' )
+
+   def writeErrorMsg( self, errMsg: str, file=None ):
+      errMsgLinesOfText = errMsg.splitlines()
+      for errMsgLine in errMsgLinesOfText:
+         self.writeLn( f'%%% {errMsgLine}', file=file )
 
    def prompt( self, prompt: str='' ) -> str:
       inputStr: str = input( prompt ).lstrip()
@@ -80,18 +80,17 @@ class Listener( object ):
       Reset the interpreter.
       '''
       if len(args) > 0:
-         print( self.do_reboot.__doc__ )
-         return
+         raise ListenerCommandError( self.do_reboot.__doc__ )
 
       if self._logFile:
-         print( 'Please close the log before exiting.' )
-         return
+         raise ListenerCommandError( 'Please close the log before exiting.' )
 
       self._interp.reboot( )
       print( '- Runtime environment reinitialized.' )
 
-      for libFileName in self._interp.runtimeLibraries():
-         self.readAndEvalFile( libFileName )
+      filenameList = self.retrieveFileList( self._libdir )
+      for filename in filenameList:
+         self._sessionLog_restore( filename )
       print( '- Runtime libraries loaded.' )
       print( 'Listener started.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
@@ -103,19 +102,16 @@ class Listener( object ):
       Begin a new logging session.
       '''
       if len(args) != 1:
-         print( self.do_log.__doc__ )
-         return
+         raise ListenerCommandError( self.do_log.__doc__ )
 
       filename = args[0]
       if self._logFile is not None:
-         print( 'Already logging.\n' )
-         return
+         raise ListenerCommandError( 'Already logging.  Can\'t open more than one log file at a time.\n' )
 
       try:
          self._logFile = open( filename, 'w' )
       except OSError:
-         print( 'Unable to open file for writing.' )
-         return
+         raise ListenerCommandError( 'Unable to open file for writing.' )
 
       self.writeLn( '>>> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
       self.writeLn( '... ;;;;;;  Starting Log ( {0} ): {1}'.format( datetime.datetime.now().isoformat(), filename ) )
@@ -128,8 +124,7 @@ class Listener( object ):
       Read and execute a log file.  V is for verbose.
       '''
       if len(args) not in ( 1, 2 ):
-         print( self.do_read.__doc__ )
-         return
+         raise ListenerCommandError( self.do_read.__doc__ )
 
       verbosity: int=0
       if len(args) == 2:
@@ -137,7 +132,7 @@ class Listener( object ):
             verbosity=3
 
       filename: str = args[0]
-      self.readAndEvalFile( filename, testFile=False, verbosity=verbosity )
+      self._sessionLog_restore( filename, verbosity=verbosity )
       print( f'Log file read successfully: {filename}' )
 
    def do_test( self, args: List[str] ) -> None:
@@ -150,17 +145,24 @@ class Listener( object ):
       '''
       numArgs = len(args)
       if numArgs not in ( 0, 1 ):
-         print( self.do_test.__doc__ )
-         return
+         raise ListenerCommandError( self.do_test.__doc__ )
 
       if numArgs == 1:
          filename = args[0]
          filenameList = [ filename ]
       else:
-         filenameList = self._interp.testFileList( )
+         filenameList = self.retrieveFileList( self._testdir )
 
+      testSummaryList: List[Tuple[str, str]] = [ ]
       for filename in filenameList:
-         self.readAndEvalFile( filename, testFile=True, verbosity=3 )
+         testResultMsg = self._sessionLog_test( filename, verbosity=3 )
+         testSummaryList.append( (filename, testResultMsg) )
+
+      # Summarize Test Results
+      print( '\n\nTest Report' )
+      print( '===========')
+      for filename, testSummary in testSummaryList:
+         print( f'{filename:35} {testSummary}' )
 
    def do_continue( self, args: List[str] ) -> None:
       '''Usage:  continue <filename> [V|v]
@@ -169,14 +171,12 @@ class Listener( object ):
       the file verbosely.
       '''
       if self._logFile:
-         print( "A log file is already open and logging.  If you wish to log in a different" )
-         print( "file, you must first close the current logging session." )
-         return
+         raise ListenerCommandError(
+            "A log file is already open and logging.  Only one log file can be open at a time." )
 
       numArgs = len(args)
       if numArgs not in ( 1, 2 ):
-         print( self.do_continue.__doc__ )
-         return
+         raise ListenerCommandError( self.do_continue.__doc__ )
 
       self.do_read( args )
 
@@ -184,8 +184,7 @@ class Listener( object ):
       try:
          self._logFile = open( filename, 'a' )
       except OSError:
-         print( 'Unable to open file for append.' )
-         return
+         raise ListenerCommandError( 'Unable to open file for append.' )
 
       self.writeLn( '>>> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
       self.writeLn( '... ;;;;;;  Continuing Log ( {0} ): {1}'.format( datetime.datetime.now().isoformat(), filename ) )
@@ -198,12 +197,10 @@ class Listener( object ):
       Close the current logging session.
       '''
       if len(args) != 0:
-         print( self.do_close.__doc__ )
-         return
+         raise ListenerCommandError( self.do_close.__doc__ )
 
       if self._logFile is None:
-         print( "Not currently logging." )
-         return
+         raise ListenerCommandError( "Not currently logging." )
 
       self.writeLn( '>>> ;;;;;;  Logging ended.' )
       self.writeLn( '... ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
@@ -220,12 +217,10 @@ class Listener( object ):
       Dump a stack trace of the most recent error.
       '''
       if len(args) != 0:
-         print( self.do_dump.__doc__ )
-         return
+         raise ListenerCommandError( self.do_dump.__doc__ )
 
       if self._exceptInfo is None:
-         self.writeLn( 'No exception information available.\n' )
-         return
+         raise ListenerCommandError( 'No exception information available.\n' )
 
       sys.excepthook( *self._exceptInfo )
 
@@ -234,12 +229,10 @@ class Listener( object ):
       Exit the interpreter and listener.
       '''
       if self._logFile is not None:
-         print( "Logging must be stopped before you can exit." )
-         return
+         raise ListenerCommandError( "Logging must be stopped before you can exit." )
 
       if len(args) != 0:
-         print( self.do_exit.__doc__ )
-         return
+         raise ListenerCommandError( self.do_exit.__doc__ )
 
       self.writeLn( 'Bye.' )
       raise Exception( )
@@ -254,12 +247,10 @@ class Listener( object ):
          try:
             doc=getattr(self, f'do_{arg}').__doc__
             if doc:
-               print(str(doc))
-               return
+               raise ListenerCommandError(str(doc))
          except AttributeError:
             pass
-         print("*** No help on {arg}.")
-         return
+         raise ListenerCommandError( f"*** No help on {arg}." )
       else:
          names = dir(self.__class__)
          names.sort()
@@ -350,7 +341,7 @@ class Listener( object ):
          func = getattr(self, f'do_{cmd}')
          func(args)
       except AttributeError:
-         print( f'Unknown command "{listenerCommand}"' )
+         raise ListenerCommandError( f'Unknown command "{listenerCommand}"' )
 
    def readEvalPrintLoop( self ) -> None:
       inputExprLineList: List[str] = [ ]
@@ -362,50 +353,42 @@ class Listener( object ):
             lineInput = self.prompt( '... ' ).strip()
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
-            inputExprStr = ''.join( inputExprLineList )
-            if inputExprStr[0] == ']':
-               self.doCommand( inputExprStr[:-1] )
-            else:
-               try:
+            inputExprStr = ''.join( inputExprLineList ).strip()
+            try:
+               if inputExprStr[0] == ']':
+                  self.doCommand( inputExprStr )
+               else:
                   start = time.perf_counter( )
                   resultStr = self._interp.eval( inputExprStr )
                   cost  = time.perf_counter( ) - start
                   self.writeLn( f'\n==> {resultStr}' )
                   print( f'-------------  Total execution time:  {cost:15.5f} sec' )
 
-               except Parser.ParseError as ex:
-                  self._exceptInfo = sys.exc_info( )
-                  self.writeLn( ex.generateVerboseErrorString() )
+            except Parser.ParseError as ex:
+               self._exceptInfo = sys.exc_info( )
+               self.writeErrorMsg( ex.generateVerboseErrorString() )
 
-               except Exception as ex:
-                  self._exceptInfo = sys.exc_info( )
-                  self.writeLn( ex.args[-1] )
+            except Exception as ex:
+               self._exceptInfo = sys.exc_info( )
+               self.writeErrorMsg( ex.args[-1] )
 
-               self.writeLn( )
+            self.writeLn( )
 
             inputExprLineList = [ ]
 
          else:
             inputExprLineList.append( lineInput + '\n' )
 
-   def readAndEvalFile( self, filename: str, testFile: bool=False, verbosity: int=0 ) -> None:
+   def _sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
       inputText = None
       with open( filename, 'r') as file:
          inputText = file.read( )
 
       if inputText is None:
-         self.writeLn( 'Unable to read file.\n' )
-         return
+         raise ListenerCommandError( f'Unable to read file {filename}.\n' )
 
-      if testFile:
-         print( f'   Test file: {filename}... ', end='' )
-         self._sessionLog_test( inputText, verbosity=3 )
-      else:
-         self._sessionLog_restore( inputText, verbosity )
-
-   def _sessionLog_restore( self, inputText: str, verbosity: int=0 ) -> None:
       for exprNum,exprPackage in enumerate(self.parseLog(inputText)):
-         exprStr,outputStr,retValStr = exprPackage
+         exprStr,outputStr,retValStr,errMsgStr = exprPackage
          if verbosity == 0:
             self._interp.eval( exprStr )
          else:
@@ -419,42 +402,68 @@ class Listener( object ):
             resultStr = self._interp.eval( exprStr )
             print( f'\n==> {resultStr}' )
 
-   def _sessionLog_test( self, inputText: str, verbosity: int=3 ) -> None:
+   def _sessionLog_test( self, filename: str, verbosity: int=3 ) -> str:
+      inputText = None
+      with open( filename, 'r') as file:
+         inputText = file.read( )
+
+      if inputText is None:
+         raise ListenerCommandError( 'Unable to read file {filename}.\n' )
+
+      print( f'   Test file: {filename}... ', end='' )
       numPassed = 0
 
       if verbosity >= 3:
          print()
 
       for exprNum,exprPackage in enumerate(self.parseLog(inputText)):
-         exprStr,expectedOutput,expectedRetValStr = exprPackage
-         actualRetValStr = self._interp.eval( exprStr )
-
-         # Test Return Value
-         if (actualRetValStr is None) and (expectedRetValStr is not None):
-            passFail = 'Failed!  Returned <Code>None</Code>; expected <i>value</i>.'
-         elif (actualRetValStr is not None) and (expectedRetValStr is None):
-            passFail = 'Failed!  Returned a value; expected <Code>None</Code>'
-         elif (actualRetValStr is not None) and (expectedRetValStr is not None):
-            if actualRetValStr == expectedRetValStr:
-               passFail = 'PASSED!'
-               numPassed += 1
-            else:
-               passFail = 'Failed!  Return value doesn\'t equal expected value.'
-
+         exprStr,expectedOutputStr,expectedRetValStr,expectedErrStr = exprPackage
          if verbosity == 2:
-            print( f'{str(exprNum).rjust(8)}. {passFail}' )
+            print( f'{str(exprNum).rjust(8)}.' )
          elif verbosity == 3:
-            print( f'{str(exprNum).rjust(8)}> {exprStr}         {passFail}\n' )
+            print( f'{str(exprNum).rjust(8)}> {exprStr}' )
+
+         # Perform the test and collect the various outputs
+         errorStream = io.StringIO( )
+         outputStream = io.StringIO( )
+
+         try:
+            actualRetValStr = self._interp.eval( exprStr, outputStream )
+         except Parser.ParseError as ex:
+            self.writeErrorMsg( ex.generateVerboseErrorString(), file=errorStream )
+         except Exception as ex:
+            self.writeErrorMsg( ex.args[-1], file=errorStream )
+
+         actualOutputStr = outputStream.getvalue().strip()
+         actualErrorStr = errorStream.getvalue().strip()
+
+         # Assess the results
+         retVal_passed = actualRetValStr == expectedRetValStr
+         outVal_passed = actualOutputStr == expectedOutputStr
+         errVal_passed = actualErrorStr == expectedErrStr
+
+         # Tally findings
+         passFail = 'Failed!'
+         if retVal_passed and outVal_passed and errVal_passed:
+            passFail = 'PASSED!'
+            numPassed += 1
+
+         # Report Results
+         print( f'         {passFail}\n' )
 
 
       numTests = exprNum + 1
       numFailed = numTests - numPassed
+      resultMessage = ''
       if numFailed == 0:
-         print( 'ALL PASSED!' )
+         resultMessage = 'ALL TESTS PASSED!'
       else:
-         print( f'({numFailed}/{numTests}) Failed.' )
+         resultMessage = f'({numFailed}/{numTests}) Failed.'
 
-   def parseLog( self, inputText: str ) -> List[Tuple[str, str, str]]:
+      print( resultMessage )
+      return resultMessage
+
+   def parseLog( self, inputText: str ) -> List[Tuple[str, str, str, str]]:
       stream = Parser.LineScanner( inputText )
       parsedLog = [ ]
       eof = False
@@ -463,6 +472,7 @@ class Listener( object ):
          expr = ''
          output = ''
          retVal = ''
+         errMsg = ''
 
          # Skip to the begenning of an interaction prompt
          try:
@@ -473,16 +483,17 @@ class Listener( object ):
 
             # Parse Expression
             # string variable *line* begins with '>>> '
-            expr = line[ 4: ]
-            stream.consumeLine()
-            line = stream.peekLine()
-            while not eof and line.startswith( '... ' ):
-               expr += line[ 4: ]
+            if line.startswith( '>>> ' ):
+               expr = line[ 4: ]
                stream.consumeLine()
                line = stream.peekLine()
+               while not eof and line.startswith( '...' ):
+                  expr += line[ 4: ]
+                  stream.consumeLine()
+                  line = stream.peekLine()
 
             # Parse Output from the evaluation (such as write statements)
-            while not line.startswith( ('==> ','... ','>>> ') ):
+            while not line.startswith( ('==> ','... ','>>> ', '%%% ') ):
                # Parse written output
                if output is None:
                   output = ''
@@ -495,16 +506,29 @@ class Listener( object ):
                retVal = line[ 4: ]
                stream.consumeLine()
                line = stream.peekLine()
-               while not eof and not line.startswith( ('==> ','... ','>>> ', ';') ):
+               while not eof and not line.startswith( ('==> ','... ','>>> ','%%% ') ):
                   retVal += line
+                  stream.consumeLine()
+                  line = stream.peekLine()
+
+            if line.startswith( '%%% '):
+               errMsg = line[4:]
+               stream.consumeLine()
+               line = stream.peekLine()
+               while not eof and line.startswith( '%%% ' ):
+                  errMsg += line[4:]
                   stream.consumeLine()
                   line = stream.peekLine()
 
          except StopIteration:
             eof = True
 
-         parsedLog.append( (expr,output.rstrip(),retVal.rstrip()))
+         parsedLog.append( (expr,output.rstrip(),retVal.rstrip(),errMsg) )
 
       return parsedLog
 
-
+   def retrieveFileList( self, dirname: str='' ) -> List[str]:
+      testFileList = os.listdir( dirname )
+      testFileList.sort()
+      testFileList = [ f'{dirname}/' + testFileName for testFileName in testFileList ]
+      return testFileList

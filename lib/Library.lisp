@@ -31,6 +31,12 @@
 >>> (defun!! exp (num)
 ...    (pow e num))
 ...
+>>> (defun!! tan (num)
+...    (/ (sin num) (cos num)))
+...
+>>> (defun!! ln (num)
+...    (log num e))
+...
 >>> ; Prompt the user for input on the command line.
 ... ;
 ... (defun!! read_prompt (promptStr)

@@ -79,7 +79,7 @@
 
 ==> 35
 
->>> (set! var1 "some string value")
+>>> (def! var1 "some string value")
 ...
 
 ==> "some string value"
@@ -108,7 +108,7 @@
 ...    var1
 ...    )
 ...
-some string value
+"some string value"
 
 ==> "some string value"
 
@@ -164,13 +164,13 @@ TRUE
 ...    (writeLn! var1)
 ...    (writeLn! var2)
 ...    (writeLn! var3)
-...    (set! 'var2 -22/7)
-...    (set! 'var3 "a value")
+...    (def!! 'var2 -22/7)
+...    (def! 'var3 "a value")
 ...    (writeLn! var1)
 ...    (writeLn! var2)
 ...    (writeLn! var3)
 ...    (block
-...       (set! 'var3 true)
+...       (def! 'var3 true)
 ...       (writeLn! var1)
 ...       (writeLn! var2)
 ...       (writeLn! var3)

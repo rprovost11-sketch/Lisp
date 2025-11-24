@@ -4,6 +4,8 @@ from LispParser import LispParser
 import ltk.Listener as Listener
 from ltk.Environment import Environment
 
+import os
+import sys
 import functools
 import math
 import random
@@ -30,6 +32,8 @@ L_NUMBER = (int,float,fractions.Fraction)
 L_ATOM   = (int,float,fractions.Fraction,str)
 
 class LispInterpreter( Listener.Interpreter ):
+   outStrm = None
+
    def __init__( self ) -> None:
       self._parser: LispParser = LispParser( )
       primitiveDict: Dict[str, Any] = LispInterpreter.constructPrimitives( self._parser.parse )
@@ -39,29 +43,13 @@ class LispInterpreter( Listener.Interpreter ):
       primitiveDict = LispInterpreter.constructPrimitives( self._parser.parse )
       self._env = self._env.reInitialize( **primitiveDict )
 
-   def eval( self, inputExprStr: str ) -> str:
+   def eval( self, inputExprStr: str, outStrm=None ) -> str:
+      LispInterpreter.outStrm = outStrm
       ast = self._parser.parse( inputExprStr )
       resultExpr = LispInterpreter._lEval( self._env, ast )
+      LispInterpreter.outStrm = None
+
       return prettyPrintSExpr( resultExpr ).strip()
-
-   def runtimeLibraries( self ) -> List[str]:
-      return [ 'Library.lisp' ]
-
-   def testFileList( self ) -> List[str]:
-      return [ 'testing/test01-constants.lisp',
-               'testing/test02-calculations.lisp',
-               'testing/test03-predicates.lisp',
-               'testing/test04-relationals.lisp',
-               'testing/test05-logical.lisp',
-               'testing/test06-conversions.lisp',
-               'testing/test07-listops.lisp',
-               'testing/test08-variables.lisp',
-               #'testing/test09-functions.lisp',
-               'testing/test10-dataTypes.lisp',
-               'testing/test11-controlStructs.lisp',
-               'testing/test12-macros.lisp',
-               #'testing/test99-misc.lisp',
-               ]
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
@@ -395,6 +383,32 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_set, 'Unknown error.' )
 
+      @LDefPrimitive( 'setf', '<symbol> <sexpr>' )                             # (setf '<symbol> <expr> )  ;; Update a variable.  If doesn't already exist make a global.
+      def LP_setf( env, *args, **kwargs ):
+         assert isinstance( env, Environment )
+
+         try:
+            key,val = args
+         except:
+            raise LispRuntimeFuncError( LP_setf, '2 arguments expected.' )
+
+         key = str(key)
+         try:
+            if isinstance( val, LFunction ):
+               val.setName( key )
+
+            # If key exists somewhere in the symbol table hierarchy, set its
+            # value to val.  If it doesn't exist, define it in the local-most
+            # symbol table and set its value to val.
+            theSymTab = env.findDef( str(key) )
+            if not theSymTab:
+               env.setGlobal( key, val )
+            else:
+               theSymTab.setLocal( key, val )
+            return val
+         except:
+            raise LispRuntimeFuncError( LP_setf, 'Unknown error.' )
+
       @LDefPrimitive( 'undef!', '\'<symbol>' )                                 # (undef! '<symbol>)   ;; undefine the most local definition for a symbol.
       def LP_undef( env, *args, **kwargs ):
          if len(args) == 1:
@@ -592,10 +606,10 @@ class LispInterpreter( Listener.Interpreter ):
          sym = LSymbol( symstr )
          return sym
 
-      @LDefPrimitive( 'while', '<conditionExpr> <bodyExpr>', specialOperation=True )             # (while <conditionExpr> <bodyExpr>)  ;; repeatedly evaluate body while condition is true.
+      @LDefPrimitive( 'while', '<conditionExpr> <body>', specialOperation=True )        # (while <conditionExpr> <expr1> <expr2> ...)  ;; repeatedly evaluate body while condition is true.
       def LP_while( env, *args, **kwargs ):
          try:
-            conditionExpr, bodyExpr = args
+            conditionExpr, *body = args
          except ValueError:
             raise LispRuntimeFuncError( LP_while, '2 arguments expected.' )
 
@@ -604,7 +618,8 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             condResult = LispInterpreter._lEval(env, conditionExpr)
             while LispInterpreter._lTrue( condResult ):
-               latestResult = LispInterpreter._lEval( env, bodyExpr )
+               for expr in body:
+                  latestResult = LispInterpreter._lEval( env, expr )
                condResult = LispInterpreter._lEval(env, conditionExpr )
 
          except Exception:
@@ -707,8 +722,8 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_pprint, '1 lisp object argument expected.' )
 
          theExpr = args[0]
-         prettyPrintSExpr( theExpr )
-         return theExpr
+         theExprStr = prettyPrintSExpr( theExpr )
+         return theExprStr
 
       # =======================
       # List & Map Manipulation
@@ -1046,16 +1061,6 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_cos, 'Invalid argument.' )
 
-      @LDefPrimitive( 'tan', '<radians>' )                                     # (tan <radians>)
-      def LP_tan( env, *args, **kwargs ):
-         if len(args) != 1:
-            raise LispRuntimeFuncError( LP_tan, '1 argument expected.' )
-
-         try:
-            return math.tan(args[0])
-         except:
-            raise LispRuntimeFuncError( LP_tan, 'Invalid argument.' )
-
       @LDefPrimitive( 'min', '<val1> <val2> ...')                              # (min <val1> <val2> ...)
       def LP_min( env, *args, **kwargs ):
          if len(args) < 1:
@@ -1365,7 +1370,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          value  = args[0]
 
-         print( prettyPrintSExpr(value), sep='', end='', file=L_STDOUT )
+         print( prettyPrintSExpr(value), sep='', end='', file=LispInterpreter.outStrm )
 
          return value
 
@@ -1377,7 +1382,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          value  = args[0]
 
-         print( prettyPrintSExpr(value), sep='', end='\n' )
+         print( prettyPrintSExpr(value), sep='', end='\n', file=LispInterpreter.outStrm )
 
          return value
 

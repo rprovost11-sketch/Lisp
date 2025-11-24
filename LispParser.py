@@ -80,6 +80,7 @@ class LispScanner( Parser.Scanner ):
       buf = self.buffer
 
       try:
+         buf.scanLineTxt( )
          self._skipWhitespaceAndComments( )
 
          nextChar = buf.peekNextChar( )
@@ -100,6 +101,7 @@ class LispScanner( Parser.Scanner ):
          elif nextChar == ')':
             buf.markStartOfLexeme( )
             buf.consume( )
+            buf.scanLineTxt( )
             return LispScanner.CLOSE_PAREN_TOK
          elif nextChar == '#':
             buf.markStartOfLexeme( )
@@ -158,6 +160,9 @@ class LispScanner( Parser.Scanner ):
       buf.markStartOfLexeme( )
       buf.consume( )
       buf.consumeUpTo( '"' )
+      nextChar = buf.peekNextChar( )
+      if nextChar != '"':
+         raise Parser.ParseError( self, '\'"\' expected.  A string literal may be unterminated.' )
       buf.consume( )
 
       return LispScanner.STRING_TOK

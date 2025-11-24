@@ -65,7 +65,16 @@ NAN                                     ;; the constant not a number.
                                         ;;    and returns the result of those
                                         ;;    expansions in a list.
 (set! '<symbol> <expr> )                ;; Update a variable's value.  If isn't
-                                        ;;    bound, define a local.
+                                        ;;    bound, defines a local.
+(setf <symbol> <expr> )                 ;; Update a variable's value.  The
+                                        ;;    search for the variable begins
+                                        ;;    locally and proceeds to search
+                                        ;;    ever less local scopes until
+                                        ;;    the global scope is searched.
+                                        ;;    If the variable is located in this
+                                        ;;    search its value is updated.  If
+                                        ;;    it's not located a global is
+                                        ;;    defined and set to the value.
 (undef! '<symbol>)                      ;; Undefine the most local definition
                                         ;;    for a symbol.
 (symtab!)                               ;; Print a symbol tab.  Each scope on a
@@ -86,30 +95,27 @@ NAN                                     ;; the constant not a number.
                                         ;;    sexpr.
 (if <cond> <conseq> [<alt>])            ;; If cond evaluates to true evaluates
                                         ;;    conseq otherwise evaluates alt.
-(cond (<cond> <expr>) (<cond> <expr>) ...)
+(cond (<cond1> <body1>) (<cond2> <body2>) ...)
                                         ;; Evaluates each cond in order until
                                         ;;    one evaluates to true.  Then
-                                        ;;    evaluate and return the result
-                                        ;;    of the associated expr.  All
-                                        ;;    remaining conds and exprs are
-                                        ;;    skipped.
-(case <expr> (<val1> <expr1>) (<val2> <expr2>) ...)
+                                        ;;    evaluates each expr in body and
+                                        ;;    returns the result of the last
+                                        ;;    expr evaluated.  All remaining
+                                        ;;    conds and bodys are skipped.
+(case <expr> (<val1> <body1>) (<val2> <body2>) ...)
                                         ;; Evaluates expr.  Finds the first
-                                        ;;    val that equals expr's result.
-                                        ;;    evaluates the corresponding expr.
-                                        ;;    All remaining (val expr) pairs
-                                        ;;    are skipped.
-(while <conditionExpr> <bodyExpr>)      ;; Perform a loop over bodyExpr.  Before
-                                        ;;    each execution of bodyExpr
-                                        ;;    conditionExpr is evaluated.  If
-                                        ;;    conditionExpr is true, bodyExp is
-                                        ;;    evaluated, then the conditionExpr
-                                        ;;    is evaluated again and so on
-                                        ;;    looping.  However if conditionExpr
-                                        ;;    ever evaluates to false, while
-                                        ;;    returns the result of the most
-                                        ;;    recent body evaluation, or it
-                                        ;;    returns NIL.
+                                        ;;    val that equals expr's val.  Then
+                                        ;;    evaluates each expr in body and
+                                        ;;    returns the result of the last
+                                        ;;    expr evaluated.  All remaining
+                                        ;;    cases are skipped.
+(while <conditionExpr> <body>)          ;; Perform a loop over the body sexprs.
+                                        ;;    Before iteration conditionExpr is
+                                        ;;    evaluated.  If conditionExpr is
+                                        ;;    true the iteration occurs.
+                                        ;;    However if conditionExpr evaluates
+                                        ;;    to false, while returns the result
+                                        ;;    recent body evaluation.
 (doTimes (<variable> <countExpr>) <sexpr1> <sexpr2> ...)
                                         ;; Performs a loop countExpr times.
                                         ;;    For each iternation of the loop
@@ -176,14 +182,11 @@ NAN                                     ;; the constant not a number.
 (/ <expr1> <expr2> ...)                 ;; Returns the quotient.
 (// <expr1> <expr2>)                    ;; Returns the integer division.
 (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
-(abs <expr>)                            ;; Returns the absolute value.
 (log <x> [<base>])                      ;; Returns the log of x.  If base if not
                                         ;;    provided, 10 is used.
 (pow <base> <power>)                    ;; Returns base raised to power.
 (sin <radians>)                         ;; Returns the sin of radians.
 (cos <radians>)                         ;; Returns the cos of radians.
-(tan <radians>)                         ;; Returns the tan of radians.
-(exp <pow:number>)                      ;; Returns the exponent of number.
 (min <val1> <val2> ...)                 ;; Returns the lowest of the values.
 (max <val1> <val2> ...)                 ;; Returns the highest of the values.
 
@@ -244,6 +247,9 @@ Library Functions
 (copy <list>)                           ;; Return a copy of a list.
 (deepCopy <list>)                       ;; Return a deepcopy of a list.
 (fact n)                                ;; compute the factorial of n.
+(tan <radians>)                         ;; Returns the tan of radians.
+(exp <pow:number>)                      ;; Returns the exponent of number.
+(abs <expr>)                            ;; Returns the absolute value.
 
 Library Macros
 ==============
@@ -255,6 +261,8 @@ Library Macros
 Parameters
 ==========
 
+Support for &rest and &optional parameters.
+
 Parameters in function and macro definitions are evaluated and bound by the same
 routine.  So, they work identically.  Generally params are just names for
 positional arguments in a call to the function or macro.  There is one exception
@@ -264,3 +272,28 @@ parameter gets second, etc.  The final parameter may be preceded by the symbol
 remaining arguments passed in.  With all the remaining arguments collected into
 a list bound to the final parameter, there is now a way to handle variable
 argument lists for function.
+
+
+
+Features
+- A full featured listener with session logging and restoration, interpreter
+  reboot, and interpreter testing.
+- Function definition with full stack and recursion support.
+- Common Lisp macro defition and the macroexpand primitive.
+- &rest and &optional parameter support in both function and macro definitions.
+- Rhobust error handling and reporting.
+- Complete lexical analyzer and LL(1) recursive descent parser.
+- Support for special operations.
+- Includes a runtime library written in lisp.
+
+- Fully implemented in python 3.14.
+- Implemented from scratch (without copying other people's ideas).
+
+- This is a toy intended for educational purposes only.  NOT FOR PRODUCTION USE.
+
+Some Design Features
+- Fully object oriented.
+- Designed to be easily modified and exteded.
+- Prioritize readability over performance; explicit over implicit.
+- Prioritize implementing something in library.lisp over in python.
+- Full suite of tests.
