@@ -374,7 +374,7 @@ class LispInterpreter( Listener.Interpreter ):
 
          try:
             # If key exists somewhere in the symbol table hierarchy, set its
-            # value to val.  If it doesn't exist, define it in the local-most
+            # value to val.  If it doesn't exist, define it in the global
             # symbol table and set its value to val.
             theSymTab = env.findDef( str(key) )
             if theSymTab:
@@ -438,6 +438,66 @@ class LispInterpreter( Listener.Interpreter ):
          lastResult = L_NIL
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
+
+         #env = env.closeScope( )  # Will occur when env goes out of scope
+
+         return lastResult
+
+      @LDefPrimitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <expr1> <expr2> ...)', specialOperation=True ) # (let <expr1> <expr2> ...)     ;; execute the sequence of expr's in a nested scope
+      def LP_let( env, *args, **kwargs ):
+         try:
+            vardefs, *body = args
+         except ValueError:
+            raise LispRuntimeFuncError( LP_let, '2 or more arguments expected.' )
+
+         if not isinstance( vardefs,  LList ):
+            raise LispRuntimeFuncError( LP_let, 'The first argument to let expected to be a list of variable initializations.' )
+
+         # Evaluate the var def initial value exprs in the outer scope.
+         varSyms = [ varPair[0] for varPair in vardefs ]   # collect the var names in one list
+         varExprs = [ varPair[1] for varPair in vardefs ]  # collect the initial value expressions in another list.
+         evaluatedExprs = [ LispInterpreter._lEval(env, expr) for expr in varExprs ]
+
+         # Open the new scope
+         env = env.openScope( )
+         assert isinstance(env, Environment)
+
+         # define the local variable symbols and values in the new environment
+         for varSym, initialVar in zip( varSyms, evaluatedExprs ):
+            env.setLocal( str(varSym), initialVar )
+
+         # Evaluate the body
+         lastResult = L_NIL
+         for sexpr in body:
+            lastResult = LispInterpreter._lEval( env, sexpr )
+
+         #env = env.closeScope( )  # Will occur when env goes out of scope
+
+         return lastResult
+
+      @LDefPrimitive( 'let*', '<expr1> <expr2> ...)', specialOperation=True )                   # (block <expr1> <expr2> ...)     ;; execute the sequence of expr's in a nested scope
+      def LP_letstar( env, *args, **kwargs ):
+         try:
+            vardefs, *body = args
+         except ValueError:
+            raise LispRuntimeFuncError( LP_let, '2 or more arguments expected.' )
+
+         if not isinstance( vardefs,  LList ):
+            raise LispRuntimeFuncError( LP_let, 'The first argument to let expected to be a list of variable initializations.' )
+
+         # Open the new scope
+         env = env.openScope( )
+         assert isinstance(env, Environment)
+
+         # Evaluate and bind the ver defs in order
+         for varSym, varExpr in vardefs:
+            evaluatedExpr = LispInterpreter._lEval( env, varExpr )
+            env.setLocal( str(varSym),  evaluatedExpr )
+
+         # Evaluate the body
+         lastResult = L_NIL
+         for sexpr in body:
+            lastResult = LispInterpreter._lEval( env, sexpr )
 
          #env = env.closeScope( )  # Will occur when env goes out of scope
 

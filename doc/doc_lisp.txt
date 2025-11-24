@@ -78,6 +78,19 @@ NAN                                     ;; the constant not a number.
                                         ;;    When evaluating such a function
                                         ;;    expr2 is evaluated within a
                                         ;;    nested scope.
+(let ( (<var1> <expr1>) (<var2> <expr2> ... ) ) <expr1> <expr2> ... )
+                                        ;; Execute code in a nested scope.
+                                        ;;    var1, var2, ... are local variables
+                                        ;;    bound to initial values.  Initial
+                                        ;;    values are not evaluated in order
+                                        ;;    and are not evaluated in the
+                                        ;;    new local scope.
+(let* ( (<var1> <expr1>) (<var2> <expr2> ... ) ) <expr1> <expr2> ... )
+                                        ;; Execute code in a nested scope.
+                                        ;;    var1, var2, ... are local variables
+                                        ;;    bound to initial values.  Initial
+                                        ;;    values ARE evaluated in order
+                                        ;;    and inside the new local scope.
 (block <expr1> <expr2> ...)             ;; Execute the sequence of expr's in a
                                         ;;    nested scope.  Returns the result
                                         ;;    of the last expr evaluated.
