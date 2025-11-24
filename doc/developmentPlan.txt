@@ -6,8 +6,6 @@ To Do
 -----
 - make evaluations of undefined variables raise LypsRuntimeError instead of
   evaluating to themselves.
-- remove block primitive.
-- remove def!, def!!.
 - continue to bring other primitives into alignment with common lisp.
 - implement stream IO primitives.
 - implement lisp structs.
@@ -28,5 +26,7 @@ Completed
 - make nil the exclusive value for false.
 - remove set!.  Fully replace with setf.
 - implement let and let*.
+- remove block primitive.
+- remove def!, def!!.
 
 

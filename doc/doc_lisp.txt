@@ -49,9 +49,7 @@ INF                                     ;; the constant positive infinity.
 NAN                                     ;; the constant not a number.
 
 ### Variable Definition ###
-(def! '<symbol> <expr> )                ;; Define a var in the local scope.
-(def!! '<symbol> <expr> )               ;; Define a var in the global scope.
-(defmacro!! name (<param1> <param2> ...);; Define and return a global macro.
+(defmacro name (<param1> <param2> ...)  ;; Define and return a global macro.
         <expr1> <expr2> ...)
 (expandmacro '(<macroName> <arg1> <arg2> ...))
                                         ;; Perform the expansion of the macro
@@ -91,9 +89,6 @@ NAN                                     ;; the constant not a number.
                                         ;;    bound to initial values.  Initial
                                         ;;    values ARE evaluated in order
                                         ;;    and inside the new local scope.
-(block <expr1> <expr2> ...)             ;; Execute the sequence of expr's in a
-                                        ;;    nested scope.  Returns the result
-                                        ;;    of the last expr evaluated.
 (progn <sexpr1> <sexpr2> ...)           ;; Evaluate each sexpression in turn.
                                         ;;    Returns the result of the last
                                         ;;    sexpr.
@@ -257,9 +252,7 @@ Library Functions
 
 Library Macros
 ==============
-(defun! name (<param1> <param2> ...)    ;; Define and return a local function.
-        <expr1> <expr2> ...)
-(defun!! name (<param1> <param2> ...)   ;; Define and return a global function.
+(defun name (<param1> <param2> ...)   ;; Define and return a global function.
         <expr1> <expr2> ...)
 
 Parameters

@@ -72,7 +72,7 @@ class LList( list ):
       if len(self) < 2:
          return LList( )
       else:
-         return LList( *self[ 1 : ])
+         return LList( *self[ 1 : ] )
 
 
 class LMap( object ):
@@ -164,7 +164,8 @@ class LMacro( object ):
       return self._reprStr
 
    def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
-      listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )
+      listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )   # Calls back to LispInterpreter._lEval to expand macro body
+
       latestResult = None
       for expr in listOfExpandedExprs:
          latestResult = sExprEvaluator( env, expr )

@@ -202,13 +202,14 @@ class LispInterpreter( Listener.Interpreter ):
       LispInterpreter.bindArguments( env, expr._params, args )
 
       # Evaluate each body expression; expanding each expr in turn to expand
-      # any macros.  Place those expanded expressions in resultList.
+      # the full macro body.  Place those expanded expressions in resultList.
       resultList = [ ]
       latestResult = None
       for expr in expr._body:
          latestResult = LispInterpreter._lEval( env, expr )
          resultList.append( latestResult )
 
+      #env = env.closeScope( ) # occurs automatically when env goes out of scope
       return resultList
 
    @staticmethod
@@ -230,6 +231,7 @@ class LispInterpreter( Listener.Interpreter ):
          for listElt in expr:
             resultListElt = LispInterpreter.backquote_expand( env, listElt )
             if ( isinstance( resultListElt, LList ) and
+                 (len(resultListElt) > 0) and
                  (resultListElt[0] == LSymbol('COMMA-AT')) ):
                for elt in resultListElt.rest().first():
                   resultList.append( elt )
@@ -279,37 +281,7 @@ class LispInterpreter( Listener.Interpreter ):
       # =================
       # Symbol Definition
       # -----------------
-      @LDefPrimitive( 'def!', '\'<symbol> <object>' )                          # (def! '<symbol> <expr> )  ;; Define a var in the local scope.
-      def LP_defLocal( env, *args, **kwargs ):
-         try:
-            key,val = args
-         except:
-            raise LispRuntimeFuncError( LP_defLocal, '2 arguments expected.', )
-
-         try:
-            if isinstance( val, LFunction ):
-               val.setName( str(key) )
-
-            return env.setLocal( str(key), val )
-         except:
-            raise LispRuntimeFuncError( LP_defLocal, 'Unknown error.' )
-
-      @LDefPrimitive( 'def!!', '\'<symbol> <object>' )                         # (def!! '<symbol> <expr> ) ;; Define a var in the global scope.
-      def LP_defGlobal( env, *args, **kwargs ):
-         try:
-            key,val = args
-         except:
-            raise LispRuntimeFuncError( LP_defGlobal, '2 arguments expected.' )
-
-         try:
-            if isinstance( val, LFunction ):
-               val.setName( str(key) )
-
-            return env.setGlobal( str(key), val)
-         except:
-            raise LispRuntimeFuncError( LP_defGlobal, 'Unknown error.' )
-
-      @LDefPrimitive( 'defmacro!!', '<symbol> (<param1> <param2> ...) <expr1> <expr2> ...', specialOperation=True )
+      @LDefPrimitive( 'defmacro', '<symbol> (<param1> <param2> ...) <expr1> <expr2> ...', specialOperation=True )
       def LP_defmacro( env, *args, **kwargs ):
          try:
             fnName, funcParams, *funcBody = args
@@ -427,21 +399,6 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_lambda, '2 arguments expected.' )
 
          return LFunction( LSymbol(""), funcParams, funcBody )
-
-      @LDefPrimitive( 'block', '<expr1> <expr2> ...)', specialOperation=True )                   # (block <expr1> <expr2> ...)     ;; execute the sequence of expr's in a nested scope
-      def LP_block( env, *args, **kwargs ):
-         if len(args) < 1:
-            raise LispRuntimeFuncError( LP_block, '1 or more arguments expected.' )
-
-         env = env.openScope( )
-
-         lastResult = L_NIL
-         for expr in args:
-            lastResult = LispInterpreter._lEval( env, expr )
-
-         #env = env.closeScope( )  # Will occur when env goes out of scope
-
-         return lastResult
 
       @LDefPrimitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <expr1> <expr2> ...)', specialOperation=True ) # (let <expr1> <expr2> ...)     ;; execute the sequence of expr's in a nested scope
       def LP_let( env, *args, **kwargs ):
@@ -723,6 +680,32 @@ class LispInterpreter( Listener.Interpreter ):
             return latestResult
 
          return L_NIL
+
+      @LDefPrimitive( 'foreach', '<variable> <list> <expr1> <expr2> ...', specialOperation=True )
+      def LP_foreach( env, *args, **kwargs ):
+         try:
+            varSymbol, anExpr, *body = args
+         except:
+            raise LispRuntimeFuncError( LP_foreach, "3 or more arguments expected." )
+
+         if not isinstance( varSymbol, LSymbol ):
+            raise LispRuntimeFuncError( LP_foreach, "Argument 1 expected to be a symbol." )
+
+         alist = LispInterpreter._lEval( env, anExpr )
+         if not isinstance( alist, LList ):
+            raise LispRuntimeFuncError( LP_foreach, "Argument 2 expected to evaluate to a list." )
+
+         # Evaluate the body while there are elements left in the list
+         latestResult = L_NIL
+         assert isinstance( env, Environment )
+         while len(alist) > 0:
+            env.setLocal( str(varSymbol), alist.first() )
+            alist = alist.rest()
+
+            for sexpr in body:
+               latestResult = LispInterpreter._lEval( env,  sexpr )
+
+         return latestResult
 
       @LDefPrimitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env, *args, **kwargs ):

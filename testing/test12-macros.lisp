@@ -1,4 +1,4 @@
->>> (def! 'name 'john)
+>>> (setf name 'john)
 ...
 
 ==> JOHN
@@ -18,7 +18,7 @@
 
 ==> JOHN
 
->>> (def! 'full '(r h l))
+>>> (setf full '(r h l))
 ...
 
 ==> (R H L)
@@ -28,7 +28,7 @@
 
 ==> (R H L)
 
->>> (defmacro!! zero (var) `(def!! ,var 0))
+>>> (defmacro zero (var) `(setf ,var 0))
 ...
 
 ==> (Macro ZERO (VAR) ... )
@@ -48,7 +48,7 @@
 
 ==> 0
 
->>> (defmacro!! foo (a &rest b) `(a ,a ,@b))
+>>> (defmacro foo (a &rest b) `(a ,a ,@b))
 ...
 
 ==> (Macro FOO (A &REST B) ... )

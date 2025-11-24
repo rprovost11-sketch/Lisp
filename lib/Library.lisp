@@ -1,59 +1,55 @@
->>> (defmacro!! defun! (fnName argList &rest body)
-...                    `(def! ',fnName (lambda (,@argList) ,@body)))
+>>> (defmacro defun (fnName argList &rest body)
+...                    `(setf ,fnName (lambda (,@argList) ,@body)))
 ...
->>> (defmacro!! defun!! (fnName argList &rest body)
-...                    `(def!! ',fnName (lambda (,@argList) ,@body)))
-...
->>> (defun!! apply (aFn aList)
+>>> (defun apply (aFn aList)
 ...          (if (isNil? aList)
 ...              '( )
 ...              (cons (aFn (first aList))
 ...                    (apply aFn (rest aList)))))
 ...
->>> (defun!! foreach (sym lst expr)
-...          (cond
-...              ((= (length lst) 0)  '())
-...              ((= (length lst) 1)   (def! sym (first lst))
-...                                    (eval expr))
-...              (1                    (def! sym (first lst))
-...                                    (eval expr)
-...                                    (foreach sym (rest lst) expr))
-...                  ))
-...
->>> (defun!! sqrt (num)
+>>> ;(defmacro foreach (sym lst expr)
+... ;         `(cond
+... ;             ((= (length ',lst) 0)  '())
+... ;             ((= (length ',lst) 1)   (setf ,sym (first ',lst))
+... ;                                     (eval ,expr))
+... ;             (t                      (setf ,sym (first ',lst))
+... ;                                     (eval ,expr)
+... ;                                     (foreach ,sym (rest ',lst) ,expr))
+... ;                 ))
+... ;
+>>> (defun sqrt (num)
 ...    (pow num 1/2))
 ...
->>> (defun!! abs (num)
+>>> (defun abs (num)
 ...    (if (<= num 0)
 ...       (* -1 num)
 ...       num))
 ...
->>> (defun!! exp (num)
+>>> (defun exp (num)
 ...    (pow e num))
 ...
->>> (defun!! tan (num)
+>>> (defun tan (num)
 ...    (/ (sin num) (cos num)))
 ...
->>> (defun!! ln (num)
+>>> (defun ln (num)
 ...    (log num e))
 ...
 >>> ; Prompt the user for input on the command line.
 ... ;
-... (defun!! read_prompt (promptStr)
-...          (block
+... (defun read_prompt (promptStr)
 ...             (write! promptStr)
-...             (readLn!)          ))
+...             (readLn!)          )
 ...
->>> (defun!! isEven? (intVal)
+>>> (defun isEven? (intVal)
 ...          (= (mod intVal 2) 0))
 ...
->>> (defun!! isOdd? (intVal)
+>>> (defun isOdd? (intVal)
 ...          (= (mod intVal 2) 1))
 ...
 >>> ; List - remove a symbol from a list - destructive
 ... ;
 ... ; (remove '<symbol> '<list>)
-... (defun!! remove (sym lst)
+... (defun remove (sym lst)
 ...          (cond
 ...             ((isNil? lst)         nil)
 ...             ((= sym (first lst))  (rest lst))
@@ -62,7 +58,7 @@
 >>> ; List - compute the length of the list
 ... ;
 ... ; (length '<list>)
-... (defun!! length (lst)
+... (defun length (lst)
 ...          (if (isNil? lst)
 ...              0
 ...              (+ 1 (length (rest lst)))))
@@ -70,10 +66,10 @@
 >>> ; List - reverse the order of the top level elements
 ... ;
 ... ; (reverse '<list>)
-... (defun!! reverse (lst)
+... (defun reverse (lst)
 ...          (reverse-aux '() lst))
 ...
->>> (defun!! reverse-aux (destLst srcLst)
+>>> (defun reverse-aux (destLst srcLst)
 ...          (if (isNil? srcLst)
 ...              destLst
 ...              (reverse-aux (cons (first srcLst) destLst) (rest srcLst))))
@@ -81,14 +77,14 @@
 >>> ; List - make a copy of the argument list
 ... ;
 ... ; (copy <list>)
-... (defun!! copy (lst)
+... (defun copy (lst)
 ...          (reverse (reverse lst)))
 ...
 >>> ; List - make a deepCopy fo the argument list
 ... ;
 ... ; (deepCopy <list>)
 ...
-... (defun!! deepCopy (expr)
+... (defun deepCopy (expr)
 ...          (cond ((isNil?   expr)  '( ))
 ...                 ((isAtom?   expr)  expr)
 ...                 ((isString? expr)  expr)
@@ -100,7 +96,7 @@
 ... ; Given a nested structure of lists and maps, this function will execute
 ... ; a depth-first traversal down aPath - a list of map keys and list inidies.
 ... ; returns the object in that location.
-... (defun!! dig (aTree aPath)
+... (defun dig (aTree aPath)
 ...          (if (isNil? aPath)
 ...              aTree
 ...              (dig (at aTree (first aPath)) (rest aPath)) ))
@@ -108,7 +104,7 @@
 >>> ; Compare two lists for deep equality - deep comparison
 ... ;
 ... ; (equal? '<expr-1> '<expr-2>)
-... (defun!! equal? (expr1 expr2)
+... (defun equal? (expr1 expr2)
 ...          (cond ((or (isAtom? expr1)
 ...                     (isNil? expr1))
 ...                                       (= expr1 expr2))
@@ -123,7 +119,7 @@
 >>> ; Compute the factorial
 ... ;
 ... ; (fact n)
-... (defun!! fact (n)
+... (defun fact (n)
 ...          (if (= n 0)
 ...              1
 ...              (* n (fact (- n 1)))))
@@ -131,13 +127,13 @@
 >>> ; Compute the Fibonacci number
 ... ;
 ... ; (fib n)
-... (defun!! fib (n)
+... (defun fib (n)
 ...          (if (<= n 2)
 ...              1
 ...              (+ (fib (- n 1))
 ...                 (fib (- n 2)))))
 ...
->>> (defun!! d (expr)
+>>> (defun d (expr)
 ...          (cond ((isNumber? expr)
 ...                       0)
 ...                ((isSymbol? expr)

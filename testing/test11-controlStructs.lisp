@@ -26,9 +26,9 @@
 
 ==> "three"
 
->>> (defun!! countdown1 (num)
+>>> (defun countdown1 (num)
 ...    (while (> num 0)
-...       (block
+...       (let ()
 ...          (writeLn! num)
 ...          (setf num (- num 1))
 ...          )
@@ -48,9 +48,9 @@
 
 ==> 0
 
->>> (defun!! countdown2 (num)
+>>> (defun countdown2 (num)
 ...    (while (> num 0)
-...       (block
+...       (let ()
 ...          (writeLn! num)
 ...          (setf num (- num 1))
 ...          )
@@ -67,8 +67,8 @@
 
 ==> 0
 
->>> (foreach 'item '(0 1 2 3 4 5)
-...    '(writeLn! item))
+>>> (foreach item '(0 1 2 3 4 5)
+...    (writeLn! item))
 ...
 0
 1
