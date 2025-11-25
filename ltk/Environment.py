@@ -38,6 +38,10 @@ class Environment( object ):
       assert isinstance(self.GLOBAL_SCOPE, Environment)
       return self.GLOBAL_SCOPE._locals[ key ]
 
+   def getGlobalEnv( self ) -> Environment:
+      assert isinstance( Environment.GLOBAL_SCOPE, Environment )
+      return Environment.GLOBAL_SCOPE
+
    def undef( self, key: str ) -> None:
       scope: (Environment | None) = self
       while scope:

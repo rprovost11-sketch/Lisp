@@ -64,7 +64,7 @@ NAN                                     ;; the constant not a number.
                                         ;;    search its value is updated.  If
                                         ;;    it's not located a global is
                                         ;;    defined and set to the value.
-(undef! '<symbol>)                      ;; Undefine the most local definition
+(undef! '<symbol>)                      ;; Undefine the global definition
                                         ;;    for a symbol.
 (symtab!)                               ;; Print a symbol tab.  Each scope on a
                                         ;;    separate line.  Local scope first.
