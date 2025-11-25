@@ -1,19 +1,27 @@
+>>> (defun signum (num)
+...    (if (zerop num)
+...       num
+...       (/ num (abs num))))
+...
 >>> (defun sqrt (num)
-...    (pow num 1/2))
+...    (expt num 1/2))
+...
+>>> (defun isqrt (num)
+...    (int (sqrt num)))
 ...
 >>> (defun abs (num)
-...    (if (<= num 0)
-...       (* -1 num)
+...    (if (minusp num)
+...       (- num)
 ...       num))
 ...
 >>> (defun exp (num)
-...    (pow e num))
-...
->>> (defun tan (num)
-...    (/ (sin num) (cos num)))
+...    (expt e num))
 ...
 >>> (defun ln (num)
 ...    (log num e))
+...
+>>> (defun tan (num)
+...    (/ (sin num) (cos num)))
 ...
 >>> (defun evenp (intVal)
 ...          (= (mod intVal 2) 0))
@@ -77,4 +85,9 @@
 ...                             ('pow      (list '*   (list '* (at expr 2) (list 'pow (at expr 1) (- (at expr 2) 1))) (d (at expr 1))))
 ...                             ))))
 ...
-
+>>> ;(defmacro incf (var &optional (delta 1))
+... ;   `(setf ,var (+ ,var ,delta)))
+... ;
+>>> ;(defmacro decf (var &optional (delta 1))
+... ;   `(setf ,var (- ,var ,delta)))
+... ;

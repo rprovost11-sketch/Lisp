@@ -1025,6 +1025,30 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_moddiv, 'Invalid argument.' )
 
+      @LDefPrimitive( 'gcd', '<integer1> <integer2> ...' )                     # (gcd <int1> <int2> ...)
+      def LP_gcd( env: Environment,  *args,  **kwargs ):
+         numArgs = len(args)
+         if numArgs == 0:
+            return 0
+         elif numArgs == 1:
+            return abs(args[0])
+         else:
+            try:
+               return math.gcd( *args )
+            except:
+               raise LispRuntimeFuncError( LP_gcd, 'Invalid argument.' )
+
+      @LDefPrimitive( 'lcm', '<integer1> <integer2> ...' )                     # (lcm <int1> <int2> ...)
+      def LP_lcm( env: Environment,  *args,  **kwargs ):
+         numArgs = len(args)
+         if numArgs == 0:
+            raise LispRuntimeFuncError( LP_lcm, '1 or more integer arguments expected.' )
+         else:
+            try:
+               return math.lcm( *args )
+            except:
+               raise LispRuntimeFuncError( LP_lcm, 'Invalid argument.' )
+
       @LDefPrimitive( 'log', '<expr> [ <base> ]')                              # (log <x> [<base>])                         ;; if base is not provided, 10 is used.
       def LP_log( env: Environment, *args, **kwargs ):
          numArgs = len(args)
@@ -1033,21 +1057,21 @@ class LispInterpreter( Listener.Interpreter ):
 
          try:
             num,*rest = args
-            base = 10 if len(rest) == 0 else rest[0]
+            base = math.e if len(rest) == 0 else rest[0]
             return math.log(num,base)
          except:
             raise LispRuntimeFuncError( LP_log, 'Invalid argument.' )
 
-      @LDefPrimitive( 'pow', '<base> <power>')                                 # (pow <base> <power>)
-      def LP_pow( env: Environment, *args, **keys ):
+      @LDefPrimitive( 'expt', '<base> <power>')                                # (expt <base> <power>)
+      def LP_expt( env: Environment, *args, **keys ):
          if len(args) != 2:
-            raise LispRuntimeFuncError( LP_pow, '2 arguments expected.' )
+            raise LispRuntimeFuncError( LP_expt, '2 arguments expected.' )
 
          try:
             base,power = args
             return base ** power
          except:
-            raise LispRuntimeFuncError( LP_pow, 'Invalid argument.' )
+            raise LispRuntimeFuncError( LP_expt, 'Invalid argument.' )
 
       @LDefPrimitive( 'sin', '<radians>')                                      # (sin <radians>)
       def LP_sin( env: Environment, *args, **kwargs ):
@@ -1069,6 +1093,42 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_cos, 'Invalid argument.' )
 
+      @LDefPrimitive( 'asin', '<number>' )                                     # (asin <number>)
+      def LP_asin( env: Environment, *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_asin, '1 argument expcted.' )
+
+         try:
+            return math.asin(args[0])
+         except:
+            raise LispRuntimeFuncError( LP_asin, 'Invalid argument.' )
+
+      @LDefPrimitive( 'acos', '<number>' )                                     # (acos <number>)
+      def LP_acos( env: Environment, *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_acos, '1 argument expcted.' )
+
+         try:
+            return math.asin(args[0])
+         except:
+            raise LispRuntimeFuncError( LP_acos, 'Invalid argument.' )
+
+      @LDefPrimitive( 'atan', '<number1> &optional <number2>' )                # (atan <number1> [ <number2> ])
+      def LP_atan( env: Environment, *args, **kwargs ):
+         if len(args) == 1:
+            xval = (args[0])
+            yval = 1
+         elif len(args) == 2:
+            xval = args[0]
+            yval = args[1]
+         else:
+            raise LispRuntimeFuncError( LP_atan, '1 or two arguments expcted.' )
+
+         try:
+            return math.atan( xval / yval )
+         except:
+            raise LispRuntimeFuncError( LP_atan, 'Invalid argument.' )
+
       @LDefPrimitive( 'min', '<val1> <val2> ...')                              # (min <val1> <val2> ...)
       def LP_min( env: Environment, *args, **kwargs ):
          if len(args) < 1:
@@ -1088,6 +1148,17 @@ class LispInterpreter( Listener.Interpreter ):
             return max( *args )
          except:
             raise LispRuntimeFuncError( LP_max, 'Invalid argument.' )
+
+      @LDefPrimitive( 'random', 'number' )                                     # (random <number>)
+      def LP_random( env: Environment, *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_random, 'Exactly 1 number argument exptected.' )
+
+         num = args[0]
+         if isinstance( num,  int ):
+            return random.randint(0, num)
+         elif isinstance( num,  float ):
+            return random.uniform(0.0, num)
 
       # ==========
       # Predicates
@@ -1359,15 +1430,15 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_float, 'Invalid argument.' )
 
-      @LDefPrimitive( 'int', '<expr>')                                         # (int <val>)
-      def LP_int( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'truncate', '<expr>')                                    # (truncate <val>)
+      def LP_truncate( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_int, 'Exactly 1 argument expected.' )
+            raise LispRuntimeFuncError( LP_truncate, 'Exactly 1 argument expected.' )
 
          try:
             return int(args[0])
          except:
-            raise LispRuntimeFuncError( LP_int, 'Invalid argument.' )
+            raise LispRuntimeFuncError( LP_truncate, 'Invalid argument.' )
 
       @LDefPrimitive( 'string', '<expr1> <expr2> ...' )                        # (string <expr1> <expr2> ...)   ; returns the concatenation of the string results of the arguments
       def LP_string( env: Environment, *args, **kwargs ):

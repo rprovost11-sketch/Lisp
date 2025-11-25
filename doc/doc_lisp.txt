@@ -215,14 +215,21 @@ NAN                                     ;; the constant not-a-number.
 (* <expr1> <expr2> ...)                 ;; Returns the product.
 (/ <expr1> <expr2> ...)                 ;; Returns the quotient.
 ! (// <expr1> <expr2>)                    ;; Returns the integer division.
-! (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
-! (log <x> [<base>])                      ;; Returns the log of x.  If base if not
+(mod <expr1> <expr2>)                   ;; Returns the integer remainder.
+(gcd <int1> <int2> ...)                 ;; Returns the gcd of the arguments.
+(lcd <int1> <int2> ...)                 ;; Returns the lcd of the arguments.
+(log <x> [<base>])                      ;; Returns the log of x.  If base if not
                                         ;;    provided, 10 is used.
-! (pow <base> <power>)                    ;; Returns base raised to power.
+(expt <base> <power>)                   ;; Returns base raised to power.
 (sin <radians>)                         ;; Returns the sin of radians.
 (cos <radians>)                         ;; Returns the cos of radians.
+(asin <number>)                         ;; Returns the asin (in radians).
+(acos <number>)                         ;; Returns the acos (in radians).
+(atan <number>)                         ;; Returns the atan (in radians).
 (min <val1> <val2> ...)                 ;; Returns the lowest of the values.
 (max <val1> <val2> ...)                 ;; Returns the highest of the values.
+(random <num>)                          ;; Return a random int or float between
+                                        ;;    0 and num.
 
 ### Predicates ###
 (numberp  <expr>)                       ;; Returns t if expr is a number.
@@ -252,10 +259,10 @@ NAN                                     ;; the constant not-a-number.
 (or  <val1> <val2> ...)                 ;; Returns the logical or of vals.
 
 ### Type Conversion ###
-! (float <val>)                           ;; Returns val as a float.  val can be
+(float <val>)                           ;; Returns val as a float.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp float.
-! (int <val>)                             ;; Returns val as an int.  val can be
+(truncate <val>)                        ;; Returns val as an int.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
 ! (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
@@ -273,26 +280,31 @@ Library Functions
 (null <sexpr>)                          ;; Is the result of the sexpr nil?
 ! (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
+! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
+(length '<list>)                        ;; Return the length of a list.
+! (reverse '<list>)                       ;; Return a new list with list reversed.
+! (copy <list>)                           ;; Return a copy of a list.
+! (deepCopy <list>)                       ;; Return a deepcopy of a list.
 ! (read_prompt promptStr)                 ;; Write a prompt and read a value.
 (evenp intVal)                          ;; Is the intval even?
 (oddp intVal)                           ;; Is the intval odd?
 (plusp numVal)                          ;; Is the number positive?
 (minusp numVal)                         ;; Is the number negative?
 (zerop numVal)                          ;; Is the number zero?
-! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
-(length '<list>)                        ;; Return the length of a list.
-! (reverse '<list>)                       ;; Return a new list with list reversed.
-! (copy <list>)                           ;; Return a copy of a list.
-! (deepCopy <list>)                       ;; Return a deepcopy of a list.
+(signum num)                            ;; Compute the sign of the number.
+(sqrt num)                              ;; Compute the square root.
+(isqrt num)                             ;; Compute the integer square root.
+(exp num)                               ;; Compute e raised to num.
+(abs num)                               ;; Compute the absolute valute.
+(tan <radians>)                         ;; Returns the tan of radians.
 ! (fact n)                                ;; compute the factorial of n.
-! (tan <radians>)                         ;; Returns the tan of radians.
-! (exp <pow:number>)                      ;; Returns the exponent of number.
-! (abs <expr>)                            ;; Returns the absolute value.
 
 Library Macros
 ==============
-(defun name (<param1> <param2> ...)   ;; Define and return a global function.
+(defun name (<param1> <param2> ...)     ;; Define and return a global function.
         <expr1> <expr2> ...)
+(incf var [delta])                      ;; increment a variable by 1 or delta.
+(decf var [delta])                      ;; decrement a variable by 1 or delta.
 
 Parameters
 ==========
