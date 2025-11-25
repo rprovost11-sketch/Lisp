@@ -1,39 +1,6 @@
 >>> (defmacro defun (fnName argList &rest body)
 ...                    `(setf ,fnName (lambda (,@argList) ,@body)))
 ...
->>> (defun apply (aFn aList)
-...          (if (null aList)
-...              '( )
-...              (cons (aFn (first aList))
-...                    (apply aFn (rest aList)))))
-...
->>> ; (null sexpr)
-... ;
-... ; Does sexpr evaluate to nil?
-... (setf null not)
-...
->>> ; Setup some aliases for the otherwise oddly named predicates.
-... ;
-... (setf isNil? null)
-...
->>> (setf isNumber? numberp)
-...
->>> (setf isInteger? integerp)
-...
->>> (setf isRational? rationalp)
-...
->>> (setf isFloat? floatp)
-...
->>> (setf isSymbol? symbolp)
-...
->>> (setf isAtom? atom)
-...
->>> (setf isList? listp)
-...
->>> (setf isString? stringp)
-...
->>> (setf isFunction? functionp)
-...
 >>> ;(defmacro foreach (sym lst expr)
 ... ;         `(cond
 ... ;             ((= (length ',lst) 0)  '())
@@ -44,34 +11,11 @@
 ... ;                                     (foreach ,sym (rest ',lst) ,expr))
 ... ;                 ))
 ... ;
->>> (defun sqrt (num)
-...    (pow num 1/2))
-...
->>> (defun abs (num)
-...    (if (<= num 0)
-...       (* -1 num)
-...       num))
-...
->>> (defun exp (num)
-...    (pow e num))
-...
->>> (defun tan (num)
-...    (/ (sin num) (cos num)))
-...
->>> (defun ln (num)
-...    (log num e))
-...
 >>> ; Prompt the user for input on the command line.
 ... ;
 ... (defun read_prompt (promptStr)
 ...             (write! promptStr)
 ...             (readLn!)          )
-...
->>> (defun isEven? (intVal)
-...          (= (mod intVal 2) 0))
-...
->>> (defun isOdd? (intVal)
-...          (= (mod intVal 2) 1))
 ...
 >>> ; List - remove a symbol from a list - destructive
 ... ;
@@ -141,35 +85,4 @@
 ...                                            (equal? (rest expr1) (rest expr2)))))
 ...                    (1
 ...                                  nil)))
-...
->>> ; Compute the factorial
-... ;
-... ; (fact n)
-... (defun fact (n)
-...          (if (= n 0)
-...              1
-...              (* n (fact (- n 1)))))
-...
->>> ; Compute the Fibonacci number
-... ;
-... ; (fib n)
-... (defun fib (n)
-...          (if (<= n 2)
-...              1
-...              (+ (fib (- n 1))
-...                 (fib (- n 2)))))
-...
->>> (defun d (expr)
-...          (cond ((isNumber? expr)
-...                       0)
-...                ((isSymbol? expr)
-...                       1)
-...                ((isList? expr)
-...                       (case (first expr)
-...                             ('+        (list '+   (d (at expr 1)) (d (at expr 2))))
-...                             ('*        (list '+   (list '* (at expr 2) (d (at expr 1))) (list '* (at expr 1) (d (at expr 2)))))
-...                             ('sin      (list 'cos (at expr 1)))
-...                             ('cos      (list 'neg (list 'sin (at expr 1))))
-...                             ('pow      (list '*   (list '* (at expr 2) (list 'pow (at expr 1) (- (at expr 2) 1))) (d (at expr 1))))
-...                             ))))
 ...
