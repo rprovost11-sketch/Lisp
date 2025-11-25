@@ -1203,7 +1203,7 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_equal, 'Unknown error.' )
 
-      @LDefPrimitive( '<>', '<expr1> <expr2> ...')                             # (<>  <val1> <val2> ...)
+      @LDefPrimitive( '/=', '<expr1> <expr2> ...')                             # (/=  <val1> <val2> ...)
       def LP_notEqual( env: Environment, *args, **kwargs ):
          numArgs = len(args)
          if numArgs < 2:

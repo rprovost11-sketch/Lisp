@@ -240,7 +240,7 @@ NAN                                     ;; the constant not-a-number.
 ### Relational Operators ###
 ! (is? <val1> <val2>)                     ;; Are the two values the same object?
 (=   <val1> <val2> ...)                 ;; Are all the values equal?
-(<>  <val1> <val2> ...)                 ;; Are all the values unequal?
+(/=  <val1> <val2> ...)                 ;; Are all the values unequal?
 (<   <val1> <val2> ...)                 ;; Are all the values less than?
 (<=  <val1> <val2> ...)                 ;; Are all the values less than or equal
 (>   <val1> <val2> ...)                 ;; Are all the values more than?
@@ -274,8 +274,11 @@ Library Functions
 ! (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
 ! (read_prompt promptStr)                 ;; Write a prompt and read a value.
-! (isEven? intVal)                        ;; Is the intval even?
-! (isOdd? intVal)                         ;; Is the intval odd?
+(evenp intVal)                          ;; Is the intval even?
+(oddp intVal)                           ;; Is the intval odd?
+(plusp numVal)                          ;; Is the number positive?
+(minusp numVal)                         ;; Is the number negative?
+(zerop numVal)                          ;; Is the number zero?
 ! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
 (length '<list>)                        ;; Return the length of a list.
 ! (reverse '<list>)                       ;; Return a new list with list reversed.
