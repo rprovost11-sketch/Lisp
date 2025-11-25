@@ -2,10 +2,37 @@
 ...                    `(setf ,fnName (lambda (,@argList) ,@body)))
 ...
 >>> (defun apply (aFn aList)
-...          (if (isNil? aList)
+...          (if (null aList)
 ...              '( )
 ...              (cons (aFn (first aList))
 ...                    (apply aFn (rest aList)))))
+...
+>>> ; (null sexpr)
+... ;
+... ; Does sexpr evaluate to nil?
+... (setf null not)
+...
+>>> ; Setup some aliases for the otherwise oddly named predicates.
+... ;
+... (setf isNil? null)
+...
+>>> (setf isNumber? numberp)
+...
+>>> (setf isInteger? integerp)
+...
+>>> (setf isRational? rationalp)
+...
+>>> (setf isFloat? floatp)
+...
+>>> (setf isSymbol? symbolp)
+...
+>>> (setf isAtom? atom)
+...
+>>> (setf isList? listp)
+...
+>>> (setf isString? stringp)
+...
+>>> (setf isFunction? functionp)
 ...
 >>> ;(defmacro foreach (sym lst expr)
 ... ;         `(cond
@@ -51,7 +78,7 @@
 ... ; (remove '<symbol> '<list>)
 ... (defun remove (sym lst)
 ...          (cond
-...             ((isNil? lst)         nil)
+...             ((null lst)           nil)
 ...             ((= sym (first lst))  (rest lst))
 ...             (1                    (cons (first lst) (remove sym (rest lst))))))
 ...
@@ -59,7 +86,7 @@
 ... ;
 ... ; (length '<list>)
 ... (defun length (lst)
-...          (if (isNil? lst)
+...          (if (null lst)
 ...              0
 ...              (+ 1 (length (rest lst)))))
 ...
@@ -70,7 +97,7 @@
 ...          (reverse-aux '() lst))
 ...
 >>> (defun reverse-aux (destLst srcLst)
-...          (if (isNil? srcLst)
+...          (if (null srcLst)
 ...              destLst
 ...              (reverse-aux (cons (first srcLst) destLst) (rest srcLst))))
 ...
@@ -84,7 +111,7 @@
 ... ;
 ... ; (deepCopy <list>)
 ... (defun deepCopy (expr)
-...          (cond ((isNil?   expr)  '( ))
+...          (cond ((null   expr)  '( ))
 ...                 ((isAtom?   expr)  expr)
 ...                 ((isString? expr)  expr)
 ...                 ((isList?   expr)  (cons (deepcopy (first expr))
@@ -96,7 +123,7 @@
 ... ; a depth-first traversal down aPath - a list of map keys and list inidies.
 ... ; returns the object in that location.
 ... (defun dig (aTree aPath)
-...          (if (isNil? aPath)
+...          (if (null aPath)
 ...              aTree
 ...              (dig (at aTree (first aPath)) (rest aPath)) ))
 ...
@@ -105,7 +132,7 @@
 ... ; (equal? '<expr-1> '<expr-2>)
 ... (defun equal? (expr1 expr2)
 ...          (cond ((or (isAtom? expr1)
-...                     (isNil? expr1))
+...                     (null expr1))
 ...                                       (= expr1 expr2))
 ...                    ((and (isList? expr1)
 ...                          (isList? expr2))

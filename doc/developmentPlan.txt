@@ -29,4 +29,7 @@ Completed
 - remove block primitive.
 - remove def!, def!!.
 
-
+2025.11.26
+- The predicates have all been updated to lisp predicate names.  The old names
+  which were of a more consistent naming pattern are aliased in library.lisp
+  so that the ? names can still be used instead of the lisp names.

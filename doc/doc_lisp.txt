@@ -1,7 +1,39 @@
 Lisp Documentation
 ==================
 
-Lisp is a dialect of Lisp.
+Goals
+
+   Implement a signigicant subset of common lisp.
+
+   Regardless this is still a toy.  Not optimized.  No debugging capabilities.
+   No compiler.
+
+Features
+- A full featured listener with session logging and restoration, interpreter
+  reboot, and interpreter testing.
+- Function definition with full stack and recursion support.
+- Common Lisp macro defition and the macroexpand primitive.
+- &rest and &optional parameter support in both function and macro definitions.
+- Rhobust error handling and reporting.
+- Complete lexical analyzer and LL(1) recursive descent parser.
+- Support for special operations.
+- Includes a runtime library written in lisp.
+
+- This is a toy intended for educational and experimental purposes only.
+  NOT FOR PRODUCTION USE.  There is no mechanism for debugging other than
+  printing variable values.  There is no compiler.  The interpreter is not
+  optimized prioritizing clarity of source code over performance.
+
+Some Design Features
+- Fully object oriented.
+- Designed to be easily modified and exteded.
+- Prioritize readability over performance; explicit over implicit.
+- Prioritize implementing something in library.lisp over in python.
+- Full suite of tests.
+- Strings support the full range of python escape sequences.
+- Fully implemented in python 3.14.
+- Implemented from scratch (without copying other people's ideas).
+
 
 The Language
 ============
@@ -19,8 +51,8 @@ Lexical Elements
                       ( '.' ('0' .. '9')+ | '/' ('0' .. '9')+ )
                       # Integer, Decimal or Fraction.
       StringLiteral:  '"' (^('"'))* '"'
-      Symbol:         'a..zA..Z+-~!@$%^&*_=\:/?<>'
-                      { 'a..zA..Z+-~!@$%^&*_=\:/?<>0..9' }
+      Symbol:         'a..zA..Z+-~!@$%^&*_=\/?<>'
+                      { 'a..zA..Z+-~!@$%^&*_=\/?<>0..9' }
 
    Reserved Symbols
          'nil', 't', 'pi', 'e', 'inf', 'nan'
@@ -32,6 +64,7 @@ Grammar
 
    Object:
       NumberLiteral | StringLiteral | Symbol | List | '#' | '|' | ':' | '[' | ']'
+      | "'" Object | "`" Object | "," Object | ",@" Object
 
    List:
       '(' [ Object { Object } ] ')'
@@ -40,12 +73,13 @@ Grammar
 #######################
 
 ### Values ###
-NIL                                     ;; defined as an empty list.
+NIL                                     ;; an empty list. Stands for false.
+T                                       ;; a symbol to stand for true.
 PI                                      ;; the constant pi.
 E                                       ;; the constant e.
 INF                                     ;; the constant positive infinity.
 -INF                                    ;; the constant negative infinity.
-NAN                                     ;; the constant not a number.
+NAN                                     ;; the constant not-a-number.
 
 ### Variable Definition ###
 (defmacro name (<param1> <param2> ...)  ;; Define and return a global macro.
@@ -75,16 +109,16 @@ NAN                                     ;; the constant not a number.
                                         ;;    When evaluating such a function
                                         ;;    expr2 is evaluated within a
                                         ;;    nested scope.
-(let ( (<var1> <expr1>) (<var2> <expr2> ... ) ) <expr1> <expr2> ... )
+(let ( (<var1> <expr1>) (<var2> <expr2>) ... ) <expr1> <expr2> ... )
                                         ;; Execute code in a nested scope.
-                                        ;;    var1, var2, ... are local variables
+                                        ;;    var1,var2,... are local variables
                                         ;;    bound to initial values.  Initial
                                         ;;    values are not evaluated in order
                                         ;;    and are not evaluated in the
                                         ;;    new local scope.
-(let* ( (<var1> <expr1>) (<var2> <expr2> ... ) ) <expr1> <expr2> ... )
+(let* ( (<var1> <expr1>) (<var2> <expr2>) ... ) <expr1> <expr2> ... )
                                         ;; Execute code in a nested scope.
-                                        ;;    var1, var2, ... are local variables
+                                        ;;    var1,var2,... are local variables
                                         ;;    bound to initial values.  Initial
                                         ;;    values ARE evaluated in order
                                         ;;    and inside the new local scope.
@@ -107,27 +141,27 @@ NAN                                     ;; the constant not a number.
                                         ;;    returns the result of the last
                                         ;;    expr evaluated.  All remaining
                                         ;;    cases are skipped.
-(while <conditionExpr> <body>)          ;; Perform a loop over the body sexprs.
+! (while <conditionExpr> <body>)          ;; Perform a loop over the body sexprs.
                                         ;;    Before iteration conditionExpr is
                                         ;;    evaluated.  If conditionExpr is
                                         ;;    true the iteration occurs.
                                         ;;    However if conditionExpr evaluates
                                         ;;    to false, while returns the result
                                         ;;    recent body evaluation.
-(doTimes (<variable> <countExpr>) <sexpr1> <sexpr2> ...)
+! (doTimes (<variable> <countExpr>) <sexpr1> <sexpr2> ...)
                                         ;; Performs a loop countExpr times.
                                         ;;    For each iternation of the loop
                                         ;;    variable is set to the loop number
                                         ;;    starting with 0 for the first loop
                                         ;;    The value of the last sexpr
                                         ;;    evaluated is returned.
-(doList (<variable> <list>) <sexpr1> <sexpr2> ...)
+! (doList (<variable> <list>) <sexpr1> <sexpr2> ...)
                                         ;; Loop over the body.  Before each
                                         ;;    iteration variable is assigned
                                         ;;    the next element in list.
                                         ;;    The result of the last body expr
                                         ;;    evaluated is returned.
-(forEach <variable> '<list> <expr> ...) ;; Each iteration assigns a list element
+! (forEach <variable> '<list> <expr> ...) ;; Each iteration assigns a list element
                                         ;;    to symbol, and evaluates expr.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
 (backquote <expr>)                      ;; Similar to quote, but allows comma
@@ -135,19 +169,19 @@ NAN                                     ;; the constant not a number.
                                         ;;    expr.
 (comma <expr>)                          ;; Must occur within a backquote expr
                                         ;;    or it's an error.  Evaluates expr
-                                        ;;    and returns it to the enclosing
-                                        ;;    expr.
+                                        ;;    (even if within a quoted expr) and
+                                        ;;    returns it to the enclosing expr.
 (comma-at <expr>)                       ;; Must occur within a backquote expr
                                         ;;    or it's an error.  Evaluates expr.
                                         ;;    result must be a list.  Inserts
                                         ;;    the elements of the resulting list
                                         ;;    into the enclosing list.
-(funcall <fnNameSym> <fnArg1> <fnArg2> ...)
+! (funcall <fnNameSym> <fnArg1> <fnArg2> ...)
                                         ;; Call a function with the args provided
-(eval '<expr>)                          ;; Evaluate <expr> in the current scope.
-(parse <string>)                        ;; Parse the string as an sexpression
+! (eval '<expr>)                          ;; Evaluate <expr> in the current scope.
+! (parse <string>)                        ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
-(pprint '<expr>)                        ;; Pretty Print a sexpression.
+! (pprint '<expr>)                        ;; Pretty Print a sexpression.
 
 ### List & Map Manipulation ###
 (list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
@@ -156,23 +190,23 @@ NAN                                     ;; the constant not a number.
 (rest <list>)                           ;; Return the list minus the first item.
 (cons '<obj> '<list>)                   ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
-(push! '<list> '<value>)                ;; Push a value onto the back of a list.
-(pop! '<list>)                          ;; Pop and returns the last value of the
+! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
+! (pop! '<list>)                          ;; Pop and returns the last value of the
                                         ;;    list.
-(at '<listOrMap> '<keyOrIndex>)         ;; Return the value at a specified index
+! (at '<listOrMap> '<keyOrIndex>)         ;; Return the value at a specified index
                                         ;;    or key of a map or list.
-(atSet! <listOrMap> <keyOrIndex> <value>)
+! (atSet! <listOrMap> <keyOrIndex> <value>)
                                         ;; Update the key/index in the given
                                         ;;    list/map with value.  Returns
                                         ;;    value.
 (append '<list-1> '<list-2>)            ;; Return a new list with the two lists
                                         ;;    merged.  Order is retained.
-(hasValue? '<listOrMap> '<value>)       ;; Returns 1 if the list/map contains
+! (hasValue? '<listOrMap> '<value>)       ;; Returns 1 if the list/map contains
                                         ;;    value.
-(map '( (<key1> <val1>) (<key2> <val>2) ...))
+! (map '( (<key1> <val1>) (<key2> <val>2) ...))
                                         ;; Construct a map of key-value pairs.
-(update! <map1> <map2>)                 ;; Merge map2's data into map1.
-(hasKey? <map> <key>)                   ;; Return 1 if key is in map.
+! (update! <map1> <map2>)                 ;; Merge map2's data into map1.
+! (hasKey? <map> <key>)                   ;; Return 1 if key is in map.
 
 ### Arithmetic Operations ###
 (+ <expr1> <expr2> ...)                 ;; Returns the sum of numbers or
@@ -180,29 +214,31 @@ NAN                                     ;; the constant not a number.
 (- <expr1> <expr2> ...)                 ;; Returns the difference.
 (* <expr1> <expr2> ...)                 ;; Returns the product.
 (/ <expr1> <expr2> ...)                 ;; Returns the quotient.
-(// <expr1> <expr2>)                    ;; Returns the integer division.
-(mod <expr1> <expr2>)                   ;; Returns the integer remainder.
-(log <x> [<base>])                      ;; Returns the log of x.  If base if not
+! (// <expr1> <expr2>)                    ;; Returns the integer division.
+! (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
+! (log <x> [<base>])                      ;; Returns the log of x.  If base if not
                                         ;;    provided, 10 is used.
-(pow <base> <power>)                    ;; Returns base raised to power.
+! (pow <base> <power>)                    ;; Returns base raised to power.
 (sin <radians>)                         ;; Returns the sin of radians.
 (cos <radians>)                         ;; Returns the cos of radians.
 (min <val1> <val2> ...)                 ;; Returns the lowest of the values.
 (max <val1> <val2> ...)                 ;; Returns the highest of the values.
 
 ### Predicates ###
-(isNil? <expr>)                         ;; Returns 1 if expr is NIL.
-(isNumber?  <expr>)                     ;; Returns 1 if expr is a number.
-(isSymbol?  <expr>)                     ;; Returns 1 if expr is a symbol.
-(isAtom? <expr>)                        ;; Returns 1 if expr in { int, float,
-                                        ;;   fraction, string }.
-(isList? <expr>)                        ;; Returns 1 if expr is a list.
-(isMap?  <expr>)                        ;; Returns 1 if expr is a map.
-(isString?  <expr>)                     ;; Returns 1 if expr is a string.
-(isFunction? <expr>)                    ;; Returns 1 if expr is a function.
+(numberp  <expr>)                       ;; Returns t if expr is a number.
+(integerp <expr>)                       ;; Returns t if expr is an integer.
+(rationalp <expr>)                      ;; Returns t if expr is an integer
+                                        ;;    or a fraction.
+(symbolp  <expr>)                       ;; Returns t if expr is a symbol.
+(atom <expr>)                           ;; Returns t if expr in { int, float,
+                                        ;;   fraction, string, nil, symbol }.
+(listp <expr>)                          ;; Returns t if expr is a list.
+! (isMap?  <expr>)                        ;; Returns t if expr is a map.
+(stringp  <expr>)                       ;; Returns t if expr is a string.
+(functionp <expr>)                      ;; Returns t if expr is a function.
 
 ### Relational Operators ###
-(is? <val1> <val2>)                     ;; Are the two values the same object?
+! (is? <val1> <val2>)                     ;; Are the two values the same object?
 (=   <val1> <val2> ...)                 ;; Are all the values equal?
 (<>  <val1> <val2> ...)                 ;; Are all the values unequal?
 (<   <val1> <val2> ...)                 ;; Are all the values less than?
@@ -216,38 +252,39 @@ NAN                                     ;; the constant not a number.
 (or  <val1> <val2> ...)                 ;; Returns the logical or of vals.
 
 ### Type Conversion ###
-(float <val>)                           ;; Returns val as a float.  val can be
+! (float <val>)                           ;; Returns val as a float.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp float.
-(int <val>)                             ;; Returns val as an int.  val can be
+! (int <val>)                             ;; Returns val as an int.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
-(string <expr1> <expr2> ...)            ;; Returns the concatenation of the
+! (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
                                         ;;    string results of the arguments.
 
 ### I/O ###
-(write! <expr>)                         ;; Write text to the screeen/stream.
-(writeLn! <expr>)                       ;; Write a line of text to the
+! (write! <expr>)                         ;; Write text to the screeen/stream.
+! (writeLn! <expr>)                       ;; Write a line of text to the
                                         ;;    screen/stream.
-(read!)                                 ;; Read input from keyboard/stream.
+! (read!)                                 ;; Read input from keyboard/stream.
 
 Library Functions
 =================
 
-(apply <fn> <list>)                     ;; Apply fn to each member of list.
+(null <sexpr>)                          ;; Is the result of the sexpr nil?
+! (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
-(read_prompt promptStr)                 ;; Write a prompt and read a value.
-(isEven? intVal)                        ;; Is the intval even?
-(isOdd? intVal)                         ;; Is the intval odd?
-(remove '<symbol> '<list>)              ;; Remove a symbol from a list.
+! (read_prompt promptStr)                 ;; Write a prompt and read a value.
+! (isEven? intVal)                        ;; Is the intval even?
+! (isOdd? intVal)                         ;; Is the intval odd?
+! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
 (length '<list>)                        ;; Return the length of a list.
-(reverse '<list>)                       ;; Return a new list with list reversed.
-(copy <list>)                           ;; Return a copy of a list.
-(deepCopy <list>)                       ;; Return a deepcopy of a list.
-(fact n)                                ;; compute the factorial of n.
-(tan <radians>)                         ;; Returns the tan of radians.
-(exp <pow:number>)                      ;; Returns the exponent of number.
-(abs <expr>)                            ;; Returns the absolute value.
+! (reverse '<list>)                       ;; Return a new list with list reversed.
+! (copy <list>)                           ;; Return a copy of a list.
+! (deepCopy <list>)                       ;; Return a deepcopy of a list.
+! (fact n)                                ;; compute the factorial of n.
+! (tan <radians>)                         ;; Returns the tan of radians.
+! (exp <pow:number>)                      ;; Returns the exponent of number.
+! (abs <expr>)                            ;; Returns the absolute value.
 
 Library Macros
 ==============
@@ -267,35 +304,5 @@ parameter gets second, etc.  The final parameter may be preceded by the symbol
 &rest.  If this is the case, the final paramer is bound to a list of the
 remaining arguments passed in.  With all the remaining arguments collected into
 a list bound to the final parameter, there is now a way to handle variable
-argument lists for function.
+length argument lists for functions.
 
-
-Goals
-
-   Implement a signigicant chunk of common lisp.
-
-   Regardless this is still a toy.  Not optimized.  No debugging capabilities.
-   No compiler.
-
-Features
-- A full featured listener with session logging and restoration, interpreter
-  reboot, and interpreter testing.
-- Function definition with full stack and recursion support.
-- Common Lisp macro defition and the macroexpand primitive.
-- &rest and &optional parameter support in both function and macro definitions.
-- Rhobust error handling and reporting.
-- Complete lexical analyzer and LL(1) recursive descent parser.
-- Support for special operations.
-- Includes a runtime library written in lisp.
-- Fully implemented in python 3.14.
-- Implemented from scratch (without copying other people's ideas).
-
-- This is a toy intended for educational purposes only.  NOT FOR PRODUCTION USE.
-
-Some Design Features
-- Fully object oriented.
-- Designed to be easily modified and exteded.
-- Prioritize readability over performance; explicit over implicit.
-- Prioritize implementing something in library.lisp over in python.
-- Full suite of tests.
-- Strings support the full range of python escape sequences.

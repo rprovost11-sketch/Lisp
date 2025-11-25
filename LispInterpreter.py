@@ -1092,39 +1092,56 @@ class LispInterpreter( Listener.Interpreter ):
       # ==========
       # Predicates
       # ----------
-      @LDefPrimitive( 'isNil?', '<expr>')                                      # (isNil? <expr>)
-      def LP_isNil( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'numberp', '<expr>')                                     # (numberp  <expr>)
+      def LP_numberp( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isNil, '1 argument expected.' )
-
-         arg1 = args[0]
-         return L_T if (isinstance(arg1,LList) and (len(arg1) == 0)) else L_NIL  # T or NIL
-
-      @LDefPrimitive( 'isNumber?', '<expr>')                                   # (isNumber?  <expr>)
-      def LP_isNumber( env: Environment, *args, **kwargs ):
-         if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isNumber, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_numberp, '1 argument expected.' )
 
          return L_T if isinstance( args[0], L_NUMBER ) else L_NIL
 
-      @LDefPrimitive( 'isSymbol?', '<expr>')                                   # (isSymbol?  <expr>)
-      def LP_isSym( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'integerp', '<expr>' )                                   # (integerp <expr>)
+      def LP_integerp( env: Environment,  *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isSym, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_integerp, '1 argument expected.' )
+
+         return L_T if isinstance( args[0], int ) else L_NIL
+
+      @LDefPrimitive( 'rationalp', '<expr>' )                                  # (rationalp <expr>)
+      def LP_rationalp( env: Environment,  *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_rationalp, '1 argument expected.' )
+
+         return L_T if isinstance( args[0], (int, fractions.Fraction) ) else L_NIL
+
+      @LDefPrimitive( 'floatp', '<expr>' )                                     # (floatp <expr>)
+      def LP_floatpp( env: Environment,  *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_floatp, '1 argument expected.' )
+
+         return L_T if isinstance( args[0], (float) ) else L_NIL
+
+      @LDefPrimitive( 'symbolp', '<expr>')                                     # (symbolp  <expr>)
+      def LP_symbolp( env: Environment, *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_symbolp, '1 argument expected.' )
 
          return L_T if isinstance( args[0], LSymbol ) else L_NIL
 
-      @LDefPrimitive( 'isAtom?', '<expr>')                                     # (isAtom? <expr>) -> 1 if expr in { int, float, fraction, string }
-      def LP_isAtom( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'atom', '<expr>')                                        # (atom <expr>) -> 1 if expr in { int, float, fraction, string, nil }
+      def LP_atom( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isAtom, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_atom, '1 argument expected.' )
 
-         return L_T if isinstance( args[0], L_ATOM ) else L_NIL
+         arg = args[0]
+         if isinstance(arg, LList):
+            return L_T if len(arg) == 0 else L_NIL         # NIL or () is an atom even through it's a list.
+         else:
+            return L_T
 
-      @LDefPrimitive( 'isList?', '<expr>')                                     # (isList? <expr>)
-      def LP_isList( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'listp', '<expr>')                                       # (listp <expr>)
+      def LP_listp( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isList, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_listp, '1 argument expected.' )
 
          return L_T if isinstance( args[0], LList ) else L_NIL
 
@@ -1135,17 +1152,17 @@ class LispInterpreter( Listener.Interpreter ):
 
          return L_T if isinstance( args[0], LMap ) else L_NIL
 
-      @LDefPrimitive( 'isString?', '<expr>')                                   # (isString?  <expr>)
-      def LP_isStr( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'stringp', '<expr>')                                     # (stringp  <expr>)
+      def LP_stringp( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isStr, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_stringp, '1 argument expected.' )
 
          return L_T if isinstance( args[0], str ) else L_NIL
 
-      @LDefPrimitive( 'isFunction?', '<expr>')                                 # (isFunction? <expr>)
-      def LP_isCall( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'functionp', '<expr>')                                   # (functionp <expr>)
+      def LP_functionp( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isCall, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_functionp, '1 argument expected.' )
 
          return L_T if isinstance( args[0], (LPrimitive,LFunction) ) else L_NIL
 
@@ -1305,7 +1322,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_not, '1 argument exptected.' )
 
          arg1 = args[0]
-         return L_T if ((arg1 == 0) or ((isinstance(arg1,LList) and len(arg1)==0)) or (arg1 is None)) else L_NIL
+         return L_T if (isinstance(arg1,LList) and (len(arg1)==0)) else L_NIL
 
       @LDefPrimitive( 'and', '<expr1> <expr2> ...' )                           # (and <val1> <val2> ...)
       def LP_and( env: Environment, *args, **kwargs ):

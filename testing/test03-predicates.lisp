@@ -1,199 +1,199 @@
->>> (isNil? 1)
+>>> (null 1)
 ...
 
 ==> NIL
 
->>> (isNil? 6.7)
+>>> (null 6.7)
 ...
 
 ==> NIL
 
->>> (isNil? nil)
+>>> (null nil)
 ...
 
 ==> T
 
->>> (isNil? nan)
+>>> (null nan)
 ...
 
 ==> NIL
 
->>> (isNumber? 15)
+>>> (numberp 15)
 ...
 
 ==> T
 
->>> (isNumber? -3.8)
+>>> (numberp -3.8)
 ...
 
 ==> T
 
->>> (isNumber? pi)
+>>> (numberp pi)
 ...
 
 ==> T
 
->>> (isNumber? 2/3)
+>>> (numberp 2/3)
 ...
 
 ==> T
 
->>> (isNumber? aRandomSymbol)
+>>> (numberp aRandomSymbol)
 ...
 
 ==> NIL
 
->>> (isNumber? "hello")
+>>> (numberp "hello")
 ...
 
 ==> NIL
 
->>> (isSymbol? x)
+>>> (symbolp x)
 ...
 
 ==> T
 
->>> (isSymbol? 13)
+>>> (symbolp 13)
 ...
 
 ==> NIL
 
->>> (isSymbol? nil)
+>>> (symbolp nil)
 ...
 
 ==> NIL
 
->>> (isSymbol? e)
+>>> (symbolp e)
 ...
 
 ==> NIL
 
->>> (isSymbol? xy)
+>>> (symbolp xy)
 ...
 
 ==> T
 
->>> (isAtom? nil)
-...
-
-==> NIL
-
->>> (isAtom? 0)
+>>> (atom nil)
 ...
 
 ==> T
 
->>> (isAtom? 3/4)
+>>> (atom 0)
 ...
 
 ==> T
 
->>> (isNumber? nil)
-...
-
-==> NIL
-
->>> (isNumber? pi)
+>>> (atom 3/4)
 ...
 
 ==> T
 
->>> (isNumber? e)
+>>> (numberp nil)
+...
+
+==> NIL
+
+>>> (numberp pi)
 ...
 
 ==> T
 
->>> (isNumber? -2/3)
+>>> (numberp e)
 ...
 
 ==> T
 
->>> (isNumber? 5.8)
+>>> (numberp -2/3)
 ...
 
 ==> T
 
->>> (isNumber? "junky string")
-...
-
-==> NIL
-
->>> (isNumber? randomSymbol)
-...
-
-==> NIL
-
->>> (isNumber? '())
-...
-
-==> NIL
-
->>> (isAtom? nil)
-...
-
-==> NIL
-
->>> (isAtom? e)
+>>> (numberp 5.8)
 ...
 
 ==> T
 
->>> (isAtom? pi)
+>>> (numberp "junky string")
+...
+
+==> NIL
+
+>>> (numberp randomSymbol)
+...
+
+==> NIL
+
+>>> (numberp '())
+...
+
+==> NIL
+
+>>> (atom nil)
 ...
 
 ==> T
 
->>> (isAtom? 1/2)
+>>> (atom e)
 ...
 
 ==> T
 
->>> (isAtom? 2.8)
+>>> (atom pi)
 ...
 
 ==> T
 
->>> (isAtom? aSymbol)
-...
-
-==> NIL
-
->>> (isAtom? "hello")
+>>> (atom 1/2)
 ...
 
 ==> T
 
->>> (isAtom? '())
-...
-
-==> NIL
-
->>> (isList? nil)
+>>> (atom 2.8)
 ...
 
 ==> T
 
->>> (isList? 0)
+>>> (atom aSymbol)
+...
+
+==> T
+
+>>> (atom "hello")
+...
+
+==> T
+
+>>> (atom '())
+...
+
+==> T
+
+>>> (listp nil)
+...
+
+==> T
+
+>>> (listp 0)
 ...
 
 ==> NIL
 
->>> (isList? pi)
+>>> (listp pi)
 ...
 
 ==> NIL
 
->>> (isList? -5/7)
+>>> (listp -5/7)
 ...
 
 ==> NIL
 
->>> (isList? 62.3)
+>>> (listp 62.3)
 ...
 
 ==> NIL
 
->>> (isList? '())
+>>> (listp '())
 ...
 
 ==> T
@@ -238,92 +238,92 @@
 
 ==> NIL
 
->>> (isString? nil)
+>>> (stringp nil)
 ...
 
 ==> NIL
 
->>> (isString? 1)
+>>> (stringp 1)
 ...
 
 ==> NIL
 
->>> (isString? pi)
+>>> (stringp pi)
 ...
 
 ==> NIL
 
->>> (isString? 3)
+>>> (stringp 3)
 ...
 
 ==> NIL
 
->>> (isString? 4.7)
+>>> (stringp 4.7)
 ...
 
 ==> NIL
 
->>> (isString? 8/9)
+>>> (stringp 8/9)
 ...
 
 ==> NIL
 
->>> (isString? someSymbol)
+>>> (stringp someSymbol)
 ...
 
 ==> NIL
 
->>> (isString? "some string")
+>>> (stringp "some string")
 ...
 
 ==> T
 
->>> (isString? '())
+>>> (stringp '())
 ...
 
 ==> NIL
 
->>> (isFunction? nil)
+>>> (functionp nil)
 ...
 
 ==> NIL
 
->>> (isFunction? 0)
+>>> (functionp 0)
 ...
 
 ==> NIL
 
->>> (isFunction? e)
+>>> (functionp e)
 ...
 
 ==> NIL
 
->>> (isFunction? 2)
+>>> (functionp 2)
 ...
 
 ==> NIL
 
->>> (isFunction? -8.49)
+>>> (functionp -8.49)
 ...
 
 ==> NIL
 
->>> (isFunction? 7/8)
+>>> (functionp 7/8)
 ...
 
 ==> NIL
 
->>> (isFunction? aSymbol)
+>>> (functionp aSymbol)
 ...
 
 ==> NIL
 
->>> (isFunction? "a string")
+>>> (functionp "a string")
 ...
 
 ==> NIL
 
->>> (isFunction? '())
+>>> (functionp '())
 ...
 
 ==> NIL
