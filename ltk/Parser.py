@@ -40,30 +40,28 @@ class ScannerBuffer( object ):
       except IndexError:
          pass          # Scanned past eof.  Return gracefully.
 
-   def consumePast( self, aCharSet: str ) -> int:
+   def consumePast( self, aCharSet: str, maxCharsToConsume: int=10000 ) -> int:
       '''Consume up to the first character NOT in aCharSet.  Returns the number
       of characters consumed.'''
       numCharsConsumed = 0
       try:
-         while self._source[self._point] in aCharSet:   # raises on EOF
+         while (self._source[self._point] in aCharSet) and (numCharsConsumed < maxCharsToConsume):   # raises on EOF
             self.consume( )
             numCharsConsumed += 1
       except IndexError:
          pass    # scanned past eof.  Return gracefully.  Eof will be reported by
-
       return numCharsConsumed
 
-   def consumeUpTo( self, aCharSet: str ) -> int:
+   def consumeUpTo( self, aCharSet: str, maxCharsToConsume: int=10000 ) -> int:
       '''Consume up to the first character in aCharSet.  Returns the number
       of characters consumed.'''
       numCharsConsumed = 0
       try:
-         while self._source[self._point] not in aCharSet:   # raises on EOF
+         while (self._source[self._point] not in aCharSet) and (numCharsConsumed < maxCharsToConsume):   # raises on EOF
             self.consume( )
             numCharsConsumed += 1
       except IndexError:
          pass                # scanned past eof.  Return gracefully.
-
       return numCharsConsumed
 
    def saveState( self, stateInst: ScannerState ) -> None:

@@ -17,14 +17,13 @@ Lexical Elements
    Literals
       NumberLiteral:  ('+'|'-')('0' .. '9')+
                       ( '.' ('0' .. '9')+ | '/' ('0' .. '9')+ )
-                      # Integer, Decimal or Fraction.  Scientific notation
-                      #    not supported right now.
+                      # Integer, Decimal or Fraction.
       StringLiteral:  '"' (^('"'))* '"'
       Symbol:         'a..zA..Z+-~!@$%^&*_=\:/?<>'
                       { 'a..zA..Z+-~!@$%^&*_=\:/?<>0..9' }
 
    Reserved Symbols
-         'nil', 'pi', 'e', 'inf', 'nan'
+         'nil', 't', 'pi', 'e', 'inf', 'nan'
 
 Grammar
 -------
@@ -128,6 +127,8 @@ NAN                                     ;; the constant not a number.
                                         ;;    the next element in list.
                                         ;;    The result of the last body expr
                                         ;;    evaluated is returned.
+(forEach <variable> '<list> <expr> ...) ;; Each iteration assigns a list element
+                                        ;;    to symbol, and evaluates expr.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
 (backquote <expr>)                      ;; Similar to quote, but allows comma
                                         ;;    and comma-at expressions within
@@ -235,8 +236,6 @@ Library Functions
 
 (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
-(forEach '<symbol> '<list> '<expr>)     ;; Each iteration assigns list element
-                                        ;;    to symbol, and evaluates expr.
 (read_prompt promptStr)                 ;; Write a prompt and read a value.
 (isEven? intVal)                        ;; Is the intval even?
 (isOdd? intVal)                         ;; Is the intval odd?
@@ -271,10 +270,9 @@ a list bound to the final parameter, there is now a way to handle variable
 argument lists for function.
 
 
-
 Goals
 
-   Implement a signigicant portion of common lisp.
+   Implement a signigicant chunk of common lisp.
 
    Regardless this is still a toy.  Not optimized.  No debugging capabilities.
    No compiler.
@@ -289,7 +287,6 @@ Features
 - Complete lexical analyzer and LL(1) recursive descent parser.
 - Support for special operations.
 - Includes a runtime library written in lisp.
-
 - Fully implemented in python 3.14.
 - Implemented from scratch (without copying other people's ideas).
 

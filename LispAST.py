@@ -124,12 +124,11 @@ class LPrimitive( object ):
 
 
 class LFunction( object ):
-   def __init__( self, name: LSymbol, params: LList[Any], bodyExprLst: LList[Any] ) -> None:
+   def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
       self._name: LSymbol   = name
       self._params: LList = params
       self._body: LList   = bodyExprLst
       self._specialOp:bool = False
-
       self.setName( name )
 
    def __str__( self ) -> str:
@@ -149,12 +148,11 @@ class LFunction( object ):
 
 
 class LMacro( object ):
-   def __init__( self, name: LSymbol, params: LList[Any], bodyExprList: LList[Any] ) -> None:
+   def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
       self._name: LSymbol = name
       self._params: LList = params
       self._body: LList = bodyExprList
       self._specialOp: bool = True
-
       self.setName( name )
 
    def __str__( self ) -> str:

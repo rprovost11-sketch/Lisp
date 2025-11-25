@@ -26,7 +26,7 @@ Lexemes
                       { 'a..zA..Z+-~!$%^&*_=\\:/?<>0..9' }
 
    Reserved Symbols
-         'nil', 'e', 'pi', 'inf', 'nan'
+         'nil', 't', 'e', 'pi', 'inf', 'nan'
 
 Grammar
    Start:
@@ -50,9 +50,9 @@ class LispScanner( Parser.Scanner ):
    ALPHA_LOWER    = 'abcdefghijklmnopqrstuvwxyz'
    ALPHA_UPPER    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
    ALPHA          = ALPHA_LOWER + ALPHA_UPPER
-   SYMBOL_OTHER   = '~!$%^&*_=\\/?<>'
+   SYMBOL_OTHER   = '~!$%^&*_=\\/?<>:'
    SYMBOL_FIRST   = ALPHA + SIGN + SYMBOL_OTHER
-   SYMBOL_REST    = ALPHA + SIGN + SYMBOL_OTHER + DIGIT + ':'
+   SYMBOL_REST    = ALPHA + SIGN + SYMBOL_OTHER + DIGIT
 
    EOF_TOK            =   0
 
@@ -190,13 +190,13 @@ class LispScanner( Parser.Scanner ):
       nextChar = buf.peekNextChar( )
       if nextChar in LispScanner.OCTAL_DIGIT:
          # consume an octal number up to a 3 digits
-         numCharsConsumed = buf.consumePast( LispScanner.OCTAL_DIGIT )
+         numCharsConsumed = buf.consumePast( LispScanner.OCTAL_DIGIT, maxCharsToConsume=3 )
          if (numCharsConsumed < 0) or (numCharsConsumed > 3):
             raise Parser.ParseError( self, '1 to 3 octacl digits expected following escape character \\.' )
       elif nextChar == 'x':
          buf.consume( )    # consume the x
          # consume 2 digit hex number
-         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT )
+         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT, maxCharsToConsume=2 )
          if numDigitsConsumed != 2:
             raise Parser.ParseError( self, 'Expected exactly two hex digits in escape sequence following \\x.' )
       elif nextChar == 'N':
@@ -213,13 +213,13 @@ class LispScanner( Parser.Scanner ):
       elif nextChar == 'u':
          buf.consume( )    # consume the u
          # consume 4 hex digits
-         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT )
+         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT, maxCharsToConsume=4 )
          if numDigitsConsumed != 4:
             raise Parser.ParseError( self, 'Escape sequence expects exactly 4 hex digits following \\u.' )
       elif nextChar == 'U':
          buf.consume( )    # consume the U
          # consume 8 hex digits
-         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT )
+         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT, maxCharsToConsume=8 )
          if numDigitsConsumed != 8:
             raise Parser.ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\u.' )
       elif nextChar in '\\\'\"abfnrtv':

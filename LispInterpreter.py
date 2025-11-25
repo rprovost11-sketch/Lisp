@@ -48,7 +48,6 @@ class LispInterpreter( Listener.Interpreter ):
       ast = self._parser.parse( inputExprStr )
       resultExpr = LispInterpreter._lEval( self._env, ast )
       LispInterpreter.outStrm = None
-
       return prettyPrintSExpr( resultExpr ).strip()
 
    @staticmethod

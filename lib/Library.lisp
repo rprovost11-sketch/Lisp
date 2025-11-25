@@ -83,7 +83,6 @@
 >>> ; List - make a deepCopy fo the argument list
 ... ;
 ... ; (deepCopy <list>)
-...
 ... (defun deepCopy (expr)
 ...          (cond ((isNil?   expr)  '( ))
 ...                 ((isAtom?   expr)  expr)

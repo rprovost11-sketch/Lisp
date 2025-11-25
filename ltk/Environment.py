@@ -31,7 +31,6 @@ class Environment( object ):
             return scope._locals[ key ]
          except KeyError:
             scope = scope._parent
-
       return None
 
    def getGlobalValue(self, key: str ) -> Any:
@@ -68,9 +67,7 @@ class Environment( object ):
       while scope:
          if key in scope._locals:
             return True
-
          scope = scope._parent
-
       return False
 
    def findDef( self, key: str ) -> (Environment | None):
@@ -81,7 +78,5 @@ class Environment( object ):
       while scope:
          if key in scope._locals:
             break
-
          scope = scope._parent
-
       return scope          # Returns None if the key isn't located.
