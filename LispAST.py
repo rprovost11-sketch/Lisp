@@ -171,6 +171,7 @@ class LMacro( object ):
       return latestResult
 
    def setName( self, name: LSymbol ) -> None:
-      paramList = [ x._val for x in self._params ]
-      paramListStr = ' '.join(paramList)
-      self._reprStr = f"(Macro {self._name} ({paramListStr}) ... )"
+      #paramList = [ x._val for x in self._params ]
+      #paramListStr = ' '.join(paramList)
+      #self._reprStr = f"(Macro {self._name} ({paramListStr}) ... )"
+      self._reprStr = f"(Macro {self._name} {self._params} ... )"

@@ -17,7 +17,7 @@ Features
 - Rhobust error handling and reporting.
 - Complete lexical analyzer and LL(1) recursive descent parser.
 - Support for special operations.
-- Includes a runtime library written in lisp.
+- Includes runtime libraries written in lisp.
 
 - This is a toy intended for educational and experimental purposes only.
   NOT FOR PRODUCTION USE.  There is no mechanism for debugging other than
@@ -270,7 +270,7 @@ NAN                                     ;; the constant not-a-number.
 (truncate <val>)                        ;; Returns val as an int.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
-! (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
+(string <expr1> <expr2> ...)            ;; Returns the concatenation of the
                                         ;;    string results of the arguments.
 
 ### I/O ###

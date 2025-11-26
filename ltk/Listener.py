@@ -169,7 +169,8 @@ class Listener( object ):
       for filename, testSummary in testSummaryList:
          print( f'{filename:45} {testSummary}' )
 
-      print( '\nWARNING: It\'s reccomended that you reboot the interpreter after performing tests.' )
+      print( '\nWARNING: Testing leaves the interpreter in an unknown state.' +
+             'It\'s reccomended that you reboot the interpreter using the listener command ]reboot.' )
 
    def do_continue( self, args: List[str] ) -> None:
       '''Usage:  continue <filename> [V|v]

@@ -117,10 +117,10 @@
 >>> ; List - compute the length of the list
 ... ;
 ... ; (list-length '<list>)
-... (defun length (lst)
+... (defun list-length (lst)
 ...          (if (null lst)
 ...              0
-...              (+ 1 (length (rest lst)))))
+...              (+ 1 (list-length (rest lst)))))
 ...
 >>> ; List - reverse the order of the top level elements
 ... ;
@@ -173,4 +173,11 @@
 ...                                            (equal? (rest expr1) (rest expr2)))))
 ...                    (1
 ...                                  nil)))
+...
+>>> ; Compute the average of a list of values
+... (defun average (&rest values)
+...    (let ( (accum  0) )
+...       (foreach value values
+...          (incf accum value))
+...       (/ accum (length values))))
 ...

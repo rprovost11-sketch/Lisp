@@ -85,9 +85,9 @@
 ...                             ('pow      (list '*   (list '* (at expr 2) (list 'pow (at expr 1) (- (at expr 2) 1))) (d (at expr 1))))
 ...                             ))))
 ...
->>> ;(defmacro incf (var &optional (delta 1))
-... ;   `(setf ,var (+ ,var ,delta)))
-... ;
+>>> (defmacro incf (var &optional (delta 1))
+...    `(setf ,var (+ ,var ,delta)))
+...
 >>> ;(defmacro decf (var &optional (delta 1))
 ... ;   `(setf ,var (- ,var ,delta)))
 ... ;

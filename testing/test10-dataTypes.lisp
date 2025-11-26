@@ -98,12 +98,12 @@
 
 ==> T
 
->>> (length nil)
+>>> (list-length nil)
 ...
 
 ==> 0
 
->>> (length '(a b c d))
+>>> (list-length '(a b c d))
 ...
 
 ==> 4
