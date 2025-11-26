@@ -6,8 +6,9 @@ def main( ) -> None:
    theListener = Listener.Listener( interp, language='Python\'s Lisp',
                                             version='0.1.5',
                                             author='Ronald Provost/Longo',
-                                            testdir='testing',
-                                            libdir='lib' )
+                                            libdir='lib',
+                                            testdir='testing'
+                                            )
    theListener.readEvalPrintLoop( )
 
 if __name__ == '__main__':

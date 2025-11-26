@@ -46,7 +46,7 @@ class Listener( object ):
    prompt1 = '... '
    ruler = '='
 
-   def __init__( self, anInterpreter: Interpreter, testdir: str='', libdir: str='', **kwargs ) -> None:
+   def __init__( self, anInterpreter: Interpreter, libdir: str='', testdir: str='', **kwargs ) -> None:
       super().__init__( )
 
       self._interp          = anInterpreter
@@ -148,12 +148,16 @@ class Listener( object ):
       if numArgs not in ( 0, 1 ):
          raise ListenerCommandError( self.do_test.__doc__ )
 
+      if self._logFile:
+         raise ListenerCommandError( "Please discontinue logging before running any tests." )
+
+      # Collect the test filenames into a list
       if numArgs == 1:
-         filename = args[0]
-         filenameList = [ filename ]
+         filenameList = args
       else:
          filenameList = self.retrieveFileList( self._testdir )
 
+      # Conduct the testing
       testSummaryList: List[Tuple[str, str]] = [ ]
       for filename in filenameList:
          testResultMsg = self._sessionLog_test( filename, verbosity=3 )
@@ -164,6 +168,8 @@ class Listener( object ):
       print( '===========')
       for filename, testSummary in testSummaryList:
          print( f'{filename:45} {testSummary}' )
+
+      print( '\nWARNING: It\'s reccomended that you reboot the interpreter after performing tests.' )
 
    def do_continue( self, args: List[str] ) -> None:
       '''Usage:  continue <filename> [V|v]
@@ -541,5 +547,5 @@ class Listener( object ):
       "Returns a list of all the filenames in the specified directory."
       testFileList = os.listdir( dirname )
       testFileList.sort()
-      testFileList = [ f'{dirname}/' + testFileName for testFileName in testFileList ]
+      testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList ]
       return testFileList

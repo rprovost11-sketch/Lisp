@@ -1438,6 +1438,16 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_truncate, 'Invalid argument.' )
 
+      @LDefPrimitive( 'rational', '<expr>')                                    # (truncate <val>)
+      def LP_rational( env: Environment, *args, **kwargs ):
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_rational, 'Exactly 1 argument expected.' )
+
+         try:
+            return fractions.Fraction(args[0])
+         except:
+            raise LispRuntimeFuncError( LP_rational, 'Invalid argument.' )
+
       @LDefPrimitive( 'string', '<expr1> <expr2> ...' )                        # (string <expr1> <expr2> ...)   ; returns the concatenation of the string results of the arguments
       def LP_string( env: Environment, *args, **kwargs ):
          if len(args) == 0:

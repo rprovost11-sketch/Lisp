@@ -189,7 +189,9 @@ NAN                                     ;; the constant not-a-number.
 (car <list>)                            ;; Return the first item in the list.
 (cdr <list>)                            ;; Return the list minus the first item.
     also: caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr,
-          cdaar, cdadr, cddar, cdddr
+          cdaar, cdadr, cddar, cdddr, caaaar, caaadr, caadar,
+          caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
+          cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr
 (cons '<obj> '<list>)                   ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
 ! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
@@ -221,7 +223,7 @@ NAN                                     ;; the constant not-a-number.
 (gcd <int1> <int2> ...)                 ;; Returns the gcd of the arguments.
 (lcd <int1> <int2> ...)                 ;; Returns the lcd of the arguments.
 (log <x> [<base>])                      ;; Returns the log of x.  If base if not
-                                        ;;    provided, 10 is used.
+                                        ;;    provided, e is used.
 (expt <base> <power>)                   ;; Returns base raised to power.
 (sin <radians>)                         ;; Returns the sin of radians.
 (cos <radians>)                         ;; Returns the cos of radians.
@@ -264,6 +266,7 @@ NAN                                     ;; the constant not-a-number.
 (float <val>)                           ;; Returns val as a float.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp float.
+(rational <val>)                        ;; Returns val as a fraction.
 (truncate <val>)                        ;; Returns val as an int.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
