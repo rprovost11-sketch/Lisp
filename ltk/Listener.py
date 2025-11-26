@@ -83,11 +83,12 @@ class Listener( object ):
          raise ListenerCommandError( self.do_reboot.__doc__ )
 
       if self._logFile:
-         raise ListenerCommandError( 'Please close the log before exiting.' )
+         raise ListenerCommandError( 'Please close the log before exiting or rebooting.' )
 
       self._interp.reboot( )
       print( '- Runtime environment reinitialized.' )
 
+      # Read in the libraries
       filenameList = self.retrieveFileList( self._libdir )
       for filename in filenameList:
          self._sessionLog_restore( filename )
@@ -365,12 +366,12 @@ class Listener( object ):
                   self.writeLn( f'\n==> {resultStr}' )
                   print( f'-------------  Total execution time:  {cost:15.5f} sec' )
 
+            except StopIteration:
+               keepLooping = False
+
             except Parser.ParseError as ex:
                self._exceptInfo = sys.exc_info( )
                self.writeErrorMsg( ex.generateVerboseErrorString() )
-
-            except StopIteration:
-               keepLooping = False
 
             except Exception as ex:
                self._exceptInfo = sys.exc_info( )

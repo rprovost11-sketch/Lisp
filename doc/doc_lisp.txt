@@ -186,20 +186,22 @@ NAN                                     ;; the constant not-a-number.
 ### List & Map Manipulation ###
 (list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
                                         ;;    expressions.
-(first <list>)                          ;; Return the first item in the list.
-(rest <list>)                           ;; Return the list minus the first item.
+(car <list>)                            ;; Return the first item in the list.
+(cdr <list>)                            ;; Return the list minus the first item.
+    also: caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr,
+          cdaar, cdadr, cddar, cdddr
 (cons '<obj> '<list>)                   ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
 ! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
 ! (pop! '<list>)                          ;; Pop and returns the last value of the
                                         ;;    list.
-! (at '<listOrMap> '<keyOrIndex>)         ;; Return the value at a specified index
-                                        ;;    or key of a map or list.
+! (at '<listMapOrStr> '<keyOrIndex>)    ;; Return the value at a specified index
+                                        ;;    or key of a list, map or string.
 ! (atSet! <listOrMap> <keyOrIndex> <value>)
                                         ;; Update the key/index in the given
                                         ;;    list/map with value.  Returns
                                         ;;    value.
-(append '<list-1> '<list-2>)            ;; Return a new list with the two lists
+(append '<list-1> '<list-2> ...)        ;; Return a new list with the lists
                                         ;;    merged.  Order is retained.
 ! (hasValue? '<listOrMap> '<value>)       ;; Returns 1 if the list/map contains
                                         ;;    value.
@@ -281,11 +283,12 @@ Library Functions
 ! (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
 ! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
-(length '<list>)                        ;; Return the length of a list.
+(list-length '<list>)                   ;; Return the length of a list.
 ! (reverse '<list>)                       ;; Return a new list with list reversed.
 ! (copy <list>)                           ;; Return a copy of a list.
 ! (deepCopy <list>)                       ;; Return a deepcopy of a list.
 ! (read_prompt promptStr)                 ;; Write a prompt and read a value.
+(tree-equal <tree1> <tree2>)            ;; Are two deeply nested lists equal?
 (evenp intVal)                          ;; Is the intval even?
 (oddp intVal)                           ;; Is the intval odd?
 (plusp numVal)                          ;; Is the number positive?

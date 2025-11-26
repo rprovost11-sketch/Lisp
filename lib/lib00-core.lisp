@@ -17,6 +17,46 @@
 ...             (write! promptStr)
 ...             (readLn!)          )
 ...
+>>> (setf first car)
+...
+>>> (setf rest cdr)
+...
+>>> (defun caar (lst)
+...    (car (car lst)))
+...
+>>> (defun cadr (lst)
+...    (car (cdr lst)))
+...
+>>> (defun cdar (lst)
+...    (cdr (car lst)))
+...
+>>> (defun cddr (lst)
+...    (cdr (cdr lst)))
+...
+>>> (defun caaar (lst)
+...    (car (car (car lst))))
+...
+>>> (defun caadr (lst)
+...    (car (car (cdr lst))))
+...
+>>> (defun cadar (lst)
+...    (car (cdr (car lst))))
+...
+>>> (defun caddr (lst)
+...    (car (cdr (cdr lst))))
+...
+>>> (defun cdaar (lst)
+...    (cdr (car (car lst))))
+...
+>>> (defun cdadr (lst)
+...    (cdr (car (cdr lst))))
+...
+>>> (defun cddar (lst)
+...    (cdr (cdr (car lst))))
+...
+>>> (defun cdddr (lst)
+...    (cdr (cdr (cdr lst))))
+...
 >>> ; List - remove a symbol from a list - destructive
 ... ;
 ... ; (remove '<symbol> '<list>)
@@ -28,7 +68,7 @@
 ...
 >>> ; List - compute the length of the list
 ... ;
-... ; (length '<list>)
+... ; (list-length '<list>)
 ... (defun length (lst)
 ...          (if (null lst)
 ...              0
@@ -73,14 +113,14 @@
 ...
 >>> ; Compare two lists for deep equality - deep comparison
 ... ;
-... ; (equal? '<expr-1> '<expr-2>)
-... (defun equal? (expr1 expr2)
-...          (cond ((or (isAtom? expr1)
+... ; (tree-equal '<expr-1> '<expr-2>)
+... (defun tree-equal (expr1 expr2)
+...          (cond ((or (atom expr1)
 ...                     (null expr1))
 ...                                       (= expr1 expr2))
-...                    ((and (isList? expr1)
-...                          (isList? expr2))
-...                                  (and (isList? expr2)
+...                    ((and (listp expr1)
+...                          (listp expr2))
+...                                  (and (listp expr2)
 ...                                       (and (equal? (first expr1) (first expr2))
 ...                                            (equal? (rest expr1) (rest expr2)))))
 ...                    (1

@@ -6,8 +6,6 @@ To Do
 -----
 - make evaluations of undefined variables raise LypsRuntimeError instead of
   evaluating to themselves.
-- continue to bring other primitives into alignment with common lisp.
-- bring the arithmetic operations into alignment with common lisp.
 - implement stream IO primitives.
 - implement lisp structs.
 - implement packages.  A package x is a symbol in the global namespace which
@@ -35,3 +33,5 @@ Completed
   which were of a more consistent naming pattern are aliased in library.lisp
   so that the ? names can still be used instead of the lisp names.
 - bring the relational operations into alignment with common lisp.
+- bring the arithmetic operations into alignment with common lisp.
+- continue to bring other primitives into alignment with common lisp.

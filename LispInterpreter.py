@@ -68,11 +68,8 @@ class LispInterpreter( Listener.Interpreter ):
       elif isinstance( sExpr, L_ATOM ):
          return sExpr
       elif isinstance( sExpr, LSymbol ):
-         try:
-            result = env.getValue( sExpr._val )
-            return sExpr if result is None else result
-         except:
-            return sExpr
+         result = env.getValue( sExpr._val )
+         return sExpr if result is None else result
       elif  isinstance( sExpr, LList ):
          # This code is called when sExpr is an LList and it's contents (a
          # function call usually) need to be evaluated.
@@ -82,7 +79,7 @@ class LispInterpreter( Listener.Interpreter ):
          # Break the list contents into a function and a list of args
          try:
             primary, *exprArgs = sExpr
-         except:
+         except ValueError:
             raise LispRuntimeError( 'Badly formed list expression.' )
 
          if not isinstance( primary, (LList,LSymbol) ):
@@ -770,28 +767,28 @@ class LispInterpreter( Listener.Interpreter ):
          theLMapInst = LMap( aMap=theMapping )
          return theLMapInst
 
-      @LDefPrimitive( 'first', '<list>' )                                      # (first <list>)                     ;; return the first item in the list
-      def LP_first( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'car', '<list>' )                                        # (car <list>)                     ;; return the first item in the list
+      def LP_car( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_first, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_car, '1 argument expected.' )
 
          theList = args[0]
          if not isinstance(theList, LList):
-            raise LispRuntimeFuncError( LP_first, '1st argument expected to be a list.' )
+            raise LispRuntimeFuncError( LP_car, '1st argument expected to be a list.' )
 
          try:
             return theList.first()
          except IndexError:
             return LList( )
 
-      @LDefPrimitive( 'rest', '<list>' )                                       # (rest <list>)                      ;; return the list without the first item
-      def LP_rest( env: Environment, *args, **kwargs ):
+      @LDefPrimitive( 'cdr', '<list>' )                                        # (cdr <list>)                      ;; return the list without the first item
+      def LP_cdr( env: Environment, *args, **kwargs ):
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_rest, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_cdr, '1 argument expected.' )
 
          theList = args[0]
          if not isinstance(theList, LList):
-            raise LispRuntimeFuncError( LP_first, '1st argument expected to be a list.' )
+            raise LispRuntimeFuncError( LP_cdr, '1st argument expected to be a list.' )
 
          try:
             return theList.rest()
@@ -844,14 +841,14 @@ class LispInterpreter( Listener.Interpreter ):
 
          return value
 
-      @LDefPrimitive( 'at', '\'<listORMap> \'<keyOrIndex>' )                   # (at '<listOrMap> '<keyOrIndex>)
+      @LDefPrimitive( 'at', '\'<listMapOrStr> \'<keyOrIndex>' )                # (at '<listMapOrStr> '<keyOrIndex>)
       def LP_at( env: Environment, *args, **kwargs ):
          try:
             keyed,key = args
          except:
             raise LispRuntimeFuncError( LP_at, '2 arguments expected.' )
 
-         if isinstance(keyed, LList):
+         if isinstance(keyed, (LList, str) ):
             keyed = keyed
          elif isinstance(keyed, LMap):
             keyed = keyed._dict
@@ -895,16 +892,17 @@ class LispInterpreter( Listener.Interpreter ):
 
       @LDefPrimitive( 'append', '\'<list1> \'<list2>' )                        # (append '<list-1> '<list-2>)
       def LP_append( env: Environment, *args, **kwargs ):
-         try:
-            arg1,arg2 = args
-         except:
-            raise LispRuntimeFuncError( LP_append, '2 arguments expected' )
+         if len(args) < 2:
+            raise LispRuntimeFuncError( LP_append, 'At least 2 arguments expected.' )
 
-         if isinstance( arg1, LList ) and isinstance( arg2, LList ):
-            newList = arg1 + arg2
-            return LList( *newList )
-         else:
-            raise LispRuntimeFuncError( LP_append, 'Invalid argument.' )
+         resultList = LList( )
+         for lst in args:
+            if not isinstance( lst,  LList ):
+               raise LispRuntimeFuncError( LP_append, 'Invalid argument.' )
+            for item in lst:
+               resultList.append( item )
+
+         return resultList
 
       @LDefPrimitive( 'hasValue?', '\'<listOrMap> \'<value>' )                 # (hasValue? '<listOrMap> '<value>)
       def LP_hasValue( env: Environment, *args, **kwargs ):
