@@ -364,7 +364,7 @@ class Listener( object ):
          if (lineInput == '') and (len(inputExprLineList) != 0):
             inputExprStr = ''.join( inputExprLineList ).strip()
             try:
-               if inputExprStr[0] == ']':
+               if (inputExprStr != '') and (inputExprStr[0] == ']'):
                   self.doCommand( inputExprStr )
                else:
                   start = time.perf_counter( )
@@ -389,7 +389,8 @@ class Listener( object ):
             inputExprLineList = [ ]
 
          else:
-            inputExprLineList.append( lineInput + '\n' )
+            if lineInput != '':
+               inputExprLineList.append( lineInput + '\n' )
 
    def _sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
       inputText = None

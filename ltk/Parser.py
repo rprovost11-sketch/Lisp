@@ -115,7 +115,7 @@ class Scanner( ABC ):
    def reset( self, newSourceString: str ) -> None:
       '''Re-initialize the instance over a new string.'''
       self.buffer.reset( newSourceString )
-      self._tok = self._scanNextToken( )  # prime the scanner object.
+      self.consume( )                           # prime the scanner.
 
    def peekToken( self ) -> int:
       '''Return the next (look ahead) token, but do not consume it.'''
