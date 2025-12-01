@@ -1,11 +1,11 @@
-from typing import Any, List, Dict
+from typing import Any
 
 class Environment( object ):
    GLOBAL_SCOPE: (Environment | None) = None
 
    def __init__( self, parent: (Environment|None)=None, **initialNameValDict):
       self._parent: (Environment | None) = parent
-      self._locals: Dict[str, Any] = initialNameValDict.copy()
+      self._locals: dict[str, Any] = initialNameValDict.copy()
       if Environment.GLOBAL_SCOPE is None:
          Environment.GLOBAL_SCOPE = self
 
@@ -24,13 +24,12 @@ class Environment( object ):
       Environment.GLOBAL_SCOPE._locals[ key ] = value
       return value
 
-   def getValue( self, key: str ) -> Any:
+   def getValue( self,  key: str) -> Any:
       scope: (Environment | None) = self
       while scope:
-         try:
-            return scope._locals[ key ]
-         except KeyError:
-            scope = scope._parent
+         if key in scope._locals:
+            return scope._locals[key]
+         scope = scope._parent
       return None
 
    def getGlobalValue(self, key: str ) -> Any:
@@ -44,13 +43,12 @@ class Environment( object ):
    def undef( self, key: str ) -> None:
       scope: (Environment | None) = self
       while scope:
-         try:
+         if key in scope._locals:
             del scope._locals[ key ]
             return
-         except KeyError:
-            scope = scope._parent
+         scope = scope._parent
 
-   def localSymbols( self ) -> List[str]:
+   def localSymbols( self ) -> list[str]:
       return sorted( self._locals.keys() )
 
    def parentEnv( self ) -> (Environment | None):
@@ -80,3 +78,4 @@ class Environment( object ):
             break
          scope = scope._parent
       return scope          # Returns None if the key isn't located.
+

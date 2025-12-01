@@ -181,3 +181,25 @@
 ...          (incf accum value))
 ...       (/ accum (length values))))
 ...
+>>> (defmacro defstruct (typeName &rest fields)
+...    `(setf ,typename (map (name ,typename) (type ,typename)))
+...    (foreach fieldName ',fields
+...        (let ( (,(symbol typename "-" fieldName) nil) )
+...           (defun ,(symbol "get-" typename "-" fieldName) (inst)
+...              (at inst ,fieldName))
+...           (defun ,(symbol "set-" typename "-" fieldName) (inst value)
+...              (atSet! inst ,fieldName value))))
+...    `(defun ,(symbol typename "-p") (arg)
+...        (= (at arg 'type) ,typename))
+...    `(defun ,(symbol "make-" typename) ( )
+...        (let ( (newInst (map (type ,typename))) )
+...           (foreach fieldname ',fields
+...              (atset! newInst fieldName nil))
+...           newInst))
+...    `(defun ,(symbol "copy-" typename) (oldInst)
+...        (let ( (newInst (,(symbol "make-" typename))) )
+...           (foreach fieldname ',fields
+...              (atset! newInst fieldname (at oldInst fieldname)))
+...           newInst))
+...    )
+...

@@ -1,17 +1,14 @@
 from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive, LMacro,
                        prettyPrintSExpr )
 from LispParser import LispParser
-import ltk.Listener as Listener
+from ltk.Listener import Interpreter
 from ltk.Environment import Environment
 
-import os
-import sys
 import functools
 import math
 import random
-import string
 import fractions
-from typing import Callable, Any, Dict, List
+from typing import Callable, Any
 
 
 class LispRuntimeError( Exception ):
@@ -31,12 +28,13 @@ class LispRuntimeFuncError( LispRuntimeError ):
 L_NUMBER = (int,float,fractions.Fraction)
 L_ATOM   = (int,float,fractions.Fraction,str)
 
-class LispInterpreter( Listener.Interpreter ):
+class LispInterpreter( Interpreter ):
    outStrm = None
+   counter = 1               # Used by gensym to generate unique symbols
 
    def __init__( self ) -> None:
       self._parser: LispParser = LispParser( )
-      primitiveDict: Dict[str, Any] = LispInterpreter.constructPrimitives( self._parser.parse )
+      primitiveDict: dict[str, Any] = LispInterpreter.constructPrimitives( self._parser.parse )
       self._env:Environment = Environment( parent=None, **primitiveDict )
 
    def reboot( self ) -> None:
@@ -68,7 +66,7 @@ class LispInterpreter( Listener.Interpreter ):
       elif isinstance( sExpr, L_ATOM ):
          return sExpr
       elif isinstance( sExpr, LSymbol ):
-         result = env.getValue( sExpr._val )
+         result = env.getValue( sExpr.strval )
          return sExpr if result is None else result
       elif  isinstance( sExpr, LList ):
          # This code is called when sExpr is an LList and it's contents (a
@@ -82,8 +80,8 @@ class LispInterpreter( Listener.Interpreter ):
          except ValueError:
             raise LispRuntimeError( 'Badly formed list expression.' )
 
-         if not isinstance( primary, (LList,LSymbol) ):
-            raise LispRuntimeError( f'Badly formed list expression.  The first element should be a symbol or function.' )
+         #if not isinstance( primary, (LList,LSymbol) ):
+            #raise LispRuntimeError( f'Badly formed list expression.  The first element should be a symbol, something that evaluates to a lambd, function or macro.' )
 
          # fn is an LPrimitive, LFunction or a function name symbol
          # Use this information to get the function definition
@@ -92,8 +90,8 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a primitive or function.' )
 
          # Determine if the function uses the standard evaluation order for arguments
-         evaluatedKeys: Dict[str, Any] = { }
-         if fnDef._specialOp:
+         evaluatedKeys: dict[str, Any] = { }
+         if fnDef.specialOp:
             return fnDef( LispInterpreter._lEval, env, *exprArgs, **evaluatedKeys )
 
          # Evaluate each arg
@@ -125,7 +123,7 @@ class LispInterpreter( Listener.Interpreter ):
          raise LispRuntimeError( 'Unknown lisp expression type.' )
 
    @staticmethod
-   def bindArguments( env: Environment, paramList: List[Any], argsList: List[Any] ) -> None:
+   def bindArguments( env: Environment, paramList: list[Any], argsList: list[Any] ) -> None:
       paramNum = 0
       while paramNum < len(paramList):
          param = paramList[paramNum]
@@ -191,7 +189,7 @@ class LispInterpreter( Listener.Interpreter ):
          raise LispRuntimeError( 'Too many arguments passed in.' )
 
    @staticmethod
-   def macroexpand( env: Environment, expr: Any, args: List[Any] ) -> List[Any]:
+   def macroexpand( env: Environment, expr: Any, args: list[Any] ) -> list[Any]:
       env = env.openScope( )
 
       # store the arguments as locals
@@ -223,7 +221,7 @@ class LispInterpreter( Listener.Interpreter ):
             result = LispInterpreter._lEval(env, expr)
             return result
 
-         resultList: List[Any] = [ ]
+         resultList: list[Any] = [ ]
          for listElt in expr:
             resultListElt = LispInterpreter.backquote_expand( env, listElt )
             if ( isinstance( resultListElt, LList ) and
@@ -238,8 +236,8 @@ class LispInterpreter( Listener.Interpreter ):
          return expr
 
    @staticmethod
-   def constructPrimitives( parseLispString: Callable[[str], Any] ) -> Dict[str, Any]:
-      primitiveDict: Dict[str, Any] = { }
+   def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
+      primitiveDict: dict[str, Any] = { }
       INSIDE_BACKQUOTE = False
 
       # ###################################
@@ -330,6 +328,7 @@ class LispInterpreter( Listener.Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_setf, '2 arguments expected.' )
 
+         # Evaluate the value expression
          val = LispInterpreter._lEval(env, val)
          if isinstance( val, LFunction ):
             val.setName( key )
@@ -355,12 +354,8 @@ class LispInterpreter( Listener.Interpreter ):
          else:
             raise LispRuntimeFuncError( LP_undef, '1 argument exptected.' )
 
-         try:
-            env.getGlobalEnv().undef( str(key) )
-            return L_NIL
-         except Exception as ex:
-            print(ex)
-            raise LispRuntimeFuncError( LP_undef, 'Unknown error.' )
+         env.getGlobalEnv().undef( str(key) )
+         return L_NIL
 
       @LDefPrimitive( 'symtab!', '')
       def LP_symtab( env: Environment, *args, **kwargs ) -> Any:
@@ -429,10 +424,10 @@ class LispInterpreter( Listener.Interpreter ):
          try:
             vardefs, *body = args
          except ValueError:
-            raise LispRuntimeFuncError( LP_let, '2 or more arguments expected.' )
+            raise LispRuntimeFuncError( LP_letstar, '2 or more arguments expected.' )
 
          if not isinstance( vardefs,  LList ):
-            raise LispRuntimeFuncError( LP_let, 'The first argument to let expected to be a list of variable initializations.' )
+            raise LispRuntimeFuncError( LP_letstar, 'The first argument to let expected to be a list of variable initializations.' )
 
          # Open the new scope
          env = env.openScope( )
@@ -584,10 +579,17 @@ class LispInterpreter( Listener.Interpreter ):
 
       @LDefPrimitive( 'gensym', '' )
       def LP_gensym( env: Environment, *args, **kwargs ) -> Any:
-         if len(args) > 0:
+         if len(args) > 1:
             raise LispRuntimeFuncError( LP_gensym, '0 arguments expected.' )
 
-         symstr = ''.join( random.choices( string.ascii_uppercase, k=16 ) )
+         try:
+            prefix = args[0]
+         except IndexError:
+            prefix = 'G'
+
+         #symstr = ''.join( random.choices( string.ascii_uppercase, k=16 ) )
+         symstr = f'{prefix}{LispInterpreter.counter}'
+         LispInterpreter.counter += 1
          sym = LSymbol( symstr )
          return sym
 
@@ -600,15 +602,11 @@ class LispInterpreter( Listener.Interpreter ):
 
          latestResult = LList( )
 
-         try:
-            condResult = LispInterpreter._lEval(env, conditionExpr)
-            while LispInterpreter._lTrue( condResult ):
-               for expr in body:
-                  latestResult = LispInterpreter._lEval( env, expr )
-               condResult = LispInterpreter._lEval(env, conditionExpr )
-
-         except Exception:
-            raise LispRuntimeFuncError( LP_while, "Error evaluating condition for while loop." )
+         condResult = LispInterpreter._lEval(env, conditionExpr)
+         while LispInterpreter._lTrue( condResult ):
+            for expr in body:
+               latestResult = LispInterpreter._lEval( env, expr )
+            condResult = LispInterpreter._lEval(env, conditionExpr )
 
          return latestResult
 
@@ -814,7 +812,7 @@ class LispInterpreter( Listener.Interpreter ):
       def LP_push( env: Environment, *args, **kwargs ) -> Any:
          try:
             alist, value = args
-         except Exception:
+         except ValueError:
             raise LispRuntimeFuncError( LP_push, '2 arguments exptected.' )
 
          try:
@@ -856,7 +854,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List or Map expected.' )
 
          if isinstance(key, LSymbol):
-            key = key._val
+            key = key.strval
 
          try:
             value = keyed[ key ]
@@ -880,7 +878,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or map expeced as first argument.' )
 
          if isinstance(key, LSymbol):
-            key = key._val
+            key = key.strval
 
          try:
             keyed[ key ] = value
@@ -949,7 +947,7 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 1.  Map expected.')
 
          if isinstance(aKey, LSymbol):
-            aKey = aKey._val
+            aKey = aKey.strval
 
          try:
             return L_T if aKey in aMap else L_NIL   # T or NIL
@@ -1183,7 +1181,7 @@ class LispInterpreter( Listener.Interpreter ):
          return L_T if isinstance( args[0], (int, fractions.Fraction) ) else L_NIL
 
       @LDefPrimitive( 'floatp', '<expr>' )
-      def LP_floatpp( env: Environment,  *args, **kwargs ) -> Any:
+      def LP_floatp( env: Environment,  *args, **kwargs ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_floatp, '1 argument expected.' )
 
@@ -1462,6 +1460,22 @@ class LispInterpreter( Listener.Interpreter ):
             raise LispRuntimeFuncError( LP_string, 'Unknown error.' )
 
          return ''.join(resultStrs)
+
+      @LDefPrimitive( 'symbol',  '<string>' )
+      def LP_symbol( env: Environment, *args, **kwargs ) -> Any:
+         if len(args) <= 1:
+            raise LispRuntimeFuncError( LP_symbol, '1 or more string argument expected.' )
+
+         strList = [ str(arg) for arg in args ]
+         symstr = ''.join(strList)
+         return LSymbol(symstr)
+
+      @LDefPrimitive( 'string-cat', '<string1> <string2> ...')
+      def LP_string_cat( env: Environment, *args, **kwargs ) -> Any:
+         if len(args) < 2:
+            raise LispRuntimeFuncError( LP_string_cat, "At least two arguments expected." )
+         newString = ''.join( args )
+         return newString
 
       # ===============
       # I/O

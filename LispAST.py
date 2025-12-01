@@ -1,7 +1,7 @@
 from ltk.Environment import Environment
 
 import fractions
-from typing import Any, Dict, Callable
+from typing import Any, Callable
 
 # #################
 # Lisp Function API
@@ -19,23 +19,23 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
 # Lisp Runtime Object Definitions
 class LSymbol( object ):
    def __init__( self, val: str ) -> None:
-      self._val = val
+      self.strval = val.upper()
 
    def __str__( self ) -> str:
-      return self._val
+      return self.strval
 
    def __repr__( self ) -> str:
-      return self._val
+      return self.strval
 
    def __eq__( self, other: Any ) -> bool:
       try:
-         return self._val == other._val
+         return self.strval == other.strval
       except AttributeError:
          return False
 
    def __ne__( self, other: Any ) -> bool:
       try:
-         return self._val != other._val
+         return self.strval != other.strval
       except:
          return True
 
@@ -76,8 +76,8 @@ class LList( list ):
 
 
 class LMap( object ):
-   def __init__( self, aMap: (Dict[Any, Any]|None) = None ):
-      self._dict: Dict[Any, Any] = aMap if aMap else { }
+   def __init__( self, aMap: (dict[Any, Any]|None) = None ):
+      self._dict: dict[Any, Any] = aMap if aMap else { }
 
    def __str__( self ) -> str:
       resultStrLines = [ '(MAP\n' ]
@@ -101,13 +101,13 @@ class LMap( object ):
 
    def __setitem__( self, key: Any, val: Any ) -> None:
       if isinstance( key, LSymbol ):
-         self._dict[ key._val ] = val
+         self._dict[ key.strval ] = val
       else:
          self._dict[ key ] = val
 
    def __getitem__( self, key: Any ) -> Any:
       if isinstance( key, LSymbol ):
-         return self._dict[ key._val ]
+         return self._dict[ key.strval ]
       else:
          return self._dict[ key ]
 
@@ -117,7 +117,7 @@ class LPrimitive( object ):
       self._fn:Callable[[Environment], Any] = fn
       self._name:str = name
       self._usage:str = usage
-      self._specialOp:bool = specialOp
+      self.specialOp:bool = specialOp
 
    def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
       return self._fn( env, *args, **kwargs )
@@ -128,7 +128,7 @@ class LFunction( object ):
       self._name: LSymbol   = name
       self._params: LList = params
       self._body: LList   = bodyExprLst
-      self._specialOp:bool = False
+      self.specialOp:bool = False
       self.setName( name )
 
    def __str__( self ) -> str:
@@ -142,7 +142,7 @@ class LFunction( object ):
 
    def setName( self, name: LSymbol ) -> None:
       self._name = name
-      paramList = [ x._val for x in self._params ]
+      paramList = [ x.strval for x in self._params ]
       paramListStr = ' '.join(paramList)
       self._reprStr = f"(Function {self._name} ({paramListStr}) ... )"
 
@@ -152,7 +152,7 @@ class LMacro( object ):
       self._name: LSymbol = name
       self._params: LList = params
       self._body: LList = bodyExprList
-      self._specialOp: bool = True
+      self.specialOp: bool = True
       self.setName( name )
 
    def __str__( self ) -> str:
@@ -164,6 +164,7 @@ class LMacro( object ):
    def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
       listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )   # Calls back to LispInterpreter._lEval to expand macro body
 
+      # Eval each of the exprs of the macro's body
       latestResult = None
       for expr in listOfExpandedExprs:
          latestResult = sExprEvaluator( env, expr )
@@ -171,7 +172,7 @@ class LMacro( object ):
       return latestResult
 
    def setName( self, name: LSymbol ) -> None:
-      #paramList = [ x._val for x in self._params ]
+      #paramList = [ x.strval for x in self._params ]
       #paramListStr = ' '.join(paramList)
       #self._reprStr = f"(Macro {self._name} ({paramListStr}) ... )"
       self._reprStr = f"(Macro {self._name} {self._params} ... )"

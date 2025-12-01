@@ -34,6 +34,16 @@ Some Design Features
 - Fully implemented in python 3.14.
 - Implemented from scratch (without copying other people's ideas).
 
+Some information for the programmer
+- We want to catch all the low level python exceptions and replace them with
+  higher level lisp exceptions with information useful to the lisp programmer.
+  However, don't wrap a call to LispInterpreter._lEval() or a call to something
+  that calls _lEval() in a try block.  This will prevent the higher level
+  exceptions from percolating up and being caught by the listener so it can
+  report them to the lisp programmer as verious kinds of lisp errors.  Ideally
+  no low level python exceptions would ever reach the try block in the
+  read-eval-print loop.
+
 
 The Language
 ============

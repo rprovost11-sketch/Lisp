@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Tuple
+from typing import Any
 
 class ScannerState( object ):
    def __init__( self ) -> None:
@@ -141,19 +141,15 @@ class Scanner( ABC ):
       self._tok = stateInst.tok
       self.buffer.restoreState( stateInst )
 
-   def tokenize( self, aString: str, EOFToken: int=0 ) -> List[Tuple[int, str]]:
+   def tokenize( self, aString: str, EOFToken: int=0 ) -> list[tuple[int, str]]:
       tokenList = [ ]
-
       self.reset( aString )
-
       while self.peekToken() != EOFToken:
          token = self.peekToken()
          lex   = self.getLexeme( )
          tokenList.append( ( token, lex ) )
          self.consume( )
-
       tokenList.append( (EOFToken,'') )
-
       return tokenList
 
    def test( self, aString: str, EOFToken: int=0 ) -> None:
@@ -161,8 +157,8 @@ class Scanner( ABC ):
       try:
          tokenList = self.tokenize( aString, EOFToken )
 
-         for tokLexPair in tokenList:
-            print( '{0:<4} /{1}/'.format( *tokLexPair ) )
+         for token,lexeme in tokenList:
+            print( f'{token:<4} /{lexeme}/' )
 
       except ParseError as ex:
          print( ex )
@@ -179,23 +175,6 @@ class Scanner( ABC ):
       return value,         the int value of the next token in the buffer
       """
       pass
-
-class LineScanner( object ):
-   def __init__( self, inputText: str ) -> None:
-      self._lines:List[str] = inputText.splitlines(keepends=True)
-      self._point:int = 0
-
-   def peekLine( self ) -> str:
-      try:
-         return self._lines[ self._point ]
-      except:
-         raise StopIteration( )
-
-   def consumeLine( self ) -> None:
-      self._point += 1
-
-   def currentLineNumber( self ) -> int:
-      return self._point + 1
 
 class ParseError( Exception ):
    def __init__( self, aScanner: Scanner, errorMessage: str, filename: str='' ) -> None:
@@ -228,3 +207,21 @@ class Parser( ABC ):
    @abstractmethod
    def parse( self, inputString: str ) -> Any:  # Returns an AST of inputString
       pass
+
+class LineScanner( object ):
+   def __init__( self, inputText: str ) -> None:
+      self._lines:list[str] = inputText.splitlines(keepends=True)
+      self._point:int = 0
+
+   def peekLine( self ) -> str:
+      try:
+         return self._lines[ self._point ]
+      except:
+         raise StopIteration( )
+
+   def consumeLine( self ) -> None:
+      self._point += 1
+
+   def currentLineNumber( self ) -> int:
+      return self._point + 1
+

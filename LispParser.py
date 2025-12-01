@@ -82,7 +82,6 @@ class LispScanner( Parser.Scanner ):
       buf = self.buffer
 
       try:
-         buf.scanLineTxt( )
          self._skipWhitespaceAndComments( )
 
          nextChar = buf.peekNextChar( )
@@ -136,8 +135,7 @@ class LispScanner( Parser.Scanner ):
                buf.consume( )
                nextChar = buf.peekNextChar( )
                return LispScanner.COMMA_AT_TOK
-            else:
-               return LispScanner.COMMA_TOK
+            return LispScanner.COMMA_TOK
          elif nextChar == '"':
             return self._scanStringLiteral( )
          elif nextChar in LispScanner.SIGN_OR_DIGIT:
@@ -355,21 +353,19 @@ class LispParser( Parser.Parser ):
    def parse( self, inputString: str ) -> Any:  # Returns an AST of inputString
       self._scanner.reset( inputString )
 
-      syntaxTree = self._parseObject( )
+      ast = self._parseObject( )
 
       # EOF
       if self._scanner.peekToken( ) != LispScanner.EOF_TOK:
          raise Parser.ParseError( self._scanner, 'EOF Expected.' )
 
-      #self._scanner.consume( )
-
-      return syntaxTree
+      return ast
 
    def _parseObject( self ) -> Any: # Returns an AST or None if eof
-      nextToken = self._scanner.peekToken( )
       lex: str = ''           # Holds the lexeme string
-      ast: Any = None      # Holds the parsed AST
+      ast: Any = None         # Holds the parsed AST
 
+      nextToken = self._scanner.peekToken( )
       if nextToken == LispScanner.INTEGER_TOK:
          lex = self._scanner.getLexeme( )
          ast = int(lex)
@@ -381,15 +377,15 @@ class LispParser( Parser.Parser ):
       elif nextToken== LispScanner.FRAC_TOK:
          lex = self._scanner.getLexeme( )
          lex_num,lex_denom = lex.split('/')
-         ast    = fractions.Fraction( int(lex_num),
-                                         int(lex_denom) )
+         ast = fractions.Fraction( int(lex_num),
+                                   int(lex_denom) )
          self._scanner.consume( )
       elif nextToken == LispScanner.STRING_TOK:
          lex = self._scanner.getLexeme( )
          ast = lex[1:-1]
          self._scanner.consume( )
       elif nextToken == LispScanner.SYMBOL_TOK:
-         lex = self._scanner.getLexeme( ).upper( )   # Make symbols case insensative
+         lex = self._scanner.getLexeme( )   # Make symbols case insensative
          ast = LSymbol(lex)
          self._scanner.consume( )
       elif nextToken == LispScanner.OPEN_PAREN_TOK:
