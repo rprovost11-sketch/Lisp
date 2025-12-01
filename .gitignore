@@ -2,3 +2,6 @@ Archive/
 __pycache__/
 .mypy_cache/
 cltl/
+.vs/
+*.wpr
+*.wpu
