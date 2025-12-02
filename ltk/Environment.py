@@ -1,16 +1,13 @@
 from typing import Any
 
 class Environment( object ):
-   GLOBAL_SCOPE: (Environment | None) = None
-
    def __init__( self, parent: (Environment|None)=None, **initialNameValDict):
       self._parent: (Environment | None) = parent
       self._locals: dict[str, Any] = initialNameValDict.copy()
-      if Environment.GLOBAL_SCOPE is None:
-         Environment.GLOBAL_SCOPE = self
+      self._GLOBAL_SCOPE: Environment = self if parent is None else parent._GLOBAL_SCOPE
 
    def reInitialize( self, **initialNameValDict ) -> Environment:
-      root = Environment.GLOBAL_SCOPE
+      root = self._GLOBAL_SCOPE
       assert isinstance(root, Environment)
       root._locals = initialNameValDict.copy()
       return root
@@ -20,8 +17,7 @@ class Environment( object ):
       return value
 
    def setGlobal( self, key: str, value: Any ) -> Any:
-      assert isinstance(Environment.GLOBAL_SCOPE, Environment)
-      Environment.GLOBAL_SCOPE._locals[ key ] = value
+      self._GLOBAL_SCOPE._locals[ key ] = value
       return value
 
    def getValue( self,  key: str) -> Any:
@@ -33,12 +29,10 @@ class Environment( object ):
       return None
 
    def getGlobalValue(self, key: str ) -> Any:
-      assert isinstance(self.GLOBAL_SCOPE, Environment)
-      return self.GLOBAL_SCOPE._locals[ key ]
+      return self._GLOBAL_SCOPE._locals[ key ]
 
    def getGlobalEnv( self ) -> Environment:
-      assert isinstance( Environment.GLOBAL_SCOPE, Environment )
-      return Environment.GLOBAL_SCOPE
+      return self._GLOBAL_SCOPE
 
    def undef( self, key: str ) -> None:
       scope: (Environment | None) = self
@@ -52,12 +46,6 @@ class Environment( object ):
       return sorted( self._locals.keys() )
 
    def parentEnv( self ) -> (Environment | None):
-      return self._parent
-
-   def openScope( self ) -> Environment:
-      return Environment( self )
-
-   def closeScope( self ) -> (Environment | None):
       return self._parent
 
    def isDefined( self, key: str ) -> bool:

@@ -129,17 +129,17 @@
 
 ==> 1
 
->>> (truncate 5.893072)
+>>> (integer 5.893072)
 ...
 
 ==> 5
 
->>> (truncate pi)
+>>> (integer pi)
 ...
 
 ==> 3
 
->>> (truncate e)
+>>> (integer e)
 ...
 
 ==> 2

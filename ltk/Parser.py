@@ -208,20 +208,3 @@ class Parser( ABC ):
    def parse( self, inputString: str ) -> Any:  # Returns an AST of inputString
       pass
 
-class LineScanner( object ):
-   def __init__( self, inputText: str ) -> None:
-      self._lines:list[str] = inputText.splitlines(keepends=True)
-      self._point:int = 0
-
-   def peekLine( self ) -> str:
-      try:
-         return self._lines[ self._point ]
-      except:
-         raise StopIteration( )
-
-   def consumeLine( self ) -> None:
-      self._point += 1
-
-   def currentLineNumber( self ) -> int:
-      return self._point + 1
-

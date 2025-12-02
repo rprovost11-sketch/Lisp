@@ -277,11 +277,13 @@ NAN                                     ;; the constant not-a-number.
                                         ;;    any number type or a string
                                         ;;    containing a lisp float.
 (rational <val>)                        ;; Returns val as a fraction.
-(truncate <val>)                        ;; Returns val as an int.  val can be
+! (integer <val> [<base>])                ;; Returns val as an int.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
 (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
                                         ;;    string results of the arguments.
+(symbol <expr1> <expr2> ...)            ;; Concatenate the strings and use the
+                                        ;;    result to define a symbol.
 
 ### I/O ###
 ! (write! <expr>)                         ;; Write text to the screeen/stream.

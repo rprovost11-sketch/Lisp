@@ -77,12 +77,12 @@ class LList( list ):
 
 class LMap( object ):
    def __init__( self, aMap: (dict[Any, Any]|None) = None ):
-      self._dict: dict[Any, Any] = aMap if aMap else { }
+      self.dict: dict[Any, Any] = aMap if aMap else { }
 
    def __str__( self ) -> str:
       resultStrLines = [ '(MAP\n' ]
-      for key in sorted(self._dict.keys()):
-         value = self._dict[key]
+      for key in sorted(self.dict.keys()):
+         value = self.dict[key]
          key = str(key)
          value = str(value)
          resultStrLines.append( f'   ({key} {value})\n')
@@ -91,8 +91,8 @@ class LMap( object ):
 
    def __repr__( self ) -> str:
       resultStrLines = [ '(MAP\n' ]
-      for key in sorted(self._dict.keys()):
-         value = self._dict[key]
+      for key in sorted(self.dict.keys()):
+         value = self.dict[key]
          key = prettyPrintSExpr(key)
          value = prettyPrintSExpr(value)
          resultStrLines.append( f'   ({key} {value})\n')
@@ -101,15 +101,15 @@ class LMap( object ):
 
    def __setitem__( self, key: Any, val: Any ) -> None:
       if isinstance( key, LSymbol ):
-         self._dict[ key.strval ] = val
+         self.dict[ key.strval ] = val
       else:
-         self._dict[ key ] = val
+         self.dict[ key ] = val
 
    def __getitem__( self, key: Any ) -> Any:
       if isinstance( key, LSymbol ):
-         return self._dict[ key.strval ]
+         return self.dict[ key.strval ]
       else:
-         return self._dict[ key ]
+         return self.dict[ key ]
 
 
 class LPrimitive( object ):
@@ -125,7 +125,8 @@ class LPrimitive( object ):
 
 class LFunction( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
-      self._name: LSymbol   = name
+      self._name: LSymbol = name
+      self._reprStr: str  = ''
       self._params: LList = params
       self._body: LList   = bodyExprLst
       self.specialOp:bool = False
@@ -149,9 +150,10 @@ class LFunction( object ):
 
 class LMacro( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
-      self._name: LSymbol = name
-      self._params: LList = params
-      self._body: LList = bodyExprList
+      self._name: LSymbol  = name
+      self._reprStr:str    = ''
+      self._params: LList  = params
+      self._body: LList    = bodyExprList
       self.specialOp: bool = True
       self.setName( name )
 
@@ -172,7 +174,4 @@ class LMacro( object ):
       return latestResult
 
    def setName( self, name: LSymbol ) -> None:
-      #paramList = [ x.strval for x in self._params ]
-      #paramListStr = ' '.join(paramList)
-      #self._reprStr = f"(Macro {self._name} ({paramListStr}) ... )"
       self._reprStr = f"(Macro {self._name} {self._params} ... )"

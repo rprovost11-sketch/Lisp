@@ -10,10 +10,6 @@ The Language
 Lexemes
    Comments
       Comments extend from ';' through '\n'.
-      All text between and including these two delimiters is ignored.
-
-   Delimiters:
-      '#', '(', ')', '|', '[', ']', ';', '\n'
 
    Literals
       NumberLiteral:  ['+'|'-'] ('0' .. '9')+
@@ -25,7 +21,7 @@ Lexemes
       Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>'
                       { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
 
-   Reserved Symbols
+   Predefined Symbols
          'nil', 't', 'e', 'pi', 'inf', 'nan'
 
 Grammar

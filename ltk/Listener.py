@@ -32,10 +32,9 @@ class Interpreter( ABC ):
 
 
 class Listener( object ):
-   '''Generic Listener environment for interpreted languages complete with a
-   read-eval-print loop and featuring listener commands for session logging, as
-   well as testing and rebooting the intepreter.  Ripped off from Python's cmd
-   module.'''
+   '''Listener environment for interpreted languages.  Has a read-eval-print
+   loop and listener commands for session logging, as well as testing and
+   rebooting the intepreter.  Ripped off from Python's cmd module.'''
    def __init__( self, anInterpreter: Interpreter, libdir: str='', testdir: str='', **kwargs ) -> None:
       super().__init__( )
 
@@ -43,7 +42,6 @@ class Listener( object ):
       self._logFile: Any    = None
       self._testdir         = testdir
       self._libdir          = libdir
-      self._exceptInfo: Any = None
       self._writeLn( '{language:s} {version:s}'.format(**kwargs) )
       self._writeLn( '- Listener initialized.' )
       self._cmd_reboot( [ ] )
@@ -74,12 +72,14 @@ class Listener( object ):
                keepLooping = False
 
             except Parser.ParseError as ex:
-               self._exceptInfo = sys.exc_info( )
+               exceptInfo = sys.exc_info( )
                self._writeErrorMsg( ex.generateVerboseErrorString() )
+               sys.excepthook( *exceptInfo )
 
             except Exception as ex:   # Unknowns raised by the interpreter
-               self._exceptInfo = sys.exc_info( )
+               exceptInfo = sys.exc_info( )
                self._writeErrorMsg( ex.args[-1] )
+               sys.excepthook( *exceptInfo )
 
             self._writeLn( )
 
@@ -186,7 +186,7 @@ class Listener( object ):
          raise ListenerCommandError( self._cmd_reboot.__doc__ )
 
       if self._logFile:
-         raise ListenerCommandError( 'Please close the log before exiting or rebooting.' )
+         raise ListenerCommandError( 'Please close the log before rebooting.' )
 
       self._interp.reboot( )
       print( '- Interpreter initialized.' )
@@ -239,7 +239,7 @@ class Listener( object ):
       print( f'Log file read successfully: {filename}' )
 
    def _cmd_test( self, args: list[str] ) -> None:
-      '''Usage:  test <filename>
+      '''Usage:  test [<filename>]
       Test the interpreter using a log file.
       Read and execute a log file;
       comparing the return value to the log file return value.
@@ -247,7 +247,7 @@ class Listener( object ):
       of tests for the interpreter.
       '''
       numArgs = len(args)
-      if numArgs not in ( 0, 1 ):
+      if numArgs > 1:
          raise ListenerCommandError( self._cmd_test.__doc__ )
 
       if self._logFile:
@@ -317,22 +317,8 @@ class Listener( object ):
       self._writeLn( '... 0')
       self._writeLn( '' )
       self._writeLn( '==> 0')
-
       self._logFile.close( )
-
       self._logFile = None
-
-   def _cmd_dump( self, args: list[str] ) -> None:
-      '''Usage:  dump
-      Dump a stack trace of the most recent interpreter error.
-      '''
-      if len(args) != 0:
-         raise ListenerCommandError( self._cmd_dump.__doc__ )
-
-      if self._exceptInfo is None:
-         raise ListenerCommandError( 'No exception information available.\n' )
-
-      sys.excepthook( *self._exceptInfo )
 
    def _cmd_exit( self, args: list[str] ) -> None:
       '''Usage:  exit
@@ -379,7 +365,7 @@ class Listener( object ):
          func = getattr(self, f'_cmd_{cmd}')
          func(args)
       except AttributeError:
-         raise ListenerCommandError( f'Unknown command "{listenerCommand}"' )
+         raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
 
    def _writeLn( self, value: str='', file=None ) -> None:
       print( value, file=file )
@@ -456,9 +442,14 @@ class Listener( object ):
 
    @staticmethod
    def _parseLog( inputText: str ) -> list[tuple[str, str, str, str]]:
-      stream = Parser.LineScanner( inputText )
+      lineIter = iter(inputText.splitlines(keepends=True))
       parsedLog = [ ]
       eof = False
+
+      try:
+         line = next(lineIter)
+      except StopIteration:
+         return parsedLog
 
       while not eof:
          expr = ''
@@ -468,49 +459,38 @@ class Listener( object ):
 
          # Skip to the begenning of an interaction prompt
          try:
-            line = stream.peekLine()
             while not line.startswith( '>>> ' ):
-               stream.consumeLine()
-               line = stream.peekLine()
+               line = next(lineIter)
 
             # Parse Expression
             # string variable *line* begins with '>>> '
             if line.startswith( '>>> ' ):
                expr = line[ 4: ]
-               stream.consumeLine()
-               line = stream.peekLine()
+               line = next(lineIter)
                while not eof and line.startswith( '...' ):
                   expr += line[ 4: ]
-                  stream.consumeLine()
-                  line = stream.peekLine()
+                  line = next(lineIter)
 
             # Parse Output from the evaluation (such as write statements)
             while not line.startswith( ('==> ','... ','>>> ', '%%% ') ):
                # Parse written output
-               if output is None:
-                  output = ''
                output += line
-               stream.consumeLine()
-               line = stream.peekLine()
+               line = next(lineIter)
 
             # Parse Return Value
             if line.startswith( '==> ' ):
                retVal = line[ 4: ]
-               stream.consumeLine()
-               line = stream.peekLine()
+               line = next(lineIter)
                while not eof and not line.startswith( ('==> ','... ','>>> ','%%% ') ):
                   retVal += line
-                  stream.consumeLine()
-                  line = stream.peekLine()
+                  line = next(lineIter)
 
             if line.startswith( '%%% '):
                errMsg = line[4:]
-               stream.consumeLine()
-               line = stream.peekLine()
+               line = next(lineIter)
                while not eof and line.startswith( '%%% ' ):
                   errMsg += line[4:]
-                  stream.consumeLine()
-                  line = stream.peekLine()
+                  line = next(lineIter)
 
          except StopIteration:
             eof = True
