@@ -4,11 +4,10 @@ class Environment( object ):
    def __init__( self, parent: (Environment|None)=None, **initialNameValDict):
       self._parent: (Environment | None) = parent
       self._locals: dict[str, Any] = initialNameValDict.copy()
-      self._GLOBAL_SCOPE: Environment = self if parent is None else parent._GLOBAL_SCOPE
+      self._GLOBAL_SCOPE: Environment = parent._GLOBAL_SCOPE if parent else self
 
    def reInitialize( self, **initialNameValDict ) -> Environment:
       root = self._GLOBAL_SCOPE
-      assert isinstance(root, Environment)
       root._locals = initialNameValDict.copy()
       return root
 

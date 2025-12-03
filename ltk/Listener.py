@@ -57,7 +57,7 @@ class Listener( object ):
             lineInput = self._prompt( '... ' )
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
-            inputExprStr = ''.join( inputExprLineList ).strip()
+            inputExprStr = '\n'.join( inputExprLineList ).strip()
             try:
                if (inputExprStr != '') and (inputExprStr[0] == ']'):
                   self._runListenerCommand( inputExprStr )
@@ -76,18 +76,21 @@ class Listener( object ):
                self._writeErrorMsg( ex.generateVerboseErrorString() )
                sys.excepthook( *exceptInfo )
 
+            except ListenerCommandError as ex:
+               exceptInfo = sys.exc_info( )
+               self._writeErrorMsg( ex.args[-1] )
+
             except Exception as ex:   # Unknowns raised by the interpreter
                exceptInfo = sys.exc_info( )
                self._writeErrorMsg( ex.args[-1] )
                sys.excepthook( *exceptInfo )
 
             self._writeLn( )
-
             inputExprLineList = [ ]
 
          else:
             if lineInput != '':
-               inputExprLineList.append( lineInput + '\n' )
+               inputExprLineList.append( lineInput )
 
    def sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
       inputText = None

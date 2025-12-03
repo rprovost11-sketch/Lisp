@@ -27,8 +27,8 @@ Features
 Some Design Features
 - Fully object oriented.
 - Designed to be easily modified and exteded.
-- Prioritize readability over performance; explicit over implicit.
-- Prioritize implementing something in library.lisp over in python.
+- Prioritize readability over performance.
+- Prioritize implementing something in the runtime library over in python.
 - Full suite of tests.
 - Strings support the full range of python escape sequences.
 - Fully implemented in python 3.14.
@@ -51,10 +51,6 @@ Lexical Elements
 ----------------
    Comments
       Comments extend from ';' through '\n'.
-      All text between and including these two delimiters is ignored.
-
-   Delimiters:
-      '#', '(', ')', '|', '[', ']', ';', '\n'
 
    Literals
       NumberLiteral:  ('+'|'-')('0' .. '9')+
@@ -92,11 +88,11 @@ INF                                     ;; the constant positive infinity.
 NAN                                     ;; the constant not-a-number.
 
 ### Variable Definition ###
-(defmacro name (<param1> <param2> ...)  ;; Define and return a global macro.
+(defmacro name (<param1> <param2> ...)  ;; Define and return a macro.
         <expr1> <expr2> ...)
 (expandmacro '(<macroName> <arg1> <arg2> ...))
                                         ;; Perform the expansion of the macro
-                                        ;;    and returns the result of those
+                                        ;;    and returns the results of those
                                         ;;    expansions in a list.
 (setf <symbol> <expr> )                 ;; Update a variable's value.  The
                                         ;;    search for the variable begins
@@ -107,9 +103,9 @@ NAN                                     ;; the constant not-a-number.
                                         ;;    search its value is updated.  If
                                         ;;    it's not located a global is
                                         ;;    defined and set to the value.
-(undef! '<symbol>)                      ;; Undefine the global definition
+! (undef! '<symbol>)                      ;; Undefine the global definition
                                         ;;    for a symbol.
-(symtab!)                               ;; Print a symbol tab.  Each scope on a
+! (symtab!)                               ;; Print a symbol tab.  Each scope on a
                                         ;;    separate line.  Local scope first.
                                         ;;    Global scope last.
 
@@ -117,8 +113,8 @@ NAN                                     ;; the constant not-a-number.
 (lambda (<arg1> <arg2> ...) <expr1> <expr2> ...)
                                         ;; Return a lambda function.
                                         ;;    When evaluating such a function
-                                        ;;    expr2 is evaluated within a
-                                        ;;    nested scope.
+                                        ;;    the body (the exprs) are evaluated
+                                        ;;    within a nested scope.
 (let ( (<var1> <expr1>) (<var2> <expr2>) ... ) <expr1> <expr2> ... )
                                         ;; Execute code in a nested scope.
                                         ;;    var1,var2,... are local variables
@@ -165,12 +161,6 @@ NAN                                     ;; the constant not-a-number.
                                         ;;    starting with 0 for the first loop
                                         ;;    The value of the last sexpr
                                         ;;    evaluated is returned.
-! (doList (<variable> <list>) <sexpr1> <sexpr2> ...)
-                                        ;; Loop over the body.  Before each
-                                        ;;    iteration variable is assigned
-                                        ;;    the next element in list.
-                                        ;;    The result of the last body expr
-                                        ;;    evaluated is returned.
 ! (forEach <variable> '<list> <expr> ...) ;; Each iteration assigns a list element
                                         ;;    to symbol, and evaluates expr.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
@@ -191,7 +181,7 @@ NAN                                     ;; the constant not-a-number.
 ! (eval '<expr>)                          ;; Evaluate <expr> in the current scope.
 ! (parse <string>)                        ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
-! (pprint '<expr>)                        ;; Pretty Print a sexpression.
+! (pprint '<expr>)                        ;; Pretty Print an sexpression.
 
 ### List & Map Manipulation ###
 (list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
@@ -215,12 +205,12 @@ NAN                                     ;; the constant not-a-number.
                                         ;;    value.
 (append '<list-1> '<list-2> ...)        ;; Return a new list with the lists
                                         ;;    merged.  Order is retained.
-! (hasValue? '<listOrMap> '<value>)       ;; Returns 1 if the list/map contains
+! (hasValue? '<listOrMap> '<value>)       ;; Returns T if the list/map contains
                                         ;;    value.
 ! (map '( (<key1> <val1>) (<key2> <val>2) ...))
                                         ;; Construct a map of key-value pairs.
-! (update! <map1> <map2>)                 ;; Merge map2's data into map1.
-! (hasKey? <map> <key>)                   ;; Return 1 if key is in map.
+! (update! <map1> <map2>)                 ;; Update map1's data with map2.
+! (hasKey? <map> <key>)                   ;; Return T if key is in map.
 
 ### Arithmetic Operations ###
 (+ <expr1> <expr2> ...)                 ;; Returns the sum of numbers or

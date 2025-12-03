@@ -28,15 +28,19 @@ class LSymbol( object ):
       return self.strval
 
    def __eq__( self, other: Any ) -> bool:
-      try:
+      if isinstance(other, LSymbol):
          return self.strval == other.strval
-      except AttributeError:
+      elif isinstance(other, str):
+         return self.strval == other
+      else:
          return False
 
    def __ne__( self, other: Any ) -> bool:
-      try:
+      if isinstance(other, LSymbol):
          return self.strval != other.strval
-      except:
+      elif isinstance(other, str):
+         return self.strval != other
+      else:
          return True
 
 
@@ -143,9 +147,7 @@ class LFunction( object ):
 
    def setName( self, name: LSymbol ) -> None:
       self._name = name
-      paramList = [ x.strval for x in self._params ]
-      paramListStr = ' '.join(paramList)
-      self._reprStr = f"(Function {self._name} ({paramListStr}) ... )"
+      self._reprStr = f"(Function {self._name} {self._params} ... )"
 
 
 class LMacro( object ):
@@ -170,8 +172,8 @@ class LMacro( object ):
       latestResult = None
       for expr in listOfExpandedExprs:
          latestResult = sExprEvaluator( env, expr )
-
       return latestResult
 
    def setName( self, name: LSymbol ) -> None:
+      self._name = name
       self._reprStr = f"(Macro {self._name} {self._params} ... )"
