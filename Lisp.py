@@ -1,7 +1,6 @@
 from ltk.Listener import Listener
 from LispInterpreter import LispInterpreter
 
-import os
 import sys
 
 def main( ) -> None:
@@ -14,21 +13,22 @@ def main( ) -> None:
                                    testdir='testing'
                                    )
 
-   cli_argv = sys.argv
-   cli_argc = len(cli_argv)
-   if cli_argc == 1:
-      theListener.readEvalPrintLoop( )
-   elif cli_argc == 2:
+   argv = sys.argv        # argument values
+   argc = len(argv)       # argument count
+   if argc == 2:
       # Execute a lisp source file
-      sourceFilename = cli_argv[1]
+      sourceFilename = argv[1]
       theListener.sourceFile_exec( sourceFilename )
-   elif cli_argc == 3:
+      return
+   elif argc == 3:
       # Execute a listener session log file
-      if cli_argv[1].upper() != '-L':
+      if argv[1] != '-l':
          print( "Error: Invalid command line switch." )
          return
-      logFilename = cli_argv[2]
+      logFilename = argv[2]
       theListener.sessionLog_restore( logFilename )
+
+   theListener.readEvalPrintLoop( )
 
 if __name__ == '__main__':
    main( )

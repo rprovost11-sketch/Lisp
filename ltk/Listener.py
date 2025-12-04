@@ -47,6 +47,7 @@ class Listener( object ):
       self._cmd_reboot( [ ] )
 
    def readEvalPrintLoop( self ) -> None:
+      '''Execute a read-eval-print-loop.  Handles all exceptions internally.'''
       inputExprLineList: list[str] = [ ]
 
       keepLooping = True
@@ -71,12 +72,7 @@ class Listener( object ):
             except StopIteration:
                keepLooping = False
 
-            except Parser.ParseError as ex:
-               exceptInfo = sys.exc_info( )
-               self._writeErrorMsg( ex.generateVerboseErrorString() )
-               sys.excepthook( *exceptInfo )
-
-            except ListenerCommandError as ex:
+            except (Parser.ParseError, ListenerCommandError) as ex:
                exceptInfo = sys.exc_info( )
                self._writeErrorMsg( ex.args[-1] )
 
@@ -93,46 +89,33 @@ class Listener( object ):
                inputExprLineList.append( lineInput )
 
    def sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
+      '''Read in and restore/execute a session log.  Returns if an exception occurs.'''
       inputText = None
-      try:
-         with open( filename, 'r') as file:
-            inputText = file.read( )
-      except:
-         self._writeErrorMsg( ex.args[-1] )
-         return
+      with open( filename, 'r') as file:
+         inputText = file.read( )
 
       for exprNum,exprPackage in enumerate(Listener._parseLog(inputText)):
          exprStr,outputStr,retValStr,errMsgStr = exprPackage
          if verbosity > 0:
+            exprLines = exprStr.splitlines()
             for lineNum, line in enumerate(exprLines):
                if lineNum == 0:
                   print( f'\n>>> {line}' )
                else:
                   print( f'... {line}')
 
-         try:
-            resultStr = self._interp.eval( exprStr )
-         except Parser.ParseError as ex:
-            self._writeErrorMsg( ex.generateVerboseErrorString() )
-            return
-         except Exception as ex:
-            self._writeErrorMsg( ex.args[-1] )
-            return
-
+         resultStr = self._interp.eval( exprStr )
          if verbosity == 3:
             print( f'\n==> {resultStr}' )
 
    def sessionLog_test( self, filename: str, verbosity: int=3 ) -> str:
+      '''Test the interpreter by comparing evaluation results to a session log.
+      Returns if an exception occurs.'''
       inputText = None
-      try:
-         with open( filename, 'r') as file:
-            inputText = file.read( )
-      except:
-         self._writeErrorMsg( ex.args[-1] )
-         return
+      with open( filename, 'r') as file:
+         inputText = file.read( )
 
       print( f'   Test file: {filename}... ', end='' )
-
       if verbosity >= 3:
          print()
 
@@ -151,20 +134,11 @@ class Listener( object ):
          # Perform the test and collect the various outputs
          errorStream = io.StringIO( )
          outputStream = io.StringIO( )
-
-         try:
-            actualRetValStr = self._interp.eval( exprStr, outputStream )
-         except Parser.ParseError as ex:
-            self._writeErrorMsg( ex.generateVerboseErrorString(), file=errorStream )
-            continue
-         except Exception as ex:
-            self._writeErrorMsg( ex.args[-1], file=errorStream )
-            continue
-
+         actualRetValStr = self._interp.eval( exprStr, outputStream )
          actualOutputStr = outputStream.getvalue().strip()
          actualErrorStr = errorStream.getvalue().strip()
 
-         # Assess the results
+         # Compute the results
          retVal_passed = actualRetValStr == expectedRetValStr
          outVal_passed = actualOutputStr == expectedOutputStr
          errVal_passed = actualErrorStr == expectedErrStr
@@ -178,7 +152,7 @@ class Listener( object ):
          # Report Results
          print( f'         {passFail}\n' )
 
-
+      # Summarize results for test file
       numTests = exprNum + 1
       numFailed = numTests - numPassed
       resultMessage = ''
@@ -191,21 +165,11 @@ class Listener( object ):
       return resultMessage
 
    def sourceFile_exec( self, filename ):
-      try:
-         with open(filename, 'r' ) as file:
-            sourceCode = file.read( )
-      except:
-         self._writeErrorMsg( ex.args[-1] )
-         return
-
+      '''Execute a source file.  Does not raise or return a value.'''
+      with open(filename, 'r' ) as file:
+         sourceCode = file.read( )
       outStrm = io.StringIO( )
-
-      try:
-         self._interp.eval( sourceCode, file=outStrm )
-      except Parser.ParseError as ex:
-         self._writeErrorMsg( ex.generateVerboseErrorString() )
-      except Exception as ex:
-         self._writeErrorMsg( ex.args[-1] )
+      self._interp.eval( sourceCode, file=outStrm )
 
    def _cmd_reboot( self, args: list[str] ) -> None:
       '''Usage: reboot

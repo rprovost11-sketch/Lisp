@@ -192,7 +192,9 @@ class ParseError( Exception ):
          'sourceLine': self.sourceLine
          }
 
-   def generateVerboseErrorString( self ):
+      super().__init__( self._generateVerboseErrorString() )
+
+   def _generateVerboseErrorString( self ):
       """Generate an error string.
       Category:      Pure Function.
       Returns:       (str) A detailed textual representation of the error.
