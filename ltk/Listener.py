@@ -168,8 +168,7 @@ class Listener( object ):
       '''Execute a source file.  Does not raise or return a value.'''
       with open(filename, 'r' ) as file:
          sourceCode = file.read( )
-      outStrm = io.StringIO( )
-      self._interp.eval( sourceCode, file=outStrm )
+      self._interp.eval( sourceCode, file=io.StringIO() )
 
    def _cmd_reboot( self, args: list[str] ) -> None:
       '''Usage: reboot

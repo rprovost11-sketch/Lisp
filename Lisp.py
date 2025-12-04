@@ -6,7 +6,7 @@ import sys
 def main( ) -> None:
    interp = LispInterpreter( )
    theListener = Listener( interp, language='Python\'s Lisp',
-                                   version='0.1.6',
+                                   version='0.2.2',
                                    author='Ronald Provost/Longo',
                                    email='ronLongo9@outlook.com',
                                    libdir='lib',
@@ -27,6 +27,9 @@ def main( ) -> None:
          return
       logFilename = argv[2]
       theListener.sessionLog_restore( logFilename )
+   elif argc > 3:
+      print( 'Error: Invalid number of arguments.' )
+      return
 
    theListener.readEvalPrintLoop( )
 

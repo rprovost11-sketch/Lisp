@@ -45,6 +45,22 @@ Some information for the programmer
   read-eval-print loop.
 
 
+Usage
+=====
+
+Run the repl.
+
+          > python3 Lisp.py
+
+Execute a lisp source file.
+
+          > python3 Lisp.py <lispSourceFile.lisp>
+
+Exectue a listener log file, and enter the repl.
+
+          > python3 Lisp.py -l <sessionLogFile>
+
+
 The Language
 ============
 Lexical Elements
