@@ -94,35 +94,42 @@ class Listener( object ):
 
    def sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
       inputText = None
-      with open( filename, 'r') as file:
-         inputText = file.read( )
-
-      if inputText is None:
-         raise ListenerCommandError( f'Unable to read file {filename}.\n' )
+      try:
+         with open( filename, 'r') as file:
+            inputText = file.read( )
+      except:
+         self._writeErrorMsg( ex.args[-1] )
+         return
 
       for exprNum,exprPackage in enumerate(Listener._parseLog(inputText)):
          exprStr,outputStr,retValStr,errMsgStr = exprPackage
-         if verbosity == 0:
-            self._interp.eval( exprStr )
-         else:
-            exprLines = exprStr.splitlines()
+         if verbosity > 0:
             for lineNum, line in enumerate(exprLines):
                if lineNum == 0:
                   print( f'\n>>> {line}' )
                else:
                   print( f'... {line}')
 
+         try:
             resultStr = self._interp.eval( exprStr )
-            if verbosity == 3:
-               print( f'\n==> {resultStr}' )
+         except Parser.ParseError as ex:
+            self._writeErrorMsg( ex.generateVerboseErrorString() )
+            return
+         except Exception as ex:
+            self._writeErrorMsg( ex.args[-1] )
+            return
+
+         if verbosity == 3:
+            print( f'\n==> {resultStr}' )
 
    def sessionLog_test( self, filename: str, verbosity: int=3 ) -> str:
       inputText = None
-      with open( filename, 'r') as file:
-         inputText = file.read( )
-
-      if inputText is None:
-         raise ListenerCommandError( 'Unable to read file {filename}.\n' )
+      try:
+         with open( filename, 'r') as file:
+            inputText = file.read( )
+      except:
+         self._writeErrorMsg( ex.args[-1] )
+         return
 
       print( f'   Test file: {filename}... ', end='' )
 
@@ -149,8 +156,10 @@ class Listener( object ):
             actualRetValStr = self._interp.eval( exprStr, outputStream )
          except Parser.ParseError as ex:
             self._writeErrorMsg( ex.generateVerboseErrorString(), file=errorStream )
+            continue
          except Exception as ex:
             self._writeErrorMsg( ex.args[-1], file=errorStream )
+            continue
 
          actualOutputStr = outputStream.getvalue().strip()
          actualErrorStr = errorStream.getvalue().strip()
@@ -180,6 +189,23 @@ class Listener( object ):
 
       print( resultMessage )
       return resultMessage
+
+   def sourceFile_exec( self, filename ):
+      try:
+         with open(filename, 'r' ) as file:
+            sourceCode = file.read( )
+      except:
+         self._writeErrorMsg( ex.args[-1] )
+         return
+
+      outStrm = io.StringIO( )
+
+      try:
+         self._interp.eval( sourceCode, file=outStrm )
+      except Parser.ParseError as ex:
+         self._writeErrorMsg( ex.generateVerboseErrorString() )
+      except Exception as ex:
+         self._writeErrorMsg( ex.args[-1] )
 
    def _cmd_reboot( self, args: list[str] ) -> None:
       '''Usage: reboot

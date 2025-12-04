@@ -43,10 +43,12 @@ class LispInterpreter( Interpreter ):
 
    def eval( self, inputExprStr: str, outStrm=None ) -> str:
       LispInterpreter.outStrm = outStrm
-      ast = self._parser.parse( inputExprStr )
-      resultExpr = LispInterpreter._lEval( self._env, ast )
-      LispInterpreter.outStrm = None
-      return prettyPrintSExpr( resultExpr ).strip()
+      try:
+         ast = self._parser.parse( inputExprStr )
+         returnVal = LispInterpreter._lEval( self._env, ast )
+      finally:
+         LispInterpreter.outStrm = None
+      return prettyPrintSExpr( returnVal ).strip()
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
@@ -1032,7 +1034,7 @@ class LispInterpreter( Interpreter ):
 
          try:
             base,power = args
-            return math.pow(base,power)
+            return base ** power
          except:
             raise LispRuntimeFuncError( LP_expt, 'Invalid argument.' )
 

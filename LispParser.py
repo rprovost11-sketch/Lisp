@@ -349,13 +349,20 @@ class LispParser( Parser.Parser ):
    def parse( self, inputString: str ) -> Any:  # Returns an AST of inputString
       self._scanner.reset( inputString )
 
-      ast = self._parseObject( )
+      # Parse all the sexpressions and insert them into a lisp progn function
+      exprAst = self._parseObject( )
+      bodyExpr = None
+      if exprAst is not None:
+         bodyExpr = LList( LSymbol('progn'), exprAst )
+         while self._scanner.peekToken() != LispScanner.EOF_TOK:
+            exprAst = self._parseObject( )
+            bodyExpr.append( exprAst )
 
       # EOF
       if self._scanner.peekToken( ) != LispScanner.EOF_TOK:
          raise Parser.ParseError( self._scanner, 'EOF Expected.' )
 
-      return ast
+      return bodyExpr
 
    def _parseObject( self ) -> Any: # Returns an AST or None if eof
       lex: str = ''           # Holds the lexeme string
