@@ -8,19 +8,41 @@ import time
 from abc import ABC, abstractmethod
 from typing import Any
 
+def retrieveFileList( dirname ) -> list[str]:
+   "Returns a list of all the filenames in the specified directory."
+   testFileList = os.listdir( dirname )
+   testFileList.sort()
+   testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList ]
+   return testFileList
+
 class ListenerCommandError( Exception ):
    def __init__( self, message, *args, **kwargs ):
       super().__init__( message )
 
 class Interpreter( ABC ):
    '''Interpreter interface required by the Listener class.'''
+   def evalFile( self, filename: str ):
+      with open(filename, 'r' ) as file:
+         sourceCode = file.read( )
+      return self.eval( sourceCode, outStrm=io.StringIO() )
+
+   def evalFiles( self, filenameList: list[str] ):
+      lastResult = None
+      for filename in filenameList:
+         lastResult = self.evalFile( filename )
+      return lastResult
+
+   def loadRuntimeLibrary( self, runtimeLibraryDir: str) -> None:
+      filenameList = retrieveFileList( runtimeLibraryDir )
+      self.evalFiles( filenameList )
+
    @abstractmethod
    def reboot( self ):
       '''Reboot the interpreter.'''
       pass
 
    @abstractmethod
-   def eval( self, anExprStr: str, file=None ):
+   def eval( self, anExprStr: str, file=None ) -> str:
       '''Evaluate an expression string of the target language and return a
       string expr representing the return value of the evaluation.
 
@@ -164,12 +186,6 @@ class Listener( object ):
       print( resultMessage )
       return resultMessage
 
-   def sourceFile_exec( self, filename ):
-      '''Execute a source file.  Does not raise or return a value.'''
-      with open(filename, 'r' ) as file:
-         sourceCode = file.read( )
-      self._interp.eval( sourceCode, file=io.StringIO() )
-
    def _cmd_reboot( self, args: list[str] ) -> None:
       '''Usage: reboot
       Reset the interpreter.
@@ -184,9 +200,7 @@ class Listener( object ):
       print( '- Interpreter initialized.' )
 
       # Read in the libraries
-      filenameList = Listener._retrieveFileList( self._libdir )
-      for filename in filenameList:
-         self.sessionLog_restore( filename )
+      self._interp.loadRuntimeLibrary( self._libdir )
       print( '- Runtime libraries loaded.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Enter \']help\' for listener commands.' )
@@ -249,7 +263,7 @@ class Listener( object ):
       if numArgs == 1:
          filenameList = args
       else:
-         filenameList = Listener._retrieveFileList( self._testdir )
+         filenameList = retrieveFileList( self._testdir )
 
       # Conduct the testing
       testSummaryList: list[tuple[str, str]] = [ ]
@@ -374,14 +388,6 @@ class Listener( object ):
       if self._logFile and ((len(inputStr) != 0) or (inputStr[0] != ']')):
          self._logFile.write( f'{prompt}{inputStr}\n' )
       return inputStr
-
-   @staticmethod
-   def _retrieveFileList( dirname: str='' ) -> list[str]:
-      "Returns a list of all the filenames in the specified directory."
-      testFileList = os.listdir( dirname )
-      testFileList.sort()
-      testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList ]
-      return testFileList
 
    @staticmethod
    def _columnize(list: list[str], displaywidth: int=80) -> None:

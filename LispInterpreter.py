@@ -4,6 +4,7 @@ from LispParser import LispParser
 from ltk.Listener import Interpreter
 from ltk.Environment import Environment
 
+import io
 import functools
 import math
 import random
@@ -34,12 +35,11 @@ class LispInterpreter( Interpreter ):
 
    def __init__( self ) -> None:
       self._parser: LispParser = LispParser( )
-      primitiveDict: dict[str, Any] = LispInterpreter._constructPrimitives( self._parser.parse )
-      self._env:Environment = Environment( parent=None, **primitiveDict )
+      self.reboot( )
 
    def reboot( self ) -> None:
-      primitiveDict = LispInterpreter._constructPrimitives( self._parser.parse )
-      self._env = self._env.reInitialize( **primitiveDict )
+      primitiveDict: dict[str, Any] = LispInterpreter._constructPrimitives( self._parser.parse )
+      self._env:Environment = Environment( parent=None, **primitiveDict )
 
    def eval( self, inputExprStr: str, outStrm=None ) -> str:
       LispInterpreter.outStrm = outStrm
@@ -49,6 +49,15 @@ class LispInterpreter( Interpreter ):
       finally:
          LispInterpreter.outStrm = None
       return prettyPrintSExpr( returnVal ).strip()
+
+   def eval2( self, inputExprStr: str, outStrm=None ) -> Any:
+      LispInterpreter.outStrm = outStrm
+      try:
+         ast = self._parser.parse( inputExprStr )
+         returnVal = LispInterpreter._lEval( self._env, ast )
+      finally:
+         LispInterpreter.outStrm = None
+      return returnVal
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
@@ -349,12 +358,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_undef, '1 argument exptected.' )
          key = args[0]
 
-         try:
-            theSymTab =  env.findDef( str(key) )
-            if theSymTab:
-               theSymTab.undef( str(key) )
-         except:
-            raise LispRuntimeFuncError( LP_undef, 'Unknown error.' )
+         env.getGlobalEnv().undef( str(key) )
          return L_NIL
 
       @LDefPrimitive( 'symtab!', '')

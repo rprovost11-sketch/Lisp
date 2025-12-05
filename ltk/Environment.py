@@ -6,11 +6,6 @@ class Environment( object ):
       self._locals: dict[str, Any] = initialNameValDict.copy()
       self._GLOBAL_SCOPE: Environment = parent._GLOBAL_SCOPE if parent else self
 
-   def reInitialize( self, **initialNameValDict ) -> Environment:
-      root = self._GLOBAL_SCOPE
-      root._locals = initialNameValDict.copy()
-      return root
-
    def setLocal( self, key: str, value: Any ) -> Any:
       self._locals[ key ] = value
       return value
