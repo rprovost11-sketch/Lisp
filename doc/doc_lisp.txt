@@ -61,15 +61,15 @@ function and prints the results.
           from LispInterpreter import LispInterpreter
           from LispAST import prettyPrintSExpr
 
-          interp = LispInterpreter( )
-          interp.loadRuntimeLibrary( runtimeLibraryDir='lib' )
-          interp.eval2( '''(defun fibo (num)
-                              (if (< num 2)
-                                  1
-                                  (+ (fibo (- num 1))
-                                     (fibo (- num 2)))))''')
+          interp = LispInterpreter( runtimeLibraryDir='lib' )
+          interp.rawEval( '''(defun fibo (num)
+                                 (if (< num 2)
+                                     1
+                                     (+ (fibo (- num 1))
+                                        (fibo (- num 2)))))''')
+
           defun fibo( nth ):
-             return interp.eval2(f'(fibo {nth})')
+             return interp.rawEval(f'(fibo {nth})')
 
           print( fibo(10) )
           print( prettyPrintSExpr(fib(15)) )

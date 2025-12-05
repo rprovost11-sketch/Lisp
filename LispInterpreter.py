@@ -1,7 +1,7 @@
 from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive, LMacro,
                        prettyPrintSExpr )
 from LispParser import LispParser
-from ltk.Listener import Interpreter
+from ltk.Listener import Interpreter, retrieveFileList
 from ltk.Environment import Environment
 
 import io
@@ -33,24 +33,21 @@ class LispInterpreter( Interpreter ):
    outStrm = None
    counter = 1               # Used by gensym to generate unique symbols
 
-   def __init__( self ) -> None:
+   def __init__( self, runtimeLibraryDir: str ) -> None:
+      self._libDir = runtimeLibraryDir
       self._parser: LispParser = LispParser( )
       self.reboot( )
 
    def reboot( self ) -> None:
       primitiveDict: dict[str, Any] = LispInterpreter._constructPrimitives( self._parser.parse )
       self._env:Environment = Environment( parent=None, **primitiveDict )
+      self._loadRuntimeLibrary( )
 
    def eval( self, inputExprStr: str, outStrm=None ) -> str:
-      LispInterpreter.outStrm = outStrm
-      try:
-         ast = self._parser.parse( inputExprStr )
-         returnVal = LispInterpreter._lEval( self._env, ast )
-      finally:
-         LispInterpreter.outStrm = None
+      returnVal = self.rawEval( inputExprStr, outStrm )
       return prettyPrintSExpr( returnVal ).strip()
 
-   def eval2( self, inputExprStr: str, outStrm=None ) -> Any:
+   def rawEval( self, inputExprStr: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
          ast = self._parser.parse( inputExprStr )
@@ -58,6 +55,16 @@ class LispInterpreter( Interpreter ):
       finally:
          LispInterpreter.outStrm = None
       return returnVal
+
+   def evalFile( self, filename: str ) -> None:
+      with open(filename, 'r' ) as file:
+         sourceCode = file.read( )
+      self.eval( sourceCode, outStrm=io.StringIO() )
+
+   def _loadRuntimeLibrary( self ) -> None:
+      filenameList = retrieveFileList( self._libDir )
+      for filename in filenameList:
+         self.evalFile( filename )
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:

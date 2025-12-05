@@ -20,22 +20,7 @@ class ListenerCommandError( Exception ):
       super().__init__( message )
 
 class Interpreter( ABC ):
-   '''Interpreter interface required by the Listener class.'''
-   def evalFile( self, filename: str ):
-      with open(filename, 'r' ) as file:
-         sourceCode = file.read( )
-      return self.eval( sourceCode, outStrm=io.StringIO() )
-
-   def evalFiles( self, filenameList: list[str] ):
-      lastResult = None
-      for filename in filenameList:
-         lastResult = self.evalFile( filename )
-      return lastResult
-
-   def loadRuntimeLibrary( self, runtimeLibraryDir: str) -> None:
-      filenameList = retrieveFileList( runtimeLibraryDir )
-      self.evalFiles( filenameList )
-
+   '''Interpreter interface expected by the Listener class.'''
    @abstractmethod
    def reboot( self ):
       '''Reboot the interpreter.'''
@@ -45,10 +30,6 @@ class Interpreter( ABC ):
    def eval( self, anExprStr: str, file=None ) -> str:
       '''Evaluate an expression string of the target language and return a
       string expr representing the return value of the evaluation.
-
-      EXCEPTIONS:
-         Implementation should bundle errors and exceptions such that only
-         two kinds of exceptions leave
       '''
       pass
 
@@ -57,14 +38,13 @@ class Listener( object ):
    '''Listener environment for interpreted languages.  Has a read-eval-print
    loop and listener commands for session logging, as well as testing and
    rebooting the intepreter.  Ripped off from Python's cmd module.'''
-   def __init__( self, anInterpreter: Interpreter, libdir: str='', testdir: str='', **kwargs ) -> None:
+   def __init__( self, anInterpreter: Interpreter, testdir: str='', language: str='', version: str='', **kwargs ) -> None:
       super().__init__( )
 
       self._interp          = anInterpreter
       self._logFile: Any    = None
       self._testdir         = testdir
-      self._libdir          = libdir
-      self._writeLn( '{language:s} {version:s}'.format(**kwargs) )
+      self._writeLn( '{language} {version}'.format(**kwargs) )
       self._writeLn( '- Listener initialized.' )
       self._cmd_reboot( [ ] )
 
@@ -198,9 +178,6 @@ class Listener( object ):
 
       self._interp.reboot( )
       print( '- Interpreter initialized.' )
-
-      # Read in the libraries
-      self._interp.loadRuntimeLibrary( self._libdir )
       print( '- Runtime libraries loaded.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Enter \']help\' for listener commands.' )
