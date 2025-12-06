@@ -33,15 +33,21 @@ class LispInterpreter( Interpreter ):
    outStrm = None
    counter = 1               # Used by gensym to generate unique symbols
 
-   def __init__( self, runtimeLibraryDir: str ) -> None:
+   def __init__( self, runtimeLibraryDir: str=None ) -> None:
       self._libDir = runtimeLibraryDir
       self._parser: LispParser = LispParser( )
       self.reboot( )
 
    def reboot( self ) -> None:
+      # Load in the primitives
       primitiveDict: dict[str, Any] = LispInterpreter._constructPrimitives( self._parser.parse )
       self._env:Environment = Environment( parent=None, **primitiveDict )
-      self._loadRuntimeLibrary( )
+
+      # Load in the runtime library
+      if self._libDir:
+         filenameList = retrieveFileList( self._libDir )
+         for filename in filenameList:
+            self.evalFile( filename )
 
    def eval( self, inputExprStr: str, outStrm=None ) -> str:
       returnVal = self.rawEval( inputExprStr, outStrm )
@@ -59,12 +65,7 @@ class LispInterpreter( Interpreter ):
    def evalFile( self, filename: str ) -> None:
       with open(filename, 'r' ) as file:
          sourceCode = file.read( )
-      self.eval( sourceCode, outStrm=io.StringIO() )
-
-   def _loadRuntimeLibrary( self ) -> None:
-      filenameList = retrieveFileList( self._libDir )
-      for filename in filenameList:
-         self.evalFile( filename )
+      self.rawEval( sourceCode, outStrm=io.StringIO() )
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
@@ -132,6 +133,7 @@ class LispInterpreter( Interpreter ):
 
          return latestResult
       elif isinstance( sExpr, LMacro ):
+         # Expand the macro body and return it in a list
          return LispInterpreter._macroexpand( env, sExpr, list(args) ) #convert args from a tuple to a list
       else:
          raise LispRuntimeError( 'Unknown lisp expression type.' )
@@ -714,6 +716,16 @@ class LispInterpreter( Interpreter ):
          theExpr = args[0]
          theExprStr = prettyPrintSExpr( theExpr )
          return theExprStr
+
+      @LDefPrimitive( 'python', '<string>' )
+      def LP_python( env: Environment, *args, **kwargs ) -> Any:
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_python, '1 string argument expected by python.' )
+         thePythonCode = args[0]
+         if not isinstance(thePythonCode, str):
+            raise LispRuntimeFuncError( LP_python, 'Argument expected to be a string.' )
+         theReturnVal = eval( thePythonCode, globals(), locals() )
+         return theReturnVal
 
       # =======================
       # List & Map Manipulation

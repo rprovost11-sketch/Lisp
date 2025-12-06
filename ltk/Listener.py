@@ -37,15 +37,15 @@ class Interpreter( ABC ):
 class Listener( object ):
    '''Listener environment for interpreted languages.  Has a read-eval-print
    loop and listener commands for session logging, as well as testing and
-   rebooting the intepreter.  Ripped off from Python's cmd module.'''
+   rebooting the intepreter.  Partly ripped off from Python's cmd module.'''
    def __init__( self, anInterpreter: Interpreter, testdir: str='', language: str='', version: str='', **kwargs ) -> None:
       super().__init__( )
 
       self._interp          = anInterpreter
-      self._logFile: Any    = None
       self._testdir         = testdir
-      self._writeLn( '{language} {version}'.format(**kwargs) )
-      self._writeLn( '- Listener initialized.' )
+      self._logFile: Any    = None
+      print( f'{language} {version}' )
+      print( '- Listener initialized.' )
       self._cmd_reboot( [ ] )
 
    def readEvalPrintLoop( self ) -> None:
@@ -307,16 +307,16 @@ class Listener( object ):
       '''Usage:  exit
       Exit the interpreter and listener.
       '''
-      if self._logFile is not None:
-         raise ListenerCommandError( "Logging must be stopped before you can exit." )
-
       if len(args) != 0:
          raise ListenerCommandError( self._cmd_exit.__doc__ )
 
-      self._writeLn( 'Bye.' )
+      if self._logFile is not None:
+         self._cmd_close( [''] )
+
+      print( 'Bye.' )
       raise StopIteration( )
 
-   def _cmd_help(self, args: list[str] ) -> None:
+   def _cmd_help( self, args: list[str] ) -> None:
       '''Usage: help [<command>]
       List all available commands, or detailed help for a specific command.
       '''
@@ -325,7 +325,7 @@ class Listener( object ):
          try:
             doc=getattr(self, f'_cmd_{arg}').__doc__
             if doc:
-               raise ListenerCommandError(str(doc))
+               raise ListenerCommandError(doc)
          except AttributeError:
             pass
          raise ListenerCommandError( f"*** No help on {arg}." )
@@ -367,7 +367,7 @@ class Listener( object ):
       return inputStr
 
    @staticmethod
-   def _columnize(list: list[str], displaywidth: int=80) -> None:
+   def _columnize( list: list[str], displaywidth: int=80 ) -> None:
       """Display a list of strings as a compact set of columns.
 
       Each column is only as wide as necessary.
@@ -418,7 +418,7 @@ class Listener( object ):
    @staticmethod
    def _parseLog( inputText: str ) -> list[tuple[str, str, str, str]]:
       lineIter = iter(inputText.splitlines(keepends=True))
-      parsedLog = [ ]
+      parsedLog: list[Any] = [ ]
       eof = False
 
       try:

@@ -166,9 +166,10 @@ class LMacro( object ):
       return self._reprStr
 
    def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
-      listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )   # Calls back to LispInterpreter._lEval to expand macro body
+      # Expand macro body
+      listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )
 
-      # Eval each of the exprs of the macro's body
+      # Eval each of the expanded exprs of the macro's body
       latestResult = None
       for expr in listOfExpandedExprs:
          latestResult = sExprEvaluator( env, expr )

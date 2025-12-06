@@ -11,7 +11,7 @@ Goals
 Features
 - A full featured listener with session logging and resumption, interpreter
   reboot, and interpreter testing.
-- Function definition with full stack and recursion support.
+- Function definition with stack and recursion support.
 - Common Lisp macro defition and the macroexpand primitive.
 - &rest and &optional parameter support in both function and macro definitions.
 - Rhobust error handling and reporting.
@@ -19,8 +19,9 @@ Features
 - Support for special operations.
 - Includes runtime libraries written in lisp.
 - Easily integrates lisp into python code.
+- Call into python code from lisp.
 
-Some Design Features
+Design Features (the code not lisp)
 - Fully object oriented.
 - Designed to be easily modified and exteded.
 - Prioritize readability over performance.
@@ -28,7 +29,8 @@ Some Design Features
 - Full suite of tests.
 - Strings support the full range of python escape sequences.
 - Fully implemented in python 3.14.
-- Implemented from scratch (without copying other people's ideas).
+- Implemented from scratch.
+- No external package dependencies.
 
 
 Command Line Usage
@@ -42,21 +44,17 @@ Execute a lisp source file.
 
           > python3 Lisp.py <lispSourceFile.lisp>
 
-Exectue a listener log file, and enter the repl.
 
-          > python3 Lisp.py -l <sessionLogFile>
+API: Using Lisp as a Package
+============================
 
-
-API Useage as a Package
-=======================
-
-The easiest way to use the package is to instantiate a LispInterpreter, load
-its runtime library, then use its eval() functions to call into lisp.
-Successive calls to these eval functions are equivalent to successive
-evaluations in the repl.  Thus, data is persistent across calls.
+The easiest way to use the package is to instantiate a LispInterpreter, passing
+it info on where to find a runtime library, then use its eval() functions to
+call into lisp.  Successive calls to these eval functions are equivalent to
+successive evaluations in the repl.  Thus, data is persistent across calls.
 
 The example below simply defines a fibonacci function in lisp, then calls the
-function and prints the results.
+function from python and prints the results.
 
           from LispInterpreter import LispInterpreter
           from LispAST import prettyPrintSExpr
@@ -68,27 +66,35 @@ function and prints the results.
                                      (+ (fibo (- num 1))
                                         (fibo (- num 2)))))''')
 
-          defun fibo( nth ):
+          def fibo_wrapper( nth ):
              return interp.rawEval(f'(fibo {nth})')
 
-          print( fibo(10) )
-          print( prettyPrintSExpr(fib(15)) )
+          print( fibo_wrapper(10) )
+          print( prettyPrintSExpr(fibo_wrapper(15)) )
 
 If the lisp code returns an int,float,fraction or string, then it just returns
-the python verions of those things.  However, most calls to eval2 will return
-an AST of an sexpression.  A subsequent call to prettyPrintSExpr(ast) will
-convert the complex structure to a string representation.
+the python verions of those things.  However, most calls to rawEval will return
+the AST of an sexpression.  A subsequent call to prettyPrintSExpr(ast) will
+convert the complex structure to a python string representation.
 
 LispInterpreter's eval functions can handle any number of lisp expressions
 in the string argument.  The return value is always the value of the result
 of evaluating the last expression in the string.
 
-Currently there is no mechanism to call python code from lisp.
+Calling python from lisp is even easier.  Just call the python lisp primitive
+and pass it some python code in a lisp string.
+
+          # Simply call python
+          interp.rawEval( '(python "3 + 4")' )
+
+          # Passing values from lisp
+          interp.rawEval( '(setf num 3)' )
+          interp.rawEval( '(python (string num " + 4"))' )
 
 Primarily you will want your program to interact with LispAST.py,
 LispInterpreter.py, LispParser.py and ltk/Listener.py.  Methods prefixed by _
 are considered private.  Private methods are implementation details for the
-given class and it probably not useful to you.  Moreover, given that they are
+given class and probably not useful to you.  Moreover, given that they are
 not intended for use, they are likely to change without notice in future
 revisions.  The remaining methods, those without _, are public and are useful
 to the python programmer.  Note that the public interface for the class
@@ -103,7 +109,7 @@ new primitives into the LispInterpreter.  Following are some notes I've
 accumulated regarding modifying the package.
 
 Regarding Exceptions in the Interpreter and AST
-- During expression evaluation, we want to catch all the low level python
+- During expression evaluation, you want to catch all the low level python
   exceptions and re-raise higher level lisp exceptions with information useful
   to the lisp programmer.  However, we don't wrap a call to
   LispInterpreter._lEval() (or a call to something that calls _lEval()) in a try
@@ -114,33 +120,35 @@ Regarding Exceptions in the Interpreter and AST
 
 The Language
 ============
-Lexical Elements
-----------------
+The Language
+------------
+Lexemes
    Comments
       Comments extend from ';' through '\n'.
 
    Literals
-      NumberLiteral:  ('+'|'-')('0' .. '9')+
-                      ( '.' ('0' .. '9')+ | '/' ('0' .. '9')+ )
-                      # Integer, Decimal or Fraction.
+      NumberLiteral:  ['+'|'-'] ('0' .. '9')+
+                         ( '/' ('0' .. '9')+
+                         | 'e' ['+'|'-'] ('0' .. '9')+
+                         | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]
+                         )
       StringLiteral:  '"' (^('"'))* '"'
-      Symbol:         'a..zA..Z+-~!@$%^&*_=\/?<>'
-                      { 'a..zA..Z+-~!@$%^&*_=\/?<>0..9' }
+      Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>'
+                      { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
 
-   Reserved Symbols
-         'nil', 't', 'pi', 'e', 'inf', 'nan'
+   Predefined Symbols
+         'nil', 't', 'e', 'pi', 'inf', 'nan'
 
 Grammar
--------
    Start:
-      Object EOF
+      Object* EOF
 
    Object:
       NumberLiteral | StringLiteral | Symbol | List | '#' | '|' | ':' | '[' | ']'
       | "'" Object | "`" Object | "," Object | ",@" Object
 
    List:
-      '(' [ Object { Object } ] ')'
+      '(' Object* ')'
 
 ### LISP PRIMITIVES ###
 #######################
@@ -159,7 +167,7 @@ NAN                                     ;; the constant not-a-number.
         <expr1> <expr2> ...)
 (expandmacro '(<macroName> <arg1> <arg2> ...))
                                         ;; Perform the expansion of the macro
-                                        ;;    and returns the results of those
+                                        ;;    and return the results of those
                                         ;;    expansions in a list.
 (setf <symbol> <expr> )                 ;; Update a variable's value.  The
                                         ;;    search for the variable begins
@@ -249,16 +257,13 @@ NAN                                     ;; the constant not-a-number.
 ! (parse <string>)                        ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
 ! (pprint '<expr>)                        ;; Pretty Print an sexpression.
+! (python <pythonCodeString>)           ;; Execute some python code from lisp.
 
 ### List & Map Manipulation ###
 (list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
                                         ;;    expressions.
 (car <list>)                            ;; Return the first item in the list.
 (cdr <list>)                            ;; Return the list minus the first item.
-    also: caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr,
-          cdaar, cdadr, cddar, cdddr, caaaar, caaadr, caadar,
-          caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
-          cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr
 (cons '<obj> '<list>)                   ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
 ! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
@@ -351,6 +356,10 @@ NAN                                     ;; the constant not-a-number.
 Library Functions
 =================
 
+caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr,
+cdaar, cdadr, cddar, cdddr, caaaar, caaadr, caadar,
+caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
+cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr
 (null <sexpr>)                          ;; Is the result of the sexpr nil?
 ! (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
