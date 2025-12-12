@@ -52,7 +52,7 @@ class Environment( object ):
 
    def findDef( self, key: str ) -> (Environment | None):
       '''Starting from the local-most scope, this function searches for the
-      scope in which a symbol (key) is defined and returns that SymbolTable.
+      scope in which key is defined and returns that SymbolTable.
       If the key is not defined, None is returned.'''
       scope: (Environment | None) = self
       while scope:

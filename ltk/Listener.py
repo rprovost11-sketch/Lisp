@@ -29,8 +29,15 @@ class Interpreter( ABC ):
    @abstractmethod
    def eval( self, anExprStr: str, file=None ) -> str:
       '''Evaluate an expression string of the target language and return a
-      string expr representing the return value of the evaluation.
+      string representing the return value of the evaluation.
       '''
+      pass
+
+   @abstractmethod
+   def evalFile( self, filename: str ) -> None:
+      '''Read and evaluate a target language source file.  Returns the result
+      of the last expression evaluated.  Evaluation of the source file should
+      occur silently.  All output should be suppressed.'''
       pass
 
 
@@ -75,13 +82,12 @@ class Listener( object ):
                keepLooping = False
 
             except (Parser.ParseError, ListenerCommandError) as ex:
-               exceptInfo = sys.exc_info( )
                self._writeErrorMsg( ex.args[-1] )
 
             except Exception as ex:   # Unknowns raised by the interpreter
-               exceptInfo = sys.exc_info( )
                self._writeErrorMsg( ex.args[-1] )
-               sys.excepthook( *exceptInfo )
+               #exceptInfo = sys.exc_info( )
+               #sys.excepthook( *exceptInfo )
 
             self._writeLn( )
             inputExprLineList = [ ]
@@ -205,12 +211,12 @@ class Listener( object ):
       self._writeLn( '' )
       self._writeLn( '==> 0')
 
-   def _cmd_read( self, args: list[str] ) -> None:
-      '''Usage:  read <filename> [v|v]
+   def _cmd_readlog( self, args: list[str] ) -> None:
+      '''Usage:  readlog <filename> [v|v]
       Read and execute a log file.  V is for verbose.
       '''
       if len(args) not in ( 1, 2 ):
-         raise ListenerCommandError( self._cmd_read.__doc__ )
+         raise ListenerCommandError( self._cmd_readlog.__doc__ )
 
       verbosity: int=0
       if len(args) == 2:
@@ -220,6 +226,17 @@ class Listener( object ):
       filename: str = args[0]
       self.sessionLog_restore( filename, verbosity=verbosity )
       print( f'Log file read successfully: {filename}' )
+
+   def _cmd_readsrc( self, args: list[str] ) -> None:
+      '''Usage:  readsrc <filename>
+      Read and execute a source file.
+      '''
+      if len(args) != 1:
+         raise ListenerCommandError( self._cmd_readsrc.__doc__ )
+
+      filename: str = args[0]
+      self._interp.evalFile( filename )
+      print( f'Source file read successfully: {filename}' )
 
    def _cmd_test( self, args: list[str] ) -> None:
       '''Usage:  test [<filename>]

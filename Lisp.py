@@ -3,12 +3,12 @@ from LispInterpreter import LispInterpreter
 
 import sys
 
-LANGUAGE    = 'Python\'s Lisp'
-VERSION     = '0.5.0'
-AUTHOR      = 'Ronald Provost/Longo'
-EMAIL       = 'ronLongo9@outlook.com'
-TEST_DIR    = 'testing'
-LIBRARY_DIR = 'lib'
+LANGUAGE     = 'Python\'s Lisp'
+VERSION      = '0.5.0'
+AUTHOR       = 'Ronald Provost/Longo'
+EMAIL        = 'ronLongo9@outlook.com'
+TEST_DIR     = 'testing'
+LIBRARY_DIR  = 'lib'
 
 def main( ) -> None:
    interp = LispInterpreter( runtimeLibraryDir=LIBRARY_DIR )
@@ -16,6 +16,7 @@ def main( ) -> None:
    argv = sys.argv        # argument values
    argc = len(argv)       # argument count
    if argc == 1:
+      # Enter the repl
       theListener = Listener( interp, language=LANGUAGE,
                                       version=VERSION,
                                       author=AUTHOR,

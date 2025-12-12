@@ -22,6 +22,7 @@ Features
 - Call into python code from lisp.
 
 Design Features (the code not lisp)
+- Very simple tree-walking interpreter.
 - Fully object oriented.
 - Designed to be easily modified and exteded.
 - Prioritize readability over performance.
@@ -50,8 +51,8 @@ API: Using Lisp as a Package
 
 The easiest way to use the package is to instantiate a LispInterpreter, passing
 it info on where to find a runtime library, then use its eval() functions to
-call into lisp.  Successive calls to these eval functions are equivalent to
-successive evaluations in the repl.  Thus, data is persistent across calls.
+call into lisp.  Everything is persistent across calls to these eval functions
+and you can mix and match which one you use at any given time.
 
 The example below simply defines a fibonacci function in lisp, then calls the
 function from python and prints the results.
@@ -64,7 +65,7 @@ function from python and prints the results.
                                  (if (< num 2)
                                      1
                                      (+ (fibo (- num 1))
-                                        (fibo (- num 2)))))''')
+                                        (fibo (- num 2)))))''' )
 
           def fibo_wrapper( nth ):
              return interp.rawEval(f'(fibo {nth})')
@@ -92,7 +93,7 @@ and pass it some python code in a lisp string.
           interp.rawEval( '(python (string num " + 4"))' )
 
 Primarily you will want your program to interact with LispAST.py,
-LispInterpreter.py, LispParser.py and ltk/Listener.py.  Methods prefixed by _
+LispInterpreter.py, LispParser.py and ltk/Parser.py.  Methods prefixed by _
 are considered private.  Private methods are implementation details for the
 given class and probably not useful to you.  Moreover, given that they are
 not intended for use, they are likely to change without notice in future
@@ -105,23 +106,21 @@ Modification of the Package
 ===========================
 
 Customizations are possible.  One way to get started easily is to write some
-new primitives into the LispInterpreter.  Following are some notes I've
+new primitives into LispInterpreter.  Following are some notes I've
 accumulated regarding modifying the package.
 
 Regarding Exceptions in the Interpreter and AST
-- During expression evaluation, you want to catch all the low level python
+- During s-expression evaluation, you want to catch all the low level python
   exceptions and re-raise higher level lisp exceptions with information useful
-  to the lisp programmer.  However, we don't wrap a call to
+  to the lisp programmer.  However, you generally don't want to wrap a call to
   LispInterpreter._lEval() (or a call to something that calls _lEval()) in a try
-  block.  Doing so would prevent the higher level exceptions from percolating up
+  block.  Doing so might prevent the higher level exceptions from percolating up
   and being caught by the listener so it can report them to the lisp programmer
   as verious kinds of lisp errors.  Ideally no low level python exceptions
-  should ever reach the try block in the Listener class's repl.
+  would ever reach the try block in the Listener class's repl.
 
 The Language
 ============
-The Language
-------------
 Lexemes
    Comments
       Comments extend from ';' through '\n'.
@@ -131,8 +130,8 @@ Lexemes
                          ( '/' ('0' .. '9')+
                          | 'e' ['+'|'-'] ('0' .. '9')+
                          | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]
-                         )
-      StringLiteral:  '"' (^('"'))* '"'
+                         )   # Supports integers, floats and fractions
+      StringLiteral:  '"' (^('"'))* '"'   # Supports python escape sequences
       Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>'
                       { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
 
@@ -281,8 +280,8 @@ NAN                                     ;; the constant not-a-number.
                                         ;;    value.
 ! (map '( (<key1> <val1>) (<key2> <val>2) ...))
                                         ;; Construct a map of key-value pairs.
-! (update! <map1> <map2>)                 ;; Update map1's data with map2.
-! (hasKey? <map> <key>)                   ;; Return T if key is in map.
+! (update! <map1> <map2>)                 ;; Update map1's data with map2's.
+! (hasKey? <map> <key>)                   ;; Return T if key is in the map.
 
 ### Arithmetic Operations ###
 (+ <expr1> <expr2> ...)                 ;; Returns the sum of numbers or
@@ -293,7 +292,7 @@ NAN                                     ;; the constant not-a-number.
 ! (// <expr1> <expr2>)                    ;; Returns the integer division.
 (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
 (gcd <int1> <int2> ...)                 ;; Returns the gcd of the arguments.
-(lcd <int1> <int2> ...)                 ;; Returns the lcd of the arguments.
+(lcm <int1> <int2> ...)                 ;; Returns the lcm of the arguments.
 (log <x> [<base>])                      ;; Returns the log of x.  If base if not
                                         ;;    provided, e is used.
 (expt <base> <power>)                   ;; Returns base raised to power.
@@ -382,6 +381,7 @@ cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr
 (abs num)                               ;; Compute the absolute valute.
 (tan <radians>)                         ;; Returns the tan of radians.
 ! (fact n)                                ;; compute the factorial of n.
+! (fib n)                                 ;; return the nth fibonacci number.
 
 Library Macros
 ==============

@@ -33,7 +33,7 @@ class LispInterpreter( Interpreter ):
    outStrm = None
    counter = 1               # Used by gensym to generate unique symbols
 
-   def __init__( self, runtimeLibraryDir: str=None ) -> None:
+   def __init__( self, runtimeLibraryDir: (str|None)=None ) -> None:
       self._libDir = runtimeLibraryDir
       self._parser: LispParser = LispParser( )
       self.reboot( )
@@ -53,6 +53,11 @@ class LispInterpreter( Interpreter ):
       returnVal = self.rawEval( inputExprStr, outStrm )
       return prettyPrintSExpr( returnVal ).strip()
 
+   def evalFile( self, filename: str ) -> None:
+      with open(filename, 'r' ) as file:
+         sourceCode = file.read( )
+      self.rawEval( sourceCode, outStrm=io.StringIO() )
+
    def rawEval( self, inputExprStr: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
@@ -61,11 +66,6 @@ class LispInterpreter( Interpreter ):
       finally:
          LispInterpreter.outStrm = None
       return returnVal
-
-   def evalFile( self, filename: str ) -> None:
-      with open(filename, 'r' ) as file:
-         sourceCode = file.read( )
-      self.rawEval( sourceCode, outStrm=io.StringIO() )
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
@@ -76,10 +76,7 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lEval( env: Environment, sExpr: Any, *args, **kwargs ) -> Any:
-      '''Evaluate expr as a lisp expression.
-      Note:  Symbols (including function names) need to be in capitals before
-      invoking this function.
-      '''
+      '''Evaluate expr as one or more lisp s-expressions.'''
       if sExpr is None:
          return LList( )
       elif isinstance( sExpr, L_ATOM ):
@@ -108,7 +105,8 @@ class LispInterpreter( Interpreter ):
          # Determine if the function uses the standard evaluation order for arguments
          evaluatedKeys: dict[str, Any] = { }
          if fnDef.specialOp:
-            return fnDef( LispInterpreter._lEval, env, *exprArgs, **evaluatedKeys )
+            return LispInterpreter._lperformCall( env, fnDef, *exprArgs, **evaluatedKeys )
+            #return fnDef( LispInterpreter._lEval, env, *exprArgs, **evaluatedKeys )
 
          # Evaluate each arg
          evaluatedArgs = [ ]
@@ -116,30 +114,31 @@ class LispInterpreter( Interpreter ):
             evaluatedArg = LispInterpreter._lEval( env, argExpr )
             evaluatedArgs.append( evaluatedArg )
 
-         return fnDef( LispInterpreter._lEval, env, *evaluatedArgs, **evaluatedKeys )
+         return LispInterpreter._lperformCall( env, fnDef, *evaluatedArgs, **evaluatedKeys )
+         #return fnDef( LispInterpreter._lEval, env, *evaluatedArgs, **evaluatedKeys )
       elif  isinstance( sExpr, LMap ):
          return sExpr
       elif  isinstance( sExpr, LFunction ):
          env = Environment( env )         # Open a new scope. Auto closes when env goes out of scope.
 
          # store the arguments as locals
-         LispInterpreter._bindArguments( env, sExpr._params, list(args) ) #convert args from a tuple to a list
+         LispInterpreter._lbindArguments( env, sExpr.params, list(args) ) #convert args from a tuple to a list
 
          # evaluate the body expressions.  Return the result of the last
          # body expression evaluated.
          latestResult = None
-         for expr in sExpr._body:
+         for expr in sExpr.body:
             latestResult = LispInterpreter._lEval( env, expr )
 
          return latestResult
       elif isinstance( sExpr, LMacro ):
          # Expand the macro body and return it in a list
-         return LispInterpreter._macroexpand( env, sExpr, list(args) ) #convert args from a tuple to a list
+         return LispInterpreter._lmacroExpand( env, sExpr, list(args) ) #convert args from a tuple to a list
       else:
          raise LispRuntimeError( 'Unknown lisp expression type.' )
 
    @staticmethod
-   def _bindArguments( env: Environment, paramList: list[Any], argsList: list[Any] ) -> None:
+   def _lbindArguments( env: Environment, paramList: list[Any], argsList: list[Any] ) -> None:
       paramNum = 0
       while paramNum < len(paramList):
          paramName = paramList[paramNum]
@@ -203,26 +202,43 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Too many arguments passed in.' )
 
    @staticmethod
-   def _macroexpand( env: Environment, expr: Any, args: list[Any] ) -> list[Any]:
+   def _lperformCall( env: Environment, lcallable: (LPrimitive|LFunction|LMacro), *args, **kwargs ):
+      if isinstance( lcallable, LPrimitive ):
+         return lcallable._fn( env, *args, **kwargs )
+      elif isinstance( lcallable, LFunction ):
+         return LispInterpreter._lEval( env, lcallable, *args, **kwargs )
+      elif isinstance( lcallable, LMacro ):
+         # Expand macro body
+         listOfExpandedExprs = LispInterpreter._lEval( env, lcallable, *args, **kwargs )
+
+         # Eval each of the expanded exprs of the macro's body
+         latestResult = None
+         for expr in listOfExpandedExprs:
+            latestResult = LispInterpreter._lEval( env, expr )
+         return latestResult
+      else:
+         raise LispRuntimeError( 'Unknown callable.' )
+
+   @staticmethod
+   def _lmacroExpand( env: Environment, macroDef: LMacro, args: list[Any] ) -> list[Any]:
       env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
 
       # store the arguments as locals
-      LispInterpreter._bindArguments( env, expr._params, args )
+      LispInterpreter._lbindArguments( env, macroDef.params, args )
 
       # Evaluate each body expression; expanding each expr in turn to expand
       # the full macro body.  Place those expanded expressions in resultList.
       resultList = [ ]
       latestResult = None
-      for expr in expr._body:
-         latestResult = LispInterpreter._lEval( env, expr )
+      for bodySExpr in macroDef.body:
+         latestResult = LispInterpreter._lEval( env, bodySExpr )
          resultList.append( latestResult )
 
       return resultList
 
    @staticmethod
-   def _backquote_expand( env: Environment, expr: Any ) -> Any:
+   def _lbackquoteExpand( env: Environment, expr: Any ) -> Any:
       '''Expand a backquote List expression.
-
       Note: This function is oddly dependent upon COMMA and COMMA-AT.
       '''
       if isinstance( expr, LList ):
@@ -236,7 +252,7 @@ class LispInterpreter( Interpreter ):
 
          resultList: list[Any] = [ ]
          for listElt in expr:
-            resultListElt = LispInterpreter._backquote_expand( env, listElt )
+            resultListElt = LispInterpreter._lbackquoteExpand( env, listElt )
             if ( isinstance( resultListElt, LList ) and
                  (len(resultListElt) > 0) and
                  (resultListElt[0] == LSymbol('COMMA-AT')) ):
@@ -366,7 +382,6 @@ class LispInterpreter( Interpreter ):
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_undef, '1 argument exptected.' )
          key = args[0]
-
          env.getGlobalEnv().undef( str(key) )
          return L_NIL
 
@@ -559,7 +574,7 @@ class LispInterpreter( Interpreter ):
 
          try:
             INSIDE_BACKQUOTE = True
-            expandedForm = LispInterpreter._backquote_expand( env, sExpr )
+            expandedForm = LispInterpreter._lbackquoteExpand( env, sExpr )
          finally:
             INSIDE_BACKQUOTE = False
 

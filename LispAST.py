@@ -123,16 +123,13 @@ class LPrimitive( object ):
       self._usage:str = usage
       self.specialOp:bool = specialOp
 
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
-      return self._fn( env, *args, **kwargs )
-
 
 class LFunction( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
       self._name: LSymbol = name
       self._reprStr: str  = ''
-      self._params: LList = params
-      self._body: LList   = bodyExprLst
+      self.params: LList = params
+      self.body: LList   = bodyExprLst
       self.specialOp:bool = False
       self.setName( name )
 
@@ -142,20 +139,17 @@ class LFunction( object ):
    def __repr__( self ) -> str:
       return self._reprStr
 
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
-      return sExprEvaluator( env, self, *args, **kwargs )
-
    def setName( self, name: LSymbol ) -> None:
       self._name = name
-      self._reprStr = f"(Function {self._name} {self._params} ... )"
+      self._reprStr = f"(Function {self._name} {self.params} ... )"
 
 
 class LMacro( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
       self._name: LSymbol  = name
       self._reprStr:str    = ''
-      self._params: LList  = params
-      self._body: LList    = bodyExprList
+      self.params: LList  = params
+      self.body: LList    = bodyExprList
       self.specialOp: bool = True
       self.setName( name )
 
@@ -165,16 +159,6 @@ class LMacro( object ):
    def __repr__( self ) -> str:
       return self._reprStr
 
-   def __call__( self, sExprEvaluator: Callable[[Environment, Any], Any], env: Environment, *args, **kwargs ) -> Any:
-      # Expand macro body
-      listOfExpandedExprs = sExprEvaluator( env, self, *args, **kwargs )
-
-      # Eval each of the expanded exprs of the macro's body
-      latestResult = None
-      for expr in listOfExpandedExprs:
-         latestResult = sExprEvaluator( env, expr )
-      return latestResult
-
    def setName( self, name: LSymbol ) -> None:
       self._name = name
-      self._reprStr = f"(Macro {self._name} {self._params} ... )"
+      self._reprStr = f"(Macro {self._name} {self.params} ... )"
