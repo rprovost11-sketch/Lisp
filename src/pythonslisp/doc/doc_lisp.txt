@@ -39,11 +39,11 @@ Command Line Usage
 
 Run the repl.
 
-          > python3 Lisp.py
+          > python3 pythonslisp
 
 Execute a lisp source file.
 
-          > python3 Lisp.py <lispSourceFile.lisp>
+          > python3 pythonslisp <lispSourceFile.lisp>
 
 
 API: Using Lisp as a Package
@@ -57,8 +57,8 @@ and you can mix and match which one you use at any given time.
 The example below simply defines a fibonacci function in lisp, then calls the
 function from python and prints the results.
 
-          from LispInterpreter import LispInterpreter
-          from LispAST import prettyPrintSExpr
+          from pythonslisp.LispInterpreter import LispInterpreter
+          from pythonslisp.LispAST import prettyPrintSExpr
 
           interp = LispInterpreter( runtimeLibraryDir='lib' )
           interp.rawEval( '''(defun fibo (num)
@@ -92,15 +92,16 @@ and pass it some python code in a lisp string.
           interp.rawEval( '(setf num 3)' )
           interp.rawEval( '(python (string num " + 4"))' )
 
-Primarily you will want your program to interact with LispAST.py,
-LispInterpreter.py, LispParser.py and ltk/Parser.py.  Methods prefixed by _
-are considered private.  Private methods are implementation details for the
-given class and probably not useful to you.  Moreover, given that they are
-not intended for use, they are likely to change without notice in future
-revisions.  The remaining methods, those without _, are public and are useful
-to the python programmer.  Note that the public interface for the class
-LispScanner is actually found in the base class ltk/Parser.Scanner.  LispScanner
-only implements private methods needed by the base class.
+Primarily you will want your program to interact with pythonslisp.LispAST,
+pythonslisp.LispInterpreter, pythonslisp.LispParser and pythonslisp.ltk.Parser.
+Methods prefixed by _ are considered private.  Private methods are
+implementation details for the given class and probably not useful to you.
+Moreover, given that they are not intended for use, they are likely to change
+without notice in future revisions.  The remaining functions and methods, those
+without _, are public and are useful to the python programmer.  Note that the
+public interface for the class pythonslisp.Parser.LispScanner is actually found
+in the base class pythonslisp.ltk.Parser.Scanner.  LispScanner only implements
+private methods needed by the base class.
 
 Modification of the Package
 ===========================

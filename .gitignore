@@ -2,6 +2,7 @@ Archive/
 __pycache__/
 .mypy_cache/
 cltl/
+dist/
 .vs/
 *.wpr
 *.wpu
