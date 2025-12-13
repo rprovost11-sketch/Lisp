@@ -4,7 +4,7 @@ from LispInterpreter import LispInterpreter
 import sys
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.7.1'
+VERSION      = '0.7.2'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'testing'
