@@ -66,17 +66,8 @@ class LList( list ):
       resultStr = f'({mbrListStr})'
       return resultStr
 
-   def copy( self ) -> LList:
-      return LList( *self[:] )
-
-   def first( self ) -> Any:
-      return self[ 0 ]
-
-   def rest( self ) -> LList:
-      if len(self) < 2:
-         return LList( )
-      else:
-         return LList( *self[ 1 : ] )
+   #def copy( self ) -> LList:
+      #return LList( *self[:] )
 
 
 class LMap( object ):
@@ -118,7 +109,7 @@ class LMap( object ):
 
 class LPrimitive( object ):
    def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialOp: bool=False ) -> None:
-      self._fn:Callable[[Environment], Any] = fn
+      self.fn:Callable[[Environment], Any] = fn
       self._name:str = name
       self._usage:str = usage
       self.specialOp:bool = specialOp
@@ -126,39 +117,28 @@ class LPrimitive( object ):
 
 class LFunction( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
-      self._name: LSymbol = name
-      self._reprStr: str  = ''
+      self.name: LSymbol = name
       self.params: LList = params
       self.body: LList   = bodyExprLst
       self.specialOp:bool = False
-      self.setName( name )
 
    def __str__( self ) -> str:
-      return self._reprStr
+      return self.__repr__( )
 
    def __repr__( self ) -> str:
-      return self._reprStr
-
-   def setName( self, name: LSymbol ) -> None:
-      self._name = name
-      self._reprStr = f"(Function {self._name} {self.params} ... )"
+      return f"(Function {self.name} {self.params} ... )"
 
 
 class LMacro( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
-      self._name: LSymbol  = name
-      self._reprStr:str    = ''
+      self.name: LSymbol  = name
       self.params: LList  = params
       self.body: LList    = bodyExprList
       self.specialOp: bool = True
-      self.setName( name )
 
    def __str__( self ) -> str:
-      return self._reprStr
+      return self.__repr__()
 
    def __repr__( self ) -> str:
-      return self._reprStr
+      return f"(Macro {self.name} {self.params} ... )"
 
-   def setName( self, name: LSymbol ) -> None:
-      self._name = name
-      self._reprStr = f"(Macro {self._name} {self.params} ... )"

@@ -1,6 +1,6 @@
 [project]
 name = "pythonslisp"
-version = "0.8.0"
+version = "0.8.1"
 authors = [
   { name="Ronald H Provost/Longo", email="ronlongo9@outlook.com" },
 ]
@@ -15,7 +15,7 @@ license = "GPL-2.0-or-later"
 license-files = [ "LICENSE*" ]
 
 [projects.scripts]
-lisp = "lisp:main"
+lisp = "pythonslisp.lisp:main"
 
 [project.urls]
 Homepage = "https://github.com/rprovost11-sketch/Lisp"

@@ -204,7 +204,7 @@ class LispInterpreter( Interpreter ):
    @staticmethod
    def _lperformCall( env: Environment, lcallable: (LPrimitive|LFunction|LMacro), *args, **kwargs ):
       if isinstance( lcallable, LPrimitive ):
-         return lcallable._fn( env, *args, **kwargs )
+         return lcallable.fn( env, *args, **kwargs )
       elif isinstance( lcallable, LFunction ):
          return LispInterpreter._lEval( env, lcallable, *args, **kwargs )
       elif isinstance( lcallable, LMacro ):
@@ -256,7 +256,7 @@ class LispInterpreter( Interpreter ):
             if ( isinstance( resultListElt, LList ) and
                  (len(resultListElt) > 0) and
                  (resultListElt[0] == LSymbol('COMMA-AT')) ):
-               for elt in resultListElt.rest().first():
+               for elt in resultListElt[1]:
                   resultList.append( elt )
             else:
                resultList.append( resultListElt )
@@ -361,7 +361,7 @@ class LispInterpreter( Interpreter ):
          # Evaluate the value expression
          val = LispInterpreter._lEval(env, val)
          if isinstance( val, (LFunction,LMacro) ):
-            val.setName( key )
+            val.name = key
          key = str(key)
 
          try:
@@ -780,13 +780,14 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_car, '1st argument expected to be a list.' )
 
          try:
-            return theList.first()
+            return theList[0]
          except IndexError:
             return LList( )
 
       @LDefPrimitive( 'cdr', '<list>' )
       def LP_cdr( env: Environment, *args, **kwargs ) -> Any:
-         if len(args) != 1:
+         numArgs = len(args)
+         if numArgs != 1:
             raise LispRuntimeFuncError( LP_cdr, '1 argument expected.' )
          theList = args[0]
 
@@ -794,7 +795,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_cdr, '1st argument expected to be a list.' )
 
          try:
-            return theList.rest()
+            return LList( *theList[1:] )
          except IndexError:
             return LList( )
 
@@ -806,7 +807,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_cons, '2 arguments exptected.' )
 
          try:
-            copiedList = arg2.copy( )
+            copiedList = LList( *arg2[:] ) # copy LList arg2
             copiedList.insert( 0, arg1 )
          except:
             raise LispRuntimeFuncError( LP_cons, 'Invalid argument.' )
