@@ -763,8 +763,11 @@ class LispInterpreter( Interpreter ):
             except:
                raise LispRuntimeFuncError( LP_map, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
 
-            if isinstance( key, (int,float,str,LSymbol) ):
-               theMapping[ key ] = LispInterpreter._lEval( env, expr)
+            if isinstance( key,  LSymbol ):
+               key = str(key)
+
+            if isinstance( key, (int,float,str) ):
+               theMapping[ key ] = LispInterpreter._lEval( env, expr )
             else:
                raise LispRuntimeFuncError( LP_map, f'Entry {entryNum+1} has an invalid <key> type.' )
          return theMapping
@@ -853,6 +856,9 @@ class LispInterpreter( Interpreter ):
          else:
             raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List or Map expected.' )
 
+         if isinstance( key, LSymbol ):
+            key = str(key)
+
          try:
             value = keyed[ key ]
          except:
@@ -872,13 +878,15 @@ class LispInterpreter( Interpreter ):
          else:
             raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or map expeced as first argument.' )
 
+         if isinstance( key, LSymbol ):
+            key = str(key)
+
          try:
             keyed[ key ] = value
          except:
             raise LispRuntimeFuncError( LP_atSet, 'Invalid argument key/index.' )
 
          return value
-
 
       @LDefPrimitive( 'append', '\'<list1> \'<list2>' )
       def LP_append( env: Environment, *args, **kwargs ) -> Any:
@@ -941,8 +949,11 @@ class LispInterpreter( Interpreter ):
          if not isinstance(aMap, LMap):
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 1.  Map expected.')
 
+         if isinstance( aKey, LSymbol ):
+            aKey = str(aKey)
+
          try:
-            return L_T if str(aKey) in aMap else L_NIL   # T or NIL
+            return L_T if aKey in aMap else L_NIL   # T or NIL
          except:
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument.' )
 

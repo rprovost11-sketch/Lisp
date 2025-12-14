@@ -84,12 +84,6 @@ class LMap( dict ):
       resultStrLines.append(')\n')
       return '\n'.join(resultStrLines)
 
-   def __setitem__( self,  key: Any,  val: Any ) -> None:
-      super().__setitem__( str(key),  val )
-
-   def __getitem__( self,  key: Any ) -> Any:
-      return super().__getitem__( str(key) )
-
 
 class LPrimitive( object ):
    def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialOp: bool=False ) -> None:
