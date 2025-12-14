@@ -73,10 +73,10 @@ function from python and prints the results.
           print( fibo_wrapper(10) )
           print( prettyPrintSExpr(fibo_wrapper(15)) )
 
-If the lisp code returns an int,float,fraction or string, then it just returns
-the python verions of those things.  However, most calls to rawEval will return
-the AST of an sexpression.  A subsequent call to prettyPrintSExpr(ast) will
-convert the complex structure to a python string representation.
+If the lisp code returns an int,float,fraction,string,list or dict then it just
+returns the python verions of those things.  However, most calls to rawEval will
+return the AST of an sexpression.  A subsequent call to prettyPrintSExpr(ast)
+will convert the complex structure to a python string representation.
 
 LispInterpreter's eval functions can handle any number of lisp expressions
 in the string argument.  The return value is always the value of the result

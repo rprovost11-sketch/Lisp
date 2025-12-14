@@ -1404,7 +1404,7 @@ class LispInterpreter( Interpreter ):
       def lwrite( value, end='' ):
          valueStr = prettyPrintSExpr( value )
          valueStr = bytes( valueStr, "utf-8" ).decode( "unicode_escape" ) # decode escape sequences
-         print( valueStr, sep='', end='\n', file=LispInterpreter.outStrm )
+         print( valueStr, sep='', end=end, file=LispInterpreter.outStrm )
          return value
 
       @LDefPrimitive( 'readLn!', '')

@@ -92,6 +92,11 @@ class LPrimitive( object ):
       self._usage:str = usage
       self.specialOp:bool = specialOp
 
+   def __str__( self ) -> str:
+      return self.__repr__()
+
+   def __repr__( self ) -> str:
+      return f'(Primitive {self._name})'
 
 class LFunction( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:

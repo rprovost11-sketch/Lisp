@@ -2,7 +2,6 @@ import ltk.Parser as Parser
 
 import io
 import os
-import sys
 import datetime
 import time
 from abc import ABC, abstractmethod
@@ -271,7 +270,7 @@ class Listener( object ):
       for filename, testSummary in testSummaryList:
          print( f'{filename:45} {testSummary}' )
 
-      print( '\nWARNING: Testing leaves the interpreter in an unknown state.' +
+      print( '\nWARNING: Testing leaves the interpreter in an unknown state. ' +
              'It\'s reccomended that you reboot the interpreter using the listener command ]reboot.' )
 
    def _cmd_continue( self, args: list[str] ) -> None:
@@ -288,7 +287,7 @@ class Listener( object ):
       if numArgs not in ( 1, 2 ):
          raise ListenerCommandError( self._cmd_continue.__doc__ )
 
-      self._cmd_read( args )
+      self._cmd_readlog( args )
 
       filename = args[0]
       try:
