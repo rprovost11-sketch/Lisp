@@ -756,19 +756,18 @@ class LispInterpreter( Interpreter ):
          if len(args) < 1:
             raise LispRuntimeFuncError( LP_map, '1 or more arguments exptected.' )
 
-         theMapping = { }
+         theMapping = LMap( )
          for entryNum,key_expr_pair in enumerate(args):
             try:
-               key,expr =  key_expr_pair
+               key,expr = key_expr_pair
             except:
                raise LispRuntimeFuncError( LP_map, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
 
             if isinstance( key, (int,float,str,LSymbol) ):
-               theMapping[ str(key) ] = LispInterpreter._lEval( env, expr)
+               theMapping[ key ] = LispInterpreter._lEval( env, expr)
             else:
                raise LispRuntimeFuncError( LP_map, f'Entry {entryNum+1} has an invalid <key> type.' )
-         theLMapInst = LMap( aMap=theMapping )
-         return theLMapInst
+         return theMapping
 
       @LDefPrimitive( 'car', '<list>' )
       def LP_car( env: Environment, *args, **kwargs ) -> Any:
@@ -849,15 +848,10 @@ class LispInterpreter( Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_at, '2 arguments expected.' )
 
-         if isinstance(keyed, (LList, str) ):
+         if isinstance(keyed, (LList, LMap, str) ):
             keyed = keyed
-         elif isinstance(keyed, LMap):
-            keyed = keyed.dict
          else:
             raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List or Map expected.' )
-
-         if isinstance(key, LSymbol):
-            key = key.strval
 
          try:
             value = keyed[ key ]
@@ -873,15 +867,10 @@ class LispInterpreter( Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_atSet, '3 arguments expected.' )
 
-         if isinstance(keyed, LList):
+         if isinstance(keyed, (LList, LMap) ):
             keyed = keyed
-         elif isinstance(keyed, LMap):
-            keyed = keyed.dict
          else:
             raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or map expeced as first argument.' )
-
-         if isinstance(key, LSymbol):
-            key = key.strval
 
          try:
             keyed[ key ] = value
@@ -914,7 +903,7 @@ class LispInterpreter( Interpreter ):
          if isinstance(keyed, LList):
             keyed = keyed
          elif isinstance(keyed, LMap):
-            keyed = keyed.dict.values()
+            keyed = keyed.values()
          else:
             raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.  Argument 1 expected to be a list or map.')
 
@@ -937,7 +926,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_update, 'Argument 2 expected to be a map.' )
 
          try:
-            map1.dict.update( map2.dict )
+            map1.update( map2 )
             return map1
          except:
             raise LispRuntimeFuncError( LP_update, 'Invalid argument.  Both arguments must be maps.' )
@@ -949,16 +938,11 @@ class LispInterpreter( Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_hasKey, '2 arguments expected.' )
 
-         if isinstance(aMap, LMap):
-            aMap = aMap.dict
-         else:
+         if not isinstance(aMap, LMap):
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 1.  Map expected.')
 
-         if isinstance(aKey, LSymbol):
-            aKey = aKey.strval
-
          try:
-            return L_T if aKey in aMap else L_NIL   # T or NIL
+            return L_T if str(aKey) in aMap else L_NIL   # T or NIL
          except:
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument.' )
 

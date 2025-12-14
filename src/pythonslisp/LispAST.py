@@ -66,45 +66,29 @@ class LList( list ):
       resultStr = f'({mbrListStr})'
       return resultStr
 
-   #def copy( self ) -> LList:
-      #return LList( *self[:] )
 
-
-class LMap( object ):
-   def __init__( self, aMap: (dict[Any, Any]|None) = None ):
-      self.dict: dict[Any, Any] = aMap if aMap else { }
+class LMap( dict ):
+   def __init__( self, **mapping ):
+      super().__init__(**mapping)
 
    def __str__( self ) -> str:
-      resultStrLines = [ '(MAP\n' ]
-      for key in sorted(self.dict.keys()):
-         value = self.dict[key]
-         key = str(key)
-         value = str(value)
-         resultStrLines.append( f'   ({key} {value})\n')
-      resultStrLines.append(')\n')
-      return ''.join(resultStrLines)
+      return self.__repr__( )
 
    def __repr__( self ) -> str:
-      resultStrLines = [ '(MAP\n' ]
-      for key in sorted(self.dict.keys()):
-         value = self.dict[key]
+      resultStrLines = [ '(MAP' ]
+      for key in sorted(self.keys()):
+         value = super().__getitem__( str(key) )
          key = prettyPrintSExpr(key)
-         value = prettyPrintSExpr(value)
-         resultStrLines.append( f'   ({key} {value})\n')
+         value = prettyPrintSExpr( value )
+         resultStrLines.append( f'   ({key} {value})')
       resultStrLines.append(')\n')
-      return ''.join(resultStrLines)
+      return '\n'.join(resultStrLines)
 
-   def __setitem__( self, key: Any, val: Any ) -> None:
-      if isinstance( key, LSymbol ):
-         self.dict[ key.strval ] = val
-      else:
-         self.dict[ key ] = val
+   def __setitem__( self,  key: Any,  val: Any ) -> None:
+      super().__setitem__( str(key),  val )
 
-   def __getitem__( self, key: Any ) -> Any:
-      if isinstance( key, LSymbol ):
-         return self.dict[ key.strval ]
-      else:
-         return self.dict[ key ]
+   def __getitem__( self,  key: Any ) -> Any:
+      return super().__getitem__( str(key) )
 
 
 class LPrimitive( object ):
@@ -141,4 +125,5 @@ class LMacro( object ):
 
    def __repr__( self ) -> str:
       return f"(Macro {self.name} {self.params} ... )"
+
 
