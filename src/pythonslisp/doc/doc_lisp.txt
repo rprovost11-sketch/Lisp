@@ -158,9 +158,6 @@ NIL                                     ;; an empty list. Stands for false.
 T                                       ;; a symbol to stand for true.
 PI                                      ;; the constant pi.
 E                                       ;; the constant e.
-INF                                     ;; the constant positive infinity.
--INF                                    ;; the constant negative infinity.
-NAN                                     ;; the constant not-a-number.
 
 ### Variable Definition ###
 (defmacro name (<param1> <param2> ...)  ;; Define and return a macro.
@@ -183,6 +180,10 @@ NAN                                     ;; the constant not-a-number.
 ! (symtab!)                               ;; Print a symbol tab.  Each scope on a
                                         ;;    separate line.  Local scope first.
                                         ;;    Global scope last.
+(gensym [<prefix-str])                  ;; Generate a unique symbol.  The
+                                        ;;    default is to set <prefix-str> to
+                                        ;;    G.  The unique symbol is the
+                                        ;;    <prefix-str> followed by digits.
 
 ### Control Structures ###
 (lambda (<arg1> <arg2> ...) <expr1> <expr2> ...)

@@ -168,7 +168,7 @@ class LispInterpreter( Interpreter ):
 
             if isinstance(paramSpec, LSymbol):
                paramName = paramSpec
-               paramDefVal = LList( )
+               defaultValExpr = LList( )
             elif isinstance(paramSpec, LList):
                try:
                   paramName, defaultValExpr = paramSpec
@@ -177,15 +177,14 @@ class LispInterpreter( Interpreter ):
 
                if not isinstance(paramName, LSymbol):
                   raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
-
-               # evaluate the defaultValExpr
-               paramDefVal = LispInterpreter._lEval( env, defaultValExpr )
+            else:
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
 
             if len(argsList) != 0:
                argVal = argsList[0]
                argsList = argsList[1:]
             else:
-               argVal = paramDefVal
+               argVal = LispInterpreter._lEval( env, defaultValExpr )
 
             env.setLocal( str(paramName), argVal )
             paramNum += 1
@@ -278,9 +277,6 @@ class LispInterpreter( Interpreter ):
       primitiveDict[ 'NIL'  ] = L_NIL
       primitiveDict[ 'PI'   ] = math.pi
       primitiveDict[ 'E'    ] = math.e
-      primitiveDict[ 'INF'  ] = math.inf
-      primitiveDict[ '-INF' ] = -math.inf
-      primitiveDict[ 'NAN'  ] = math.nan
 
       class LDefPrimitive( object ):
          def __init__( self, primitiveSymbol: str, args: str, specialOperation: bool=False ) -> None:
@@ -402,6 +398,21 @@ class LispInterpreter( Interpreter ):
             pass
 
          return L_NIL
+
+      @LDefPrimitive( 'gensym', '' )
+      def LP_gensym( env: Environment, *args, **kwargs ) -> Any:
+         if len(args) > 1:
+            raise LispRuntimeFuncError( LP_gensym, '0 or 1 arguments expected.' )
+
+         try:
+            prefix = args[0]
+         except IndexError:
+            prefix = 'G'
+
+         symstr = f'{prefix}{LispInterpreter.counter}'
+         LispInterpreter.counter += 1
+         sym = LSymbol( symstr )
+         return sym
 
       # ==================
       # Control Structures
@@ -606,21 +617,6 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_comma_at, 'Argument 1 must evaluate to a List.' )
          retValue = LList( LSymbol('COMMA-AT'), result )
          return retValue
-
-      @LDefPrimitive( 'gensym', '' )
-      def LP_gensym( env: Environment, *args, **kwargs ) -> Any:
-         if len(args) > 1:
-            raise LispRuntimeFuncError( LP_gensym, '0 arguments expected.' )
-
-         try:
-            prefix = args[0]
-         except IndexError:
-            prefix = 'G'
-
-         symstr = f'{prefix}{LispInterpreter.counter}'
-         LispInterpreter.counter += 1
-         sym = LSymbol( symstr )
-         return sym
 
       @LDefPrimitive( 'while', '<conditionExpr> <body>', specialOperation=True )
       def LP_while( env: Environment, *args, **kwargs ) -> Any:

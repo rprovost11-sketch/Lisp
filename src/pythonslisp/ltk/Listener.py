@@ -28,7 +28,7 @@ class Interpreter( ABC ):
    @abstractmethod
    def eval( self, anExprStr: str, file=None ) -> str:
       '''Evaluate an expression string of the target language and return a
-      string representing the return value of the evaluation.
+      string representing the return value.
       '''
       pass
 
