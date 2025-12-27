@@ -10,9 +10,8 @@
 ;                                     (eval ,expr)
 ;                                     (foreach ,sym (rest ',lst) ,expr))
 ;                 ))
-;
+
 ; Prompt the user for input on the command line.
-;
 (defun read_prompt (promptStr)
             (write! promptStr)
             (readLn!)          )
@@ -20,6 +19,33 @@
 (setf first car)
 
 (setf rest cdr)
+
+(defun second (lst)
+   (cadr lst))
+
+(defun third (lst)
+   (at lst 2))
+
+(defun fourth (lst)
+   (at lst 3))
+
+(defun fifth (lst)
+   (at lst 4))
+
+(defun sixth (lst)
+   (at lst 5))
+
+(defun seventh (lst)
+   (at lst 6))
+
+(defun eighth (lst)
+   (at lst 7))
+
+(defun ninth (lst)
+   (at lst 8))
+
+(defun thenth (lst)
+   (at lst 9))
 
 (defun caar (lst)
    (car (car lst)))
@@ -105,26 +131,23 @@
 (defun cddddr (lst)
    (cdr (cdr (cdr (cdr lst)))))
 
-; List - remove a symbol from a list - destructive
-;
 ; (remove '<symbol> '<list>)
+; remove a symbol from a list - destructive
 (defun remove (sym lst)
          (cond
             ((null lst)           nil)
             ((= sym (first lst))  (rest lst))
             (1                    (cons (first lst) (remove sym (rest lst))))))
 
-; List - compute the length of the list
-;
 ; (list-length '<list>)
+; compute the length of the list
 (defun list-length (lst)
          (if (null lst)
              0
              (+ 1 (list-length (rest lst)))))
 
-; List - reverse the order of the top level elements
-;
 ; (reverse '<list>)
+; reverse the order of the top level elements
 (defun reverse (lst)
          (reverse-aux '() lst))
 
@@ -133,15 +156,13 @@
              destLst
              (reverse-aux (cons (first srcLst) destLst) (rest srcLst))))
 
-; List - make a copy of the argument list
-;
 ; (copy <list>)
+; make a copy of the argument list
 (defun copy (lst)
          (reverse (reverse lst)))
 
-; List - make a deepCopy fo the argument list
-;
 ; (deepCopy <list>)
+; make a deepCopy fo the argument list
 (defun deepCopy (expr)
          (cond ((null   expr)  '( ))
                 ((isAtom?   expr)  expr)
@@ -150,7 +171,6 @@
                                          (deepcopy (rest  expr)))) ))
 
 ; (dig aTree aPath)
-;
 ; Given a nested structure of lists and maps, this function will execute
 ; a depth-first traversal down aPath - a list of map keys and list inidies.
 ; returns the object in that location.
@@ -159,9 +179,8 @@
              aTree
              (dig (at aTree (first aPath)) (rest aPath)) ))
 
-; Compare two lists for deep equality - deep comparison
-;
 ; (tree-equal '<expr-1> '<expr-2>)
+; Compare two lists for deep equality - deep comparison
 (defun tree-equal (expr1 expr2)
          (cond ((or (atom expr1)
                     (null expr1))
@@ -181,25 +200,32 @@
          (incf accum value))
       (/ accum (length values))))
 
-(defmacro defstruct (typeName &rest fields)
-   `(setf ,typename (map (name ,typename) (type ,typename)))
-   (foreach fieldName ',fields
-       (let ( (,(symbol typename "-" fieldName) nil) )
-          (defun ,(symbol "get-" typename "-" fieldName) (inst)
-             (at inst ,fieldName))
-          (defun ,(symbol "set-" typename "-" fieldName) (inst value)
-             (atSet! inst ,fieldName value))))
-   `(defun ,(symbol typename "-p") (arg)
-       (= (at arg 'type) ,typename))
-   `(defun ,(symbol "make-" typename) ( )
-       (let ( (newInst (map (type ,typename))) )
-          (foreach fieldname ',fields
-             (atset! newInst fieldName nil))
-          newInst))
-   `(defun ,(symbol "copy-" typename) (oldInst)
-       (let ( (newInst (,(symbol "make-" typename))) )
-          (foreach fieldname ',fields
-             (atset! newInst fieldname (at oldInst fieldname)))
-          newInst))
-   )
+;(setf symbolCounter 1)
+;(defun gensym (&optional (prefix 'G'))
+;   (let
+;      ((theSymbol (symbol prefix symbolCounter)))
+;      (incf symbolCounter)
+;      theSymbol))
+
+;(defmacro defstruct (typeName &rest fields)
+;   `(setf ,typename (map (name ,typename) (type ,typename)))
+;   (foreach fieldName ',fields
+;       (let ( (,(symbol typename "-" fieldName) nil) )
+;          (defun ,(symbol "get-" typename "-" fieldName) (inst)
+;             (at inst ,fieldName))
+;          (defun ,(symbol "set-" typename "-" fieldName) (inst value)
+;             (atSet! inst ,fieldName value))))
+;   `(defun ,(symbol typename "-p") (arg)
+;       (= (at arg 'type) ,typename))
+;   `(defun ,(symbol "make-" typename) ( )
+;       (let ( (newInst (map (type ,typename))) )
+;          (foreach fieldname ',fields
+;             (atset! newInst fieldName nil))
+;          newInst))
+;   `(defun ,(symbol "copy-" typename) (oldInst)
+;       (let ( (newInst (,(symbol "make-" typename))) )
+;          (foreach fieldname ',fields
+;             (atset! newInst fieldname (at oldInst fieldname)))
+;          newInst))
+;   )
 

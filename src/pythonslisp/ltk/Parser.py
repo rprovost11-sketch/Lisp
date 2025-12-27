@@ -177,15 +177,15 @@ class Scanner( ABC ):
       pass
 
 class ParseError( Exception ):
-   def __init__( self, aScanner: Scanner, errorMessage: str, filename: str='' ) -> None:
-      self.filename:str   = filename
+   def __init__( self, aScanner: Scanner, errorMessage: str, srcfilename: str='' ) -> None:
+      self.srcfilename:str= srcfilename
       self.lineNum:int    = aScanner.buffer.scanLineNum()
       self.colNum:int     = aScanner.buffer.scanColNum()
       self.errorMsg:str   = errorMessage
       self.sourceLine:str = aScanner.buffer.scanLineTxt()
 
       self.errInfo = {
-         'filename':   self.filename,
+         'srcfilename':self.srcfilename,
          'lineNum':    self.lineNum,
          'colNum':     self.colNum,
          'errorMsg':   self.errorMsg,
@@ -202,7 +202,7 @@ class ParseError( Exception ):
       Preconditions: [AssertionError] The underlying buffer must wrap a string.
       """
       self.errInfo['indentStr'] = ' ' * ( self.errInfo['colNum'] - 1 )
-      return 'Syntax Error: {filename}({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'.format( **self.errInfo )
+      return 'Syntax Error: {srcfilename}({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'.format( **self.errInfo )
 
 
 class Parser( ABC ):

@@ -68,12 +68,12 @@
 
 ==> ("a" "b" "c" "d")
 
->>> (at mylist 2)
+>>> (at 2 mylist)
 ...
 
 ==> "c"
 
->>> (atset! mylist 1 1)
+>>> (setf (at 1 mylist) 1)
 ...
 
 ==> 1
@@ -131,12 +131,12 @@
    ("c" 3)
 )
 
->>> (at mymap "b")
+>>> (at "b" mymap)
 ...
 
 ==> 2
 
->>> (atset! mymap "b" e)
+>>> (setf (at "b" mymap) e)
 ...
 
 ==> 2.718281828459045

@@ -26,7 +26,7 @@ Lexemes
 
 Grammar
    Start:
-      Object EOF
+      Object* EOF
 
    Object:
       NumberLiteral | StringLiteral | Symbol | List | '#' | '|' | ':' | '[' | ']'

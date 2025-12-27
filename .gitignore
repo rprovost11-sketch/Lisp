@@ -3,6 +3,7 @@ __pycache__/
 .mypy_cache/
 cltl/
 dist/
+build/
 .vs/
 *.wpr
 *.wpu

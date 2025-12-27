@@ -1,5 +1,5 @@
-from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive, LMacro,
-                       prettyPrintSExpr )
+from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive,
+                      LMacro, prettyPrintSExpr )
 from LispParser import LispParser
 from ltk.Listener import Interpreter, retrieveFileList
 from ltk.Environment import Environment
@@ -350,29 +350,63 @@ class LispInterpreter( Interpreter ):
       @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialOperation=True )
       def LP_setf( env: Environment, *args, **kwargs ) -> Any:
          try:
-            key,val = args
+            lval,rval = args
          except ValueError:
             raise LispRuntimeFuncError( LP_setf, '2 arguments expected.' )
 
-         # Evaluate the value expression
-         val = LispInterpreter._lEval(env, val)
-         if isinstance( val, (LFunction,LMacro) ):
-            val.name = key
-         key = str(key)
-
+         rval = LispInterpreter._lEval(env, rval)
+         
          try:
-            # If key exists somewhere in the symbol table hierarchy, set its
-            # value to val.  If it doesn't exist, define it in the global
-            # symbol table and set its value to val.
-            theSymTab = env.findDef( str(key) )
-            if theSymTab:
-               theSymTab.setLocal( key, val )
-            else:
-               env.setGlobal( key, val )
-            return val
-         except:
+            if isinstance(lval, LSymbol ):
+               sym = lval
+               if isinstance( rval, (LFunction,LMacro) ):
+                  rval.name = sym
+               sym = str(sym)
+      
+               # If sym exists somewhere in the symbol table hierarchy, set its
+               # value to rval.  If it doesn't exist, define it in the global
+               # symbol table and set its value to rval.
+               theSymTab = env.findDef( sym )
+               if theSymTab:
+                  theSymTab.setLocal( sym, rval )
+               else:
+                  env.setGlobal( sym, rval )
+            
+            elif isinstance( lval, LList ):       # s-expression
+               sexpr = lval
+               sexprLen = len(sexpr)
+               if sexprLen == 2:                       # Expect (car <lst>)
+                  primitive, lst = sexpr
+                  if primitive == 'CAR':
+                     lst[0] = rval
+                  else:
+                     raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue.' )
+               elif sexprLen == 3:
+                  primitive, keyOrIndex, mapOrLst = sexpr
+                  keyOrIndex = LispInterpreter._lEval(env,keyOrIndex)
+                  mapOrLst = LispInterpreter._lEval(env,mapOrLst)
+                  if primitive == 'AT':
+                     if isinstance(mapOrLst, LMap):
+                        theDict = mapOrLst
+                        theKey = str(keyOrIndex)
+                        theDict[theKey] = rval
+                     elif isinstance(mapOrLst, LList):
+                        theLst = mapOrLst
+                        theIdx = int(keyOrIndex)
+                        theLst[theIdx] = rval
+                     else:
+                        raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue.' )
+                  else:
+                     raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue.' )
+               else:
+                  raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue' )
+         except LispRuntimeError:
+            raise 
+         except Exception:
             raise LispRuntimeFuncError( LP_setf, 'Unknown error.' )
-
+         
+         return rval
+         
       @LDefPrimitive( 'undef!', '\'<symbol>' )
       def LP_undef( env: Environment, *args, **kwargs ) -> Any:
          if len(args) != 1:
@@ -840,10 +874,10 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_pop, 'Invalid argument.' )
          return value
 
-      @LDefPrimitive( 'at', '\'<listMapOrStr> \'<keyOrIndex>' )
+      @LDefPrimitive( 'at', '<keyOrIndex> <listMapOrStr>' )
       def LP_at( env: Environment, *args, **kwargs ) -> Any:
          try:
-            keyed,key = args
+            key,keyed = args
          except:
             raise LispRuntimeFuncError( LP_at, '2 arguments expected.' )
 
@@ -859,28 +893,6 @@ class LispInterpreter( Interpreter ):
             value = keyed[ key ]
          except:
             raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
-
-         return value
-
-      @LDefPrimitive( 'atSet!', '<listOrMap> <keyOrIndex> <value>' )
-      def LP_atSet( env: Environment, *args, **kwargs ) -> Any:
-         try:
-            keyed,key,value = args
-         except:
-            raise LispRuntimeFuncError( LP_atSet, '3 arguments expected.' )
-
-         if isinstance(keyed, (LList, LMap) ):
-            keyed = keyed
-         else:
-            raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or map expeced as first argument.' )
-
-         if isinstance( key, LSymbol ):
-            key = str(key)
-
-         try:
-            keyed[ key ] = value
-         except:
-            raise LispRuntimeFuncError( LP_atSet, 'Invalid argument key/index.' )
 
          return value
 

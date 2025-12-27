@@ -35,3 +35,8 @@ Completed
 - bring the relational operations into alignment with common lisp.
 - bring the arithmetic operations into alignment with common lisp.
 - continue to bring other primitives into alignment with common lisp.
+
+2025.12.15
+- Comleted encapsulation of the common lisp interpreter into the LispInterpreter
+  class.  It's now possible, if I choose, to implement a SchemeInterpreter
+  class that reuses all of the remaining code.

@@ -34,9 +34,8 @@ Design Features (the code not lisp)
 - No external package dependencies.
 
 
-Command Line Usage
-==================
-
+### USAGE ###
+#############
 Run the repl.
 
           > python3 pythonslisp
@@ -48,7 +47,6 @@ Execute a lisp source file.
 
 API: Using Lisp as a Package
 ============================
-
 The easiest way to use the package is to instantiate a LispInterpreter, passing
 it info on where to find a runtime library, then use its eval() functions to
 call into lisp.  Everything is persistent across calls to these eval functions
@@ -120,8 +118,8 @@ Regarding Exceptions in the Interpreter and AST
   as verious kinds of lisp errors.  Ideally no low level python exceptions
   would ever reach the try block in the Listener class's repl.
 
-The Language
-============
+### THE LANGUAGE ###
+####################
 Lexemes
    Comments
       Comments extend from ';' through '\n'.
@@ -152,6 +150,7 @@ Grammar
 
 ### LISP PRIMITIVES ###
 #######################
+    Primitives marked with ! are specific to Python's Lisp (not common lisp).
 
 ### Values ###
 NIL                                     ;; an empty list. Stands for false.
@@ -264,23 +263,21 @@ E                                       ;; the constant e.
 (list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
                                         ;;    expressions.
 (car <list>)                            ;; Return the first item in the list.
+Use: (setf (car <list>) <newValueExpr>)
 (cdr <list>)                            ;; Return the list minus the first item.
 (cons '<obj> '<list>)                   ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
 ! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
 ! (pop! '<list>)                          ;; Pop and returns the last value of the
                                         ;;    list.
-! (at '<listMapOrStr> '<keyOrIndex>)    ;; Return the value at a specified index
+! (at <keyOrIndex> <listMapOrStr>)      ;; Return the value at a specified index
                                         ;;    or key of a list, map or string.
-! (atSet! <listOrMap> <keyOrIndex> <value>)
-                                        ;; Update the key/index in the given
-                                        ;;    list/map with value.  Returns
-                                        ;;    value.
+Use: (setf (at <keyOrIndex> <mapListOrStr>) <newValueExpr>)
 (append '<list-1> '<list-2> ...)        ;; Return a new list with the lists
                                         ;;    merged.  Order is retained.
 ! (hasValue? '<listOrMap> '<value>)       ;; Returns T if the list/map contains
                                         ;;    value.
-! (map '( (<key1> <val1>) (<key2> <val>2) ...))
+! (map '( (<key1> <val1>) (<key2> <val2>) ...))
                                         ;; Construct a map of key-value pairs.
 ! (update! <map1> <map2>)                 ;; Update map1's data with map2's.
 ! (hasKey? <map> <key>)                   ;; Return T if key is in the map.
@@ -356,11 +353,10 @@ E                                       ;; the constant e.
 
 Library Functions
 =================
-
-caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr,
-cdaar, cdadr, cddar, cdddr, caaaar, caaadr, caadar,
-caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
-cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr
+caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr, cdaar, cdadr, cddar, cdddr,
+caaaar, caaadr, caadar, caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
+cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr, first, second, third,
+fourth, fifth, sixth, seventh, eighth, ninth, tenth, rest
 (null <sexpr>)                          ;; Is the result of the sexpr nil?
 ! (apply <fn> <list>)                     ;; Apply fn to each member of list.
                                         ;;    Returns the results in a list.
