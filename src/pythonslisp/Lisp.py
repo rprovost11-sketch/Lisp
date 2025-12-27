@@ -1,10 +1,10 @@
-from ltk.Listener import Listener
+from Listener import Listener
 from LispInterpreter import LispInterpreter
 
 import sys
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.10.3'
+VERSION      = '0.11.0'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'testing'

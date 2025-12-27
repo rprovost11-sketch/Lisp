@@ -1,4 +1,4 @@
-import ltk.Parser as Parser
+import Parser as Parser
 from LispAST import LList, LSymbol
 
 import fractions

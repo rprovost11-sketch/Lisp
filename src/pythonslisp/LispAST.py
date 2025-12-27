@@ -1,4 +1,4 @@
-from ltk.Environment import Environment
+from Environment import Environment
 
 import fractions
 from typing import Any, Callable

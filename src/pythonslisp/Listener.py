@@ -1,4 +1,4 @@
-import ltk.Parser as Parser
+import Parser as Parser
 
 import io
 import os

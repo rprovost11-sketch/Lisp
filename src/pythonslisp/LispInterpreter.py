@@ -1,8 +1,8 @@
 from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive,
                       LMacro, prettyPrintSExpr )
 from LispParser import LispParser
-from ltk.Listener import Interpreter, retrieveFileList
-from ltk.Environment import Environment
+from Listener import Interpreter, retrieveFileList
+from Environment import Environment
 
 import io
 import functools
