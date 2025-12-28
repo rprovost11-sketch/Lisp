@@ -1,15 +1,15 @@
-from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive,
-                      LMacro, prettyPrintSExpr )
-from LispParser import LispParser
-from Listener import Interpreter, retrieveFileList
-from Environment import Environment
-
 import io
 import functools
 import math
 import random
-import fractions
+from fractions import Fraction
 from typing import Callable, Any
+
+from LispParser import LispParser
+from Listener import Interpreter, retrieveFileList
+from Environment import Environment
+from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive,
+                      LMacro, prettyPrintSExpr )
 
 
 class LispRuntimeError( Exception ):
@@ -26,12 +26,11 @@ class LispRuntimeFuncError( LispRuntimeError ):
       super().__init__( errStr )
 
 
-L_NUMBER = (int,float,fractions.Fraction)
-L_ATOM   = (int,float,fractions.Fraction,str)
+L_NUMBER = (int,float,Fraction)
+L_ATOM   = (int,float,Fraction,str)
 
 class LispInterpreter( Interpreter ):
    outStrm = None
-   counter = 1               # Used by gensym to generate unique symbols
 
    def __init__( self, runtimeLibraryDir: (str|None)=None ) -> None:
       self._libDir = runtimeLibraryDir
@@ -49,19 +48,26 @@ class LispInterpreter( Interpreter ):
          for filename in filenameList:
             self.evalFile( filename )
 
-   def eval( self, inputExprStr: str, outStrm=None ) -> str:
-      returnVal = self.rawEval( inputExprStr, outStrm )
+   def eval( self, source: str, outStrm=None ) -> str:
+      returnVal = self.rawEval( source, outStrm=outStrm )
       return prettyPrintSExpr( returnVal ).strip()
 
-   def evalFile( self, filename: str ) -> None:
-      with open(filename, 'r' ) as file:
-         sourceCode = file.read( )
-      self.rawEval( sourceCode, outStrm=io.StringIO() )
+   def evalFile( self, filename: str, outStrm=None ) -> str:
+      self.rawEvalFile( filename, outStrm=outStrm )
 
-   def rawEval( self, inputExprStr: str, outStrm=None ) -> Any:
+   def rawEval( self, source: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
-         ast = self._parser.parse( inputExprStr )
+         ast = self._parser.parse( source )
+         returnVal = LispInterpreter._lEval( self._env, ast )
+      finally:
+         LispInterpreter.outStrm = None
+      return returnVal
+
+   def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
+      LispInterpreter.outStrm = outStrm
+      try:
+         ast = self._parser.parseFile( filename )
          returnVal = LispInterpreter._lEval( self._env, ast )
       finally:
          LispInterpreter.outStrm = None
@@ -356,62 +362,56 @@ class LispInterpreter( Interpreter ):
 
          rval = LispInterpreter._lEval(env, rval)
          
-         try:
-            if isinstance(lval, LSymbol ):
-               sym = lval
-               if isinstance( rval, (LFunction,LMacro) ):
-                  rval.name = sym
-               sym = str(sym)
-      
-               # If sym exists somewhere in the symbol table hierarchy, set its
-               # value to rval.  If it doesn't exist, define it in the global
-               # symbol table and set its value to rval.
-               theSymTab = env.findDef( sym )
-               if theSymTab:
-                  theSymTab.setLocal( sym, rval )
-               else:
-                  env.setGlobal( sym, rval )
+         if isinstance(lval, LList):       # s-expression
+            if len(lval) < 1:
+               raise LispRuntimeFuncError( LP_setf, 'lvalue cannot be NIL.' )
             
-            elif isinstance( lval, LList ):       # s-expression
-               sexpr = lval
-               sexprLen = len(sexpr)
-               if sexprLen == 2:                       # Expect (car <lst>)
-                  primitive, lst = sexpr
-                  if primitive == 'CAR':
-                     lst[0] = rval
-                  else:
-                     raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue.' )
-               elif sexprLen == 3:
-                  primitive, keyOrIndex, mapOrLst = sexpr
-                  keyOrIndex = LispInterpreter._lEval(env,keyOrIndex)
-                  mapOrLst = LispInterpreter._lEval(env,mapOrLst)
-                  if primitive == 'AT':
-                     if isinstance(mapOrLst, LMap):
-                        theDict = mapOrLst
-                        theKey = str(keyOrIndex)
-                        theDict[theKey] = rval
-                     elif isinstance(mapOrLst, LList):
-                        theLst = mapOrLst
-                        theIdx = int(keyOrIndex)
-                        theLst[theIdx] = rval
-                     else:
-                        raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue.' )
-                  else:
-                     raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue.' )
-               else:
-                  raise LispRuntimeFuncError( LP_setf, 'Invalid lvalue' )
-         except LispRuntimeError:
-            raise 
-         except Exception:
-            raise LispRuntimeFuncError( LP_setf, 'Unknown error.' )
+            primitive = lval[0]
+            if primitive == 'AT':
+               try:
+                  primitive, keyOrIndex, mapOrLst = lval
+               except ValueError:
+                  raise LispRuntimeFuncError( LP_setf, 'lvalue expected 3 elements.' )
+               
+               theSelector = LispInterpreter._lEval(env,keyOrIndex)
+               theContainer = LispInterpreter._lEval(env,mapOrLst)
+               
+               if not isinstance(theContainer, (LList, LMap)):
+                  raise LispRuntimeFuncError( LP_setf, 'Invalid container type following \'AT\' primitive.' )
+
+               try:
+                  theContainer[theSelector] = rval
+               except (KeyError, IndexError):
+                  raise LispRuntimeFuncError( LP_setf, 'Invalid key or index.')
+               
+               return rval
+            else:
+               lval = LispInterpreter._lEval(env,lval)
+
+         if isinstance(lval, LSymbol ):
+            sym = lval
+            if isinstance(rval,(LFunction,LMacro)) and (rval.name == ''):
+               rval.name = sym
+            sym = str(sym)
+   
+            # If sym exists somewhere in the symbol table hierarchy, set its
+            # value to rval.  If it doesn't exist, define it in the global
+            # symbol table and set its value to rval.
+            theSymTab = env.findDef( sym )
+            if theSymTab:
+               theSymTab.setLocal( sym, rval )
+            else:
+               env.setGlobal( sym, rval )
          
          return rval
          
-      @LDefPrimitive( 'undef!', '\'<symbol>' )
+      @LDefPrimitive( 'undef!', '<symbol>', specialOperation=True)
       def LP_undef( env: Environment, *args, **kwargs ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_undef, '1 argument exptected.' )
          key = args[0]
+         if not isinstance(key, LSymbol):
+            raise LispRuntimeFuncError( LP_undef, 'Argument expected to be a symbol.' )
          env.getGlobalEnv().undef( str(key) )
          return L_NIL
 
@@ -432,21 +432,6 @@ class LispInterpreter( Interpreter ):
             pass
 
          return L_NIL
-
-      @LDefPrimitive( 'gensym', '' )
-      def LP_gensym( env: Environment, *args, **kwargs ) -> Any:
-         if len(args) > 1:
-            raise LispRuntimeFuncError( LP_gensym, '0 or 1 arguments expected.' )
-
-         try:
-            prefix = args[0]
-         except IndexError:
-            prefix = 'G'
-
-         symstr = f'{prefix}{LispInterpreter.counter}'
-         LispInterpreter.counter += 1
-         sym = LSymbol( symstr )
-         return sym
 
       # ==================
       # Control Structures
@@ -534,7 +519,7 @@ class LispInterpreter( Interpreter ):
             lastResult = LispInterpreter._lEval( env, expr )
          return lastResult
 
-      @LDefPrimitive( 'if', '<cond> <conseq> [<alt>]', specialOperation=True )
+      @LDefPrimitive( 'if', '<cond> <conseq> &optional <alt>', specialOperation=True )
       def LP_if( env: Environment, *args, **kwargs ) -> Any:
          numArgs = len(args)
          if not(2 <= numArgs <= 3):
@@ -831,7 +816,7 @@ class LispInterpreter( Interpreter ):
          except IndexError:
             return LList( )
 
-      @LDefPrimitive( 'cons', '\'<obj> \'<list>' )
+      @LDefPrimitive( 'cons', '<obj> <list>' )
       def LP_cons( env: Environment, *args, **kwargs ) -> Any:
          try:
             arg1,arg2 = args
@@ -846,7 +831,7 @@ class LispInterpreter( Interpreter ):
 
          return copiedList
 
-      @LDefPrimitive( 'push!', '\'<list> \'<value>' )
+      @LDefPrimitive( 'push!', '<list> <value>' )
       def LP_push( env: Environment, *args, **kwargs ) -> Any:
          try:
             alist, value = args
@@ -862,7 +847,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_push, 'Invalid argument.' )
          return alist
 
-      @LDefPrimitive( 'pop!', '\'<list>' )
+      @LDefPrimitive( 'pop!', '<list>' )
       def LP_pop( env: Environment, *args, **kwargs ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_pop, '1 argument expected.' )
@@ -896,7 +881,7 @@ class LispInterpreter( Interpreter ):
 
          return value
 
-      @LDefPrimitive( 'append', '\'<list1> \'<list2>' )
+      @LDefPrimitive( 'append', '<list1> <list2>' )
       def LP_append( env: Environment, *args, **kwargs ) -> Any:
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_append, 'At least 2 arguments expected.' )
@@ -909,7 +894,7 @@ class LispInterpreter( Interpreter ):
                resultList.append( item )
          return resultList
 
-      @LDefPrimitive( 'hasValue?', '\'<listOrMap> \'<value>' )
+      @LDefPrimitive( 'hasValue?', '<listOrMap> <value>' )
       def LP_hasValue( env: Environment, *args, **kwargs ) -> Any:
          try:
             keyed,aVal = args
@@ -1027,7 +1012,7 @@ class LispInterpreter( Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_lcm, 'Invalid argument.' )
 
-      @LDefPrimitive( 'log', '<expr> [ <base> ]')
+      @LDefPrimitive( 'log', '<expr> &optional (<base> 10)')
       def LP_log( env: Environment, *args, **kwargs ) -> Any:
          numArgs = len(args)
          if not( 1 <= numArgs <= 2 ):
@@ -1106,7 +1091,7 @@ class LispInterpreter( Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_max, 'Invalid argument.' )
 
-      @LDefPrimitive( 'random', 'number' )
+      @LDefPrimitive( 'random', '<number>' )
       def LP_random( env: Environment, *args, **kwargs ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_random, 'Exactly 1 number argument exptected.' )
@@ -1138,7 +1123,7 @@ class LispInterpreter( Interpreter ):
       def LP_rationalp( env: Environment,  *args, **kwargs ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_rationalp, '1 argument expected.' )
-         return L_T if isinstance( args[0], (int, fractions.Fraction) ) else L_NIL
+         return L_T if isinstance( args[0], (int,Fraction) ) else L_NIL
 
       @LDefPrimitive( 'floatp', '<expr>' )
       def LP_floatp( env: Environment,  *args, **kwargs ) -> Any:
@@ -1356,7 +1341,7 @@ class LispInterpreter( Interpreter ):
          except (ValueError, IndexError):
             raise LispRuntimeFuncError( LP_float, 'Invalid argument.' )
 
-      @LDefPrimitive( 'integer', '<expr> [<base>]')
+      @LDefPrimitive( 'integer', '<expr> &optional (<base> 10)')
       def LP_integer( env: Environment, *args, **kwargs ) -> Any:
          numArgs = len(args)
          if (numArgs < 1) or (numArgs > 2):
@@ -1373,7 +1358,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_rational, 'Exactly 1 argument expected.' )
 
          try:
-            return fractions.Fraction(args[0])
+            return Fraction(args[0])
          except (IndexError, TypeError):
             raise LispRuntimeFuncError( LP_rational, 'Invalid argument.' )
 

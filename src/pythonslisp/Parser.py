@@ -4,6 +4,7 @@ from typing import Any
 class ScannerState( object ):
    def __init__( self ) -> None:
       self.tok: int             = 0
+      self.buffer_filename:str = ''
       self.buffer_source: str   = ''
       self.buffer_point: int    = 0
       self.buffer_mark: int     = 0
@@ -12,18 +13,30 @@ class ScannerState( object ):
 class ScannerBuffer( object ):
    def __init__( self ) -> None:
       '''Initialize a scanner buffer instance.'''
+      self._filename:str = ''  # the source filename
       self._source:str  = ''   # the string to be analyzed lexically
       self._point:int   = 0    # the current scanner position
       self._mark:int    = 0    # the first character of the lexeme currently being scanned
       self._lineNum:int = 1    # the current line number
 
-   def reset( self, sourceString: str ) -> None:
+   def reset( self, source: str ) -> None:
       '''Re-initialize the instance over a new or the current string.'''
-      self._source = sourceString
+      self._filename = ''
+      self._source = source.rstrip()
+         
       self._point    = 0
       self._mark     = 0
       self._lineNum  = 1
 
+   def resetFromFile( self, filename: str ) -> None:
+      self._filename = filename
+      with open(self._filename, 'r' ) as file:
+         self._source = file.read( ).rstrip()
+         
+      self._point    = 0
+      self._mark     = 0
+      self._lineNum  = 1
+      
    def peekNextChar( self ) -> str:
       '''Return the next character in the buffer or an empty string if eof.'''
       try:
@@ -65,12 +78,14 @@ class ScannerBuffer( object ):
       return numCharsConsumed
 
    def saveState( self, stateInst: ScannerState ) -> None:
+      stateInst.buffer_filename = self._filename
       stateInst.buffer_source   = self._source
       stateInst.buffer_point    = self._point
       stateInst.buffer_mark     = self._mark
       stateInst.buffer_lineNum  = self._lineNum
 
    def restoreState( self, stateInst: ScannerState ) -> None:
+      self._filename = stateInst.buffer_filename
       self._source   = stateInst.buffer_source
       self._point    = stateInst.buffer_point
       self._mark     = stateInst.buffer_mark
@@ -83,6 +98,9 @@ class ScannerBuffer( object ):
    def getLexeme( self ) -> str:
       '''Returns the substring spanning from mark to point.'''
       return self._source[ self._mark : self._point ]
+
+   def scanFilename( self ) -> str:
+      return self._filename
 
    def scanLineNum( self ) -> int:
       '''Return the line num (first line is 1) of point.'''
@@ -103,7 +121,10 @@ class ScannerBuffer( object ):
 
    def _linePos( self ) -> int:
       '''Return the index into the buffer string of the first character of the current line.'''
-      theLinePos = self._source.rfind( '\n', self._point ) + 1
+      if self._point >= len(self._source):
+         theLinePos = self._source.rfind( '\n', 0, len(self._source) - 1 ) + 1
+      else:
+         theLinePos = self._source.rfind( '\n', 0, self._point ) + 1
       return 0 if theLinePos < 0 else theLinePos
 
 class Scanner( ABC ):
@@ -112,11 +133,18 @@ class Scanner( ABC ):
       self.buffer:ScannerBuffer  = ScannerBuffer( )
       self._tok:int = -1               # The next token
 
-   def reset( self, newSourceString: str ) -> None:
-      '''Re-initialize the instance over a new string.'''
-      self.buffer.reset( newSourceString )
+   def reset( self, source: str ) -> None:
+      '''Re-initialize the instance over a new string.  arg is either a source
+      code string or a filename to a file containing source code.  Which of
+      these is determined by the isFilename argument.
+      '''
+      self.buffer.reset( source )
       self.consume( )                           # prime the scanner.
 
+   def resetFromFile( self, filename: str ) -> None:
+      self.buffer.resetFromFile( filename )
+      self.consume( )
+   
    def peekToken( self ) -> int:
       '''Return the next (look ahead) token, but do not consume it.'''
       return self._tok
@@ -177,8 +205,8 @@ class Scanner( ABC ):
       pass
 
 class ParseError( Exception ):
-   def __init__( self, aScanner: Scanner, errorMessage: str, srcfilename: str='' ) -> None:
-      self.srcfilename:str= srcfilename
+   def __init__( self, aScanner: Scanner, errorMessage: str ) -> None:
+      self.srcfilename:str= aScanner.buffer.scanFilename()
       self.lineNum:int    = aScanner.buffer.scanLineNum()
       self.colNum:int     = aScanner.buffer.scanColNum()
       self.errorMsg:str   = errorMessage
@@ -202,11 +230,15 @@ class ParseError( Exception ):
       Preconditions: [AssertionError] The underlying buffer must wrap a string.
       """
       self.errInfo['indentStr'] = ' ' * ( self.errInfo['colNum'] - 1 )
-      return 'Syntax Error: {srcfilename}({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'.format( **self.errInfo )
+      return 'Syntax Error: {srcfilename} ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'.format( **self.errInfo )
 
 
 class Parser( ABC ):
    @abstractmethod
-   def parse( self, inputString: str ) -> Any:  # Returns an AST of inputString
+   def parse( self, source: str ) -> Any:  # Returns an AST of inputString
+      pass
+
+   @abstractmethod
+   def parseFile( self, filename: str ) -> Any:  # Returns an AST of inputString
       pass
 

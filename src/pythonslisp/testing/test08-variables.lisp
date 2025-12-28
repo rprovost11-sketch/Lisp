@@ -153,7 +153,7 @@ TRUE
 
 ==> 2
 
->>> (undef! 'var3)
+>>> (undef! var3)
 ...
 
 ==> NIL

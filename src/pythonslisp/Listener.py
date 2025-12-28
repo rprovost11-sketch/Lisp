@@ -1,11 +1,11 @@
-import Parser as Parser
-
 import io
 import os
 import datetime
 import time
 from abc import ABC, abstractmethod
 from typing import Any
+
+import Parser as Parser
 
 def retrieveFileList( dirname ) -> list[str]:
    "Returns a list of all the filenames in the specified directory."
@@ -26,17 +26,13 @@ class Interpreter( ABC ):
       pass
 
    @abstractmethod
-   def eval( self, anExprStr: str, file=None ) -> str:
+   def eval( self, source: str, outStrm=None ) -> str:
       '''Evaluate an expression string of the target language and return a
-      string representing the return value.
-      '''
+      string representing the return value.'''
       pass
-
+   
    @abstractmethod
-   def evalFile( self, filename: str ) -> None:
-      '''Read and evaluate a target language source file.  Returns the result
-      of the last expression evaluated.  Evaluation of the source file should
-      occur silently.  All output should be suppressed.'''
+   def evalFile( self, filename: str, outStrm=None ) -> None:
       pass
 
 
@@ -141,7 +137,7 @@ class Listener( object ):
          # Perform the test and collect the various outputs
          errorStream = io.StringIO( )
          outputStream = io.StringIO( )
-         actualRetValStr = self._interp.eval( exprStr, outputStream )
+         actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
          actualOutputStr = outputStream.getvalue().strip()
          actualErrorStr = errorStream.getvalue().strip()
 

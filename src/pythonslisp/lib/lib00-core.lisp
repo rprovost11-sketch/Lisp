@@ -1,5 +1,5 @@
 (defmacro defun (fnName argList &rest body)
-                   `(setf ,fnName (lambda (,@argList) ,@body)))
+   `(setf ,fnName (lambda (,@argList) ,@body)))
 
 ;(defmacro foreach (sym lst expr)
 ;         `(cond
@@ -16,36 +16,37 @@
             (write! promptStr)
             (readLn!)          )
 
-(setf first car)
+(defmacro first (lst)
+   `(car ,lst))
 
 (setf rest cdr)
 
-(defun second (lst)
-   (cadr lst))
+(defmacro second (lst)
+   `(cadr ,lst))
 
-(defun third (lst)
-   (at lst 2))
+(defmacro third (lst)
+   `(caddr ,lst))
 
-(defun fourth (lst)
-   (at lst 3))
+(defmacro fourth (lst)
+   `(cadddr ,lst))
 
-(defun fifth (lst)
-   (at lst 4))
+(defmacro fifth (lst)
+   `(cadddr (cdr ,lst)))
 
-(defun sixth (lst)
-   (at lst 5))
+(defmacro sixth (lst)
+   `(cadddr (cddr ,lst)))
 
-(defun seventh (lst)
-   (at lst 6))
+(defmacro seventh (lst)
+   `(cadddr (cdddr ,lst)))
 
-(defun eighth (lst)
-   (at lst 7))
+(defmacro eighth (lst)
+   `(cadddr (cddddr ,lst)))
 
-(defun ninth (lst)
-   (at lst 8))
+(defmacro ninth (lst)
+   `(cadddr (cddddr (cdr ,lst))))
 
-(defun thenth (lst)
-   (at lst 9))
+(defmacro tenth (lst)
+   `(cadddr (cddddr (cddr ,lst))))
 
 (defun caar (lst)
    (car (car lst)))
@@ -200,32 +201,32 @@
          (incf accum value))
       (/ accum (length values))))
 
-;(setf symbolCounter 1)
-;(defun gensym (&optional (prefix 'G'))
-;   (let
-;      ((theSymbol (symbol prefix symbolCounter)))
-;      (incf symbolCounter)
-;      theSymbol))
+(setf __symbolCounter 1)
+(defun gensym (&optional (prefix "G"))
+   (let
+      ((theSymbol (symbol prefix __symbolCounter)))
+      (incf __symbolCounter)
+      theSymbol))
 
-;(defmacro defstruct (typeName &rest fields)
-;   `(setf ,typename (map (name ,typename) (type ,typename)))
-;   (foreach fieldName ',fields
-;       (let ( (,(symbol typename "-" fieldName) nil) )
-;          (defun ,(symbol "get-" typename "-" fieldName) (inst)
-;             (at inst ,fieldName))
-;          (defun ,(symbol "set-" typename "-" fieldName) (inst value)
-;             (atSet! inst ,fieldName value))))
+; (macroexpand '(defstruct point x y))
+;(defmacro defstruct (typename &rest fields)
+;   `(setf ,typename (map (name ,typename)
+;                         (type ,typename)
+;                         (fileds ,fields)))
+;   (foreach fieldname fields
+;       (defmacro (symbol typename "-" fieldname) (inst)
+;          `(at ,fieldname inst)))
 ;   `(defun ,(symbol typename "-p") (arg)
 ;       (= (at arg 'type) ,typename))
 ;   `(defun ,(symbol "make-" typename) ( )
 ;       (let ( (newInst (map (type ,typename))) )
 ;          (foreach fieldname ',fields
-;             (atset! newInst fieldName nil))
+;             (setf (at fieldname newInst) nil))
 ;          newInst))
 ;   `(defun ,(symbol "copy-" typename) (oldInst)
 ;       (let ( (newInst (,(symbol "make-" typename))) )
 ;          (foreach fieldname ',fields
-;             (atset! newInst fieldname (at oldInst fieldname)))
+;             (setf fieldname newInst (at fieldname oldInst)))
 ;          newInst))
 ;   )
 

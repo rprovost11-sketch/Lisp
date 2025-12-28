@@ -1,10 +1,10 @@
+import sys
+
 from Listener import Listener
 from LispInterpreter import LispInterpreter
 
-import sys
-
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.11.0'
+VERSION      = '0.11.2'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'testing'

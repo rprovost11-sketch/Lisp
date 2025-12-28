@@ -13,11 +13,6 @@
 
 ==> (BANANA CAKE DONUT)
 
->>> (first '())
-...
-
-==> NIL
-
 >>> (rest '(donkey))
 ...
 

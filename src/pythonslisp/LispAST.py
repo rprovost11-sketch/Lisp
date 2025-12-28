@@ -1,7 +1,7 @@
-from Environment import Environment
-
-import fractions
+from fractions import Fraction
 from typing import Any, Callable
+
+from Environment import Environment
 
 # #################
 # Lisp Function API
@@ -10,7 +10,7 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
    of a lisp object.'''
    if isinstance(sExpr, str):
       return f'\"{sExpr}\"'
-   elif isinstance(sExpr, fractions.Fraction):
+   elif isinstance(sExpr, Fraction):
       return f'{sExpr.numerator}/{sExpr.denominator}'
    else:
       return repr(sExpr)

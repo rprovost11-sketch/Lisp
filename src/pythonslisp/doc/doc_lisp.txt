@@ -38,11 +38,11 @@ Design Features (the code not lisp)
 #############
 Run the repl.
 
-          > python3 pythonslisp
+          > python3 -m pythonslisp
 
 Execute a lisp source file.
 
-          > python3 pythonslisp <lispSourceFile.lisp>
+          > python3 -m pythonslisp <lispSourceFile.lisp>
 
 
 API: Using Lisp as a Package
@@ -179,10 +179,6 @@ E                                       ;; the constant e.
 ! (symtab!)                               ;; Print a symbol tab.  Each scope on a
                                         ;;    separate line.  Local scope first.
                                         ;;    Global scope last.
-(gensym [<prefix-str])                  ;; Generate a unique symbol.  The
-                                        ;;    default is to set <prefix-str> to
-                                        ;;    G.  The unique symbol is the
-                                        ;;    <prefix-str> followed by digits.
 
 ### Control Structures ###
 (lambda (<arg1> <arg2> ...) <expr1> <expr2> ...)
@@ -263,17 +259,18 @@ E                                       ;; the constant e.
 (list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
                                         ;;    expressions.
 (car <list>)                            ;; Return the first item in the list.
-Use: (setf (car <list>) <newValueExpr>)
 (cdr <list>)                            ;; Return the list minus the first item.
-(cons '<obj> '<list>)                   ;; Return a new list with <obj> inserted
+(cons <obj> <list>)                     ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
 ! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
 ! (pop! '<list>)                          ;; Pop and returns the last value of the
                                         ;;    list.
 ! (at <keyOrIndex> <listMapOrStr>)      ;; Return the value at a specified index
                                         ;;    or key of a list, map or string.
-Use: (setf (at <keyOrIndex> <mapListOrStr>) <newValueExpr>)
-(append '<list-1> '<list-2> ...)        ;; Return a new list with the lists
+Use: (setf (at <key> <map>) <newValueExpr>)
+Use: (setf (at <idx> <lst>) <newValueExpr>)
+Use: (setf (at <idx> <str>) <newValueExpr>)
+(append <list-1> <list-2> ...)          ;; Return a new list with the lists
                                         ;;    merged.  Order is retained.
 ! (hasValue? '<listOrMap> '<value>)       ;; Returns T if the list/map contains
                                         ;;    value.
@@ -380,6 +377,10 @@ fourth, fifth, sixth, seventh, eighth, ninth, tenth, rest
 (tan <radians>)                         ;; Returns the tan of radians.
 ! (fact n)                                ;; compute the factorial of n.
 ! (fib n)                                 ;; return the nth fibonacci number.
+(gensym [<prefix-str])                  ;; Generate a unique symbol.  The
+                                        ;;    default is to set <prefix-str> to
+                                        ;;    G.  The unique symbol is the
+                                        ;;    <prefix-str> followed by digits.
 
 Library Macros
 ==============
