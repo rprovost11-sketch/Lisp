@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 class ScannerState( object ):
-   def __init__( self ) -> None:
+   def __init__( self, filename: str = '', source: str = '', point: int = 0, mark: int = 0, lineNum: int = 0 ) -> None:
       self.tok: int             = 0
-      self.buffer_filename:str = ''
-      self.buffer_source: str   = ''
-      self.buffer_point: int    = 0
-      self.buffer_mark: int     = 0
-      self.buffer_lineNum: int  = 0
+      self.buffer_filename:str = filename
+      self.buffer_source: str   = source
+      self.buffer_point: int    = point
+      self.buffer_mark: int     = mark
+      self.buffer_lineNum: int  = lineNum
 
 class ScannerBuffer( object ):
    def __init__( self ) -> None:
@@ -23,7 +23,6 @@ class ScannerBuffer( object ):
       '''Re-initialize the instance over a new or the current string.'''
       self._filename = ''
       self._source = source.rstrip()
-         
       self._point    = 0
       self._mark     = 0
       self._lineNum  = 1
@@ -32,7 +31,6 @@ class ScannerBuffer( object ):
       self._filename = filename
       with open(self._filename, 'r' ) as file:
          self._source = file.read( ).rstrip()
-         
       self._point    = 0
       self._mark     = 0
       self._lineNum  = 1
@@ -77,12 +75,10 @@ class ScannerBuffer( object ):
          pass                # scanned past eof.  Return gracefully.
       return numCharsConsumed
 
-   def saveState( self, stateInst: ScannerState ) -> None:
-      stateInst.buffer_filename = self._filename
-      stateInst.buffer_source   = self._source
-      stateInst.buffer_point    = self._point
-      stateInst.buffer_mark     = self._mark
-      stateInst.buffer_lineNum  = self._lineNum
+   def saveState( self ) -> ScannerState:
+      return ScannerState( filename=self._filename, source=self._source,
+                           point=self._point, mark=self._mark,
+                           lineNum=self._lineNum )
 
    def restoreState( self, stateInst: ScannerState ) -> None:
       self._filename = stateInst.buffer_filename
@@ -134,14 +130,12 @@ class Scanner( ABC ):
       self._tok:int = -1               # The next token
 
    def reset( self, source: str ) -> None:
-      '''Re-initialize the instance over a new string.  arg is either a source
-      code string or a filename to a file containing source code.  Which of
-      these is determined by the isFilename argument.
-      '''
+      '''Re-initialize the instance over a new string.'''
       self.buffer.reset( source )
       self.consume( )                           # prime the scanner.
 
    def resetFromFile( self, filename: str ) -> None:
+      '''Re-initialize the instance over the contents of a source file.'''
       self.buffer.resetFromFile( filename )
       self.consume( )
    
@@ -158,41 +152,17 @@ class Scanner( ABC ):
       This should be called before consume.'''
       return self.buffer.getLexeme( )
 
-   def saveState( self, stateInst: ScannerState ) -> None:
+   def saveState( self ) -> ScannerState:
       '''Create a restore point (for backtracking).  The current
       state of the scanner is preserved under aStateName.'''
-      stateInst.tok             = self._tok
-      self.buffer.saveState( stateInst )
+      stateInst = self.buffer.saveState( )
+      stateInst.tok = self._tok
+      return stateInst 
 
    def restoreState( self, stateInst: ScannerState ) -> None:
       '''Restore a saved state (backtrack to the point where the restore point was made).'''
       self._tok = stateInst.tok
       self.buffer.restoreState( stateInst )
-
-   def tokenize( self, aString: str, EOFToken: int=0 ) -> list[tuple[int, str]]:
-      tokenList = [ ]
-      self.reset( aString )
-      while self.peekToken() != EOFToken:
-         token = self.peekToken()
-         lex   = self.getLexeme( )
-         tokenList.append( ( token, lex ) )
-         self.consume( )
-      tokenList.append( (EOFToken,'') )
-      return tokenList
-
-   def test( self, aString: str, EOFToken: int=0 ) -> None:
-      '''Scanner Testing:  Print the list of tokens in the input string.'''
-      try:
-         tokenList = self.tokenize( aString, EOFToken )
-
-         for token,lexeme in tokenList:
-            print( f'{token:<4} /{lexeme}/' )
-
-      except ParseError as ex:
-         print( ex )
-
-      except Exception as ex:
-         print( ex )
 
    @abstractmethod
    def _scanNextToken( self ) -> int:

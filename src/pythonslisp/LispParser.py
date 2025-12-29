@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import Any
 
-from Parser import Scanner, Parser, ParseError, ScannerState
+from Parser import Scanner, Parser, ParseError
 from LispAST import LList, LSymbol
 
 """
@@ -230,17 +230,13 @@ class LispScanner( Scanner ):
                          | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]    # <-- decimal/exponentiation case
                          )
       '''
+      SAVE = self.saveState( )                  # Save the scanner state
+
       buf = self.buffer
-
-      SAVE = ScannerState( )
-      nextChar = buf.peekNextChar( )
-
       buf.markStartOfLexeme( )
-      self.saveState( SAVE )                  # Save the scanner state
-
-      buf.consume( )
-
+      nextChar = buf.peekNextChar()
       if nextChar in LispScanner.SIGN:
+         buf.consume()
          secondChar = buf.peekNextChar( )
          if secondChar not in LispScanner.DIGIT:
             self.restoreState( SAVE )         # Restore the scanner state
@@ -435,42 +431,24 @@ class LispParser( Parser ):
       theList = [ ]
 
       # Open List
-      if self._scanner.peekToken( ) != LispScanner.OPEN_PAREN_TOK:
+      nextToken = self._scanner.peekToken()
+      if nextToken != LispScanner.OPEN_PAREN_TOK:
          raise ParseError( self._scanner, '( expected.' )
       else:
          self._scanner.consume( )
 
       # List Entries
-      while self._scanner.peekToken( ) not in (LispScanner.CLOSE_PAREN_TOK,
+      nextToken = self._scanner.peekToken( )
+      while nextToken not in (LispScanner.CLOSE_PAREN_TOK,
                                                LispScanner.EOF_TOK):
          theList.append( self._parseObject( ) )
+         nextToken = self._scanner.peekToken( )
 
       # Close List
-      if self._scanner.peekToken( ) != LispScanner.CLOSE_PAREN_TOK:
+      if nextToken != LispScanner.CLOSE_PAREN_TOK:
          raise ParseError( self._scanner, ') expected.')
       else:
          self._scanner.consume( )
 
       return LList( *theList )
 
-
-def testLispScanner( ) -> None:
-   scanner = LispScanner( )
-   tokenList = scanner.tokenize("""(defmacro!! defun! (fnName argList &body body) `(def! ',fnName (lambda (,@argList) ,@body)))""")
-   for token, lexeme in tokenList:
-      print( f'{token:5}  {lexeme}' )
-
-def testLispParser( ) -> None:
-   xy = LispParser( )
-
-   def test( anExpr ):
-      print( '\n>>> ', anExpr )
-      expr = xy.parse( anExpr )
-      print( expr )
-
-   test( '(one two three)' )
-   test( '(one (two three) four)' )
-   test( '((one) two)' )
-
-if __name__ == '__main__':
-   testLispScanner( )
