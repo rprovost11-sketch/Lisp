@@ -1,9 +1,13 @@
 # Lisp-Py
-Lisp programming language - Implemented purely in Python 3.14
+Common Lisp programming language
 
-Lisp is intended as an toy interpreter for a very simple Lisp dialect.
+The best python lisp implementation!
 
-Lisp is implemented entirely in python 3.14.
+Implemented entirely in python 3.14.
+
+Embed lisp in python code and python in lisp code; or interact with lisp in the included repl.
+
+Features Common Lisp macro definition and expansion.  &rest and &optional parameters supported so far (&key parameters not yet implemented).
 
 Uses
 ==========
