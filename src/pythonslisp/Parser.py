@@ -176,31 +176,15 @@ class Scanner( ABC ):
 
 class ParseError( Exception ):
    def __init__( self, aScanner: Scanner, errorMessage: str ) -> None:
-      self.srcfilename:str= aScanner.buffer.scanFilename()
-      self.lineNum:int    = aScanner.buffer.scanLineNum()
-      self.colNum:int     = aScanner.buffer.scanColNum()
-      self.errorMsg:str   = errorMessage
-      self.sourceLine:str = aScanner.buffer.scanLineTxt()
+      super().__init__( self._generateVerboseErrorString(srcfilename=aScanner.buffer.scanFilename(),
+                                                         lineNum=aScanner.buffer.scanLineNum(),
+                                                         colNum=aScanner.buffer.scanColNum(),
+                                                         sourceLine=aScanner.buffer.scanLineTxt(),
+                                                         errorMsg=errorMessage) )
 
-      self.errInfo = {
-         'srcfilename':self.srcfilename,
-         'lineNum':    self.lineNum,
-         'colNum':     self.colNum,
-         'errorMsg':   self.errorMsg,
-         'sourceLine': self.sourceLine
-         }
-
-      super().__init__( self._generateVerboseErrorString() )
-
-   def _generateVerboseErrorString( self ):
-      """Generate an error string.
-      Category:      Pure Function.
-      Returns:       (str) A detailed textual representation of the error.
-      Side Effects:  None.
-      Preconditions: [AssertionError] The underlying buffer must wrap a string.
-      """
-      self.errInfo['indentStr'] = ' ' * ( self.errInfo['colNum'] - 1 )
-      return 'Syntax Error: {srcfilename} ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'.format( **self.errInfo )
+   def _generateVerboseErrorString( self, srcfilename: str, lineNum: int, colNum: int, sourceLine: str, errorMsg: str ):
+      indentStr = ' ' * ( colNum - 1 )
+      return f'Syntax Error: {srcfilename} ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'
 
 
 class Parser( ABC ):

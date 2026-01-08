@@ -15,6 +15,14 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
    else:
       return repr(sExpr)
 
+def prettyPrint( sExpr: Any ) -> str:
+   '''Return a printable, formatted string representation
+   of a lisp object.'''
+   if isinstance(sExpr, Fraction):
+      return f'{sExpr.numerator}/{sExpr.denominator}'
+   else:
+      return str(sExpr)
+
 # ###############################
 # Lisp Runtime Object Definitions
 class LSymbol( object ):

@@ -194,13 +194,6 @@
                    (1
                                  nil)))
 
-; Compute the average of a list of values
-(defun average (&rest values)
-   (let ( (accum  0) )
-      (foreach value values
-         (incf accum value))
-      (/ accum (length values))))
-
 (setf __symbolCounter 1)
 (defun gensym (&optional (prefix "G"))
    (let

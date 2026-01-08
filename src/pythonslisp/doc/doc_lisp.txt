@@ -252,7 +252,6 @@ E                                       ;; the constant e.
 ! (eval '<expr>)                          ;; Evaluate <expr> in the current scope.
 ! (parse <string>)                        ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
-! (pprint '<expr>)                        ;; Pretty Print an sexpression.
 ! (python <pythonCodeString>)           ;; Execute some python code from lisp.
 
 ### List & Map Manipulation ###
@@ -265,8 +264,10 @@ E                                       ;; the constant e.
 ! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
 ! (pop! '<list>)                          ;; Pop and returns the last value of the
                                         ;;    list.
-! (at <keyOrIndex> <listMapOrStr>)      ;; Return the value at a specified index
+! (at <keyOrIndex> <mapListOrStr>)      ;; Return the value at a specified index
                                         ;;    or key of a list, map or string.
+! (at-delete <keyOrIndex> <mapOrList>)  ;; Delete the item from the map or list
+                                        ;;    specified by the keyOrIndex.
 Use: (setf (at <key> <map>) <newValueExpr>)
 Use: (setf (at <idx> <lst>) <newValueExpr>)
 Use: (setf (at <idx> <str>) <newValueExpr>)
@@ -338,14 +339,22 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
 (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
-                                        ;;    string results of the arguments.
+                                        ;;    repr string results of the
+                                        ;;    arguments.
+(ustring <expr1> <expr2> ...)           ;; Returns the concatenation of the
+                                        ;;    str string results of the
+                                        ;;    arguments.
 (symbol <expr1> <expr2> ...)            ;; Concatenate the strings and use the
                                         ;;    result to define a symbol.
 
 ### I/O ###
-! (write! <expr>)                         ;; Write text to the screeen/stream.
-! (writeLn! <expr>)                       ;; Write a line of text to the
-                                        ;;    screen/stream.
+! (writef <formatStr> <mapOrList>)        ;; Write formatted text.
+! (write! <object1> <object2> ...)        ;; Write text rep of objects to the
+                                          ;;    screeen/stream.
+! (writeLn! <object1> <object2> ...)      ;; Write a line of text to the
+                                          ;;    screen/stream.
+! (uwrite! <object1> <object2> ...)
+! (uwriteLn! <object1> <object2> ...)
 ! (read!)                                 ;; Read input from keyboard/stream.
 
 Library Functions

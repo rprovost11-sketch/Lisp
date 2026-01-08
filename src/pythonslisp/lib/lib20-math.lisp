@@ -91,3 +91,11 @@
 (defmacro decf (var &optional (delta 1))
    `(setf ,var (- ,var ,delta)))
 
+; Compute the average of a list of values
+(defun average (&rest values)
+   (let ( (accum  0) )
+      (foreach value values
+         (incf accum value))
+      (/ accum (list-length values))))
+
+
