@@ -14,6 +14,9 @@ To Do
   can be accessed with the notation p::y.
 - Produce more test files including error testing and listener command testing.
 - Implement &key parameters for functions and macros.
+- Figure out how to make an environment scope that is parent to the GLOBAL
+  Environment in which the built-ins are defined.  They cannot be redefined,
+  only temporarily covered up by a descendent environment.
 
 Completed
 ---------

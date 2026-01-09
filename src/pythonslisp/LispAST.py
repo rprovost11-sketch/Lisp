@@ -94,11 +94,11 @@ class LMap( dict ):
 
 
 class LPrimitive( object ):
-   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialOp: bool=False ) -> None:
+   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialForm: bool=False ) -> None:
       self.fn:Callable[[Environment], Any] = fn
       self._name:str = name
       self._usage:str = usage
-      self.specialOp:bool = specialOp
+      self.specialForm:bool = specialForm
 
    def __str__( self ) -> str:
       return self.__repr__()
@@ -111,7 +111,7 @@ class LFunction( object ):
       self.name: LSymbol = name
       self.params: LList = params
       self.body: LList   = bodyExprLst
-      self.specialOp:bool = False
+      self.specialForm:bool = False
 
    def __str__( self ) -> str:
       return self.__repr__( )
@@ -125,7 +125,7 @@ class LMacro( object ):
       self.name: LSymbol  = name
       self.params: LList  = params
       self.body: LList    = bodyExprList
-      self.specialOp: bool = True
+      self.specialForm: bool = True
 
    def __str__( self ) -> str:
       return self.__repr__()
