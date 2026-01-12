@@ -4,8 +4,6 @@ Development Tasks
 
 To Do
 -----
-- make evaluations of undefined variables raise LypsRuntimeError instead of
-  evaluating to themselves.
 - implement stream IO primitives.
 - implement lisp structs.
 - implement packages.  A package x is a symbol in the global namespace which
@@ -43,3 +41,7 @@ Completed
 - Comleted encapsulation of the common lisp interpreter into the LispInterpreter
   class.  It's now possible, if I choose, to implement a SchemeInterpreter
   class that reuses all of the remaining code.
+
+2026.01.12
+- make evaluations of undefined variables raise LypsRuntimeError instead of
+  evaluating to themselves.

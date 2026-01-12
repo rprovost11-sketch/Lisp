@@ -31,7 +31,7 @@
 
 ==> "3.5"Hello"1/2"
 
->>> (list pi 3/4 asymbol "a string")
+>>> (list pi 3/4 'asymbol "a string")
 ...
 
 ==> (3.141592653589793 3/4 ASYMBOL "a string")

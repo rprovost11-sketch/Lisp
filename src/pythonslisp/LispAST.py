@@ -94,17 +94,21 @@ class LMap( dict ):
 
 
 class LPrimitive( object ):
-   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, specialForm: bool=False ) -> None:
+   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, args: str, specialForm: bool=False ) -> None:
       self.fn:Callable[[Environment], Any] = fn
       self._name:str = name
       self._usage:str = usage
+      self._args:str = args
       self.specialForm:bool = specialForm
 
    def __str__( self ) -> str:
       return self.__repr__()
 
    def __repr__( self ) -> str:
-      return f'(Primitive {self._name})'
+      if len(self._usage) > 0:
+         return f'(Primitive {self._name} ({self._args}) ...)'
+      else:
+         return f'(Primitive {self._name} (...) ...)'
 
 class LFunction( object ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:

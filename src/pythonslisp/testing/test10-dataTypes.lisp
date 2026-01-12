@@ -1,4 +1,4 @@
->>> (list (+ 1 3) '(apple pear "string") 22/7 false)
+>>> (list (+ 1 3) '(apple pear "string") 22/7 'false)
 ...
 
 ==> (4 (APPLE PEAR "string") 22/7 FALSE)

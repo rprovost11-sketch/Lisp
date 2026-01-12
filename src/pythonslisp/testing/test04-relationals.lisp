@@ -38,7 +38,7 @@
 
 ==> T
 
->>> (is? "a string" aSymbol)
+>>> (is? "a string" 'aSymbol)
 ...
 
 ==> NIL

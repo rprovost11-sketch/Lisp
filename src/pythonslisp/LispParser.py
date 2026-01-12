@@ -238,7 +238,7 @@ class LispScanner( Scanner ):
       if nextChar in LispScanner.SIGN:
          buf.consume()
          secondChar = buf.peekNextChar( )
-         if secondChar not in LispScanner.DIGIT:
+         if (secondChar == '') or (secondChar not in LispScanner.DIGIT):
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
 

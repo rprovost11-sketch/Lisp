@@ -13,11 +13,6 @@
 
 ==> T
 
->>> (null nan)
-...
-
-==> NIL
-
 >>> (numberp 15)
 ...
 
@@ -38,17 +33,12 @@
 
 ==> T
 
->>> (numberp aRandomSymbol)
-...
-
-==> NIL
-
 >>> (numberp "hello")
 ...
 
 ==> NIL
 
->>> (symbolp x)
+>>> (symbolp 'x)
 ...
 
 ==> T
@@ -68,7 +58,7 @@
 
 ==> NIL
 
->>> (symbolp xy)
+>>> (symbolp 'xy)
 ...
 
 ==> T
@@ -118,7 +108,7 @@
 
 ==> NIL
 
->>> (numberp randomSymbol)
+>>> (numberp 'randomSymbol)
 ...
 
 ==> NIL
@@ -153,7 +143,7 @@
 
 ==> T
 
->>> (atom aSymbol)
+>>> (atom 'aSymbol)
 ...
 
 ==> T
@@ -268,7 +258,7 @@
 
 ==> NIL
 
->>> (stringp someSymbol)
+>>> (stringp 'someSymbol)
 ...
 
 ==> NIL
@@ -313,7 +303,7 @@
 
 ==> NIL
 
->>> (functionp aSymbol)
+>>> (functionp 'aSymbol)
 ...
 
 ==> NIL

@@ -21,12 +21,14 @@
 >>> xyz
 ...
 
-==> XYZ
+%%% Undefined Variable: XYZ.
+==> 
 
 >>> someSymbol
 ...
 
-==> SOMESYMBOL
+%%% Undefined Variable: SOMESYMBOL.
+==> 
 
 >>> 0
 ...

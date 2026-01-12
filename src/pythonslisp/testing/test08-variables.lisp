@@ -18,11 +18,6 @@
 
 ==> 40
 
->>> var2
-...
-
-==> VAR2
-
 >>> (setf var2 6.2)
 ...
 
@@ -63,7 +58,7 @@
 
 ==> (BANANA ORANGE CHERRY)
 
->>> (if (= (first myList) apple)
+>>> (if (= (first myList) 'apple)
 ... "It's true!")
 ...
 
@@ -128,20 +123,22 @@
 >>> var3
 ...
 
-==> VAR3
+%%% Undefined Variable: VAR3.
+==> 
 
->>> (let ( (var3 true) )
+>>> (let ( (var3 "true") )
 ...    (writeLn! var3)
 ...    )
 ...
-TRUE
+"true"
 
-==> TRUE
+==> "true"
 
 >>> var3
 ...
 
-==> VAR3
+%%% Undefined Variable: VAR3.
+==> 
 
 >>> (setf var1 15)
 ...
@@ -204,4 +201,5 @@ Symbol Table Dump:  Inner-Most Scope First
 >>> var3
 ...
 
-==> VAR3
+%%% Undefined Variable: VAR3.
+==> 

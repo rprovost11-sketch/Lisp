@@ -47,7 +47,7 @@ class Listener( object ):
       self._testdir         = testdir
       self._logFile: Any    = None
       print( f'{language} {version}' )
-      print( '- Listener initialized.' )
+      print( '- Listener initialized' )
       self._cmd_reboot( [ ] )
 
    def readEvalPrintLoop( self ) -> None:
@@ -124,22 +124,28 @@ class Listener( object ):
 
       numPassed = 0
       exprNum = -1
-      actualRetValStr = ''
-      actualOutputStr = ''
-      actualErrorStr = ''
       for exprNum,exprPackage in enumerate(Listener._parseLog(inputText)):
          exprStr,expectedOutputStr,expectedRetValStr,expectedErrStr = exprPackage
          if verbosity == 2:
             print( f'{str(exprNum).rjust(8)}.' )
          elif verbosity == 3:
             print( f'{str(exprNum).rjust(8)}> {exprStr}' )
+         
+         expectedErrStr = expectedErrStr.rstrip()
 
          # Perform the test and collect the various outputs
-         errorStream = io.StringIO( )
          outputStream = io.StringIO( )
-         actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
+         actualRetValStr = ''
+         actualErrorStr = ''
+         
+         try:
+            actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
+         except Parser.ParseError as ex:
+            actualErrorStr = ex.args[-1]
+         except Exception as ex:   # Unknowns raised by the interpreter
+            actualErrorStr = ex.args[-1]
+         
          actualOutputStr = outputStream.getvalue().strip()
-         actualErrorStr = errorStream.getvalue().strip()
 
          # Compute the results
          retVal_passed = actualRetValStr == expectedRetValStr
@@ -178,8 +184,8 @@ class Listener( object ):
          raise ListenerCommandError( 'Please close the log before rebooting.' )
 
       self._interp.reboot( )
-      print( '- Interpreter initialized.' )
-      print( '- Runtime libraries loaded.' )
+      print( '- Interpreter initialized' )
+      print( '- Runtime libraries loaded' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Enter \']help\' for listener commands.' )
       print( 'Welcome!' )

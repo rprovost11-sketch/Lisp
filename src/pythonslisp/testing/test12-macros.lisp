@@ -36,9 +36,10 @@
 >>> x
 ...
 
-==> X
+%%% Undefined Variable: X.
+==> 
 
->>> (zero x)
+>>> (zero 'x)
 ...
 
 ==> 0

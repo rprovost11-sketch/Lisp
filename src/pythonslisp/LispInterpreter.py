@@ -1,4 +1,3 @@
-import io
 import functools
 import math
 import random
@@ -11,15 +10,13 @@ from Environment import Environment
 from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive,
                       LMacro, prettyPrintSExpr, prettyPrint )
 
-
 class LispRuntimeError( Exception ):
    def __init__( self, *args ) -> None:
       super().__init__( self, *args )
 
 
 class LispRuntimeFuncError( LispRuntimeError ):
-   def __init__( self, lispCallable: Callable[[Environment], Any], errorMsg: str ) -> None:
-      assert isinstance(lispCallable, LPrimitive)
+   def __init__( self, lispCallable: LPrimitive, errorMsg: str ) -> None:
       fnName = lispCallable._name
       usage = lispCallable._usage
       errStr = f"ERROR '{fnName}': {errorMsg}\nUSAGE: {usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
@@ -39,7 +36,7 @@ class LispInterpreter( Interpreter ):
 
    def reboot( self ) -> None:
       # Load in the primitives
-      primitiveDict: dict[str, Any] = LispInterpreter._constructPrimitives( self._parser.parse )
+      primitiveDict: dict[str, Any] = LispInterpreter._lconstructPrimitives( self._parser.parse )
       self._env:Environment = Environment( parent=None, **primitiveDict )
 
       # Load in the runtime library
@@ -88,8 +85,12 @@ class LispInterpreter( Interpreter ):
       elif isinstance( sExpr, L_ATOM ):
          return sExpr
       elif isinstance( sExpr, LSymbol ):
-         result = env.getValue( sExpr.strval )
-         return sExpr if result is None else result
+         try:
+            return env.getValue( sExpr.strval )
+         except KeyError:
+            raise LispRuntimeError( f'Undefined Variable: {sExpr.strval}.' )
+         #result = env.getValue( sExpr.strval )
+         #return sExpr if result is None else result
       elif  isinstance( sExpr, LList ):
          # This code is called when sExpr is an LList and it's contents (a
          # function call usually) need to be evaluated.
@@ -256,7 +257,7 @@ class LispInterpreter( Interpreter ):
          return expr
 
    @staticmethod
-   def _constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
+   def _lconstructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
       primitiveDict: dict[str, Any] = { }
       INSIDE_BACKQUOTE = False
 
@@ -264,7 +265,7 @@ class LispInterpreter( Interpreter ):
       # Lisp Object & Primitive Definitions
       # ###################################
       L_NIL = LList( )
-      L_T  = LSymbol( 'T' )
+      L_T = LSymbol( 'T' )
       primitiveDict[ 'T'    ] = L_T
       primitiveDict[ 'NIL'  ] = L_NIL
       primitiveDict[ 'PI'   ] = math.pi
@@ -272,7 +273,7 @@ class LispInterpreter( Interpreter ):
 
       class LDefPrimitive( object ):
          '''Decorator to assist in the definition of a lisp primitive.'''
-         def __init__( self, primitiveSymbol: str, args: str, specialForm: bool=False ) -> None:
+         def __init__( self, primitiveSymbol: str, args: str = '', specialForm: bool=False ) -> None:
             '''Arguments:
             primitiveSymbol, the string representation of the lisp symbol used
                to name the primitive in the interpreter.
@@ -285,13 +286,15 @@ class LispInterpreter( Interpreter ):
             '''
             self._name:str  = primitiveSymbol.upper( )
             self._usage:str = f'({primitiveSymbol} {args})' if args else ''
+            self._args:str = args
             self._specialForm:bool = specialForm
 
          def __call__( self, primitiveDef ):
             '''primitiveDef is a python function to implmenet the lisp primitive.'''
             nonlocal primitiveDict
             lPrimitivObj = LPrimitive( primitiveDef, self._name,
-                                       self._usage, self._specialForm )
+                                       self._usage, self._args,
+                                       self._specialForm )
             primitiveDict[ self._name ] = lPrimitivObj
             return lPrimitivObj
 
@@ -319,7 +322,7 @@ class LispInterpreter( Interpreter ):
          return theFunc
 
       @LDefPrimitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)' )
-      def LP_macroexpand( env:  Environment, *args ) -> Any:
+      def LP_macroexpand( env: Environment, *args ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
          theMacroCall = args[0]
@@ -407,7 +410,7 @@ class LispInterpreter( Interpreter ):
          env.getGlobalEnv().undef( str(key) )
          return L_NIL
 
-      @LDefPrimitive( 'symtab!', '')
+      @LDefPrimitive( 'symtab!' )
       def LP_symtab( env: Environment, *args ) -> Any:
          if len(args) > 0:
             raise LispRuntimeFuncError( LP_symtab, '0 arguments expected.' )
@@ -878,7 +881,23 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_atDelete, "Bad index or key into collection." )
          
          return L_T
-            
+      
+      @LDefPrimitive( 'at-insert', '<index> <list> <newItem>' )
+      def LP_atInsert( env: Environment, *args ) -> bool:
+         try:
+            index, lst, newItem = args
+         except:
+            raise LispRuntimeFuncError( LP_atInsert, "Exactly 3 arguments expected." )
+         
+         if not isinstance(index, int):
+            raise LispRuntimeFuncError( LP_atInsert, "Argument 1 expected to be an integer index." )
+         
+         if not isinstance( lst, list ):
+            raise LispRuntimeFuncError( LP_atInsert, "Argument 2 expected to be a list." )
+         
+         lst.insert( index, newItem )
+         return newItem
+      
       @LDefPrimitive( 'append', '<list1> <list2> ...' )
       def LP_append( env: Environment, *args ) -> Any:
          if len(args) < 2:
@@ -1371,7 +1390,7 @@ class LispInterpreter( Interpreter ):
       @LDefPrimitive( 'ustring', '<object1> <object2> ...' )
       def LP_ustring( env: Environment, *args ) -> Any:
          if len(args) == 0:
-            raise LispRuntimeFuncError( LP_rstring, '1 or more arguments exptected.' )
+            raise LispRuntimeFuncError( LP_ustring, '1 or more arguments exptected.' )
 
          resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
          return ''.join(resultStrs)
@@ -1451,7 +1470,7 @@ class LispInterpreter( Interpreter ):
             print( end=end, file=LispInterpreter.outStrm )
          return values[-1]
 
-      @LDefPrimitive( 'readLn!', '')
+      @LDefPrimitive( 'readLn!' )
       def LP_readln( env: Environment, *args ) -> Any:
          if len(args) > 0:
             raise LispRuntimeFuncError( LP_readln, '0 arguments expected.' )
