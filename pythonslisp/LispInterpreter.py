@@ -78,7 +78,7 @@ class LispInterpreter( Interpreter ):
          return True
 
    @staticmethod
-   def _lEval( env: Environment, sExpr: Any, expandOnly: bool=False ) -> Any:
+   def _lEval( env: Environment, sExpr: Any ) -> Any:
       if isinstance( sExpr, L_ATOM ):
          return sExpr
       elif isinstance( sExpr, LSymbol ):
@@ -102,7 +102,7 @@ class LispInterpreter( Interpreter ):
 
          # Determine if the function uses the standard evaluation order for arguments
          if fnDef.specialForm:
-            return LispInterpreter._lperformCall( env, fnDef, *sExprArgs, expandOnly=expandOnly )
+            return LispInterpreter._lperformCall( env, fnDef, *sExprArgs )
             #return fnDef( LispInterpreter._lEval, env, *exprArgs, **evaluatedKeys )
 
          # Evaluate each arg in order from left to right
@@ -115,7 +115,7 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Unknown lisp expression type.' )
 
    @staticmethod
-   def _lperformCall( env: Environment, lcallable: LCallable, *args, expandOnly=False ) -> Any:
+   def _lperformCall( env: Environment, lcallable: LCallable, *args ) -> Any:
       if isinstance( lcallable, LPrimitive ):
          return lcallable.fn( env, *args )
       elif isinstance( lcallable, LFunction ):
@@ -130,11 +130,8 @@ class LispInterpreter( Interpreter ):
             latestResult = LispInterpreter._lEval( env, expr )
          return latestResult
       elif isinstance( lcallable, LMacro ):
-         listOfExpandedExprs = LispInterpreter._expandmacro( env, lcallable, *args )
+         listOfExpandedExprs = LispInterpreter._macroexpand( env, lcallable, *args )
 
-         if expandOnly:
-            return LList( *listOfExpandedExprs )
-         
          # Evaluate the expanded macro
          latestResult = None
          for expr in listOfExpandedExprs:
@@ -207,7 +204,7 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Too many arguments passed in.' )
 
    @staticmethod
-   def _expandmacro( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
+   def _macroexpand( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
       # ################
       # Expand the macro
       env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
@@ -316,15 +313,25 @@ class LispInterpreter( Interpreter ):
       def LP_macroexpand( env: Environment, *args ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
-         theMacroCallExpr = args[0]
+         theMacroCall = args[0]
 
-         if not isinstance( theMacroCallExpr, LList ):
+         if not isinstance( theMacroCall, LList ):
             raise LispRuntimeFuncError( LP_macroexpand, 'Argument 1 expected to be a list.' )
 
-         if len(theMacroCallExpr) < 2:
+         if len(theMacroCall) < 2:
             raise LispRuntimeError( 'Macro call must be at least two elements in length.' )
          
-         return LispInterpreter._lEval( env, theMacroCallExpr, expandOnly=True )
+         # Break the list contents into a function and a list of args
+         primary, *exprArgs = theMacroCall
+
+         # fn is an LPrimitive, LFunction or a macro name symbol
+         # Use this information to get the function definition
+         macroDef = LispInterpreter._lEval( env, primary )
+         if not isinstance( macroDef, LMacro ):
+            raise LispRuntimeError( 'Badly formed list expression.  The first element should evaluate to a macro.' )
+
+         expandedMacroBody = LispInterpreter._macroexpand( env, macroDef, *exprArgs )
+         return LList( *expandedMacroBody )
 
       @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialForm=True )
       def LP_setf( env: Environment, *args ) -> Any:

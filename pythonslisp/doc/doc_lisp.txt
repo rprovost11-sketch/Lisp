@@ -1,9 +1,7 @@
 Lisp Documentation
 ==================
 
-Goals
-
-   Implement a significant subset of common lisp.
+Goals:  Implement a substantial subset of the features of common lisp.
 
 Features
 - A full featured listener with session logging and resumption, interpreter
@@ -22,12 +20,13 @@ Design Features (the code not lisp)
 - Very simple tree-walk interpreter.
 - Fully object oriented.
 - Designed to be easily modified and extended.
-- Prioritize readability over performance.
+- Prioritize code readability over code performance.
 - Prioritize implementing something in the runtime library over in python.
 - Full suite of tests.
 - Strings support the full range of python escape sequences.
 - Fully implemented in python 3.14.
-- Implemented from scratch (Didn't start from anyone else's code).
+- Implemented from scratch (Didn't start from anyone else's code.  AI was not
+  used or consulted with).
 - No external package dependencies.
 
 
