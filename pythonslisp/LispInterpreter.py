@@ -7,7 +7,7 @@ from typing import Callable, Any
 from LispParser import LispParser
 from Listener import Interpreter, retrieveFileList
 from Environment import Environment
-from LispAST import ( LSymbol, LList, LMap, LFunction, LPrimitive,
+from LispAST import ( LSymbol, LList, LMap, LCallable, LFunction, LPrimitive,
                       LMacro, prettyPrintSExpr, prettyPrint )
 
 class LispRuntimeError( Exception ):
@@ -17,8 +17,8 @@ class LispRuntimeError( Exception ):
 
 class LispRuntimeFuncError( LispRuntimeError ):
    def __init__( self, lispCallable: LPrimitive, errorMsg: str ) -> None:
-      fnName = lispCallable._name
-      usage = lispCallable._usage
+      fnName = lispCallable.name
+      usage = lispCallable.usage
       errStr = f"ERROR '{fnName}': {errorMsg}\nUSAGE: {usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
       super().__init__( errStr )
 
@@ -78,7 +78,7 @@ class LispInterpreter( Interpreter ):
          return True
 
    @staticmethod
-   def _lEval( env: Environment, sExpr: Any ) -> Any:
+   def _lEval( env: Environment, sExpr: Any, expandOnly: bool=False ) -> Any:
       if isinstance( sExpr, L_ATOM ):
          return sExpr
       elif isinstance( sExpr, LSymbol ):
@@ -97,12 +97,12 @@ class LispInterpreter( Interpreter ):
 
          # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
          fnDef = LispInterpreter._lEval( env, primary )
-         if not isinstance( fnDef, (LPrimitive, LFunction, LMacro) ):
+         if not isinstance( fnDef, LCallable ):
             raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a primitive, function or macro.' )
 
          # Determine if the function uses the standard evaluation order for arguments
          if fnDef.specialForm:
-            return LispInterpreter._lperformCall( env, fnDef, *sExprArgs )
+            return LispInterpreter._lperformCall( env, fnDef, *sExprArgs, expandOnly=expandOnly )
             #return fnDef( LispInterpreter._lEval, env, *exprArgs, **evaluatedKeys )
 
          # Evaluate each arg in order from left to right
@@ -115,7 +115,7 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Unknown lisp expression type.' )
 
    @staticmethod
-   def _lperformCall( env: Environment, lcallable: (LPrimitive|LFunction|LMacro), *args ) -> Any:
+   def _lperformCall( env: Environment, lcallable: LCallable, *args, expandOnly=False ) -> Any:
       if isinstance( lcallable, LPrimitive ):
          return lcallable.fn( env, *args )
       elif isinstance( lcallable, LFunction ):
@@ -132,6 +132,9 @@ class LispInterpreter( Interpreter ):
       elif isinstance( lcallable, LMacro ):
          listOfExpandedExprs = LispInterpreter._expandmacro( env, lcallable, *args )
 
+         if expandOnly:
+            return LList( *listOfExpandedExprs )
+         
          # Evaluate the expanded macro
          latestResult = None
          for expr in listOfExpandedExprs:
@@ -204,7 +207,7 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Too many arguments passed in.' )
 
    @staticmethod
-   def _expandmacro( env: Environment, macroDef: LMacro, *args ):
+   def _expandmacro( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
       # ################
       # Expand the macro
       env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
@@ -214,7 +217,7 @@ class LispInterpreter( Interpreter ):
 
       # Evaluate each body expression; expanding each expr in turn to expand
       # the full macro body.  Place those expanded expressions in resultList.
-      return LList( *[ LispInterpreter._lEval(env, bodySExpr) for bodySExpr in macroDef.body ] )
+      return [ LispInterpreter._lEval(env, bodySExpr) for bodySExpr in macroDef.body ]
 
    @staticmethod
    def _lbackquoteExpand( env: Environment, expr: Any ) -> Any:
@@ -261,11 +264,11 @@ class LispInterpreter( Interpreter ):
 
       class LDefPrimitive( object ):
          '''Decorator to assist in the definition of a lisp primitive.'''
-         def __init__( self, primitiveSymbol: str, args: str = '', specialForm: bool=False ) -> None:
+         def __init__( self, primitiveSymbol: str, params: str = '', specialForm: bool=False ) -> None:
             '''Arguments:
             primitiveSymbol, the string representation of the lisp symbol used
                to name the primitive in the interpreter.
-            args, a documentation string listing the arguments taken by this
+            params, a documentation string listing the arguments taken by this
                primitive.
             specialForm, Defaults to False.  A true value indicates to the
                interpreter that that this primitive wants its arguments
@@ -273,15 +276,15 @@ class LispInterpreter( Interpreter ):
                evaluated prior to calling this function.)
             '''
             self._name:str  = primitiveSymbol.upper( )
-            self._usage:str = f'({primitiveSymbol} {args})' if args else ''
-            self._args:str = args
+            self._usage:str = f'({primitiveSymbol} {params})' if params else ''
+            self._params:str = params
             self._specialForm:bool = specialForm
 
          def __call__( self, primitiveDef ):
             '''primitiveDef is a python function to implmenet the lisp primitive.'''
             nonlocal primitiveDict
             lPrimitivObj = LPrimitive( primitiveDef, self._name,
-                                       self._usage, self._args,
+                                       self._usage, self._params,
                                        self._specialForm )
             primitiveDict[ self._name ] = lPrimitivObj
             return lPrimitivObj
@@ -313,27 +316,15 @@ class LispInterpreter( Interpreter ):
       def LP_macroexpand( env: Environment, *args ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
-         theMacroCall = args[0]
+         theMacroCallExpr = args[0]
 
-         if not isinstance( theMacroCall, LList ):
+         if not isinstance( theMacroCallExpr, LList ):
             raise LispRuntimeFuncError( LP_macroexpand, 'Argument 1 expected to be a list.' )
 
-         # Break the list contents into a function and a list of args
-         try:
-            primary, *exprArgs = theMacroCall
-         except ValueError:
+         if len(theMacroCallExpr) < 2:
             raise LispRuntimeError( 'Macro call must be at least two elements in length.' )
-
-         if not isinstance( primary, LSymbol ):
-            raise LispRuntimeError( f'Badly formed list expression.  The first element should be a symbol or function.' )
-
-         # fn is an LPrimitive, LFunction or a macro name symbol
-         # Use this information to get the function definition
-         macroDef = LispInterpreter._lEval( env, primary )
-         if not isinstance( macroDef, LMacro ):
-            raise LispRuntimeError( 'Badly formed list expression.  The first element should evaluate to a macro.' )
-
-         return LispInterpreter._expandmacro( env, macroDef, *exprArgs )
+         
+         return LispInterpreter._lEval( env, theMacroCallExpr, expandOnly=True )
 
       @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialForm=True )
       def LP_setf( env: Environment, *args ) -> Any:

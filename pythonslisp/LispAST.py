@@ -93,29 +93,32 @@ class LMap( dict ):
       return '\n'.join(resultStrLines)
 
 
-class LPrimitive( object ):
-   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, args: str, specialForm: bool=False ) -> None:
+class LCallable( object ):
+   def __init__( self, name: str, specialForm: bool = False ) -> None:
+      self.name:str = name
+      self.specialForm = specialForm
+
+class LPrimitive( LCallable ):
+   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, params: str, specialForm: bool=False ) -> None:
       self.fn:Callable[[Environment], Any] = fn
-      self._name:str = name
-      self._usage:str = usage
-      self._args:str = args
-      self.specialForm:bool = specialForm
+      self.usage:str = usage
+      self.params:str = params
+      super().__init__( name, specialForm )
 
    def __str__( self ) -> str:
       return self.__repr__()
 
    def __repr__( self ) -> str:
-      if len(self._usage) > 0:
-         return f'(Primitive {self._name} ({self._args}) ...)'
+      if len(self.usage) > 0:
+         return f'(Primitive {self.name} ({self.params}) ...)'
       else:
-         return f'(Primitive {self._name} (...) ...)'
+         return f'(Primitive {self.name} (...) ...)'
 
-class LFunction( object ):
+class LFunction( LCallable ):
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
-      self.name: LSymbol = name
       self.params: LList = params
       self.body: LList   = bodyExprLst
-      self.specialForm:bool = False
+      super().__init__( name, specialForm=False )
 
    def __str__( self ) -> str:
       return self.__repr__( )
@@ -124,12 +127,11 @@ class LFunction( object ):
       return f"(Function {self.name} {self.params} ... )"
 
 
-class LMacro( object ):
+class LMacro( LCallable ):
    def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
-      self.name: LSymbol  = name
       self.params: LList  = params
       self.body: LList    = bodyExprList
-      self.specialForm: bool = True
+      super().__init__( name, specialForm=True )
 
    def __str__( self ) -> str:
       return self.__repr__()
