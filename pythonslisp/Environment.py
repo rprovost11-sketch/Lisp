@@ -20,8 +20,7 @@ class Environment( object ):
          if key in scope._locals:
             return scope._locals[key]
          scope = scope._parent
-      raise KeyError( )
-      #return None
+      raise KeyError
 
    def getGlobalValue(self, key: str ) -> Any:
       return self._GLOBAL_SCOPE._locals[ key ]

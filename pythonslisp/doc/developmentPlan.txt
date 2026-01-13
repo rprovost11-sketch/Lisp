@@ -15,6 +15,10 @@ To Do
 - Figure out how to make an environment scope that is parent to the GLOBAL
   Environment in which the built-ins are defined.  They cannot be redefined,
   only temporarily covered up by a descendent environment.
+- Can we make the nil list immutable by subclassing LList, overriding all the
+  methods to make __len__() return 0 and make anything that normally mutates
+  the list raise an exception then perhaps the nil list would truly be
+  immutable.
 
 Completed
 ---------
