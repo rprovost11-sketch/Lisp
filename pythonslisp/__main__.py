@@ -1,4 +1,4 @@
-from Lisp import main
+from pythonslisp.Lisp import main
 
 if __name__ == '__main__':
    main( )

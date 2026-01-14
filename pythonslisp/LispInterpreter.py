@@ -4,11 +4,12 @@ import random
 from fractions import Fraction
 from typing import Callable, Any
 
-from LispParser import LispParser
-from Listener import Interpreter, retrieveFileList
-from Environment import Environment
-from LispAST import ( LSymbol, LList, LMap, LCallable, LFunction, LPrimitive,
-                      LMacro, prettyPrintSExpr, prettyPrint )
+from pythonslisp.LispParser import LispParser
+from pythonslisp.Listener import Interpreter, retrieveFileList
+from pythonslisp.Environment import Environment
+from pythonslisp.LispAST import ( LSymbol, LList, LMap, LCallable, LFunction,
+                                  LPrimitive, LMacro,
+                                  prettyPrintSExpr, prettyPrint )
 
 class LispRuntimeError( Exception ):
    def __init__( self, *args ) -> None:
@@ -72,7 +73,7 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
-      if isinstance(sExpr, (LList, list)):
+      if isinstance(sExpr, list):
          return len(sExpr) != 0
       else:
          return True
@@ -86,7 +87,7 @@ class LispInterpreter( Interpreter ):
             return env.getValue( sExpr.strval )
          except KeyError:
             raise LispRuntimeError( f'Undefined Variable: {sExpr.strval}.' )
-      elif  isinstance( sExpr, LList ):
+      elif isinstance( sExpr, LList ):
          # This code is called when sExpr is an LList and it's contents (a
          # function call usually) need to be evaluated.
          if len(sExpr) == 0:
@@ -103,13 +104,11 @@ class LispInterpreter( Interpreter ):
          # Determine if the function uses the standard evaluation order for arguments
          if fnDef.specialForm:
             return LispInterpreter._lperformCall( env, fnDef, *sExprArgs )
-            #return fnDef( LispInterpreter._lEval, env, *exprArgs, **evaluatedKeys )
 
          # Evaluate each arg in order from left to right
          evaluatedArgs = [ LispInterpreter._lEval(env, argExpr) for argExpr in sExprArgs ]
          return LispInterpreter._lperformCall( env, fnDef, *evaluatedArgs )
-         #return fnDef( LispInterpreter._lEval, env, *evaluatedArgs, **evaluatedKeys )
-      elif  isinstance( sExpr, LMap ):
+      elif isinstance( sExpr, LMap ):
          return sExpr
       else:
          raise LispRuntimeError( 'Unknown lisp expression type.' )
@@ -205,8 +204,6 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _macroexpand( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
-      # ################
-      # Expand the macro
       env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
 
       # store the arguments as locals
@@ -952,6 +949,18 @@ class LispInterpreter( Interpreter ):
          except:
             raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument.' )
 
+      @LDefPrimitive( 'sorted', '<list>' )
+      def LP_sorted( env: Environment, *args ) -> Any:
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_sorted, "Exactly 1 argument exptected." )
+         
+         theList = args[0]
+         if not isinstance(theList, list):
+            raise LispRuntimeFuncError( LP_sorted, "Argument 1 expected to be a list." )
+         
+         theSortedList = sorted( theList )
+         return LList( *theSortedList )
+      
       # =====================
       # Arithmetic Operations
       # ---------------------

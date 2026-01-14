@@ -277,6 +277,7 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
                                         ;; Construct a map of key-value pairs.
 ! (update! <map1> <map2>)                 ;; Update map1's data with map2's.
 ! (hasKey? <map> <key>)                   ;; Return T if key is in the map.
+! (sorted <list>)                         ;; Return a sorted version of list.
 
 ### Arithmetic Operations ###
 (+ <expr1> <expr2> ...)                 ;; Returns the sum of numbers or

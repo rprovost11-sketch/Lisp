@@ -1,14 +1,14 @@
 import sys
 
-from Listener import Listener
-from LispInterpreter import LispInterpreter
+from pythonslisp.Listener import Listener
+from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.18.0'
+VERSION      = '0.19.0'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
-TEST_DIR     = 'testing'
-LIBRARY_DIR  = 'lib'
+TEST_DIR     = 'pythonslisp/testing'
+LIBRARY_DIR  = 'pythonslisp/lib'
 
 def main( ) -> None:
    interp = LispInterpreter( runtimeLibraryDir=LIBRARY_DIR )

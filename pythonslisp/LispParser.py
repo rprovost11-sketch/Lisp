@@ -1,8 +1,8 @@
 from fractions import Fraction
 from typing import Any
 
-from Parser import Scanner, Parser, ParseError
-from LispAST import LList, LSymbol
+from pythonslisp.Parser import Scanner, Parser, ParseError
+from pythonslisp.LispAST import LList, LSymbol
 
 """
 The Language

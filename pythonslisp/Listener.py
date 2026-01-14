@@ -5,7 +5,7 @@ import time
 from abc import ABC, abstractmethod
 from typing import Any
 
-import Parser
+import pythonslisp.Parser
 
 def retrieveFileList( dirname ) -> list[str]:
    "Returns a list of all the filenames in the specified directory."

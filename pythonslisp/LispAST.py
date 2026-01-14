@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import Any, Callable
 
-from Environment import Environment
+from pythonslisp.Environment import Environment
 
 # #################
 # Lisp Function API
