@@ -26,6 +26,8 @@ def prettyPrint( sExpr: Any ) -> str:
 # ###############################
 # Lisp Runtime Object Definitions
 class LSymbol( object ):
+   __slots__ = ('strval')
+   
    def __init__( self, val: str ) -> None:
       self.strval = val.upper()
 
@@ -94,27 +96,33 @@ class LMap( dict ):
 
 
 class LCallable( object ):
+   __slots__ = ('name', 'specialForm')
+   
    def __init__( self, name: str, specialForm: bool = False ) -> None:
       self.name:str = name
       self.specialForm = specialForm
 
 class LPrimitive( LCallable ):
+   __slots__ = ('fn', 'usageStr', 'paramsStr')
+   
    def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, params: str, specialForm: bool=False ) -> None:
       self.fn:Callable[[Environment], Any] = fn
-      self.usage:str = usage
-      self.params:str = params
+      self.usageStr:str = usage
+      self.paramsStr:str = params
       super().__init__( name, specialForm )
 
    def __str__( self ) -> str:
       return self.__repr__()
 
    def __repr__( self ) -> str:
-      if len(self.usage) > 0:
-         return f'(Primitive {self.name} ({self.params}) ...)'
+      if len(self.usageStr) > 0:
+         return f'(Primitive {self.name} ({self.paramsStr}) ...)'
       else:
          return f'(Primitive {self.name} (...) ...)'
 
 class LFunction( LCallable ):
+   __slots__ = ('params', 'body')
+   
    def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
       self.params: LList = params
       self.body: LList   = bodyExprLst
@@ -128,6 +136,8 @@ class LFunction( LCallable ):
 
 
 class LMacro( LCallable ):
+   __slots__ = ('params', 'body')
+   
    def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
       self.params: LList  = params
       self.body: LList    = bodyExprList

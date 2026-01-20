@@ -5,7 +5,7 @@ import time
 from abc import ABC, abstractmethod
 from typing import Any
 
-import pythonslisp.Parser
+import pythonslisp.Parser as Parser
 
 def retrieveFileList( dirname ) -> list[str]:
    "Returns a list of all the filenames in the specified directory."
@@ -270,7 +270,7 @@ class Listener( object ):
       print( '\n\nTest Report' )
       print( '===========')
       for filename, testSummary in testSummaryList:
-         print( f'{filename:45} {testSummary}' )
+         print( f'{filename:55} {testSummary}' )
 
       print( '\nWARNING: Testing leaves the interpreter in an unknown state. ' +
              'It\'s reccomended that you reboot the interpreter using the listener command ]reboot.' )

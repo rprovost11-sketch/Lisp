@@ -2,7 +2,7 @@ from fractions import Fraction
 from typing import Any
 
 from pythonslisp.Parser import Scanner, Parser, ParseError
-from pythonslisp.LispAST import LList, LSymbol
+from pythonslisp.LispAST import LList, LSymbol, LPrimitive
 
 """
 The Language
@@ -83,48 +83,48 @@ class LispScanner( Scanner ):
          nextChar = buf.peekNextChar( )
          if nextChar == '':
             return LispScanner.EOF_TOK
-         elif nextChar == '[':
-            buf.markStartOfLexeme( )
-            buf.consume( )
-            return LispScanner.OPEN_BRACKET_TOK
-         elif nextChar == ']':
-            buf.markStartOfLexeme( )
-            buf.consume( )
-            return LispScanner.CLOSE_BRACKET_TOK
+         #elif nextChar == '[':
+            #buf.markStartOfLexeme( )
+            #buf.consume( )
+            #return LispScanner.OPEN_BRACKET_TOK
+         #elif nextChar == ']':
+            ##buf.markStartOfLexeme( )
+            #buf.consume( )
+            #return LispScanner.CLOSE_BRACKET_TOK
          elif nextChar == '(':
-            buf.markStartOfLexeme( )
+            #buf.markStartOfLexeme( )
             buf.consume( )
             return LispScanner.OPEN_PAREN_TOK
          elif nextChar == ')':
-            buf.markStartOfLexeme( )
+            #buf.markStartOfLexeme( )
             buf.consume( )
             buf.scanLineTxt( )
             return LispScanner.CLOSE_PAREN_TOK
-         elif nextChar == '#':
-            buf.markStartOfLexeme( )
-            buf.consume( )
-            return LispScanner.POUND_SIGN_TOK
-         elif nextChar == '|':
-            buf.markStartOfLexeme( )
-            buf.consume( )
-            return LispScanner.PIPE_TOK
-         elif nextChar == ':':
-            buf.markStartOfLexeme( )
-            buf.consume( )
-            nextChar = buf.peekNextChar( )
-            return LispScanner.COLON_TOK
+         #elif nextChar == '#':
+            ##buf.markStartOfLexeme( )
+            #buf.consume( )
+            #return LispScanner.POUND_SIGN_TOK
+         #elif nextChar == '|':
+            ##buf.markStartOfLexeme( )
+            #buf.consume( )
+            #return LispScanner.PIPE_TOK
+         #elif nextChar == ':':
+            ##buf.markStartOfLexeme( )
+            #buf.consume( )
+            #nextChar = buf.peekNextChar( )
+            #return LispScanner.COLON_TOK
          elif nextChar == "'":
-            buf.markStartOfLexeme( )
+            #buf.markStartOfLexeme( )
             buf.consume( )
             nextChar = buf.peekNextChar( )
             return LispScanner.SINGLE_QUOTE_TOK
          elif nextChar == '`':
-            buf.markStartOfLexeme( )
+            #buf.markStartOfLexeme( )
             buf.consume( )
             nextChar = buf.peekNextChar( )
             return LispScanner.BACK_QUOTE_TOK
          elif nextChar == ',':
-            buf.markStartOfLexeme( )
+            #buf.markStartOfLexeme( )
             buf.consume( )
             nextChar = buf.peekNextChar( )
             if nextChar == '@':
@@ -341,14 +341,21 @@ class LispScanner( Scanner ):
 class LispParser( Parser ):
    def __init__( self ) -> None:
       self._scanner    = LispScanner( )
+      self._env = None
 
    def parse( self, source: str ) -> Any:  # Returns an AST of inputString
       self._scanner.reset( source )
-      return self._parse( )
+      try:
+         return self._parse( )
+      finally:
+         self._env = None
    
    def parseFile( self, filename: str ) -> Any:
       self._scanner.resetFromFile( filename )
-      return self._parse( )
+      try:
+         return self._parse( )
+      finally:
+         self._env = None
 
    def _parse( self ) -> Any:
       # Parse all the sexpressions and insert them into a lisp progn function
@@ -428,7 +435,7 @@ class LispParser( Parser ):
       return ast
 
    def _parseList( self ) -> LList:
-      theList = [ ]
+      theList = LList( )
 
       # Open List
       nextToken = self._scanner.peekToken()
@@ -450,5 +457,4 @@ class LispParser( Parser ):
       else:
          self._scanner.consume( )
 
-      return LList( *theList )
-
+      return theList

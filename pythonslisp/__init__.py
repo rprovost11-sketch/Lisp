@@ -12,4 +12,5 @@ from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import *
 from pythonslisp.LispInterpreter import *
 from pythonslisp.LispParser import *
+from pythonslisp.Parser import * 
 from pythonslisp.Lisp import main
