@@ -4,10 +4,18 @@ Development Tasks
 
 To Do
 -----
+- OPTIMIZATION: Move macro expansion completely out of expression evaluation.
+  It should occur earlier (just after parsing).  Doing this will mean that
+  macros are only expanded once instead of every time a line of code calling a
+  macro is evaluated.
+- OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
+  can scan the AST for errors such as the wrong number or types of arguments to
+  a primitive.  This would eliminate a lot of the runtime error checking
+  currently in the primitive definitions and hence speed up the interpreter.
 - rewrite LispInterpreter._lbindArguments() to conform as much as possible to
   the common lisp standard document section 5.2.2. Lambda-Expressions.
 - implement stream IO primitives.
-- implement lisp structs.
+- implement structs.
 - implement packages.  A package x is a symbol in the global namespace which
   refers to another Environment instance which contains all the symbols of
   a package (lisp source file).  For any symbol y in the package p, this
@@ -17,13 +25,10 @@ To Do
   Environment in which the built-ins are defined.  They cannot be redefined,
   only temporarily covered up by a descendent environment.
 - Can we make the nil list immutable by subclassing LList, overriding all the
-  methods to make __len__() return 0 and make anything that normally mutates
-  the list raise an exception then perhaps the nil list would truly be
-  immutable.
-- Consider adding a semantic analyzer between parsing and evaluation which
-  can scan the AST for errors such as the wrong number of arguments to a
-  primitive.  This would eliminate a lot of the runtime error checking and
-  speed up evaluation.
+  mutating methods to make them report runtime errors.  Override __len__() to
+  return 0 then perhaps the nil list would truly be immutable.
+- Research how it might be possible to implement Scheme's tail recursion
+  optimization in the evaluator.
 
 Completed
 ---------
