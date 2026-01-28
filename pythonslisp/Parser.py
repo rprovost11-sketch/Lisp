@@ -123,7 +123,7 @@ class ScannerBuffer( object ):
          theLinePos = self._source.rfind( '\n', 0, self._point ) + 1
       return 0 if theLinePos < 0 else theLinePos
 
-class Scanner( ABC ):
+class Lexer( ABC ):
    def __init__( self ) -> None:
       '''Initialize a Scanner instance.'''
       self.buffer:ScannerBuffer  = ScannerBuffer( )
@@ -173,9 +173,9 @@ class Scanner( ABC ):
       return value,         the int value of the next token in the buffer
       """
       pass
-
+ 
 class ParseError( Exception ):
-   def __init__( self, aScanner: Scanner, errorMessage: str ) -> None:
+   def __init__( self, aScanner: Lexer, errorMessage: str ) -> None:
       super().__init__( self._generateVerboseErrorString(srcfilename=aScanner.buffer.scanFilename(),
                                                          lineNum=aScanner.buffer.scanLineNum(),
                                                          colNum=aScanner.buffer.scanColNum(),

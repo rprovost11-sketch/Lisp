@@ -100,7 +100,7 @@ class LCallable( object ):
    
    def __init__( self, name: str, specialForm: bool = False ) -> None:
       self.name:str = name
-      self.specialForm = specialForm
+      self.specialForm:bool = specialForm
 
 class LPrimitive( LCallable ):
    __slots__ = ('fn', 'usageStr', 'paramsStr')

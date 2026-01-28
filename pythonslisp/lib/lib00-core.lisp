@@ -132,6 +132,9 @@
 (defun cddddr (lst)
    (cdr (cdr (cdr (cdr lst)))))
 
+(defun list (&rest lst)
+   lst)
+
 ; (remove '<symbol> '<list>)
 ; remove a symbol from a list - destructive
 (defun remove (sym lst)

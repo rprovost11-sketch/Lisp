@@ -48,12 +48,6 @@
 
 (setf isZero? zerop)
 
-(defun apply (aFn aList)
-         (if (null aList)
-             '( )
-             (cons (aFn (first aList))
-                   (apply aFn (rest aList)))))
-
 ; Compute the factorial
 ;
 ; (fact n)

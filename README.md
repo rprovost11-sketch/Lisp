@@ -147,7 +147,7 @@ Lexemes
                       { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
 
    Predefined Symbols
-         'nil', 't', 'e', 'pi', 'inf', 'nan'
+         'nil', 't', 'e', 'pi'
 
 Grammar
    Start:
@@ -259,16 +259,20 @@ E                                       ;; the constant e.
                                         ;;    result must be a list.  Inserts
                                         ;;    the elements of the resulting list
                                         ;;    into the enclosing list.
+
+(apply <fnOrName> <arg1> <arg2> ... <listOfMoreArgs>)
+                                        ;; insert arg1,arg2,... in front of
+                                        ;; listOfMoreArgs, then apply the
+                                        ;; function to the whole list of args.
 ! (funcall <fnNameSym> <fnArg1> <fnArg2> ...)
                                         ;; Call a function with the args provided
+! (apply <fn> <arg1> <arg2> ... <list>) ;; Apply fn to the list of args.
 ! (eval <expr>)                           ;; Evaluate <expr> in the current scope.
 ! (parse <string>)                        ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
 ! (python <pythonCodeString>)           ;; Execute some python code from lisp.
 
 ### List & Map Manipulation ###
-(list <expr-1> <expr-2> ...)            ;; Returns a new list of evaluated
-                                        ;;    expressions.
 (car <list>)                            ;; Return the first item in the list.
 (cdr <list>)                            ;; Return the list minus the first item.
 (cons <obj> <list>)                     ;; Return a new list with <obj> inserted
@@ -382,8 +386,8 @@ caaaar, caaadr, caadar, caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
 cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr, first, second, third,
 fourth, fifth, sixth, seventh, eighth, ninth, tenth, rest
 (null <sexpr>)                          ;; Is the result of the sexpr nil?
-! (apply <fn> <list>)                     ;; Apply fn to each member of list.
-                                        ;;    Returns the results in a list.
+(list &rest <elts>)                     ;; Returns a new list of evaluated
+                                        ;;    expressions.
 ! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
 (list-length '<list>)                   ;; Return the length of a list.
 ! (reverse '<list>)                       ;; Return a new list with list reversed.

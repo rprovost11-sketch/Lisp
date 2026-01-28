@@ -369,7 +369,7 @@ class Listener( object ):
          raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
 
    def _writeLn( self, value: str='', file=None ) -> None:
-      print( value, file=file )
+      print( value, file=file, flush=True )
       if self._logFile:
          self._logFile.write( value + '\n' )
 

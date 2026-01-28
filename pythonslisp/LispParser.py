@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import Any
 
-from pythonslisp.Parser import Scanner, Parser, ParseError
+from pythonslisp.Parser import Lexer, Parser, ParseError
 from pythonslisp.LispAST import LList, LSymbol, LPrimitive
 
 """
@@ -22,7 +22,7 @@ Lexemes
                       { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
 
    Predefined Symbols
-         'nil', 't', 'e', 'pi', 'inf', 'nan'
+         'nil', 't', 'e', 'pi'
 
 Grammar
    Start:
@@ -36,7 +36,7 @@ Grammar
       '(' Object* ')'
 """
 
-class LispScanner( Scanner ):
+class LispLexer( Lexer ):
    WHITESPACE     = ' \t\n\r'
    SIGN           = '+-'
    DIGIT          = '0123456789'
@@ -71,7 +71,7 @@ class LispScanner( Scanner ):
    COMMA_AT_TOK       = 506
    BACK_QUOTE_TOK     = 507
 
-   def __init__( self, ) -> None:
+   def __init__( self ) -> None:
       super( ).__init__( )
 
    def _scanNextToken( self ) -> int:
@@ -82,7 +82,7 @@ class LispScanner( Scanner ):
 
          nextChar = buf.peekNextChar( )
          if nextChar == '':
-            return LispScanner.EOF_TOK
+            return LispLexer.EOF_TOK
          #elif nextChar == '[':
             #buf.markStartOfLexeme( )
             #buf.consume( )
@@ -94,12 +94,12 @@ class LispScanner( Scanner ):
          elif nextChar == '(':
             #buf.markStartOfLexeme( )
             buf.consume( )
-            return LispScanner.OPEN_PAREN_TOK
+            return LispLexer.OPEN_PAREN_TOK
          elif nextChar == ')':
             #buf.markStartOfLexeme( )
             buf.consume( )
             buf.scanLineTxt( )
-            return LispScanner.CLOSE_PAREN_TOK
+            return LispLexer.CLOSE_PAREN_TOK
          #elif nextChar == '#':
             ##buf.markStartOfLexeme( )
             #buf.consume( )
@@ -117,12 +117,12 @@ class LispScanner( Scanner ):
             #buf.markStartOfLexeme( )
             buf.consume( )
             nextChar = buf.peekNextChar( )
-            return LispScanner.SINGLE_QUOTE_TOK
+            return LispLexer.SINGLE_QUOTE_TOK
          elif nextChar == '`':
             #buf.markStartOfLexeme( )
             buf.consume( )
             nextChar = buf.peekNextChar( )
-            return LispScanner.BACK_QUOTE_TOK
+            return LispLexer.BACK_QUOTE_TOK
          elif nextChar == ',':
             #buf.markStartOfLexeme( )
             buf.consume( )
@@ -130,13 +130,13 @@ class LispScanner( Scanner ):
             if nextChar == '@':
                buf.consume( )
                nextChar = buf.peekNextChar( )
-               return LispScanner.COMMA_AT_TOK
-            return LispScanner.COMMA_TOK
+               return LispLexer.COMMA_AT_TOK
+            return LispLexer.COMMA_TOK
          elif nextChar == '"':
             return self._scanStringLiteral( )
-         elif nextChar in LispScanner.SIGN_OR_DIGIT:
+         elif nextChar in LispLexer.SIGN_OR_DIGIT:
             return self._scanNumOrSymbol( )
-         elif nextChar in LispScanner.SYMBOL_FIRST:
+         elif nextChar in LispLexer.SYMBOL_FIRST:
             return self._scanSymbol( )
          else:
             raise ParseError( self, 'Unknown Token' )
@@ -145,7 +145,7 @@ class LispScanner( Scanner ):
          raise
 
       except:
-         return LispScanner.EOF_TOK
+         return LispLexer.EOF_TOK
 
    def _scanStringLiteral( self ) -> int:
       buf = self.buffer
@@ -171,7 +171,7 @@ class LispScanner( Scanner ):
          raise ParseError( self, '\'"\' expected.  A string literal may be unterminated.' )
       buf.consume( )
 
-      return LispScanner.STRING_TOK
+      return LispLexer.STRING_TOK
 
    def _consumeStringEscapeSequence( self ) -> None:
       buf = self.buffer
@@ -182,15 +182,15 @@ class LispScanner( Scanner ):
       buf.consume( )             # Consume the \
 
       nextChar = buf.peekNextChar( )
-      if nextChar in LispScanner.OCTAL_DIGIT:
+      if nextChar in LispLexer.OCTAL_DIGIT:
          # consume an octal number up to a 3 digits
-         numCharsConsumed = buf.consumePast( LispScanner.OCTAL_DIGIT, maxCharsToConsume=3 )
+         numCharsConsumed = buf.consumePast( LispLexer.OCTAL_DIGIT, maxCharsToConsume=3 )
          if (numCharsConsumed < 0) or (numCharsConsumed > 3):
             raise ParseError( self, '1 to 3 octacl digits expected following escape character \\.' )
       elif nextChar == 'x':
          buf.consume( )    # consume the x
          # consume 2 digit hex number
-         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT, maxCharsToConsume=2 )
+         numDigitsConsumed = buf.consumePast( LispLexer.HEX_DIGIT, maxCharsToConsume=2 )
          if numDigitsConsumed != 2:
             raise ParseError( self, 'Expected exactly two hex digits in escape sequence following \\x.' )
       elif nextChar == 'N':
@@ -207,13 +207,13 @@ class LispScanner( Scanner ):
       elif nextChar == 'u':
          buf.consume( )    # consume the u
          # consume 4 hex digits
-         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT, maxCharsToConsume=4 )
+         numDigitsConsumed = buf.consumePast( LispLexer.HEX_DIGIT, maxCharsToConsume=4 )
          if numDigitsConsumed != 4:
             raise ParseError( self, 'Escape sequence expects exactly 4 hex digits following \\u.' )
       elif nextChar == 'U':
          buf.consume( )    # consume the U
          # consume 8 hex digits
-         numDigitsConsumed = buf.consumePast( LispScanner.HEX_DIGIT, maxCharsToConsume=8 )
+         numDigitsConsumed = buf.consumePast( LispLexer.HEX_DIGIT, maxCharsToConsume=8 )
          if numDigitsConsumed != 8:
             raise ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\u.' )
       elif nextChar in '\\\'\"abfnrtv':
@@ -235,14 +235,14 @@ class LispScanner( Scanner ):
       buf = self.buffer
       buf.markStartOfLexeme( )
       nextChar = buf.peekNextChar()
-      if nextChar in LispScanner.SIGN:
+      if nextChar in LispLexer.SIGN:
          buf.consume()
          secondChar = buf.peekNextChar( )
-         if (secondChar == '') or (secondChar not in LispScanner.DIGIT):
+         if (secondChar == '') or (secondChar not in LispLexer.DIGIT):
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
 
-      buf.consumePast( LispScanner.DIGIT )
+      buf.consumePast( LispLexer.DIGIT )
       nextChar = buf.peekNextChar()
 
       if nextChar == '/':
@@ -250,32 +250,32 @@ class LispScanner( Scanner ):
          buf.consume( )
 
          nextChar = buf.peekNextChar( )
-         if nextChar not in LispScanner.DIGIT:
+         if nextChar not in LispLexer.DIGIT:
             self.restoreState( SAVE )         # Restore the scanner state
             return self._scanSymbol( )
 
-         buf.consumePast( LispScanner.DIGIT )
-         return LispScanner.FRAC_TOK
+         buf.consumePast( LispLexer.DIGIT )
+         return LispLexer.FRAC_TOK
 
       elif nextChar in ('e', 'E'):
          # Exponentiation case
          buf.consume( )
 
          nextChar = buf.peekNextChar( )
-         if (nextChar not in LispScanner.SIGN) and (nextChar not in LispScanner.DIGIT):
+         if (nextChar not in LispLexer.SIGN) and (nextChar not in LispLexer.DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         if nextChar in LispScanner.SIGN:
+         if nextChar in LispLexer.SIGN:
             buf.consume( )
             nextChar = buf.peekNextChar( )
 
-         if (nextChar not in LispScanner.DIGIT):
+         if (nextChar not in LispLexer.DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         buf.consumePast( LispScanner.DIGIT )
-         return LispScanner.FLOAT_TOK
+         buf.consumePast( LispLexer.DIGIT )
+         return LispLexer.FLOAT_TOK
 
       elif nextChar == '.':
          # Possibly a floating point number
@@ -283,49 +283,49 @@ class LispScanner( Scanner ):
          #self.saveState( SAVE )
          buf.consume()
          nextChar = buf.peekNextChar()
-         if nextChar not in LispScanner.DIGIT:
+         if nextChar not in LispLexer.DIGIT:
             # Integer
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         buf.consumePast( LispScanner.DIGIT )
+         buf.consumePast( LispLexer.DIGIT )
          nextChar = buf.peekNextChar( )
 
          if nextChar not in ('e', 'E'):
-            return LispScanner.FLOAT_TOK
+            return LispLexer.FLOAT_TOK
 
          buf.consume( )
          nextChar = buf.peekNextChar( )
 
-         if (nextChar not in LispScanner.SIGN) and (nextChar not in LispScanner.DIGIT):
+         if (nextChar not in LispLexer.SIGN) and (nextChar not in LispLexer.DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         if nextChar in LispScanner.SIGN:
+         if nextChar in LispLexer.SIGN:
             buf.consume( )
             nextChar = buf.peekNextChar( )
 
-         if (nextChar not in LispScanner.DIGIT):
+         if (nextChar not in LispLexer.DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         buf.consumePast( LispScanner.DIGIT )
-         return LispScanner.FLOAT_TOK
+         buf.consumePast( LispLexer.DIGIT )
+         return LispLexer.FLOAT_TOK
 
-      return LispScanner.INTEGER_TOK
+      return LispLexer.INTEGER_TOK
 
    def _scanSymbol( self ) -> int:
       buf = self.buffer
 
       buf.markStartOfLexeme( )
       nextChar = buf.peekNextChar()
-      if nextChar not in LispScanner.SYMBOL_FIRST:
+      if nextChar not in LispLexer.SYMBOL_FIRST:
          raise ParseError( self, 'Invalid symbol character' )
       buf.consume( )
 
-      buf.consumePast( LispScanner.SYMBOL_REST )
+      buf.consumePast( LispLexer.SYMBOL_REST )
 
-      return LispScanner.SYMBOL_TOK
+      return LispLexer.SYMBOL_TOK
 
    def _skipWhitespaceAndComments( self ) -> None:
       buf = self.buffer
@@ -340,35 +340,24 @@ class LispScanner( Scanner ):
 
 class LispParser( Parser ):
    def __init__( self ) -> None:
-      self._scanner    = LispScanner( )
-      self._env = None
+      self._scanner    = LispLexer( )
 
    def parse( self, source: str ) -> Any:  # Returns an AST of inputString
       self._scanner.reset( source )
-      try:
-         return self._parse( )
-      finally:
-         self._env = None
+      return self._parse( )
    
    def parseFile( self, filename: str ) -> Any:
       self._scanner.resetFromFile( filename )
-      try:
-         return self._parse( )
-      finally:
-         self._env = None
+      return self._parse( )
 
    def _parse( self ) -> Any:
       # Parse all the sexpressions and insert them into a lisp progn function
-      exprAst = self._parseObject( )
-      bodyExpr = None
-      if exprAst is not None:
-         bodyExpr = LList( LSymbol('progn'), exprAst )
-         while self._scanner.peekToken() != LispScanner.EOF_TOK:
-            exprAst = self._parseObject( )
-            bodyExpr.append( exprAst )
+      bodyExpr = LList( LSymbol('progn') )
+      while self._scanner.peekToken() != LispLexer.EOF_TOK:
+         bodyExpr.append( self._parseObject() )
 
       # EOF
-      if self._scanner.peekToken( ) != LispScanner.EOF_TOK:
+      if self._scanner.peekToken( ) != LispLexer.EOF_TOK:
          raise ParseError( self._scanner, 'EOF Expected.' )
 
       return bodyExpr
@@ -378,56 +367,56 @@ class LispParser( Parser ):
       ast: Any = None         # Holds the parsed AST
 
       nextToken = self._scanner.peekToken( )
-      if nextToken == LispScanner.INTEGER_TOK:
+      if nextToken == LispLexer.INTEGER_TOK:
          lex = self._scanner.getLexeme( )
          ast = int(lex)
          self._scanner.consume( )
-      elif nextToken== LispScanner.FLOAT_TOK:
+      elif nextToken== LispLexer.FLOAT_TOK:
          lex = self._scanner.getLexeme( )
          ast = float(lex)
          self._scanner.consume( )
-      elif nextToken== LispScanner.FRAC_TOK:
+      elif nextToken== LispLexer.FRAC_TOK:
          lex = self._scanner.getLexeme( )
          lex_num,lex_denom = lex.split('/')
          ast = Fraction( int(lex_num), int(lex_denom) )
          self._scanner.consume( )
-      elif nextToken == LispScanner.STRING_TOK:
+      elif nextToken == LispLexer.STRING_TOK:
          lex = self._scanner.getLexeme( )
          ast = lex[1:-1]
          self._scanner.consume( )
-      elif nextToken == LispScanner.SYMBOL_TOK:
+      elif nextToken == LispLexer.SYMBOL_TOK:
          lex = self._scanner.getLexeme( )   # Make symbols case insensative
          ast = LSymbol(lex)
          self._scanner.consume( )
-      elif nextToken == LispScanner.OPEN_PAREN_TOK:
+      elif nextToken == LispLexer.OPEN_PAREN_TOK:
          lex = '()'
          ast = self._parseList( )
-      elif nextToken == LispScanner.SINGLE_QUOTE_TOK:
+      elif nextToken == LispLexer.SINGLE_QUOTE_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
          ast = LList( LSymbol('QUOTE'), subordinate )
-      elif nextToken == LispScanner.BACK_QUOTE_TOK:
+      elif nextToken == LispLexer.BACK_QUOTE_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
          ast = LList( LSymbol('BACKQUOTE'), subordinate )
-      elif nextToken == LispScanner.COMMA_TOK:
+      elif nextToken == LispLexer.COMMA_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
          ast = LList( LSymbol('COMMA'), subordinate )
-      elif nextToken == LispScanner.COMMA_AT_TOK:
+      elif nextToken == LispLexer.COMMA_AT_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
          ast = LList( LSymbol('COMMA-AT'), subordinate )
-      elif nextToken in ( LispScanner.OPEN_BRACKET_TOK, LispScanner.CLOSE_BRACKET_TOK,
-                          LispScanner.POUND_SIGN_TOK, LispScanner.PIPE_TOK, LispScanner.COLON_TOK ):
+      elif nextToken in ( LispLexer.OPEN_BRACKET_TOK, LispLexer.CLOSE_BRACKET_TOK,
+                          LispLexer.POUND_SIGN_TOK, LispLexer.PIPE_TOK, LispLexer.COLON_TOK ):
          lex = self._scanner.getLexeme( )
          ast = lex
          self._scanner.consume( )
-      elif nextToken == LispScanner.EOF_TOK:
+      elif nextToken == LispLexer.EOF_TOK:
          ast = None
       else:
          raise ParseError( self._scanner, 'Object expected.' )
@@ -439,20 +428,20 @@ class LispParser( Parser ):
 
       # Open List
       nextToken = self._scanner.peekToken()
-      if nextToken != LispScanner.OPEN_PAREN_TOK:
+      if nextToken != LispLexer.OPEN_PAREN_TOK:
          raise ParseError( self._scanner, '( expected.' )
       else:
          self._scanner.consume( )
 
       # List Entries
       nextToken = self._scanner.peekToken( )
-      while nextToken not in (LispScanner.CLOSE_PAREN_TOK,
-                                               LispScanner.EOF_TOK):
+      while nextToken not in (LispLexer.CLOSE_PAREN_TOK,
+                                               LispLexer.EOF_TOK):
          theList.append( self._parseObject( ) )
          nextToken = self._scanner.peekToken( )
 
       # Close List
-      if nextToken != LispScanner.CLOSE_PAREN_TOK:
+      if nextToken != LispLexer.CLOSE_PAREN_TOK:
          raise ParseError( self._scanner, ') expected.')
       else:
          self._scanner.consume( )
