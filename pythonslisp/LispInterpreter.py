@@ -120,7 +120,7 @@ class LispInterpreter( Interpreter ):
          LispInterpreter._lbindArguments( env, lcallable.params, list(args) ) #convert args from a tuple to a list
 
          # evaluate the body expressions.
-         latestResult = None
+         latestResult = LList()
          for sexpr in lcallable.body:
             latestResult = LispInterpreter._lEval( env, sexpr )
          return latestResult
@@ -128,7 +128,7 @@ class LispInterpreter( Interpreter ):
          listOfExpandedSExprs = LispInterpreter._macroexpand( env, lcallable, *args )
 
          # Evaluate the expanded macro
-         latestResult = None
+         latestResult = LList()
          for sexpr in listOfExpandedSExprs:
             latestResult = LispInterpreter._lEval( env, sexpr )
          return latestResult
@@ -136,7 +136,141 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Unknown callable.' )
 
    @staticmethod
-   def _lbindArguments( env: Environment, paramList: list[Any], argsList: list[Any] ) -> None:
+   def _lbindArguments( env: Environment, paramList: list[Any], argList: list[Any] ) -> None:
+      paramNum, argNum = LispInterpreter._lbindPositionalArgs( env, paramList, argList )
+      paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, paramList, paramNum, argList, argNum )
+      paramNum, argNum = LispInterpreter._lbindRestArgs( env, paramList, paramNum, argList, argNum )
+      #paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum, argList, argNum )
+      #paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
+      LispInterpreter._finalizeBindings( paramList, paramNum, argList, argNum )
+   
+   @staticmethod
+   def _lbindPositionalArgs( env: Environment, paramList, argList ) -> (int, int):
+      paramListLength = len(paramList)
+      argListLength = len(argList)
+      paramNum = 0
+      argNum = 0
+      while paramNum < paramListLength:
+         paramName = paramList[paramNum]
+         
+         if not isinstance(paramName, LSymbol):
+            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+         
+         if paramName.startswith('&'):
+            break
+         
+         if argNum >= argListLength:
+            raise LispRuntimeError( "Too few positional arguments." )
+         
+         argVal = argList[argNum]
+         
+         env.bindLocal( paramName.strval, argVal )
+      
+         paramNum += 1
+         argNum += 1
+      
+      return paramNum, argNum
+   
+   @staticmethod
+   def _lbindOptionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      paramListLength = len(paramList)
+      argListLength = len(argList)
+      
+      if paramNum >= paramListLength:
+         return paramNum, argNum
+      
+      nextParam = paramList[paramNum]
+      if not isinstance(nextParam, LSymbol):
+         raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
+      if nextParam != '&OPTIONAL':
+         return paramNum, argNum
+      paramNum += 1
+      
+      if paramNum >= paramListLength:
+         raise LispRuntimeError( f'Param expected after &Optional.' )
+      
+      while (paramNum < paramListLength):
+         paramSpec = paramList[paramNum]
+         
+         if isinstance( paramSpec, LSymbol ):
+            if paramSpec.startswith('&'):
+               break
+            
+            paramName = paramSpec
+            defaultValExpr = LList( )
+         elif isinstance( paramSpec, LList ):
+            try:
+               paramName, defaultValExpr = paramSpec
+            except:
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
+
+            if not isinstance(paramName, LSymbol):
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
+         else:
+            raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
+         paramNum += 1
+        
+         if argNum < argListLength:
+            argVal = argList[argNum]
+         
+         if (argNum >= argListLength) or (isinstance(argVal, LSymbol) and (argVal.startswith(':'))):
+            argVal = LispInterpreter._lEval( env, defaultValExpr )
+         else:
+            argNum += 1
+
+         env.bindLocal( paramName.strval, argVal )
+      
+      return paramNum, argNum
+
+   @staticmethod
+   def _lbindRestArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      paramListLength = len(paramList)
+      argListLength = len(argList)
+      
+      if paramNum >= paramListLength:
+         return paramNum, argNum
+      
+      nextParam = paramList[paramNum]
+      if not isinstance(nextParam, LSymbol):
+         raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
+      if nextParam != '&REST':
+         return paramNum, argNum
+      
+      if paramNum >= paramListLength:
+         raise LispRuntimeError( f'Param name expected after &rest.' )
+      paramNum += 1
+      
+      paramName = paramList[paramNum]
+      if not isinstance(paramName, LSymbol ):
+         raise LispRuntimeError( 'Symbol expected after &rest.' )
+      paramNum += 1
+      
+      theRestArgs = []
+      while argNum < argListLength:
+         nextArg = argList[argNum]
+         if isinstance( nextArg, LSymbol) and (nextArg.startswith(':')):
+            break
+         
+         theRestArgs.append(nextArg)
+         argNum += 1
+      
+      env.bindLocal( paramName.strval, LList(*theRestArgs) )
+      
+      return paramNum, argNum
+
+   @staticmethod
+   def _finalizeBindings( paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> None:
+      paramListLength = len(paramList)
+      argListLength = len(argList)
+      
+      if paramNum < paramListLength:
+         raise LispRuntimeError( 'Too few parameters.' )
+      
+      if argNum < argListLength:
+         raise LispRuntimeError( 'Too many arguments.' )
+   
+   @staticmethod
+   def _lbindArguments_old( env: Environment, paramList: list[Any], argsList: list[Any] ) -> None:
       paramNum = 0
       while paramNum < len(paramList):
          paramName = paramList[paramNum]

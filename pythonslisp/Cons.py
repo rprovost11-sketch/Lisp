@@ -89,7 +89,7 @@ class LCons_Iterator(object):
       self.theCons = self.theCons.cdr
       return value
 
-class LConsHeap(object):
+class LHeap(object):
    def __init__( self ):
       self.heap = { }
       for address in range( 10_000 ):

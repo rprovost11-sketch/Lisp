@@ -52,6 +52,9 @@ class LSymbol( object ):
          return self.strval != other
       else:
          return True
+   
+   def startswith( self, asubstr:str ) -> bool:
+      return self.strval.startswith(asubstr)
 
 
 class LList( list ):
