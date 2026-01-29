@@ -55,6 +55,9 @@ class LSymbol( object ):
    
    def startswith( self, asubstr:str ) -> bool:
       return self.strval.startswith(asubstr)
+   
+   def isArgKey( self ):
+      return self.strval.startswith(':')
 
 
 class LList( list ):

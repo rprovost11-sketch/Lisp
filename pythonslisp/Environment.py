@@ -14,6 +14,9 @@ class Environment( object ):
       self._GLOBAL_SCOPE._locals[ key ] = value
       return value
 
+   def updateLocals( self, newValues: dict[str, Any] ):
+      self._locals.update(**newValues)
+   
    def getValue( self,  key: str) -> Any:
       scope: (Environment | None) = self
       while scope:

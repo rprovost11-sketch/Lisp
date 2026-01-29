@@ -85,6 +85,8 @@ class LispInterpreter( Interpreter ):
          try:
             return env.getValue( sExpr.strval )
          except KeyError:
+            if sExpr.isArgKey():
+               return sExpr
             raise LispRuntimeError( f'Undefined Variable: {sExpr.strval}.' )
       elif not isinstance( sExpr, LList ):  # atom or map
          return sExpr
@@ -140,10 +142,18 @@ class LispInterpreter( Interpreter ):
       paramNum, argNum = LispInterpreter._lbindPositionalArgs( env, paramList, argList )
       paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, paramList, paramNum, argList, argNum )
       paramNum, argNum = LispInterpreter._lbindRestArgs( env, paramList, paramNum, argList, argNum )
-      #paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum, argList, argNum )
+      paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum, argList, argNum )
       #paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
-      LispInterpreter._finalizeBindings( paramList, paramNum, argList, argNum )
    
+      paramListLength = len(paramList)
+      argListLength = len(argList)
+      
+      if paramNum < paramListLength:
+         raise LispRuntimeError( 'Too few parameters.' )
+      
+      if argNum < argListLength:
+         raise LispRuntimeError( 'Too many arguments.' )
+
    @staticmethod
    def _lbindPositionalArgs( env: Environment, paramList, argList ) -> (int, int):
       paramListLength = len(paramList)
@@ -259,77 +269,61 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
 
    @staticmethod
-   def _finalizeBindings( paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> None:
+   def _lbindKeyArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
       paramListLength = len(paramList)
       argListLength = len(argList)
       
-      if paramNum < paramListLength:
-         raise LispRuntimeError( 'Too few parameters.' )
+      if paramNum >= paramListLength:
+         return paramNum, argNum
       
-      if argNum < argListLength:
-         raise LispRuntimeError( 'Too many arguments.' )
-   
-   @staticmethod
-   def _lbindArguments_old( env: Environment, paramList: list[Any], argsList: list[Any] ) -> None:
-      paramNum = 0
-      while paramNum < len(paramList):
-         paramName = paramList[paramNum]
-         if not isinstance(paramName, LSymbol):
-            raise LispRuntimeError( 'Param {paramNum} expected to be a symbol.' )
-
-         if paramName == '&REST':
-            paramNum += 1
+      nextParam = paramList[paramNum]
+      if not isinstance(nextParam, LSymbol):
+         raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
+      if nextParam != '&KEY':
+         return paramNum, argNum
+      
+      paramNum += 1
+      if paramNum >= paramListLength:
+         raise LispRuntimeError( f'Param name expected after &key.' )
+      
+      keysDict = {}
+      
+      # Iterate throught the key parameters adding them to keysDict
+      while paramNum < paramListLength:
+         paramSpec = paramList[paramNum]
+         if isinstance(paramSpec, LSymbol):
+            paramName = paramSpec
+            paramDefaultVal = LList()
+         elif isinstance(paramSpec, list):
             try:
-               paramName = paramList[paramNum]
-            except IndexError:
-               raise LispRuntimeError( 'Symbol expected after &REST' )
-
-            env.bindLocal( paramName.strval, LList(*argsList))
-            argsList = [ ]
-            paramNum += 1
-
-            if paramNum < len(paramList):
-               raise LispRuntimeError( 'Symbol after &REST must be last parameter.' )
-
-         elif paramName == '&OPTIONAL':
-            paramNum += 1
-            try:
-               paramSpec = paramList[paramNum]
-            except IndexError:
-               raise LispRuntimeError( 'Parameter spec expected after &OPTIONAL.' )
-
-            if isinstance(paramSpec, LSymbol):
-               paramName = paramSpec
-               defaultValExpr = LList( )
-            elif isinstance(paramSpec, LList):
-               try:
-                  paramName, defaultValExpr = paramSpec
-               except:
-                  raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
-
-               if not isinstance(paramName, LSymbol):
-                  raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
-            else:
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
-
-            if len(argsList) != 0:
-               argVal, *argsList = argsList
-            else:
-               argVal = LispInterpreter._lEval( env, defaultValExpr )
-
-            env.bindLocal( paramName.strval, argVal )
-            paramNum += 1
-         elif paramName == '&KEY':
-            raise LispRuntimeError( '&KEY parameters not implemented at this time.' )
-         else:
-            if len(argsList) == 0:
-               raise LispRuntimeError( 'Too few arguments.' )
-            env.bindLocal( str(paramName), argsList[0] )
-            argsList = argsList[1:]
-            paramNum += 1
-
-      if len(argsList) != 0:
-         raise LispRuntimeError( 'Too many arguments passed in.' )
+               paramName, paramDefaultVal = paramSpec
+            except ValueError:
+               raise LispRuntimeError( f'Too many default values for key parameter {paramSpec[0]}.' )
+         keysDict[paramName.strval] = paramDefaultVal
+         paramNum += 1
+      
+      # Iterate through the key args updating keysDict
+      while argNum < argListLength:
+         argKey = argList[argNum]
+         if not isinstance(argKey, LSymbol):
+            raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
+         if not argKey.startswith(':'):
+            raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
+         argKey = argKey.strval[1:]  # Strip argKey of the leading colon :
+         if argKey not in keysDict:
+            raise LispRuntimeError( f'Unknown keyword found {argKey}.' )
+         argNum += 1
+         if argNum >= argListLength:
+            raise LispRuntimeError( f'Keyword {argKey} expected to be followed by a value.' )
+         argVal = argList[argNum]
+         argNum += 1
+         
+         keysDict[argKey] = argVal
+      
+      # Update env's locals with keysDict
+      env.updateLocals( keysDict )
+      
+      return paramNum, argNum
 
    @staticmethod
    def _macroexpand( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
