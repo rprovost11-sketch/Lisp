@@ -12,8 +12,6 @@ To Do
   can scan the AST for errors such as the wrong number or types of arguments to
   a primitive.  This would eliminate a lot of the runtime error checking
   currently in the primitive definitions and hence speed up the interpreter.
-- rewrite LispInterpreter._lbindArguments() to conform as much as possible to
-  the common lisp standard document section 5.2.2. Lambda-Expressions.
 - implement stream IO primitives.
 - implement structs.
 - implement packages.  A package x is a symbol in the global namespace which
@@ -59,3 +57,7 @@ Completed
 2026.01.12
 - make evaluations of undefined variables raise LispRuntimeError instead of
   evaluating to themselves.
+
+2026.01.29
+- rewrite LispInterpreter._lbindArguments() to conform as much as possible to
+  the common lisp standard document section 5.2.2. Lambda-Expressions.

@@ -150,9 +150,6 @@ class LispInterpreter( Interpreter ):
       
       if paramNum < paramListLength:
          raise LispRuntimeError( 'Too few parameters.' )
-      
-      if argNum < argListLength:
-         raise LispRuntimeError( 'Too many arguments.' )
 
    @staticmethod
    def _lbindPositionalArgs( env: Environment, paramList, argList ) -> (int, int):
@@ -163,19 +160,22 @@ class LispInterpreter( Interpreter ):
       while paramNum < paramListLength:
          paramName = paramList[paramNum]
          
+         # Insure paramName is a symbol but doesn't start with '&'.
          if not isinstance(paramName, LSymbol):
-            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
-         
+            raise LispRuntimeError( f"Positional param {paramNum} expected to be a symbol." )
          if paramName.startswith('&'):
             break
          
          if argNum >= argListLength:
             raise LispRuntimeError( "Too few positional arguments." )
-         
          argVal = argList[argNum]
+         #if isinstance(argVal, LSymbol) and argVal.startswith(':'):
+            #raise LispRuntimeError( f"Too few positional arguments.  Found {argVal} instead." )
          
+         # Bind the positional parameter paramName to argVal
          env.bindLocal( paramName.strval, argVal )
       
+         # Prepare for the next loop
          paramNum += 1
          argNum += 1
       
@@ -186,49 +186,65 @@ class LispInterpreter( Interpreter ):
       paramListLength = len(paramList)
       argListLength = len(argList)
       
+      # Insure the next parameter is the symbol &OPTIONAL
       if paramNum >= paramListLength:
          return paramNum, argNum
-      
       nextParam = paramList[paramNum]
       if not isinstance(nextParam, LSymbol):
          raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
       if nextParam != '&OPTIONAL':
          return paramNum, argNum
+
+      # Prepare to loop over the optional parameters and arguments
       paramNum += 1
-      
       if paramNum >= paramListLength:
          raise LispRuntimeError( f'Param expected after &Optional.' )
       
       while (paramNum < paramListLength):
          paramSpec = paramList[paramNum]
          
+         # Extract the next parameter's values
          if isinstance( paramSpec, LSymbol ):
             if paramSpec.startswith('&'):
                break
-            
             paramName = paramSpec
             defaultValExpr = LList( )
+            svar = None
          elif isinstance( paramSpec, LList ):
             try:
-               paramName, defaultValExpr = paramSpec
+               paramName, defaultValExpr, *svar = paramSpec
             except:
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
 
             if not isinstance(paramName, LSymbol):
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue>).' )
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
+            
+            if len(svar) > 0:
+               svar = svar[0]
+               if not isinstance(svar, LSymbol):
+                  raise LispRuntimeFuncError( f'Parameter svar following {paramName} must be a symbol.' )
+            else:
+               svar = None
          else:
             raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          paramNum += 1
         
+         # Extract the next arguments's values
          if argNum < argListLength:
             argVal = argList[argNum]
          
          if (argNum >= argListLength) or (isinstance(argVal, LSymbol) and (argVal.startswith(':'))):
             argVal = LispInterpreter._lEval( env, defaultValExpr )
+            svarVal = LList()   # Nil, False
          else:
             argNum += 1
+            svarVal = env.getGlobalValue('T')   # T, True
 
+         # Bind the parameters
          env.bindLocal( paramName.strval, argVal )
+         
+         if svar is not None:
+            env.bindLocal( svar.strval, svarVal )
       
       return paramNum, argNum
 
@@ -255,14 +271,14 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Symbol expected after &rest.' )
       paramNum += 1
       
-      theRestArgs = []
-      while argNum < argListLength:
-         nextArg = argList[argNum]
-         if isinstance( nextArg, LSymbol) and (nextArg.startswith(':')):
-            break
+      theRestArgs = argList[argNum:]
+      #while argNum < argListLength:
+         #nextArg = argList[argNum]
+         #if isinstance( nextArg, LSymbol) and (nextArg.startswith(':')):
+            #break
          
-         theRestArgs.append(nextArg)
-         argNum += 1
+         #theRestArgs.append(nextArg)
+         #argNum += 1
       
       env.bindLocal( paramName.strval, LList(*theRestArgs) )
       
@@ -273,19 +289,19 @@ class LispInterpreter( Interpreter ):
       paramListLength = len(paramList)
       argListLength = len(argList)
       
+      # Insure that the next parameter is &KEY
       if paramNum >= paramListLength:
          return paramNum, argNum
-      
       nextParam = paramList[paramNum]
       if not isinstance(nextParam, LSymbol):
          raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
       if nextParam != '&KEY':
          return paramNum, argNum
       
+      # Prepare to iterate over the parameters
       paramNum += 1
       if paramNum >= paramListLength:
          raise LispRuntimeError( f'Param name expected after &key.' )
-      
       keysDict = {}
       
       # Iterate throught the key parameters adding them to keysDict
@@ -299,7 +315,7 @@ class LispInterpreter( Interpreter ):
                paramName, paramDefaultVal = paramSpec
             except ValueError:
                raise LispRuntimeError( f'Too many default values for key parameter {paramSpec[0]}.' )
-         keysDict[paramName.strval] = paramDefaultVal
+         keysDict[paramName.strval] = LispInterpreter._lEval(env, paramDefaultVal)
          paramNum += 1
       
       # Iterate through the key args updating keysDict

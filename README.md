@@ -23,7 +23,7 @@ Features
   reboot, and interpreter testing.
 - Function definition with stack and recursion support.
 - Common Lisp macro definition and the macroexpand primitive.
-- &rest and &optional parameter support in both function and macro definitions.
+- &optional, &rest and &key parameter support for both functions and macros.
 - Robust error handling and reporting.
 - Support for special forms.
 - Includes runtime libraries written in lisp.
@@ -419,19 +419,3 @@ Library Macros
         <expr1> <expr2> ...)
 (incf var [delta])                      ;; increment a variable by 1 or delta.
 (decf var [delta])                      ;; decrement a variable by 1 or delta.
-
-Parameters
-==========
-
-Support for &rest and &optional parameters.
-
-Parameters in function and macro definitions are evaluated and bound by the same
-routine.  So, they work identically.  Generally params are just names for
-positional arguments in a call to the function or macro.  There is one exception
-to the standard binding order of first parameter gets first argument, second
-parameter gets second, etc.  The final parameter may be preceded by the symbol
-&rest.  If this is the case, the final paramer is bound to a list of the
-remaining arguments passed in.  With all the remaining arguments collected into
-a list bound to the final parameter, there is now a way to handle variable
-length argument lists for functions.
-

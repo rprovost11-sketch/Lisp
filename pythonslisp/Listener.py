@@ -380,7 +380,7 @@ class Listener( object ):
 
    def _prompt( self, prompt: str='' ) -> str:
       inputStr: str = input( prompt ).strip()
-      if self._logFile and ((len(inputStr) != 0) or (inputStr[0] != ']')):
+      if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
          self._logFile.write( f'{prompt}{inputStr}\n' )
       return inputStr
 
