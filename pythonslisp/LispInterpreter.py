@@ -139,24 +139,58 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lbindArguments( env: Environment, paramList: list[Any], argList: list[Any] ) -> None:
-      paramNum, argNum = LispInterpreter._lbindPositionalArgs( env, paramList, argList )
-      paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, paramList, paramNum, argList, argNum )
-      paramNum, argNum = LispInterpreter._lbindRestArgs( env, paramList, paramNum, argList, argNum )
-      paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum, argList, argNum )
-      #paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
-   
       paramListLength = len(paramList)
       argListLength = len(argList)
+
+      paramNum, argNum = LispInterpreter._lbindPositionalArgs( env, paramList, 0, argList, 0 )
       
+      # Retrieve the next param which should be a symbol
+      try:
+         nextParam = paramList[paramNum]
+      except IndexError:
+         if argNum < argListLength:
+            raise LispRuntimeError( f'Too many arguments.  Expected {paramListLength}, received {argNum+1}' )
+         return          # All params used up.  Return gracefully
+      if not isinstance(nextParam, LSymbol):
+         raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+      
+      if nextParam == '&OPTIONAL':
+         paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, paramList, paramNum+1, argList, argNum )
+      
+         # Retrieve the next param which should be a symbol
+         try:
+            nextParam = paramList[paramNum]
+         except IndexError:
+            if argNum < argListLength:
+               raise LispRuntimeError( f'Too many arguments.  Expected {paramListLength}, received {argNum+1}' )
+            return          # All params used up.  Return gracefully
+         if not isinstance(nextParam, LSymbol):
+            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+      
+      if nextParam == '&REST':
+         paramNum, argNum = LispInterpreter._lbindRestArgs( env, paramList, paramNum+1, argList, argNum )
+      
+         # Retrieve the next param which should be a symbol
+         try:
+            nextParam = paramList[paramNum]
+         except IndexError:
+            return          # All params used up.  Return gracefully
+         if not isinstance(nextParam, LSymbol):
+            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+      
+      if nextParam == '&KEY':
+         paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum+1, argList, argNum )
+      
+      #paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
+   
       if paramNum < paramListLength:
          raise LispRuntimeError( 'Too few parameters.' )
 
    @staticmethod
-   def _lbindPositionalArgs( env: Environment, paramList, argList ) -> (int, int):
+   def _lbindPositionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
       paramListLength = len(paramList)
       argListLength = len(argList)
-      paramNum = 0
-      argNum = 0
+
       while paramNum < paramListLength:
          paramName = paramList[paramNum]
          
@@ -166,11 +200,11 @@ class LispInterpreter( Interpreter ):
          if paramName.startswith('&'):
             break
          
-         if argNum >= argListLength:
+         # Get the argument value as the next argument
+         try:
+            argVal = argList[argNum]
+         except IndexError:
             raise LispRuntimeError( "Too few positional arguments." )
-         argVal = argList[argNum]
-         #if isinstance(argVal, LSymbol) and argVal.startswith(':'):
-            #raise LispRuntimeError( f"Too few positional arguments.  Found {argVal} instead." )
          
          # Bind the positional parameter paramName to argVal
          env.bindLocal( paramName.strval, argVal )
@@ -186,17 +220,7 @@ class LispInterpreter( Interpreter ):
       paramListLength = len(paramList)
       argListLength = len(argList)
       
-      # Insure the next parameter is the symbol &OPTIONAL
-      if paramNum >= paramListLength:
-         return paramNum, argNum
-      nextParam = paramList[paramNum]
-      if not isinstance(nextParam, LSymbol):
-         raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
-      if nextParam != '&OPTIONAL':
-         return paramNum, argNum
-
       # Prepare to loop over the optional parameters and arguments
-      paramNum += 1
       if paramNum >= paramListLength:
          raise LispRuntimeError( f'Param expected after &Optional.' )
       
@@ -243,63 +267,32 @@ class LispInterpreter( Interpreter ):
          # Bind the parameters
          env.bindLocal( paramName.strval, argVal )
          
-         if svar is not None:
+         if svar:
             env.bindLocal( svar.strval, svarVal )
       
       return paramNum, argNum
 
    @staticmethod
    def _lbindRestArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
-      paramListLength = len(paramList)
-      argListLength = len(argList)
-      
-      if paramNum >= paramListLength:
-         return paramNum, argNum
-      
-      nextParam = paramList[paramNum]
-      if not isinstance(nextParam, LSymbol):
-         raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
-      if nextParam != '&REST':
-         return paramNum, argNum
-      
-      if paramNum >= paramListLength:
+      try:
+         paramName = paramList[paramNum]
+      except IndexError:
          raise LispRuntimeError( f'Param name expected after &rest.' )
-      paramNum += 1
-      
-      paramName = paramList[paramNum]
+
       if not isinstance(paramName, LSymbol ):
          raise LispRuntimeError( 'Symbol expected after &rest.' )
-      paramNum += 1
       
       theRestArgs = argList[argNum:]
-      #while argNum < argListLength:
-         #nextArg = argList[argNum]
-         #if isinstance( nextArg, LSymbol) and (nextArg.startswith(':')):
-            #break
-         
-         #theRestArgs.append(nextArg)
-         #argNum += 1
-      
       env.bindLocal( paramName.strval, LList(*theRestArgs) )
       
-      return paramNum, argNum
+      return paramNum + 1, argNum
 
    @staticmethod
    def _lbindKeyArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
       paramListLength = len(paramList)
       argListLength = len(argList)
       
-      # Insure that the next parameter is &KEY
-      if paramNum >= paramListLength:
-         return paramNum, argNum
-      nextParam = paramList[paramNum]
-      if not isinstance(nextParam, LSymbol):
-         raise LispRuntimeError( f"Param {paramNum+1} expected to be a symbol." )
-      if nextParam != '&KEY':
-         return paramNum, argNum
-      
       # Prepare to iterate over the parameters
-      paramNum += 1
       if paramNum >= paramListLength:
          raise LispRuntimeError( f'Param name expected after &key.' )
       keysDict = {}
@@ -327,13 +320,13 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
          argKey = argKey.strval[1:]  # Strip argKey of the leading colon :
          if argKey not in keysDict:
-            raise LispRuntimeError( f'Unknown keyword found {argKey}.' )
+            raise LispRuntimeError( f'Unexpected keyword found {argKey}.' )
          argNum += 1
-         if argNum >= argListLength:
+         try:
+            argVal = argList[argNum]
+         except IndexError:
             raise LispRuntimeError( f'Keyword {argKey} expected to be followed by a value.' )
-         argVal = argList[argNum]
          argNum += 1
-         
          keysDict[argKey] = argVal
       
       # Update env's locals with keysDict
