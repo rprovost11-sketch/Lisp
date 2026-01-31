@@ -87,7 +87,7 @@ class LispInterpreter( Interpreter ):
          except KeyError:
             if sExpr.isArgKey():
                return sExpr
-            raise LispRuntimeError( f'Undefined Variable: {sExpr.strval}.' )
+            raise LispRuntimeError( f'Unbound Variable: {sExpr.strval}.' )
       elif not isinstance( sExpr, LList ):  # atom or map
          return sExpr
       
@@ -181,7 +181,16 @@ class LispInterpreter( Interpreter ):
       if nextParam == '&KEY':
          paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum+1, argList, argNum )
       
-      #paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
+         # Retrieve the next param which should be a symbol
+         try:
+            nextParam = paramList[paramNum]
+         except IndexError:
+            return          # All params used up.  Return gracefully
+         if not isinstance(nextParam, LSymbol):
+            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+      
+      if nextParam == '&AUX':
+         paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
    
       if paramNum < paramListLength:
          raise LispRuntimeError( 'Too few parameters.' )
@@ -189,7 +198,6 @@ class LispInterpreter( Interpreter ):
    @staticmethod
    def _lbindPositionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
       paramListLength = len(paramList)
-      argListLength = len(argList)
 
       while paramNum < paramListLength:
          paramName = paramList[paramNum]
@@ -334,6 +342,10 @@ class LispInterpreter( Interpreter ):
       
       return paramNum, argNum
 
+   @staticmethod
+   def _lbindAuxArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      return paramNum, argNum
+   
    @staticmethod
    def _macroexpand( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
       env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
@@ -829,7 +841,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_eval, '1 argument exptected.' )
          return LispInterpreter._lEval( env, expr )
 
-      @LDefPrimitive( 'apply', '<function> &rest <args>' )
+      @LDefPrimitive( 'apply', '<function> &rest <args> &aux <argsList>' )
       def LP_apply( env: Environment, *args ) -> Any:
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_apply, "At least 2 arguments expected to apply." )
@@ -853,7 +865,7 @@ class LispInterpreter( Interpreter ):
          
          return LispInterpreter._lApply( env, fn, *fnArgs )
 
-      @LDefPrimitive( 'parse', '<sExprString>' )
+      @LDefPrimitive( 'parse', '<string>' )
       def LP_parse( env: Environment, *args ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_parse, '1 string argument expected.' )

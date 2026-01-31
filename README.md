@@ -1,4 +1,6 @@
-# Lisp-Py
+Python's Lisp
+=============
+
 Common Lisp programming language
 
 The best python lisp implementation!
@@ -7,11 +9,7 @@ Implemented entirely in python 3.14.
 
 Embed lisp in python code and python in lisp code; or interact with lisp in the included repl.
 
-Features Common Lisp macro definition and expansion.  &rest and &optional parameters supported so far (&key parameters not yet implemented).
-
-Uses
-==========
-Educational Only.
+Features Common Lisp macro definition and expansion.  &optional, &rest, &key and &aux parameters supported.
 
 Lisp Documentation
 ==================
@@ -23,7 +21,7 @@ Features
   reboot, and interpreter testing.
 - Function definition with stack and recursion support.
 - Common Lisp macro definition and the macroexpand primitive.
-- &optional, &rest and &key parameter support for both functions and macros.
+- &optional, &rest, &key and &aux parameter support for both functions and macros.
 - Robust error handling and reporting.
 - Support for special forms.
 - Includes runtime libraries written in lisp.
@@ -46,7 +44,8 @@ Design Features (the code not lisp)
 
 
 ### USAGE ###
-#############
+=============
+
 Run the repl.
 
           > python3 -m pythonslisp
@@ -58,6 +57,7 @@ Execute a lisp source file.
 
 API: Using Lisp as a Package
 ============================
+
 The easiest way to use the package is to import then instantiate a
 LispInterpreter, passing it info on where to find a runtime library, then use
 its eval() functions to call into lisp.  Everything is persistent across calls
@@ -102,15 +102,15 @@ and pass it some python code in a lisp string.
           interp.rawEval( '(setf num 3)' )
           interp.rawEval( '(python (string num " + 4"))' )
 
-Primarily you will want your program to interact with pythonslisp.LispAST,
+Primarily your program will interact with pythonslisp.LispAST,
 pythonslisp.LispInterpreter, pythonslisp.LispParser and pythonslisp.Parser.
 Methods prefixed by _ are considered private.  Private methods are
 implementation details for the given class and probably not useful to you.
 Moreover, given that they are not intended for public use, they are likely to
 change without notice in future revisions.  The remaining functions and methods,
 those without _, are public and are useful to the python programmer.  Note that
-the public interface for the class pythonslisp.Parser.LispScanner is actually
-found in the base class pythonslisp.Parser.Scanner.  LispScanner only implements
+the public interface for the class pythonslisp.Parser.LispLexer is actually
+found in the base class pythonslisp.Parser.Lexer.  LispLexer only implements
 private methods needed by the base class.
 
 Modification of the Package
@@ -131,7 +131,8 @@ Regarding Exceptions in the Interpreter and AST
   would ever reach the try block in the Listener class's repl.
 
 ### THE LANGUAGE ###
-####################
+====================
+
 Lexemes
    Comments
       Comments extend from ';' through '\n'.
@@ -161,7 +162,8 @@ Grammar
       '(' Object* ')'
 
 ### LISP PRIMITIVES ###
-#######################
+=======================
+
     Primitives marked with ! are specific to Python's Lisp (not common lisp).
 
 ### Values ###
@@ -172,7 +174,7 @@ E                                       ;; the constant e.
 
 ### Variable Definition ###
 (defmacro name (<param1> <param2> ...)  ;; Define and return a macro.
-        <expr1> <expr2> ...)
+        <sexpr1> <sexpr2> ...)
 (expandmacro '(<macroName> <arg1> <arg2> ...))
                                         ;; Perform the expansion of the macro
                                         ;;    and return the results of those
@@ -186,9 +188,9 @@ E                                       ;; the constant e.
                                         ;;    search its value is updated.  If
                                         ;;    it's not located a global is
                                         ;;    defined and set to the value.
-! (undef! '<symbol>)                      ;; Undefine the global definition
+! (undef! '<symbol>)                    ;; Undefine the global definition
                                         ;;    for a symbol.
-! (symtab!)                               ;; Print a symbol tab.  Each scope on a
+! (symtab!)                             ;; Print a symbol tab.  Each scope on a
                                         ;;    separate line.  Local scope first.
                                         ;;    Global scope last.
 
@@ -214,7 +216,7 @@ E                                       ;; the constant e.
 (progn <sexpr1> <sexpr2> ...)           ;; Evaluate each sexpression in turn.
                                         ;;    Returns the result of the last
                                         ;;    sexpr.
-(if <cond> <conseq> [<alt>])            ;; If cond evaluates to true evaluates
+(if <cond> <conseq> &optional <alt>)    ;; If cond evaluates to true evaluates
                                         ;;    conseq otherwise evaluates alt.
 (cond (<cond1> <body1>) (<cond2> <body2>) ...)
                                         ;; Evaluates each cond in order until
@@ -230,7 +232,8 @@ E                                       ;; the constant e.
                                         ;;    returns the result of the last
                                         ;;    expr evaluated.  All remaining
                                         ;;    cases are skipped.
-! (while <conditionExpr> <body>)          ;; Perform a loop over the body sexprs.
+! (while <conditionExpr> <sexpr1> <sexpr2)
+                                        ;; Perform a loop over the body sexprs.
                                         ;;    Before iteration conditionExpr is
                                         ;;    evaluated.  If conditionExpr is
                                         ;;    true the iteration occurs.
@@ -244,7 +247,8 @@ E                                       ;; the constant e.
                                         ;;    starting with 0 for the first loop
                                         ;;    The value of the last sexpr
                                         ;;    evaluated is returned.
-! (forEach <variable> <list> <expr> ...)  ;; Each iteration assigns a list element
+! (forEach <variable> <list> <sexpr1> <sexpr2> ...)
+                                        ;; Each iteration assigns a list element
                                         ;;    to symbol, and evaluates expr.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
 (backquote <expr>)                      ;; Similar to quote, but allows comma
@@ -266,9 +270,9 @@ E                                       ;; the constant e.
                                         ;; function to the whole list of args.
 ! (funcall <fnNameSym> <fnArg1> <fnArg2> ...)
                                         ;; Call a function with the args provided
-! (apply <fn> <arg1> <arg2> ... <list>) ;; Apply fn to the list of args.
-! (eval <expr>)                           ;; Evaluate <expr> in the current scope.
-! (parse <string>)                        ;; Parse the string as an sexpression
+(apply <fn> <arg1> <arg2> ... <list>)   ;; Apply fn to the list of args.
+(eval <expr>)                           ;; Evaluate <expr> in the current scope.
+! (parse <string>)                      ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
 ! (python <pythonCodeString>)           ;; Execute some python code from lisp.
 
@@ -277,8 +281,8 @@ E                                       ;; the constant e.
 (cdr <list>)                            ;; Return the list minus the first item.
 (cons <obj> <list>)                     ;; Return a new list with <obj> inserted
                                         ;;    into the front of list.
-! (push! '<list> '<value>)                ;; Push a value onto the back of a list.
-! (pop! '<list>)                          ;; Pop and returns the last value of the
+! (push! '<list> '<value>)              ;; Push a value onto the back of a list.
+! (pop! '<list>)                        ;; Pop and returns the last value of the
                                         ;;    list.
 ! (at <keyOrIndex> <mapListOrStr>)      ;; Return the value at a specified index
                                         ;;    or key of a list, map or string.
@@ -291,13 +295,13 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
                                         ;;    index.
 (append <list-1> <list-2> ...)          ;; Return a new list with the lists
                                         ;;    merged.  Order is retained.
-! (hasValue? '<listOrMap> '<value>)       ;; Returns T if the list/map contains
+! (hasValue? '<listOrMap> '<value>)     ;; Returns T if the list/map contains
                                         ;;    value.
 ! (map '( (<key1> <val1>) (<key2> <val2>) ...))
                                         ;; Construct a map of key-value pairs.
-! (update! <map1> <map2>)                 ;; Update map1's data with map2's.
-! (hasKey? <map> <key>)                   ;; Return T if key is in the map.
-! (sorted <list>)                         ;; Return a sorted version of list.
+! (update! <map1> <map2>)               ;; Update map1's data with map2's.
+! (hasKey? <map> <key>)                 ;; Return T if key is in the map.
+! (sorted <list>)                       ;; Return a sorted version of list.
 
 ### Arithmetic Operations ###
 (+ <expr1> <expr2> ...)                 ;; Returns the sum of numbers or
@@ -305,7 +309,7 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
 (- <expr1> <expr2> ...)                 ;; Returns the difference.
 (* <expr1> <expr2> ...)                 ;; Returns the product.
 (/ <expr1> <expr2> ...)                 ;; Returns the quotient.
-! (// <expr1> <expr2>)                    ;; Returns the integer division.
+! (// <expr1> <expr2>)                  ;; Returns the integer division.
 (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
 (gcd <int1> <int2> ...)                 ;; Returns the gcd of the arguments.
 (lcm <int1> <int2> ...)                 ;; Returns the lcm of the arguments.
@@ -331,12 +335,12 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
 (atom <expr>)                           ;; Returns t if expr in { int, float,
                                         ;;   fraction, string, nil, symbol }.
 (listp <expr>)                          ;; Returns t if expr is a list.
-! (isMap?  <expr>)                        ;; Returns t if expr is a map.
+! (isMap?  <expr>)                      ;; Returns t if expr is a map.
 (stringp  <expr>)                       ;; Returns t if expr is a string.
 (functionp <expr>)                      ;; Returns t if expr is a function.
 
 ### Relational Operators ###
-! (is? <val1> <val2>)                     ;; Are the two values the same object?
+! (is? <val1> <val2>)                   ;; Are the two values the same object?
 (=   <val1> <val2> ...)                 ;; Are all the values equal?
 (/=  <val1> <val2> ...)                 ;; Are all the values unequal?
 (<   <val1> <val2> ...)                 ;; Are all the values less than?
@@ -354,46 +358,48 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
                                         ;;    any number type or a string
                                         ;;    containing a lisp float.
 (rational <val>)                        ;; Returns val as a fraction.
-! (integer <val> [<base>])                ;; Returns val as an int.  val can be
+! (integer <val> [<base>])              ;; Returns val as an int.  val can be
                                         ;;    any number type or a string
                                         ;;    containing a lisp integer.
 (string <expr1> <expr2> ...)            ;; Returns the concatenation of the
                                         ;;    repr string results of the
                                         ;;    arguments.
-! (ustring <expr1> <expr2> ...)           ;; Returns the concatenation of the
-                                          ;;    str string results of the
-                                          ;;    arguments.
+! (ustring <expr1> <expr2> ...)         ;; Returns the concatenation of the
+                                        ;;    str string results of the
+                                        ;;    arguments.
 (symbol <expr1> <expr2> ...)            ;; Concatenate the strings and use the
                                         ;;    result to define a symbol.
 
 ### I/O ###
-! (writef <formatStr> <mapOrList>)        ;; Write formatted text.  Takes a
-                                          ;;    Python format string and a map
-                                          ;;    of values to fill the string.
-! (write! <object1> <object2> ...)        ;; Write text rep of objects to the
-                                          ;;    screeen/stream.
-! (writeLn! <object1> <object2> ...)      ;; Write a line of text to the
-                                          ;;    screen/stream.
-! (uwrite! <object1> <object2> ...)       ;; Write objects in a format suitable
-                                          ;;    for an end user.
+! (writef <formatStr> <mapOrList>)      ;; Write formatted text.  Takes a
+                                        ;;    Python format string and a map
+                                        ;;    of values to fill the string.
+! (write! <object1> <object2> ...)      ;; Write text rep of objects to the
+                                        ;;    screeen/stream.
+! (writeLn! <object1> <object2> ...)    ;; Write a line of text to the
+                                        ;;    screen/stream.
+! (uwrite! <object1> <object2> ...)     ;; Write objects in a format suitable
+                                        ;;    for an end user.
 ! (uwriteLn! <object1> <object2> ...)
-! (read!)                                 ;; Read input from keyboard/stream.
+! (read!)                               ;; Read input from keyboard/stream.
 
 Library Functions
 =================
+
 caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr, cdaar, cdadr, cddar, cdddr,
 caaaar, caaadr, caadar, caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,
 cdaadr, cdadar, cdaddr, cddaar, cddadr, cdddar, cddddr, first, second, third,
 fourth, fifth, sixth, seventh, eighth, ninth, tenth, rest
+(nth <index> <list>)                    ;; Returns the nth item of the list
 (null <sexpr>)                          ;; Is the result of the sexpr nil?
 (list &rest <elts>)                     ;; Returns a new list of evaluated
                                         ;;    expressions.
-! (remove '<symbol> '<list>)              ;; Remove a symbol from a list.
+! (remove '<symbol> <list>)             ;; Remove a symbol from a list.
 (list-length '<list>)                   ;; Return the length of a list.
-! (reverse '<list>)                       ;; Return a new list with list reversed.
-! (copy <list>)                           ;; Return a copy of a list.
-! (deepCopy <list>)                       ;; Return a deepcopy of a list.
-! (read_prompt promptStr)                 ;; Write a prompt and read a value.
+! (reverse '<list>)                     ;; Return a new list with list reversed.
+! (copy <list>)                         ;; Return a copy of a list.
+! (deepCopy <list>)                     ;; Return a deepcopy of a list.
+! (read_prompt promptStr)               ;; Write a prompt and read a value.
 (tree-equal <tree1> <tree2>)            ;; Are two deeply nested lists equal?
 (evenp intVal)                          ;; Is the intval even?
 (oddp intVal)                           ;; Is the intval odd?
@@ -406,16 +412,17 @@ fourth, fifth, sixth, seventh, eighth, ninth, tenth, rest
 (exp num)                               ;; Compute e raised to num.
 (abs num)                               ;; Compute the absolute valute.
 (tan <radians>)                         ;; Returns the tan of radians.
-! (fact n)                                ;; compute the factorial of n.
-! (fib n)                                 ;; return the nth fibonacci number.
-(gensym [<prefix-str])                  ;; Generate a unique symbol.  The
+! (fact n)                              ;; compute the factorial of n.
+! (fib n)                               ;; return the nth fibonacci number.
+(gensym &optional (<prefix-str> 'G'))   ;; Generate a unique symbol.  The
                                         ;;    default is to set <prefix-str> to
                                         ;;    G.  The unique symbol is the
                                         ;;    <prefix-str> followed by digits.
 
 Library Macros
 ==============
+
 (defun name (<param1> <param2> ...)     ;; Define and return a global function.
         <expr1> <expr2> ...)
-(incf var [delta])                      ;; increment a variable by 1 or delta.
-(decf var [delta])                      ;; decrement a variable by 1 or delta.
+(incf var &optional (<delta> 1))        ;; increment a variable by 1 or delta.
+(decf var &optional (<delta> 1))        ;; decrement a variable by 1 or delta.

@@ -6,6 +6,9 @@ class Environment( object ):
       self._locals: dict[str, Any] = initialNameValDict.copy()
       self._GLOBAL_SCOPE: Environment = parent._GLOBAL_SCOPE if parent else self
 
+   def updateLocals( self, newValues: dict[str, Any] ):
+      self._locals.update(**newValues)
+   
    def bindLocal( self, key: str, value: Any ) -> Any:
       self._locals[ key ] = value
       return value
@@ -14,9 +17,6 @@ class Environment( object ):
       self._GLOBAL_SCOPE._locals[ key ] = value
       return value
 
-   def updateLocals( self, newValues: dict[str, Any] ):
-      self._locals.update(**newValues)
-   
    def getValue( self,  key: str) -> Any:
       scope: (Environment | None) = self
       while scope:

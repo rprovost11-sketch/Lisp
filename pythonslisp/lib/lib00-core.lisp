@@ -1,20 +1,13 @@
 (defmacro defun (fnName argList &rest body)
    `(setf ,fnName (lambda (,@argList) ,@body)))
 
-;(defmacro foreach (sym lst expr)
-;         `(cond
-;             ((= (length ',lst) 0)  '())
-;             ((= (length ',lst) 1)   (setf ,sym (first ',lst))
-;                                     (eval ,expr))
-;             (t                      (setf ,sym (first ',lst))
-;                                     (eval ,expr)
-;                                     (foreach ,sym (rest ',lst) ,expr))
-;                 ))
-
 ; Prompt the user for input on the command line.
 (defun read_prompt (promptStr)
             (write! promptStr)
             (readLn!)          )
+
+(defun nth (index lst)
+   (at index lst))
 
 (defmacro first (lst)
    `(car ,lst))
@@ -153,7 +146,7 @@
 ; (reverse '<list>)
 ; reverse the order of the top level elements
 (defun reverse (lst)
-         (reverse-aux '() lst))
+         (reverse-aux (list) lst))
 
 (defun reverse-aux (destLst srcLst)
          (if (null srcLst)

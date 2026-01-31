@@ -30,6 +30,27 @@ To Do
 
 Completed
 ---------
+2026.01.29
+- rewrite LispInterpreter._lbindArguments() to conform as much as possible to
+  the common lisp standard document section 5.2.2. Lambda-Expressions.
+
+2026.01.12
+- make evaluations of undefined variables raise LispRuntimeError instead of
+  evaluating to themselves.
+
+2025.12.15
+- Comleted encapsulation of the common lisp interpreter into the LispInterpreter
+  class.  It's now possible, if I choose, to implement a SchemeInterpreter
+  class that reuses all of the remaining code.
+
+2025.11.26
+- The predicates have all been updated to lisp predicate names.  The old names
+  which were of a more consistent naming pattern are aliased in library.lisp
+  so that the ? names can still be used instead of the lisp names.
+- bring the relational operations into alignment with common lisp.
+- bring the arithmetic operations into alignment with common lisp.
+- continue to bring other primitives into alignment with common lisp.
+
 2025.11.25
 - Update the lisp scanner to accept strings that include python style escape
   sequences.
@@ -40,24 +61,3 @@ Completed
 - implement let and let*.
 - remove block primitive.
 - remove def!, def!!.
-
-2025.11.26
-- The predicates have all been updated to lisp predicate names.  The old names
-  which were of a more consistent naming pattern are aliased in library.lisp
-  so that the ? names can still be used instead of the lisp names.
-- bring the relational operations into alignment with common lisp.
-- bring the arithmetic operations into alignment with common lisp.
-- continue to bring other primitives into alignment with common lisp.
-
-2025.12.15
-- Comleted encapsulation of the common lisp interpreter into the LispInterpreter
-  class.  It's now possible, if I choose, to implement a SchemeInterpreter
-  class that reuses all of the remaining code.
-
-2026.01.12
-- make evaluations of undefined variables raise LispRuntimeError instead of
-  evaluating to themselves.
-
-2026.01.29
-- rewrite LispInterpreter._lbindArguments() to conform as much as possible to
-  the common lisp standard document section 5.2.2. Lambda-Expressions.
