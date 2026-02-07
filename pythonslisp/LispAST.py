@@ -25,6 +25,9 @@ def prettyPrint( sExpr: Any ) -> str:
 
 # ###############################
 # Lisp Runtime Object Definitions
+LNUMBER = (int,float,Fraction)
+LATOM   = (int,float,Fraction,str)
+
 class LSymbol( object ):
    __slots__ = ('strval')
    

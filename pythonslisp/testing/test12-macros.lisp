@@ -36,7 +36,7 @@
 >>> x
 ...
 
-%%% Undefined Variable: X.
+%%% Unbound Variable: X.
 ==> 
 
 >>> (zero 'x)

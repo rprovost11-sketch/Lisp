@@ -7,10 +7,51 @@ from typing import Callable, Any
 from pythonslisp.LispParser import LispParser
 from pythonslisp.Listener import Interpreter, retrieveFileList
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import ( LSymbol, LList, LMap,
+from pythonslisp.LispAST import ( LSymbol, LList, LMap, LNUMBER,
                                   LCallable, LFunction, LPrimitive, LMacro,
                                   prettyPrintSExpr, prettyPrint )
 
+class LispExpander( object ):
+   @staticmethod
+   def expand( env: Environment, sExpr: Any ) -> Any:
+      if not isinstance( sExpr, LList ):
+         return sExpr
+      
+      if len(sExpr) == 0:
+         return LList( )
+      
+      primary, *args = sExpr
+      if isinstance( primary, LSymbol ):
+         if primary == 'DEFMACRO':
+            return sExpr
+         
+         try:
+            fnDef = env.getValue( primary.strval )
+         except KeyError:
+            fnDef = None
+         
+         if isinstance(fnDef, LMacro):
+            return LispExpander._expandMacro( env, fnDef, *args )
+         elif isinstance(fnDef, LPrimitive) and (fnDef.name == 'BACKQUOTE'):
+            return fnDef.fn( env, *args )             # Invokes LP_backquote
+      
+      resultList = [ LispExpander.expand(env, subExpr) for subExpr in sExpr ]
+      return LList( *resultList )
+   
+   @staticmethod
+   def _expandMacro( env: Environment, macroDef: LMacro, *args ):
+      env = Environment( env )
+      LispInterpreter._lbindArguments( env, macroDef.params, list(args) )
+      expandedBody = [ LispExpander.expand(env, bodySExpr) for bodySExpr in macroDef.body ]
+      
+      if len(expandedBody) == 0:
+         return expandedBody
+      elif len(expandedBody) == 1:
+         return LispExpander.expand( env, expandedBody[0] )
+      else:
+         expandedBody.insert( 0, LSymbol('PROGN') )
+         return expandedBody
+   
 class LispRuntimeError( Exception ):
    def __init__( self, *args ) -> None:
       super().__init__( self, *args )
@@ -23,9 +64,6 @@ class LispRuntimeFuncError( LispRuntimeError ):
       errStr = f"ERROR '{fnName}': {errorMsg}\nUSAGE: {usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
       super().__init__( errStr )
 
-
-L_NUMBER = (int,float,Fraction)
-L_ATOM   = (int,float,Fraction,str)
 
 class LispInterpreter( Interpreter ):
    outStrm = None
@@ -57,6 +95,7 @@ class LispInterpreter( Interpreter ):
       LispInterpreter.outStrm = outStrm
       try:
          ast = self._parser.parse( source )
+         #ast = LispExpander.expand( self._env, ast )
          returnVal = LispInterpreter._lEval( self._env, ast )
       finally:
          LispInterpreter.outStrm = None
@@ -66,6 +105,7 @@ class LispInterpreter( Interpreter ):
       LispInterpreter.outStrm = outStrm
       try:
          ast = self._parser.parseFile( filename )
+         #ast = LispExpander.expand( self._env, ast )
          returnVal = LispInterpreter._lEval( self._env, ast )
       finally:
          LispInterpreter.outStrm = None
@@ -126,7 +166,7 @@ class LispInterpreter( Interpreter ):
          for sexpr in lcallable.body:
             latestResult = LispInterpreter._lEval( env, sexpr )
          return latestResult
-      elif isinstance( lcallable, LMacro ):
+      else:                     # LMacro
          listOfExpandedSExprs = LispInterpreter._macroexpand( env, lcallable, *args )
 
          # Evaluate the expanded macro
@@ -134,8 +174,6 @@ class LispInterpreter( Interpreter ):
          for sexpr in listOfExpandedSExprs:
             latestResult = LispInterpreter._lEval( env, sexpr )
          return latestResult
-      else:
-         raise LispRuntimeError( 'Unknown callable.' )
 
    @staticmethod
    def _lbindArguments( env: Environment, paramList: list[Any], argList: list[Any] ) -> None:
@@ -149,7 +187,7 @@ class LispInterpreter( Interpreter ):
          nextParam = paramList[paramNum]
       except IndexError:
          if argNum < argListLength:
-            raise LispRuntimeError( f'Too many arguments.  Expected {paramListLength}, received {argNum+1}' )
+            raise LispRuntimeError( f'Too many arguments.  Received {argNum+1}.' )
          return          # All params used up.  Return gracefully
       if not isinstance(nextParam, LSymbol):
          raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
@@ -162,7 +200,7 @@ class LispInterpreter( Interpreter ):
             nextParam = paramList[paramNum]
          except IndexError:
             if argNum < argListLength:
-               raise LispRuntimeError( f'Too many arguments.  Expected {paramListLength}, received {argNum+1}' )
+               raise LispRuntimeError( f'Too many arguments.  Received {argNum+1}.' )
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
             raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
@@ -200,24 +238,23 @@ class LispInterpreter( Interpreter ):
       paramListLength = len(paramList)
 
       while paramNum < paramListLength:
+         # Get the next parameter name.  Insure it's a symbol but doesn't start with '&'.
          paramName = paramList[paramNum]
-         
-         # Insure paramName is a symbol but doesn't start with '&'.
          if not isinstance(paramName, LSymbol):
             raise LispRuntimeError( f"Positional param {paramNum} expected to be a symbol." )
          if paramName.startswith('&'):
             break
          
-         # Get the argument value as the next argument
+         # Get the next argument value
          try:
             argVal = argList[argNum]
          except IndexError:
             raise LispRuntimeError( "Too few positional arguments." )
          
-         # Bind the positional parameter paramName to argVal
+         # Bind paramName to argVal
          env.bindLocal( paramName.strval, argVal )
       
-         # Prepare for the next loop
+         # Prepare for the next iteration
          paramNum += 1
          argNum += 1
       
@@ -344,6 +381,42 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lbindAuxArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      '''These are not really arguments.  At least: these parameters get no corresponding arguments.
+      These parameters are strictly local variables for the function.'''
+      paramListLength = len(paramList)
+      
+      # Prepare to loop over the optional parameters and arguments
+      if paramNum >= paramListLength:
+         raise LispRuntimeError( 'Param expected after &aux.' )
+      
+      while (paramNum < paramListLength):
+         paramSpec = paramList[paramNum]
+         
+         # Extract the next parameter's name and value
+         if isinstance( paramSpec, LSymbol ):
+            if paramSpec.startswith('&'):
+               raise LispRuntimeError( f'{paramSpec} occurs after &aux.' )
+            paramName = paramSpec
+            argVal = LList( )
+         elif isinstance( paramSpec, LList ):
+            try:
+               paramName, defaultValExpr = paramSpec
+            except:
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
+
+            if not isinstance(paramName, LSymbol):
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
+            
+            argVal = LispInterpreter._lEval( env, defaultValExpr )
+         else:
+            raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
+         
+         # Bind the parameters
+         env.bindLocal( paramName.strval, argVal )
+         
+         # Prepare for the next iteration
+         paramNum += 1
+      
       return paramNum, argNum
    
    @staticmethod
@@ -359,9 +432,7 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lbackquoteExpand( env: Environment, expr: Any ) -> Any:
-      '''Expand a backquote List expression.
-      Note: This function is oddly dependent upon COMMA and COMMA-AT.
-      '''
+      '''Expand a backquote List expression.'''
       if isinstance( expr, LList ):
          if len(expr) == 0:
             return LList( )
@@ -483,7 +554,7 @@ class LispInterpreter( Interpreter ):
          rval = LispInterpreter._lEval(env, rval)
          
          if isinstance(lval, LList):       # s-expression
-            if len(lval) < 1:
+            if len(lval) == 0:
                raise LispRuntimeFuncError( LP_setf, 'lvalue cannot be NIL.' )
             
             primitive = lval[0]
@@ -714,6 +785,7 @@ class LispInterpreter( Interpreter ):
          try:
             INSIDE_BACKQUOTE = True
             expandedForm = LispInterpreter._lbackquoteExpand( env, sExpr )
+            #expandedForm = LList( LSymbol('QUOTE'), expandedForm )
          finally:
             INSIDE_BACKQUOTE = False
 
@@ -841,7 +913,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_eval, '1 argument exptected.' )
          return LispInterpreter._lEval( env, expr )
 
-      @LDefPrimitive( 'apply', '<function> &rest <args> &aux <argsList>' )
+      @LDefPrimitive( 'apply', '<function> &rest <args> <argsList>' )
       def LP_apply( env: Environment, *args ) -> Any:
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_apply, "At least 2 arguments expected to apply." )
@@ -1263,7 +1335,7 @@ class LispInterpreter( Interpreter ):
       def LP_numberp( env: Environment, *args ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_numberp, '1 argument expected.' )
-         return L_T if isinstance( args[0], L_NUMBER ) else L_NIL
+         return L_T if isinstance( args[0], LNUMBER ) else L_NIL
 
       @LDefPrimitive( 'integerp', '<sexpr>' )
       def LP_integerp( env: Environment,  *args ) -> Any:

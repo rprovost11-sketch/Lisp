@@ -123,7 +123,7 @@
 >>> var3
 ...
 
-%%% Undefined Variable: VAR3.
+%%% Unbound Variable: VAR3.
 ==> 
 
 >>> (let ( (var3 "true") )
@@ -137,7 +137,7 @@
 >>> var3
 ...
 
-%%% Undefined Variable: VAR3.
+%%% Unbound Variable: VAR3.
 ==> 
 
 >>> (setf var1 15)
@@ -201,5 +201,5 @@ Symbol Table Dump:  Inner-Most Scope First
 >>> var3
 ...
 
-%%% Undefined Variable: VAR3.
+%%% Unbound Variable: VAR3.
 ==> 

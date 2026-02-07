@@ -65,7 +65,6 @@ class LispLexer( Lexer ):
 
    POUND_SIGN_TOK     = 501
    PIPE_TOK           = 502
-   COLON_TOK          = 503
    SINGLE_QUOTE_TOK   = 504
    COMMA_TOK          = 505
    COMMA_AT_TOK       = 506
@@ -108,11 +107,6 @@ class LispLexer( Lexer ):
             ##buf.markStartOfLexeme( )
             #buf.consume( )
             #return LispScanner.PIPE_TOK
-         #elif nextChar == ':':
-            ##buf.markStartOfLexeme( )
-            #buf.consume( )
-            #nextChar = buf.peekNextChar( )
-            #return LispScanner.COLON_TOK
          elif nextChar == "'":
             #buf.markStartOfLexeme( )
             buf.consume( )
@@ -412,7 +406,7 @@ class LispParser( Parser ):
          subordinate = self._parseObject( )
          ast = LList( LSymbol('COMMA-AT'), subordinate )
       elif nextToken in ( LispLexer.OPEN_BRACKET_TOK, LispLexer.CLOSE_BRACKET_TOK,
-                          LispLexer.POUND_SIGN_TOK, LispLexer.PIPE_TOK, LispLexer.COLON_TOK ):
+                          LispLexer.POUND_SIGN_TOK, LispLexer.PIPE_TOK ):
          lex = self._scanner.getLexeme( )
          ast = lex
          self._scanner.consume( )
@@ -424,26 +418,27 @@ class LispParser( Parser ):
       return ast
 
    def _parseList( self ) -> LList:
+      scn = self._scanner
+      
       theList = LList( )
 
       # Open List
-      nextToken = self._scanner.peekToken()
+      nextToken = scn.peekToken()
       if nextToken != LispLexer.OPEN_PAREN_TOK:
-         raise ParseError( self._scanner, '( expected.' )
+         raise ParseError( scn, '( expected.' )
       else:
-         self._scanner.consume( )
+         scn.consume( )
 
       # List Entries
-      nextToken = self._scanner.peekToken( )
-      while nextToken not in (LispLexer.CLOSE_PAREN_TOK,
-                                               LispLexer.EOF_TOK):
+      nextToken = scn.peekToken( )
+      while nextToken not in (LispLexer.CLOSE_PAREN_TOK, LispLexer.EOF_TOK):
          theList.append( self._parseObject( ) )
-         nextToken = self._scanner.peekToken( )
+         nextToken = scn.peekToken( )
 
       # Close List
       if nextToken != LispLexer.CLOSE_PAREN_TOK:
-         raise ParseError( self._scanner, ') expected.')
+         raise ParseError( scn, ') expected.')
       else:
-         self._scanner.consume( )
+         scn.consume( )
 
       return theList

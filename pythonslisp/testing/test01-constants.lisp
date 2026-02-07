@@ -21,13 +21,13 @@
 >>> xyz
 ...
 
-%%% Undefined Variable: XYZ.
+%%% Unbound Variable: XYZ.
 ==> 
 
 >>> someSymbol
 ...
 
-%%% Undefined Variable: SOMESYMBOL.
+%%% Unbound Variable: SOMESYMBOL.
 ==> 
 
 >>> 0
