@@ -1,6 +1,7 @@
 import functools
 import math
 import random
+import time
 from fractions import Fraction
 from typing import Callable, Any
 
@@ -33,7 +34,7 @@ class LispExpander( object ):
          if isinstance(fnDef, LMacro):
             return LispExpander._expandMacro( env, fnDef, *args )
          elif isinstance(fnDef, LPrimitive) and (fnDef.name == 'BACKQUOTE'):
-            return fnDef.fn( env, *args )             # Invokes LP_backquote
+            return fnDef.pythonFn( env, *args )             # Invokes LP_backquote
       
       resultList = [ LispExpander.expand(env, subExpr) for subExpr in sExpr ]
       return LList( *resultList )
@@ -85,8 +86,8 @@ class LispInterpreter( Interpreter ):
             self.evalFile( filename )
 
    def eval( self, source: str, outStrm=None ) -> str:
-      returnVal = self.rawEval( source, outStrm=outStrm )
-      return prettyPrintSExpr( returnVal ).strip()
+      returnVal,parseTime,execTime = self.rawEval( source, outStrm=outStrm )
+      return prettyPrintSExpr( returnVal ).strip(), parseTime, execTime
 
    def evalFile( self, filename: str, outStrm=None ) -> str:
       self.rawEvalFile( filename, outStrm=outStrm )
@@ -94,12 +95,18 @@ class LispInterpreter( Interpreter ):
    def rawEval( self, source: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
+         parseStartTime = time.perf_counter()
          ast = self._parser.parse( source )
+         parseTime = time.perf_counter() - parseStartTime
+         
          #ast = LispExpander.expand( self._env, ast )
+         
+         startTime = time.perf_counter()
          returnVal = LispInterpreter._lEval( self._env, ast )
+         evalTime = time.perf_counter() - startTime
       finally:
          LispInterpreter.outStrm = None
-      return returnVal
+      return returnVal, parseTime, evalTime
 
    def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
@@ -154,9 +161,10 @@ class LispInterpreter( Interpreter ):
    @staticmethod
    def _lApply( env: Environment, lcallable: LCallable, *args ) -> Any:
       if isinstance( lcallable, LPrimitive ):
-         return lcallable.fn( env, *args )
+         return lcallable.pythonFn( env, *args )
       elif isinstance( lcallable, LFunction ):
-         env = Environment( env )         # Open a new scope. Auto closes when env goes out of scope.
+         #env = Environment( env )         # Open a new scope. Auto closes when env goes out of scope.
+         env = Environment( lcallable.closure ) # Open a new scope on the function's closure env to support closures.
 
          # store the arguments as locals
          LispInterpreter._lbindArguments( env, lcallable.params, list(args) ) #convert args from a tuple to a list
@@ -228,7 +236,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&AUX':
-         paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum, argList, argNum )
+         paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum+1, argList, argNum )
    
       if paramNum < paramListLength:
          raise LispRuntimeError( 'Too few parameters.' )
@@ -634,7 +642,7 @@ class LispInterpreter( Interpreter ):
          except ValueError:
             raise LispRuntimeFuncError( LP_lambda, '2 arguments expected.' )
 
-         return LFunction( LSymbol(""), funcParams, LList(*funcBody) )
+         return LFunction( LSymbol(""), funcParams, LList(*funcBody), closure=env )
 
       @LDefPrimitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
       def LP_let( env: Environment, *args ) -> Any:
@@ -785,7 +793,6 @@ class LispInterpreter( Interpreter ):
          try:
             INSIDE_BACKQUOTE = True
             expandedForm = LispInterpreter._lbackquoteExpand( env, sExpr )
-            #expandedForm = LList( LSymbol('QUOTE'), expandedForm )
          finally:
             INSIDE_BACKQUOTE = False
 
@@ -1188,10 +1195,13 @@ class LispInterpreter( Interpreter ):
       def LP_sub( env: Environment, *args ) -> Any:
          try:
             if len(args) == 1:
-               return -1 * args[0]
+               arg = args[0]
+               if not isinstance( arg, LNUMBER ):
+                  raise TypeError( )
+               return -1 * arg
             else:
                return functools.reduce( lambda x,y: x - y, args )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_sub, 'Invalid argument.' )
 
       @LDefPrimitive( '*', '<number1> <number2> ...' )

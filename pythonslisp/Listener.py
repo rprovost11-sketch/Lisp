@@ -68,10 +68,12 @@ class Listener( object ):
                   self._runListenerCommand( inputExprStr )
                else:
                   start = time.perf_counter( )
-                  resultStr = self._interp.eval( inputExprStr )
+                  resultStr,parseTime,evalTime = self._interp.eval( inputExprStr )
                   cost  = time.perf_counter( ) - start
                   self._writeLn( f'\n==> {resultStr}' )
                   print( f'-------------  Total execution time: {cost:15.8f} sec' )
+                  print( f'-------------  Parse time:           {parseTime:15.8f} sec' )
+                  print( f'-------------  Eval time:            {evalTime:15.8f} sec' )
 
             except StopIteration:
                keepLooping = False
@@ -107,7 +109,7 @@ class Listener( object ):
                else:
                   print( f'... {line}')
 
-         resultStr = self._interp.eval( exprStr )
+         resultStr,_,_ = self._interp.eval( exprStr )
          if verbosity == 3:
             print( f'\n==> {resultStr}' )
 
@@ -139,7 +141,7 @@ class Listener( object ):
          actualErrorStr = ''
          
          try:
-            actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
+            actualRetValStr,_,_ = self._interp.eval( exprStr, outStrm=outputStream )
          except Parser.ParseError as ex:
             actualErrorStr = ex.args[-1]
          except Exception as ex:   # Unknowns raised by the interpreter
@@ -244,8 +246,10 @@ class Listener( object ):
       Test the interpreter using a log file.
       Read and execute a log file;
       comparing the return value to the log file return value.
-      If no test file is specified the listener will run the full standard set
+      If no test file is specified the listener will run the full standard suite
       of tests for the interpreter.
+      Note: It's reccomended that you reboot the interpreter using ]reboot both
+      before and after running tests.
       '''
       numArgs = len(args)
       if numArgs > 1:

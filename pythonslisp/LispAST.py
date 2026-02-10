@@ -112,10 +112,10 @@ class LCallable( object ):
       self.specialForm:bool = specialForm
 
 class LPrimitive( LCallable ):
-   __slots__ = ('fn', 'usageStr', 'paramsStr')
+   __slots__ = ('pythonFn', 'usageStr', 'paramsStr')
    
    def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, params: str, specialForm: bool=False ) -> None:
-      self.fn:Callable[[Environment], Any] = fn
+      self.pythonFn:Callable[[Environment], Any] = fn
       self.usageStr:str = usage
       self.paramsStr:str = params
       super().__init__( name, specialForm )
@@ -130,11 +130,12 @@ class LPrimitive( LCallable ):
          return f'(Primitive {self.name} (...) ...)'
 
 class LFunction( LCallable ):
-   __slots__ = ('params', 'body')
+   __slots__ = ('params', 'body', 'closure')
    
-   def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList ) -> None:
+   def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList, closure: Environment|None = None) -> None:
       self.params: LList = params
       self.body: LList   = bodyExprLst
+      self.closure: Environment | None = closure
       super().__init__( name, specialForm=False )
 
    def __str__( self ) -> str:

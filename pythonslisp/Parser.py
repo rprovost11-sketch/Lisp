@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-class ScannerState( object ):
+class LexerState( object ):
    def __init__( self, filename: str = '', source: str = '', point: int = 0, mark: int = 0, lineNum: int = 0 ) -> None:
       self.tok: int             = 0
       self.buffer_filename:str = filename
@@ -10,7 +10,7 @@ class ScannerState( object ):
       self.buffer_mark: int     = mark
       self.buffer_lineNum: int  = lineNum
 
-class ScannerBuffer( object ):
+class LexerBuffer( object ):
    def __init__( self ) -> None:
       '''Initialize a scanner buffer instance.'''
       self._filename:str = ''  # the source filename
@@ -38,7 +38,7 @@ class ScannerBuffer( object ):
    def peekNextChar( self ) -> str:
       '''Return the next character in the buffer or an empty string if eof.'''
       try:
-         return self._source[ self._point ]        # raises on EOF
+         return self._source[ self._point ]        # raises IndexError on EOF
       except IndexError:
          return ''
 
@@ -75,12 +75,12 @@ class ScannerBuffer( object ):
          pass                # scanned past eof.  Return gracefully.
       return numCharsConsumed
 
-   def saveState( self ) -> ScannerState:
-      return ScannerState( filename=self._filename, source=self._source,
+   def saveState( self ) -> LexerState:
+      return LexerState( filename=self._filename, source=self._source,
                            point=self._point, mark=self._mark,
                            lineNum=self._lineNum )
 
-   def restoreState( self, stateInst: ScannerState ) -> None:
+   def restoreState( self, stateInst: LexerState ) -> None:
       self._filename = stateInst.buffer_filename
       self._source   = stateInst.buffer_source
       self._point    = stateInst.buffer_point
@@ -126,7 +126,7 @@ class ScannerBuffer( object ):
 class Lexer( ABC ):
    def __init__( self ) -> None:
       '''Initialize a Scanner instance.'''
-      self.buffer:ScannerBuffer  = ScannerBuffer( )
+      self.buffer:LexerBuffer  = LexerBuffer( )
       self._tok:int = -1               # The next token
 
    def reset( self, source: str ) -> None:
@@ -152,14 +152,14 @@ class Lexer( ABC ):
       This should be called before consume.'''
       return self.buffer.getLexeme( )
 
-   def saveState( self ) -> ScannerState:
+   def saveState( self ) -> LexerState:
       '''Create a restore point (for backtracking).  The current
       state of the scanner is preserved under aStateName.'''
       stateInst = self.buffer.saveState( )
       stateInst.tok = self._tok
       return stateInst 
 
-   def restoreState( self, stateInst: ScannerState ) -> None:
+   def restoreState( self, stateInst: LexerState ) -> None:
       '''Restore a saved state (backtrack to the point where the restore point was made).'''
       self._tok = stateInst.tok
       self.buffer.restoreState( stateInst )

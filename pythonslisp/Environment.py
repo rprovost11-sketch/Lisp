@@ -41,6 +41,9 @@ class Environment( object ):
 
    def localSymbols( self ) -> list[str]:
       return sorted( self._locals.keys() )
+   
+   def isGlobalEnv( self ):
+      return self._parent is None
 
    def parentEnv( self ) -> (Environment | None):
       return self._parent

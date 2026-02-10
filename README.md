@@ -9,7 +9,6 @@ Implemented entirely in python 3.14.
 
 Embed lisp in python code and python in lisp code; or interact with lisp in the included repl.
 
-Features Common Lisp macro definition and expansion.  &optional, &rest, &key and &aux parameters supported.
 
 Lisp Documentation
 ==================
@@ -22,6 +21,7 @@ Features
 - Function definition with stack and recursion support.
 - Common Lisp macro definition and the macroexpand primitive.
 - &optional, &rest, &key and &aux parameter support for both functions and macros.
+- Support for lisp closures.
 - Robust error handling and reporting.
 - Support for special forms.
 - Includes runtime libraries written in lisp.
@@ -144,8 +144,8 @@ Lexemes
                          | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]
                          )   # Supports integers, floats and fractions
       StringLiteral:  '"' (^('"'))* '"'   # Supports python escape sequences
-      Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>'
-                      { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
+      Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>#|'
+                      { 'a..zA..Z+-~!$%^&*_=\\/?<>#|0..9' }
 
    Predefined Symbols
          'nil', 't', 'e', 'pi'
@@ -383,8 +383,8 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
 ! (uwriteLn! <object1> <object2> ...)
 ! (read!)                               ;; Read input from keyboard/stream.
 
-Library Functions
-=================
+Library Functions & Macros
+==========================
 
 caar, cadr, cdar, cddr, caaar, caadr, cadar, caddr, cdaar, cdadr, cddar, cdddr,
 caaaar, caaadr, caadar, caaddr, cadaar, cadadr, caddar, cadddr, cdaaar,

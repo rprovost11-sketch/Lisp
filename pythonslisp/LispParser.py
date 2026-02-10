@@ -46,7 +46,7 @@ class LispLexer( Lexer ):
    ALPHA_LOWER    = 'abcdefghijklmnopqrstuvwxyz'
    ALPHA_UPPER    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
    ALPHA          = ALPHA_LOWER + ALPHA_UPPER
-   SYMBOL_OTHER   = '~!$%^&*_=\\/?<>:'
+   SYMBOL_OTHER   = '~!$%^&*_=\\/?<>:#|'
    SYMBOL_FIRST   = ALPHA + SIGN + SYMBOL_OTHER
    SYMBOL_REST    = ALPHA + SIGN + SYMBOL_OTHER + DIGIT
 
@@ -63,8 +63,6 @@ class LispLexer( Lexer ):
    OPEN_PAREN_TOK     = 211
    CLOSE_PAREN_TOK    = 212
 
-   POUND_SIGN_TOK     = 501
-   PIPE_TOK           = 502
    SINGLE_QUOTE_TOK   = 504
    COMMA_TOK          = 505
    COMMA_AT_TOK       = 506
@@ -82,48 +80,23 @@ class LispLexer( Lexer ):
          nextChar = buf.peekNextChar( )
          if nextChar == '':
             return LispLexer.EOF_TOK
-         #elif nextChar == '[':
-            #buf.markStartOfLexeme( )
-            #buf.consume( )
-            #return LispScanner.OPEN_BRACKET_TOK
-         #elif nextChar == ']':
-            ##buf.markStartOfLexeme( )
-            #buf.consume( )
-            #return LispScanner.CLOSE_BRACKET_TOK
          elif nextChar == '(':
-            #buf.markStartOfLexeme( )
             buf.consume( )
             return LispLexer.OPEN_PAREN_TOK
          elif nextChar == ')':
-            #buf.markStartOfLexeme( )
             buf.consume( )
-            buf.scanLineTxt( )
             return LispLexer.CLOSE_PAREN_TOK
-         #elif nextChar == '#':
-            ##buf.markStartOfLexeme( )
-            #buf.consume( )
-            #return LispScanner.POUND_SIGN_TOK
-         #elif nextChar == '|':
-            ##buf.markStartOfLexeme( )
-            #buf.consume( )
-            #return LispScanner.PIPE_TOK
          elif nextChar == "'":
-            #buf.markStartOfLexeme( )
             buf.consume( )
-            nextChar = buf.peekNextChar( )
             return LispLexer.SINGLE_QUOTE_TOK
          elif nextChar == '`':
-            #buf.markStartOfLexeme( )
             buf.consume( )
-            nextChar = buf.peekNextChar( )
             return LispLexer.BACK_QUOTE_TOK
          elif nextChar == ',':
-            #buf.markStartOfLexeme( )
             buf.consume( )
             nextChar = buf.peekNextChar( )
             if nextChar == '@':
                buf.consume( )
-               nextChar = buf.peekNextChar( )
                return LispLexer.COMMA_AT_TOK
             return LispLexer.COMMA_TOK
          elif nextChar == '"':
@@ -224,7 +197,7 @@ class LispLexer( Lexer ):
                          | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]    # <-- decimal/exponentiation case
                          )
       '''
-      SAVE = self.saveState( )                  # Save the scanner state
+      SAVE = self.saveState( )                  # Save the lexer state
 
       buf = self.buffer
       buf.markStartOfLexeme( )
@@ -233,7 +206,7 @@ class LispLexer( Lexer ):
          buf.consume()
          secondChar = buf.peekNextChar( )
          if (secondChar == '') or (secondChar not in LispLexer.DIGIT):
-            self.restoreState( SAVE )         # Restore the scanner state
+            self.restoreState( SAVE )         # Restore the lexer state
             return self._scanSymbol( )
 
       buf.consumePast( LispLexer.DIGIT )
@@ -245,7 +218,7 @@ class LispLexer( Lexer ):
 
          nextChar = buf.peekNextChar( )
          if nextChar not in LispLexer.DIGIT:
-            self.restoreState( SAVE )         # Restore the scanner state
+            self.restoreState( SAVE )         # Restore the lexer state
             return self._scanSymbol( )
 
          buf.consumePast( LispLexer.DIGIT )
@@ -371,8 +344,7 @@ class LispParser( Parser ):
          self._scanner.consume( )
       elif nextToken== LispLexer.FRAC_TOK:
          lex = self._scanner.getLexeme( )
-         lex_num,lex_denom = lex.split('/')
-         ast = Fraction( int(lex_num), int(lex_denom) )
+         ast = Fraction( lex )
          self._scanner.consume( )
       elif nextToken == LispLexer.STRING_TOK:
          lex = self._scanner.getLexeme( )
@@ -405,11 +377,6 @@ class LispParser( Parser ):
          self._scanner.consume( )
          subordinate = self._parseObject( )
          ast = LList( LSymbol('COMMA-AT'), subordinate )
-      elif nextToken in ( LispLexer.OPEN_BRACKET_TOK, LispLexer.CLOSE_BRACKET_TOK,
-                          LispLexer.POUND_SIGN_TOK, LispLexer.PIPE_TOK ):
-         lex = self._scanner.getLexeme( )
-         ast = lex
-         self._scanner.consume( )
       elif nextToken == LispLexer.EOF_TOK:
          ast = None
       else:
