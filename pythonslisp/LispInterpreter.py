@@ -348,25 +348,58 @@ class LispInterpreter( Interpreter ):
       # Prepare to iterate over the parameters
       if paramNum >= paramListLength:
          raise LispRuntimeError( f'Param name expected after &key.' )
-      keysDict = {}
+      keysDict = {}       # Mapping: parameterKeyWord -> (variableName,svariableName)
+      varsDict = {}       # Mapping: variableName -> value
       
       # Iterate throught the key parameters adding them to keysDict
       while paramNum < paramListLength:
          paramSpec = paramList[paramNum]
          if isinstance(paramSpec, LSymbol):
-            paramName = paramSpec
-            paramDefaultVal = LList()
+            keyName = paramSpec
+            varName = paramSpec
+            initForm = LList()
+            svarName = None
          elif isinstance(paramSpec, list):
             try:
-               paramName, paramDefaultVal = paramSpec
+               keyVarSpec, *initFormSpec = paramSpec
             except ValueError:
                raise LispRuntimeError( f'Too many default values for key parameter {paramSpec[0]}.' )
-         keysDict[paramName.strval] = LispInterpreter._lEval(env, paramDefaultVal)
+            
+            # Extract the keyName and varName from keyVarSpec
+            if isinstance(keyVarSpec, LSymbol):
+               keyName = keyVarSpec
+               varName = keyVarSpec
+            elif isinstance(keyVarSpec, list):
+               try:
+                  keyName, varName = keyVarSpec
+               except ValueError:
+                  raise LispRuntimeError( f'Key Var pair following &key must contain exactly two elements.' )
+            else:
+               raise LispRuntimeError( f'&key key var pair must be either a symbol of a list (keySymbol varSymbol)' )
+            
+            # Extract initForm and svarName from initFormSpec
+            initFormSpecLen = len(initFormSpec)
+            if initFormSpec == 0:
+               initForm = LList()
+               svarName = None
+            elif initFormSpecLen == 1:
+               initForm = initFormSpec[0]
+               svarName = None
+            elif initFormSpecLen == 2:
+               initForm, svarName = initFormSpec
+            else:
+               raise LispRuntimeError( f'Too many arguments specified in a parameter keyword initialization list.' )
+         
+         # Record the names and values into the appropriate dicts
+         keysDict[keyName.strval] = (varName, svarName)
+         varsDict[varName.strval] = LispInterpreter._lEval(env, initForm)
          paramNum += 1
       
-      # Iterate through the key args updating keysDict
+      # Iterate through the key args updating varsDict
       while argNum < argListLength:
          argKey = argList[argNum]
+         svarName = None
+         svarVal = None
          if not isinstance(argKey, LSymbol):
             raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
          if not argKey.startswith(':'):
@@ -374,16 +407,27 @@ class LispInterpreter( Interpreter ):
          argKey = argKey.strval[1:]  # Strip argKey of the leading colon :
          if argKey not in keysDict:
             raise LispRuntimeError( f'Unexpected keyword found {argKey}.' )
+         
          argNum += 1
          try:
             argVal = argList[argNum]
          except IndexError:
             raise LispRuntimeError( f'Keyword {argKey} expected to be followed by a value.' )
          argNum += 1
-         keysDict[argKey] = argVal
+         try:
+            paramVar,svarName = keysDict[argKey]
+            svarVal = env.getGlobalValue('T')
+         except KeyError:
+            raise LispRuntimeError( 'Invalid key in argument list :{argKey}.' )
+         
+         # Record the bindings
+         varsDict[paramVar.strval] = argVal
+         
+         if svarName:
+            varsDict[svarName.strval] = svarVal
       
-      # Update env's locals with keysDict
-      env.updateLocals( keysDict )
+      # Update env's locals with varsDict
+      env.updateLocals( varsDict )
       
       return paramNum, argNum
 
