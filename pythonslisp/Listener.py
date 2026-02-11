@@ -69,11 +69,11 @@ class Listener( object ):
                else:
                   start = time.perf_counter( )
                   resultStr,parseTime,evalTime = self._interp.eval( inputExprStr )
-                  cost  = time.perf_counter( ) - start
+                  totalTime  = time.perf_counter( ) - start
                   self._writeLn( f'\n==> {resultStr}' )
-                  print( f'-------------  Total execution time: {cost:15.8f} sec' )
-                  print( f'-------------  Parse time:           {parseTime:15.8f} sec' )
-                  print( f'-------------  Eval time:            {evalTime:15.8f} sec' )
+                  print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
+                  print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
+                  print( f'-------------     Total execution time: {totalTime:15.8f} sec' )
 
             except StopIteration:
                keepLooping = False

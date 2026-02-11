@@ -42,19 +42,8 @@ class Environment( object ):
    def localSymbols( self ) -> list[str]:
       return sorted( self._locals.keys() )
    
-   def isGlobalEnv( self ):
-      return self._parent is None
-
    def parentEnv( self ) -> (Environment | None):
       return self._parent
-
-   def isDefined( self, key: str ) -> bool:
-      scope: (Environment | None) = self
-      while scope:
-         if key in scope._locals:
-            return True
-         scope = scope._parent
-      return False
 
    def findDef( self, key: str ) -> (Environment | None):
       '''Starting from the local-most scope, this function searches for the

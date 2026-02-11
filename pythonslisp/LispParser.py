@@ -52,21 +52,21 @@ class LispLexer( Lexer ):
 
    EOF_TOK            =   0
 
-   SYMBOL_TOK         = 101    # Value Objects
-   STRING_TOK         = 102
-   INTEGER_TOK        = 111
-   FLOAT_TOK          = 112
-   FRAC_TOK           = 121
+   SYMBOL_TOK         = 101    # Value tokens
+   STRING_TOK         = 111
+   INTEGER_TOK        = 121
+   FLOAT_TOK          = 122
+   FRAC_TOK           = 123
 
-   OPEN_BRACKET_TOK   = 201    # Paired Symbols
-   CLOSE_BRACKET_TOK  = 202
-   OPEN_PAREN_TOK     = 211
-   CLOSE_PAREN_TOK    = 212
+   OPEN_PAREN_TOK     = 201    # Paired tokens
+   CLOSE_PAREN_TOK    = 202
+   OPEN_BRACKET_TOK   = 211
+   CLOSE_BRACKET_TOK  = 212
 
-   SINGLE_QUOTE_TOK   = 504
-   COMMA_TOK          = 505
-   COMMA_AT_TOK       = 506
-   BACK_QUOTE_TOK     = 507
+   SINGLE_QUOTE_TOK   = 501    # Misc tokens
+   COMMA_TOK          = 502
+   COMMA_AT_TOK       = 503
+   BACK_QUOTE_TOK     = 504
 
    def __init__( self ) -> None:
       super( ).__init__( )

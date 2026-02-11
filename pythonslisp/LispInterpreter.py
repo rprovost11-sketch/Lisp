@@ -270,6 +270,7 @@ class LispInterpreter( Interpreter ):
    
    @staticmethod
    def _lbindOptionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      '''Syntax:  &optional {var | (var [initform [svar]])}*'''
       paramListLength = len(paramList)
       argListLength = len(argList)
       
@@ -284,49 +285,51 @@ class LispInterpreter( Interpreter ):
          if isinstance( paramSpec, LSymbol ):
             if paramSpec.startswith('&'):
                break
-            paramName = paramSpec
-            defaultValExpr = LList( )
-            svar = None
+            varName = paramSpec
+            initForm = LList( )
+            svarName = None
          elif isinstance( paramSpec, LList ):
-            try:
-               paramName, defaultValExpr, *svar = paramSpec
-            except:
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
-
-            if not isinstance(paramName, LSymbol):
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
-            
-            if len(svar) > 0:
-               svar = svar[0]
-               if not isinstance(svar, LSymbol):
-                  raise LispRuntimeFuncError( f'Parameter svar following {paramName} must be a symbol.' )
+            paramSpecLen = len(paramSpec)
+            if paramSpecLen == 1:
+               varName = paramSpec[0]
+               initForm = LList()
+               svarName = None
+            elif paramSpecLen == 2:
+               varName, initForm = paramSpec
+               svarName = None
+            elif paramSpecLen == 3:
+               varName, initForm, svarName = paramSpec
             else:
-               svar = None
+               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<svar>]] ).' )
+
+            if svarName and (not isinstance(svarName, LSymbol)):
+               raise LispRuntimeFuncError( f'Parameter svar following {varName} must be a symbol.' )
          else:
             raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          paramNum += 1
         
          # Extract the next arguments's values
          if argNum < argListLength:
-            argVal = argList[argNum]
+            initForm = argList[argNum]
          
-         if (argNum >= argListLength) or (isinstance(argVal, LSymbol) and (argVal.startswith(':'))):
-            argVal = LispInterpreter._lEval( env, defaultValExpr )
+         if (argNum >= argListLength) or (isinstance(initForm, LSymbol) and (initForm.startswith(':'))):
+            initForm = LispInterpreter._lEval( env, initForm )
             svarVal = LList()   # Nil, False
          else:
             argNum += 1
             svarVal = env.getGlobalValue('T')   # T, True
 
          # Bind the parameters
-         env.bindLocal( paramName.strval, argVal )
+         env.bindLocal( varName.strval, initForm )
          
-         if svar:
-            env.bindLocal( svar.strval, svarVal )
+         if svarName:
+            env.bindLocal( svarName.strval, svarVal )
       
       return paramNum, argNum
 
    @staticmethod
    def _lbindRestArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      '''Syntax:  &rest var'''
       try:
          paramName = paramList[paramNum]
       except IndexError:
@@ -342,16 +345,17 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lbindKeyArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+      '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [svar]])}* [&allow-other-keys]'''
       paramListLength = len(paramList)
       argListLength = len(argList)
       
       # Prepare to iterate over the parameters
       if paramNum >= paramListLength:
          raise LispRuntimeError( f'Param name expected after &key.' )
-      keysDict = {}       # Mapping: parameterKeyWord -> (variableName,svariableName)
-      varsDict = {}       # Mapping: variableName -> value
+      keysDict = {}       # Mapping: parameterKeyWord -> (varName,svarName)
+      varsDict = {}       # Mapping: varName -> value
       
-      # Iterate throught the key parameters adding them to keysDict
+      # Iterate throught the key parameters adding them to keysDict and varsDict
       while paramNum < paramListLength:
          paramSpec = paramList[paramNum]
          if isinstance(paramSpec, LSymbol):
@@ -433,7 +437,8 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lbindAuxArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
-      '''These are not really arguments.  At least: these parameters get no corresponding arguments.
+      '''Syntax:  &aux {var | (var [initForm])}*
+      These are not really arguments.  At least: these parameters get no corresponding arguments.
       These parameters are strictly local variables for the function.'''
       paramListLength = len(paramList)
       
@@ -448,23 +453,23 @@ class LispInterpreter( Interpreter ):
          if isinstance( paramSpec, LSymbol ):
             if paramSpec.startswith('&'):
                raise LispRuntimeError( f'{paramSpec} occurs after &aux.' )
-            paramName = paramSpec
-            argVal = LList( )
+            varName = paramSpec
+            initForm = LList( )
          elif isinstance( paramSpec, LList ):
             try:
-               paramName, defaultValExpr = paramSpec
+               varName, initForm = paramSpec
             except:
                raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
 
-            if not isinstance(paramName, LSymbol):
+            if not isinstance(varName, LSymbol):
                raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
             
-            argVal = LispInterpreter._lEval( env, defaultValExpr )
+            initForm = LispInterpreter._lEval( env, initForm )
          else:
             raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          
          # Bind the parameters
-         env.bindLocal( paramName.strval, argVal )
+         env.bindLocal( varName.strval, initForm )
          
          # Prepare for the next iteration
          paramNum += 1
