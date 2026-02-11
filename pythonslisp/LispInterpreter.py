@@ -86,13 +86,27 @@ class LispInterpreter( Interpreter ):
             self.evalFile( filename )
 
    def eval( self, source: str, outStrm=None ) -> str:
-      returnVal,parseTime,execTime = self.rawEval( source, outStrm=outStrm )
+      returnVal = self.rawEval( source, outStrm=outStrm )
+      return prettyPrintSExpr( returnVal ).strip()
+
+   def eval_instrumented( self, source: str, outStrm=None ) -> str:
+      returnVal,parseTime,execTime = self.rawEval_instrumented( source, outStrm=outStrm )
       return prettyPrintSExpr( returnVal ).strip(), parseTime, execTime
 
    def evalFile( self, filename: str, outStrm=None ) -> str:
       self.rawEvalFile( filename, outStrm=outStrm )
 
    def rawEval( self, source: str, outStrm=None ) -> Any:
+      LispInterpreter.outStrm = outStrm
+      try:
+         ast = self._parser.parse( source )
+         #ast = LispExpander.expand( self._env, ast )
+         returnVal = LispInterpreter._lEval( self._env, ast )
+      finally:
+         LispInterpreter.outStrm = None
+      return returnVal
+
+   def rawEval_instrumented( self, source: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
          parseStartTime = time.perf_counter()

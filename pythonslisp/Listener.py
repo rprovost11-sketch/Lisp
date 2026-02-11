@@ -46,6 +46,7 @@ class Listener( object ):
       self._interp          = anInterpreter
       self._testdir         = testdir
       self._logFile: Any    = None
+      self._instrumenting = False
       print( f'{language} {version}' )
       print( '- Listener initialized' )
       self._cmd_reboot( [ ] )
@@ -68,12 +69,13 @@ class Listener( object ):
                   self._runListenerCommand( inputExprStr )
                else:
                   start = time.perf_counter( )
-                  resultStr,parseTime,evalTime = self._interp.eval( inputExprStr )
+                  resultStr,parseTime,evalTime = self._interp.eval_instrumented( inputExprStr )
                   totalTime  = time.perf_counter( ) - start
                   self._writeLn( f'\n==> {resultStr}' )
-                  print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
-                  print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
-                  print( f'-------------     Total execution time: {totalTime:15.8f} sec' )
+                  if self._instrumenting:
+                     print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
+                     print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
+                     print( f'-------------     Total execution time: {totalTime:15.8f} sec' )
 
             except StopIteration:
                keepLooping = False
@@ -109,7 +111,7 @@ class Listener( object ):
                else:
                   print( f'... {line}')
 
-         resultStr,_,_ = self._interp.eval( exprStr )
+         resultStr = self._interp.eval( exprStr )
          if verbosity == 3:
             print( f'\n==> {resultStr}' )
 
@@ -141,7 +143,7 @@ class Listener( object ):
          actualErrorStr = ''
          
          try:
-            actualRetValStr,_,_ = self._interp.eval( exprStr, outStrm=outputStream )
+            actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
          except Parser.ParseError as ex:
             actualErrorStr = ex.args[-1]
          except Exception as ex:   # Unknowns raised by the interpreter
@@ -337,6 +339,17 @@ class Listener( object ):
 
       print( 'Bye.' )
       raise StopIteration( )
+
+   def _cmd_instrument( self, args: list[str] ) -> None:
+      '''Usage:  instrument
+      Toggle on or off instrumenting in the repl.
+      '''
+      if len(args) != 0:
+         raise ListenerCommandError( self._cmd_instrument.__doc__ )
+      
+      self._instrumenting = not self._instrumenting
+      stateStr = 'ON' if self._instrumenting else 'OFF'
+      print( f'Instrumenting is now {stateStr}.' )
 
    def _cmd_help( self, args: list[str] ) -> None:
       '''Usage: help [<command>]

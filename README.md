@@ -113,6 +113,13 @@ the public interface for the class pythonslisp.Parser.LispLexer is actually
 found in the base class pythonslisp.Parser.Lexer.  LispLexer only implements
 private methods needed by the base class.
 
+Note that eval() functions in the interpreter that include the label
+'instrumented' are designed for testing the performance of the interpreter.
+These special versions of eval() return a tuple of three values: return value,
+parse time in seconds, evaluation time in seconds.  They are probably not that
+useful to the python developer.  They are used by the listener's repl to
+report performance characteristics during interactive sessions.
+
 Modification of the Package
 ===========================
 
