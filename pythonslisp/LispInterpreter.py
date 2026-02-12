@@ -729,18 +729,22 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_let, 'The first argument to let expected to be a list of variable initializations.' )
 
          # Evaluate the var def initial value exprs in the outer scope.
-         varSyms = [ varPair[0] for varPair in vardefs ]   # collect the var names in one list
-         varExprs = [ varPair[1] for varPair in vardefs ]  # collect the initial value expressions in another list.
-         evaluatedExprs = [ LispInterpreter._lEval(env, expr) for expr in varExprs ]
+         initDict = { }
+         for varSpec in vardefs:
+            if isinstance(varSpec, LSymbol):
+               varName = varSpec
+               initForm = LList()
+            elif isinstance(varSpec, list) and (len(varSpec) == 2):
+               varName, initForm = varSpec
+               if not isinstance(varName, LSymbol):
+                  raise LispRuntimeFuncError( LP_let, 'First element of a variable initializer pair expected to be a symbol.' )
+            else:
+               raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be 2 elements long.' )
+            
+            initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
 
          # Open the new scope
-         env = Environment( env )     # Open a new scope. Auto closes when env goes out of scope.
-
-         # define the local variable symbols and values in the new env/scope.
-         for varSym, initialVar in zip( varSyms, evaluatedExprs ):
-            if not isinstance( varSym, LSymbol ):
-               raise LispRuntimeFuncError( LP_let, 'Variable initialization list expected a symbol.' )
-            env.bindLocal( str(varSym), initialVar )
+         env = Environment( env, **initDict )     # Open a new scope. Auto closes when env goes out of scope.
 
          # Evaluate each body sexpr in the new env/scope
          lastResult = L_NIL
@@ -761,12 +765,18 @@ class LispInterpreter( Interpreter ):
          # Open the new scope
          env = Environment( env )    #  Open a new scope. Auto closes when env goes out of scope.
 
-         # Evaluate and bind the var defs in order
-         for varSym, varExpr in vardefs:
-            if not isinstance( varSym,  LSymbol ):
-               raise LispRuntimeFuncError( LP_letstar, 'Variable initialization list expected a symbol.' )
-            evaluatedExpr = LispInterpreter._lEval( env, varExpr )
-            env.bindLocal( str(varSym),  evaluatedExpr )
+         for varSpec in vardefs:
+            if isinstance(varSpec, LSymbol):
+               varName = varSpec
+               initForm = LList()
+            elif isinstance(varSpec, list) and (len(varSpec) == 2):
+               varName, initForm = varSpec
+               if not isinstance(varName, LSymbol):
+                  raise LispRuntimeFuncError( LP_let, 'First element of a variable initializer pair expected to be a symbol.' )
+            else:
+               raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be 2 elements long.' )
+            
+            env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
 
          # Evaluate each body sexpr in the new env/scope.
          lastResult = L_NIL
