@@ -375,6 +375,8 @@ class LispInterpreter( Interpreter ):
       while paramNum < paramListLength:
          paramSpec = paramList[paramNum]
          if isinstance(paramSpec, LSymbol):
+            if paramSpec == '&ALLOW-OTHER-KEYS':
+               break
             keyName = paramSpec
             varName = paramSpec
             initForm = LList()
@@ -415,6 +417,13 @@ class LispInterpreter( Interpreter ):
          varsDict[varName.strval] = LispInterpreter._lEval(env, initForm)
          paramNum += 1
       
+      allowOtherKeys = False
+      if (paramNum < paramListLength):
+         nextParam = paramList[paramNum]
+         if isinstance(nextParam, LSymbol) and (nextParam == '&ALLOW-OTHER-KEYS'):
+            allowOtherKeys = True
+            paramNum += 1
+      
       # Iterate through the key args updating varsDict
       while argNum < argListLength:
          argKey = argList[argNum]
@@ -425,7 +434,7 @@ class LispInterpreter( Interpreter ):
          if not argKey.startswith(':'):
             raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
          argKey = argKey.strval[1:]  # Strip argKey of the leading colon :
-         if argKey not in keysDict:
+         if (not allowOtherKeys) and (argKey not in keysDict):
             raise LispRuntimeError( f'Unexpected keyword found {argKey}.' )
          
          argNum += 1
@@ -1772,7 +1781,7 @@ class LispInterpreter( Interpreter ):
                sys.setrecursionlimit(newLimit)
                return newLimit
             except RecursionError:
-               return env.getGlobalValue('NIL')
+               return LList()
          else:
             raise LispRuntimeFuncError( LP_recurslimit, 'Only one optional arg is allowed.' )
       

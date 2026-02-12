@@ -186,31 +186,6 @@ class Listener( object ):
       except AttributeError:
          raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
 
-   def _cmd_help( self, args: list[str] ) -> None:
-      '''Usage: help [<command>]
-      List all available commands, or detailed help for a specific command.
-      '''
-      if len(args) > 0:
-         arg = args[0]
-         try:
-            doc=getattr(self, f'_cmd_{arg}').__doc__
-            if doc:
-               raise ListenerCommandError(doc)
-         except AttributeError:
-            pass
-         raise ListenerCommandError( f"*** No help on {arg}." )
-      else:
-         header = "Listener Commands"
-         names = dir(self.__class__)
-         names.sort()
-         cmds = [ name[5:] for name in names if name.startswith('_cmd_') ]
-         print( )
-         print(header)
-         print('=' * len(header))
-         Listener._columnize(cmds, 69)
-         print()
-         print( 'Type \']help <command>\' for help on a command.' )
-
    def _cmd_close( self, args: list[str] ) -> None:
       '''Usage:  close
       Close the current logging session.
@@ -269,6 +244,31 @@ class Listener( object ):
 
       print( 'Bye.' )
       raise StopIteration( )
+
+   def _cmd_help( self, args: list[str] ) -> None:
+      '''Usage: help [<command>]
+      List all available commands, or detailed help for a specific command.
+      '''
+      if len(args) > 0:
+         arg = args[0]
+         try:
+            doc=getattr(self, f'_cmd_{arg}').__doc__
+            if doc:
+               raise ListenerCommandError(doc)
+         except AttributeError:
+            pass
+         raise ListenerCommandError( f"*** No help on {arg}." )
+      else:
+         header = "Listener Commands"
+         names = dir(self.__class__)
+         names.sort()
+         cmds = [ name[5:] for name in names if name.startswith('_cmd_') ]
+         print( )
+         print(header)
+         print('=' * len(header))
+         Listener._columnize(cmds, 69)
+         print()
+         print( 'Type \']help <command>\' for help on a command.' )
 
    def _cmd_instrument( self, args: list[str] ) -> None:
       '''Usage:  instrument
