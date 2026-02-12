@@ -144,7 +144,7 @@ class LispInterpreter( Interpreter ):
       s-expression in the form of a LispAST; eval will return the result.'''
       if isinstance( sExpr, LSymbol ):
          try:
-            return env.getValue( sExpr.strval )
+            return env.getValue3( sExpr.strval )
          except KeyError:
             if sExpr.isArgKey():
                return sExpr
@@ -161,16 +161,16 @@ class LispInterpreter( Interpreter ):
       primary, *argsToFn = sExpr
 
       # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
-      fnDef = LispInterpreter._lEval( env, primary )
-      if not isinstance( fnDef, LCallable ):
+      fnObj = LispInterpreter._lEval( env, primary )
+      if not isinstance( fnObj, LCallable ):
          raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
       
       # Do the args need to be evaluated before calling the function?
-      if not fnDef.specialForm:
+      if not fnObj.specialForm:
          argsToFn = [ LispInterpreter._lEval(env, argExpr) for argExpr in argsToFn ]
       
       # Call the function and return the results
-      return LispInterpreter._lApply( env, fnDef, *argsToFn )
+      return LispInterpreter._lApply( env, fnObj, *argsToFn )
    
    @staticmethod
    def _lApply( env: Environment, lcallable: LCallable, *args ) -> Any:
@@ -734,12 +734,18 @@ class LispInterpreter( Interpreter ):
             if isinstance(varSpec, LSymbol):
                varName = varSpec
                initForm = LList()
-            elif isinstance(varSpec, list) and (len(varSpec) == 2):
-               varName, initForm = varSpec
+            elif isinstance(varSpec, list):
+               varSpecLen = len(varSpec)
+               if varSpecLen == 1:
+                  varName = varSpec[0]
+                  initForm = List()
+               elif varSpecLen == 2:
+                  varName, initForm = varSpec
+               else:
+                  raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be 1 or 2 elements long.' )
+                  
                if not isinstance(varName, LSymbol):
                   raise LispRuntimeFuncError( LP_let, 'First element of a variable initializer pair expected to be a symbol.' )
-            else:
-               raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be 2 elements long.' )
             
             initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
 
@@ -769,12 +775,18 @@ class LispInterpreter( Interpreter ):
             if isinstance(varSpec, LSymbol):
                varName = varSpec
                initForm = LList()
-            elif isinstance(varSpec, list) and (len(varSpec) == 2):
-               varName, initForm = varSpec
+            elif isinstance(varSpec, list):
+               varSpecLen = len(varSpec)
+               if varSpecLen == 1:
+                  varName = varSpec[0]
+                  initForm = List()
+               elif varSpecLen == 2:
+                  varName, initForm = varSpec
+               else:
+                  raise LispRuntimeFuncError( LP_letstar, 'Variable initializer spec expected to be 1 or 2 elements long.' )
+                  
                if not isinstance(varName, LSymbol):
-                  raise LispRuntimeFuncError( LP_let, 'First element of a variable initializer pair expected to be a symbol.' )
-            else:
-               raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be 2 elements long.' )
+                  raise LispRuntimeFuncError( LP_letstar, 'First element of a variable initializer pair expected to be a symbol.' )
             
             env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
 

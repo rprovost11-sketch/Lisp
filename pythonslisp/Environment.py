@@ -48,6 +48,16 @@ class Environment( object ):
             scope = scope._parent
       raise KeyError
 
+   def getValue3( self,  key: str) -> Any:
+      scope: (Environment | None) = self
+      while scope:
+         val = scope._locals.get(key)
+         if val is None:
+            scope = scope._parent
+         else:
+            return val
+      raise KeyError
+
    def getGlobalValue(self, key: str ) -> Any:
       return self._GLOBAL_SCOPE._locals[ key ]
 

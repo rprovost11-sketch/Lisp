@@ -84,8 +84,8 @@ class Listener( object ):
 
             except Exception as ex:   # Unknowns raised by the interpreter
                self._writeErrorMsg( ex.args[-1] )
-               #exceptInfo = sys.exc_info( )
-               #sys.excepthook( *exceptInfo )
+               exceptInfo = sys.exc_info( )
+               sys.excepthook( *exceptInfo )
 
             self._writeLn( )
             inputExprLineList = [ ]
@@ -232,6 +232,22 @@ class Listener( object ):
       self._writeLn( '' )
       self._writeLn( '==> 0')
 
+   def _cmd_dump( self, args: list[str] ) -> None:
+      '''Usage:  dump
+      Dump a stack trace of the last error.
+      '''
+      
+      if len(args) != 0:
+         raise ListenerCommandError( 'Zero arguments expected by listener command dump.' )
+      
+      exceptInfo = sys.last_exc
+      exceptInfo = sys.exc_info( )
+      if exceptInfo[0] is None:
+         print( 'No exception info available.' )
+         return
+      
+      sys.excepthook( *exceptInfo )
+
    def _cmd_exit( self, args: list[str] ) -> None:
       '''Usage:  exit
       Exit the listener.
@@ -268,7 +284,8 @@ class Listener( object ):
          print('=' * len(header))
          Listener._columnize(cmds, 69)
          print()
-         print( 'Type \']help <command>\' for help on a command.' )
+         print( "Type ']help <command>' for help on a command." )
+         print( "Type ']<command> [ <args> ]' to execute a command." )
 
    def _cmd_instrument( self, args: list[str] ) -> None:
       '''Usage:  instrument

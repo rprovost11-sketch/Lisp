@@ -2,7 +2,7 @@ from fractions import Fraction
 from typing import Any
 
 from pythonslisp.Parser import Lexer, Parser, ParseError
-from pythonslisp.LispAST import LList, LSymbol, LPrimitive
+from pythonslisp.LispAST import LList, LSymbol
 
 """
 The Language
