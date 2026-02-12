@@ -180,7 +180,7 @@ PI                                      ;; the constant pi.
 E                                       ;; the constant e.
 
 ### Variable Definition ###
-(defmacro name (<param1> <param2> ...)  ;; Define and return a macro.
+(defmacro name (<formalParams>)         ;; Define and return a macro.
         <sexpr1> <sexpr2> ...)
 (expandmacro '(<macroName> <arg1> <arg2> ...))
                                         ;; Perform the expansion of the macro
@@ -202,7 +202,7 @@ E                                       ;; the constant e.
                                         ;;    Global scope last.
 
 ### Control Structures ###
-(lambda (<arg1> <arg2> ...) <expr1> <expr2> ...)
+(lambda (<formalParams>) <expr1> <expr2> ...)
                                         ;; Return a lambda function.
                                         ;;    When evaluating such a function
                                         ;;    the body (the exprs) are evaluated
@@ -239,7 +239,7 @@ E                                       ;; the constant e.
                                         ;;    returns the result of the last
                                         ;;    expr evaluated.  All remaining
                                         ;;    cases are skipped.
-! (while <conditionExpr> <sexpr1> <sexpr2)
+! (while <conditionExpr> <sexpr1> <sexpr2>)
                                         ;; Perform a loop over the body sexprs.
                                         ;;    Before iteration conditionExpr is
                                         ;;    evaluated.  If conditionExpr is
@@ -247,14 +247,14 @@ E                                       ;; the constant e.
                                         ;;    However if conditionExpr evaluates
                                         ;;    to false, while returns the result
                                         ;;    recent body evaluation.
-! (doTimes (<variable> <countExpr>) <sexpr1> <sexpr2> ...)
+! (doTimes (<var> <countExpr>) <sexpr1> <sexpr2> ...)
                                         ;; Performs a loop countExpr times.
                                         ;;    For each iternation of the loop
                                         ;;    variable is set to the loop number
                                         ;;    starting with 0 for the first loop
                                         ;;    The value of the last sexpr
                                         ;;    evaluated is returned.
-! (forEach <variable> <list> <sexpr1> <sexpr2> ...)
+! (forEach <var> <list> <sexpr1> <sexpr2> ...)
                                         ;; Each iteration assigns a list element
                                         ;;    to symbol, and evaluates expr.
 (quote <expr>)                          ;; Returns <expr> without evaluating it.
@@ -277,7 +277,6 @@ E                                       ;; the constant e.
                                         ;; function to the whole list of args.
 ! (funcall <fnNameSym> <fnArg1> <fnArg2> ...)
                                         ;; Call a function with the args provided
-(apply <fn> <arg1> <arg2> ... <list>)   ;; Apply fn to the list of args.
 (eval <expr>)                           ;; Evaluate <expr> in the current scope.
 ! (parse <string>)                      ;; Parse the string as an sexpression
                                         ;;    and returns the sexpression.
@@ -320,7 +319,7 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
 (mod <expr1> <expr2>)                   ;; Returns the integer remainder.
 (gcd <int1> <int2> ...)                 ;; Returns the gcd of the arguments.
 (lcm <int1> <int2> ...)                 ;; Returns the lcm of the arguments.
-(log <x> [<base>])                      ;; Returns the log of x.  If base if not
+(log <x> &optional (<base> 10))         ;; Returns the log of x.  If base if not
                                         ;;    provided, e is used.
 (expt <base> <power>)                   ;; Returns base raised to power.
 (sin <radians>)                         ;; Returns the sin of radians.
@@ -390,6 +389,13 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
 ! (uwriteLn! <object1> <object2> ...)
 ! (read!)                               ;; Read input from keyboard/stream.
 
+### System ###
+! (recursLimit &optional <newLimit>)    ;; Get or set the system recursion
+                                        ;;    limit.  The higher newLimit the
+                                        ;;    deeper recursion will be allowed
+                                        ;;    to go.  If setting, returns
+                                        ;;    newLimit upon success otherwise
+                                        ;;    nil.
 Library Functions & Macros
 ==========================
 
@@ -433,3 +439,25 @@ Library Macros
         <expr1> <expr2> ...)
 (incf var &optional (<delta> 1))        ;; increment a variable by 1 or delta.
 (decf var &optional (<delta> 1))        ;; decrement a variable by 1 or delta.
+
+Formal Parameters
+=================
+Function and macro parameters are rather a complex subject.  I've implemented
+most of the Common Lisp formal parameters spec.  Here is the full specification.
+
+formalParams -> ( {var}*
+                  [ &optional {var | (var [initForm [svar]])}* ]
+                  [ &rest var ]
+                  [ &key {var | ({var | (keyword var)} [initForm [svar]]) }* 
+                           [&allow-other-keys] ]
+                  [ &aux {var | (var [initForm])}* ] )
+
+      Notes:
+      - braces indicate grouping
+      - brackets surround optional parts
+      - pipes separate alternative parts
+      - asterisk indicates zero of more of the part it follows
+      - parenthesis are taken listerally as actual parenthesis in lisp
+      - symbols preceded by & are taken literally
+      - The ordering of sections is not flexible
+

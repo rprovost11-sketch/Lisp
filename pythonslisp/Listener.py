@@ -42,14 +42,12 @@ class Listener( object ):
    loop and listener commands for session logging, as well as testing and
    rebooting the intepreter.  Partly ripped off from Python's cmd module.'''
    def __init__( self, anInterpreter: Interpreter, testdir: str='', language: str='', version: str='', **kwargs ) -> None:
-      super().__init__( )
-
       self._interp          = anInterpreter
       self._testdir         = testdir
       self._logFile: Any    = None
       self._instrumenting = False
       print( f'{language} {version}' )
-      print( '- Listener initialized' )
+      print( '- Listener initialized', flush=True )
       self._cmd_reboot( [ ] )
 
    def readEvalPrintLoop( self ) -> None:
@@ -209,7 +207,7 @@ class Listener( object ):
          print( )
          print(header)
          print('=' * len(header))
-         Listener._columnize(cmds, 79)
+         Listener._columnize(cmds, 69)
          print()
          print( 'Type \']help <command>\' for help on a command.' )
 
@@ -344,32 +342,12 @@ class Listener( object ):
       if self._logFile:
          raise ListenerCommandError( 'Please close the log before rebooting.' )
 
-      self._interp.reboot( )                     # boot/Reboot the interpreter
       print( '- Interpreter initialized' )
-      print( '- Runtime libraries loaded' )
-      print( '- ', end='' )
-      self._cmd_recurslimit( ['10000'] )         # increase the recursion limit
+      print( '- Runtime library loaded' )
+      self._interp.reboot( )                     # boot/Reboot the interpreter
       print( 'Enter \']help\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Welcome!' )
-
-   def _cmd_recurslimit( self, args: list[str] ) -> None:
-      '''Usage:  recurslimit [<newDepth>]
-      Get or set the interpreter's recursion depth.
-      '''
-      numArgs = len(args)
-      if numArgs == 0:
-         print( f'Current recursion limit: {sys.getrecursionlimit():,d}' )
-         return
-      elif numArgs == 1:
-         newDepth = int(args[0])
-         try:
-            sys.setrecursionlimit(newDepth)
-            print( f'Recursion limit set to: {newDepth:,d}' )
-         except RecursionError:
-            print( 'Failed to change recursion limit.' )
-      else:
-         raise ListenerCommandError( 'One optional arg is allowed for recursdepth.' )
 
    def _cmd_test( self, args: list[str] ) -> None:
       '''Usage:  test [<filename>]

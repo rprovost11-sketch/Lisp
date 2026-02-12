@@ -2,6 +2,7 @@ import functools
 import math
 import random
 import time
+import sys
 from fractions import Fraction
 from typing import Callable, Any
 
@@ -72,7 +73,6 @@ class LispInterpreter( Interpreter ):
    def __init__( self, runtimeLibraryDir: (str|None)=None ) -> None:
       self._libDir = runtimeLibraryDir
       self._parser: LispParser = LispParser( )
-      self.reboot( )
 
    def reboot( self ) -> None:
       # Load in the primitives
@@ -1758,4 +1758,22 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_readln, '0 arguments expected.' )
          return input()
 
+      # ===============
+      # System Level
+      # ---------------
+      @LDefPrimitive( 'recurslimit', '&optional <newLimit>')
+      def LP_recurslimit( env: Environment, *args ) -> Any:
+         numArgs = len(args)
+         if numArgs == 0:
+            return sys.getrecursionlimit()
+         elif numArgs == 1:
+            newLimit = int(args[0])
+            try:
+               sys.setrecursionlimit(newLimit)
+               return newLimit
+            except RecursionError:
+               return env.getGlobalValue('NIL')
+         else:
+            raise LispRuntimeFuncError( LP_recurslimit, 'Only one optional arg is allowed.' )
+      
       return primitiveDict
