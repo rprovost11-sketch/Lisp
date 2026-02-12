@@ -77,7 +77,7 @@ class LispInterpreter( Interpreter ):
    def reboot( self ) -> None:
       # Load in the primitives
       primitiveDict: dict[str, Any] = LispInterpreter._lconstructPrimitives( self._parser.parse )
-      self._env:Environment = Environment( parent=None, **primitiveDict )
+      self._env:Environment = Environment( parent=None, **primitiveDict )  # Create the GLOBAL environment
 
       # Load in the runtime library
       if self._libDir:
@@ -208,6 +208,8 @@ class LispInterpreter( Interpreter ):
       try:
          nextParam = paramList[paramNum]
       except IndexError:
+         # There are no more params to process. So argNum should be == or > argListLength.
+         # So, if argNum < argListLength, then there are still unprocessed args.
          if argNum < argListLength:
             raise LispRuntimeError( f'Too many arguments.  Received {argNum+1}.' )
          return          # All params used up.  Return gracefully
@@ -572,7 +574,7 @@ class LispInterpreter( Interpreter ):
       # =================
       # Symbol Definition
       # -----------------
-      @LDefPrimitive( 'defmacro', '<symbol> (<param1> <param2> ...) <sexpr1> <sexpr2> ...', specialForm=True )
+      @LDefPrimitive( 'defmacro', '<symbol> ( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_defmacro( env: Environment, *args ) -> Any:
          try:
             fnName, funcParams, *funcBody = args
@@ -698,7 +700,7 @@ class LispInterpreter( Interpreter ):
       # ==================
       # Control Structures
       # ------------------
-      @LDefPrimitive( 'lambda', '(<param1> <param2> ... ) <sexpr1> <sexpr2> ...', specialForm=True )
+      @LDefPrimitive( 'lambda', '( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_lambda( env: Environment, *args ) -> Any:
          try:
             funcParams, *funcBody = args
@@ -906,7 +908,7 @@ class LispInterpreter( Interpreter ):
             condResult = LispInterpreter._lEval(env, conditionExpr )
          return latestResult
 
-      @LDefPrimitive( 'doTimes', '(<variable> <integer>) <sexpr1> <sexpr2> ...', specialForm=True )
+      @LDefPrimitive( 'doTimes', '(<var> <integer>) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_dotimes( env: Environment, *args ) -> Any:
          try:
             loopControl, *body = args

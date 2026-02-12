@@ -4,7 +4,7 @@ from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.24.3'
+VERSION      = '0.24.4'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'pythonslisp/testing'

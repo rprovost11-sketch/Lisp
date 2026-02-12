@@ -60,8 +60,6 @@ class LispLexer( Lexer ):
 
    OPEN_PAREN_TOK     = 201    # Paired tokens
    CLOSE_PAREN_TOK    = 202
-   OPEN_BRACKET_TOK   = 211
-   CLOSE_BRACKET_TOK  = 212
 
    SINGLE_QUOTE_TOK   = 501    # Misc tokens
    COMMA_TOK          = 502
@@ -334,7 +332,14 @@ class LispParser( Parser ):
       ast: Any = None         # Holds the parsed AST
 
       nextToken = self._scanner.peekToken( )
-      if nextToken == LispLexer.INTEGER_TOK:
+      if nextToken == LispLexer.SYMBOL_TOK:
+         lex = self._scanner.getLexeme( )   # Make symbols case insensative
+         ast = LSymbol(lex)
+         self._scanner.consume( )
+      elif nextToken == LispLexer.OPEN_PAREN_TOK:
+         lex = '()'
+         ast = self._parseList( )
+      elif nextToken == LispLexer.INTEGER_TOK:
          lex = self._scanner.getLexeme( )
          ast = int(lex)
          self._scanner.consume( )
@@ -350,13 +355,6 @@ class LispParser( Parser ):
          lex = self._scanner.getLexeme( )
          ast = lex[1:-1]
          self._scanner.consume( )
-      elif nextToken == LispLexer.SYMBOL_TOK:
-         lex = self._scanner.getLexeme( )   # Make symbols case insensative
-         ast = LSymbol(lex)
-         self._scanner.consume( )
-      elif nextToken == LispLexer.OPEN_PAREN_TOK:
-         lex = '()'
-         ast = self._parseList( )
       elif nextToken == LispLexer.SINGLE_QUOTE_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )

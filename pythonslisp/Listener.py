@@ -2,6 +2,7 @@ import io
 import os
 import datetime
 import time
+import sys
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -177,22 +178,112 @@ class Listener( object ):
       print( resultMessage )
       return resultMessage
 
-   def _cmd_reboot( self, args: list[str] ) -> None:
-      '''Usage: reboot
-      Reset the interpreter.
+   def _runListenerCommand( self, listenerCommand: str ) -> None:
+      cmdParts  = listenerCommand[1:].split( ' ' )
+      cmd,*args = cmdParts
+
+      try:
+         func = getattr(self, f'_cmd_{cmd}')
+         func(args)
+      except AttributeError:
+         raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
+
+   def _cmd_help( self, args: list[str] ) -> None:
+      '''Usage: help [<command>]
+      List all available commands, or detailed help for a specific command.
       '''
       if len(args) > 0:
-         raise ListenerCommandError( self._cmd_reboot.__doc__ )
+         arg = args[0]
+         try:
+            doc=getattr(self, f'_cmd_{arg}').__doc__
+            if doc:
+               raise ListenerCommandError(doc)
+         except AttributeError:
+            pass
+         raise ListenerCommandError( f"*** No help on {arg}." )
+      else:
+         header = "Listener Commands"
+         names = dir(self.__class__)
+         names.sort()
+         cmds = [ name[5:] for name in names if name.startswith('_cmd_') ]
+         print( )
+         print(header)
+         print('=' * len(header))
+         Listener._columnize(cmds, 79)
+         print()
+         print( 'Type \']help <command>\' for help on a command.' )
 
+   def _cmd_close( self, args: list[str] ) -> None:
+      '''Usage:  close
+      Close the current logging session.
+      '''
+      if len(args) != 0:
+         raise ListenerCommandError( self._cmd_close.__doc__ )
+
+      if self._logFile is None:
+         raise ListenerCommandError( "Not currently logging." )
+
+      self._writeLn( '>>> ;;;;;;  Logging ended.' )
+      self._writeLn( '... ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
+      self._writeLn( '... 0')
+      self._writeLn( '' )
+      self._writeLn( '==> 0')
+      self._logFile.close( )
+      self._logFile = None
+
+   def _cmd_continue( self, args: list[str] ) -> None:
+      '''Usage:  continue <filename> [V|v]
+      Read and execute a log file.  Keep the log file open to
+      continue a logging session where you left off.  V reads
+      the file verbosely.
+      '''
       if self._logFile:
-         raise ListenerCommandError( 'Please close the log before rebooting.' )
+         raise ListenerCommandError(
+            "A log file is already open and logging.  Only one log file can be open at a time." )
 
-      self._interp.reboot( )
-      print( '- Interpreter initialized' )
-      print( '- Runtime libraries loaded' )
-      print( 'Enter any expression to have it evaluated by the interpreter.')
-      print( 'Enter \']help\' for listener commands.' )
-      print( 'Welcome!' )
+      numArgs = len(args)
+      if numArgs not in ( 1, 2 ):
+         raise ListenerCommandError( self._cmd_continue.__doc__ )
+
+      self._cmd_readlog( args )
+
+      filename = args[0]
+      try:
+         self._logFile = open( filename, 'a' )
+      except OSError:
+         raise ListenerCommandError( 'Unable to open file for append.' )
+
+      self._writeLn( '>>> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
+      self._writeLn( '... ;;;;;;  Continuing Log ( {0} ): {1}'.format( datetime.datetime.now().isoformat(), filename ) )
+      self._writeLn( '... 0')
+      self._writeLn( '' )
+      self._writeLn( '==> 0')
+
+   def _cmd_exit( self, args: list[str] ) -> None:
+      '''Usage:  exit
+      Exit the listener.
+      '''
+      if len(args) != 0:
+         raise ListenerCommandError( self._cmd_exit.__doc__ )
+
+      if self._logFile is not None:
+         self._cmd_close( [''] )
+
+      print( 'Bye.' )
+      raise StopIteration( )
+
+   def _cmd_instrument( self, args: list[str] ) -> None:
+      '''Usage:  instrument
+      Toggle on or off instrumenting in the repl.  Note that performance
+      characteristics are only reported on screen.  If logging they are not
+      recorded in the log file.
+      '''
+      if len(args) != 0:
+         raise ListenerCommandError( self._cmd_instrument.__doc__ )
+      
+      self._instrumenting = not self._instrumenting       # toggle the state
+      stateStr = 'ON' if self._instrumenting else 'OFF'
+      print( f'Instrumenting is now {stateStr}.' )
 
    def _cmd_log( self, args: list[str] ) -> None:
       '''Usage:  log <filename>
@@ -243,13 +334,49 @@ class Listener( object ):
       self._interp.evalFile( filename )
       print( f'Source file read successfully: {filename}' )
 
+   def _cmd_reboot( self, args: list[str] ) -> None:
+      '''Usage: reboot
+      Reset the interpreter.
+      '''
+      if len(args) > 0:
+         raise ListenerCommandError( self._cmd_reboot.__doc__ )
+
+      if self._logFile:
+         raise ListenerCommandError( 'Please close the log before rebooting.' )
+
+      self._interp.reboot( )                     # boot/Reboot the interpreter
+      print( '- Interpreter initialized' )
+      print( '- Runtime libraries loaded' )
+      print( '- ', end='' )
+      self._cmd_recurslimit( ['10000'] )         # increase the recursion limit
+      print( 'Enter \']help\' for listener commands.' )
+      print( 'Enter any expression to have it evaluated by the interpreter.')
+      print( 'Welcome!' )
+
+   def _cmd_recurslimit( self, args: list[str] ) -> None:
+      '''Usage:  recurslimit [<newDepth>]
+      Get or set the interpreter's recursion depth.
+      '''
+      numArgs = len(args)
+      if numArgs == 0:
+         print( f'Current recursion limit: {sys.getrecursionlimit():,d}' )
+         return
+      elif numArgs == 1:
+         newDepth = int(args[0])
+         try:
+            sys.setrecursionlimit(newDepth)
+            print( f'Recursion limit set to: {newDepth:,d}' )
+         except RecursionError:
+            print( 'Failed to change recursion limit.' )
+      else:
+         raise ListenerCommandError( 'One optional arg is allowed for recursdepth.' )
+
    def _cmd_test( self, args: list[str] ) -> None:
       '''Usage:  test [<filename>]
       Test the interpreter using a log file.
-      Read and execute a log file;
-      comparing the return value to the log file return value.
-      If no test file is specified the listener will run the full standard suite
-      of tests for the interpreter.
+      Read and execute a log file.  Compare the output, return value, and error
+      messages to the those in the log file.  If no test file is specified the
+      listener will run the full standard suite of tests.
       Note: It's reccomended that you reboot the interpreter using ]reboot both
       before and after running tests.
       '''
@@ -280,110 +407,6 @@ class Listener( object ):
 
       print( '\nWARNING: Testing leaves the interpreter in an unknown state. ' +
              'It\'s reccomended that you reboot the interpreter using the listener command ]reboot.' )
-
-   def _cmd_continue( self, args: list[str] ) -> None:
-      '''Usage:  continue <filename> [V|v]
-      Read and execute a log file.  Keep the log file open to
-      continue a logging session where you left off.  V reads
-      the file verbosely.
-      '''
-      if self._logFile:
-         raise ListenerCommandError(
-            "A log file is already open and logging.  Only one log file can be open at a time." )
-
-      numArgs = len(args)
-      if numArgs not in ( 1, 2 ):
-         raise ListenerCommandError( self._cmd_continue.__doc__ )
-
-      self._cmd_readlog( args )
-
-      filename = args[0]
-      try:
-         self._logFile = open( filename, 'a' )
-      except OSError:
-         raise ListenerCommandError( 'Unable to open file for append.' )
-
-      self._writeLn( '>>> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
-      self._writeLn( '... ;;;;;;  Continuing Log ( {0} ): {1}'.format( datetime.datetime.now().isoformat(), filename ) )
-      self._writeLn( '... 0')
-      self._writeLn( '' )
-      self._writeLn( '==> 0')
-
-   def _cmd_close( self, args: list[str] ) -> None:
-      '''Usage:  close
-      Close the current logging session.
-      '''
-      if len(args) != 0:
-         raise ListenerCommandError( self._cmd_close.__doc__ )
-
-      if self._logFile is None:
-         raise ListenerCommandError( "Not currently logging." )
-
-      self._writeLn( '>>> ;;;;;;  Logging ended.' )
-      self._writeLn( '... ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;' )
-      self._writeLn( '... 0')
-      self._writeLn( '' )
-      self._writeLn( '==> 0')
-      self._logFile.close( )
-      self._logFile = None
-
-   def _cmd_exit( self, args: list[str] ) -> None:
-      '''Usage:  exit
-      Exit the interpreter and listener.
-      '''
-      if len(args) != 0:
-         raise ListenerCommandError( self._cmd_exit.__doc__ )
-
-      if self._logFile is not None:
-         self._cmd_close( [''] )
-
-      print( 'Bye.' )
-      raise StopIteration( )
-
-   def _cmd_instrument( self, args: list[str] ) -> None:
-      '''Usage:  instrument
-      Toggle on or off instrumenting in the repl.
-      '''
-      if len(args) != 0:
-         raise ListenerCommandError( self._cmd_instrument.__doc__ )
-      
-      self._instrumenting = not self._instrumenting
-      stateStr = 'ON' if self._instrumenting else 'OFF'
-      print( f'Instrumenting is now {stateStr}.' )
-
-   def _cmd_help( self, args: list[str] ) -> None:
-      '''Usage: help [<command>]
-      List all available commands, or detailed help for a specific command.
-      '''
-      if len(args) > 0:
-         arg = args[0]
-         try:
-            doc=getattr(self, f'_cmd_{arg}').__doc__
-            if doc:
-               raise ListenerCommandError(doc)
-         except AttributeError:
-            pass
-         raise ListenerCommandError( f"*** No help on {arg}." )
-      else:
-         header = "Listener Commands (type ]help <topic> for help on a command.)"
-         names = dir(self.__class__)
-         names.sort()
-         cmds = [ name[5:] for name in names if name.startswith('_cmd_') ]
-         print( )
-         print(header)
-         print('=' * len(header))
-         Listener._columnize(cmds, 79)
-         print()
-
-   def _runListenerCommand( self, listenerCommand: str ) -> None:
-      cmdParts  = listenerCommand[1:].split( ' ' )
-      cmd,*args = cmdParts
-
-      try:
-         func = getattr(self, f'_cmd_{cmd}')
-         func(args)
-      except AttributeError:
-         raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
 
    def _writeLn( self, value: str='', file=None ) -> None:
       print( value, file=file, flush=True )
