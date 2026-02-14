@@ -9,6 +9,7 @@ To Do
 - Implement an online (help <symbol>) primitive which prints some documentation
   about the primitive, function or macro.
 - See if macros are also supposed to support closures.
+- Investigate nested backquotes.
 
 
 - OPTIMIZATION: Move macro expansion completely out of expression evaluation.

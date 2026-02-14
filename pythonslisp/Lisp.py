@@ -4,16 +4,16 @@ from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.25.2'
+VERSION      = '0.25.3'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'pythonslisp/testing'
 LIBRARY_DIR  = 'pythonslisp/lib'
-USAGE = '''USAGE:  python3.14 -m pythonslisp [lispSourceFile|-h|--help|-v|--version]
+USAGE = '''   USAGE:  python3.14 -m pythonslisp [lispSourceFile|-h|--help|-v|--version]
 
 This command takes one optional argument.
 
-- If no arguments are specified the Listener\'s repl will execute.
+- If no argument is specified the Listener\'s repl will execute.
 - If a lisp source file name is provided as the only argument, Python\'s Lisp
   will execute the source file.
 - If -h or --help is the argument, then lisp displays this help message then exits.
@@ -58,7 +58,7 @@ def main( ) -> None:
          print( ex.args[-1] )
          sys.exit(1)
    else:
-      print( f'Error: Invalid number of arguments.\n{USAGE}', file=sys.stderr )
+      print( f'Error: Invalid number of arguments.\n\n{USAGE}', file=sys.stderr )
       sys.exit(1)
 
 if __name__ == '__main__':

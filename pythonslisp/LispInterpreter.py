@@ -13,6 +13,7 @@ from pythonslisp.LispAST import ( LSymbol, LList, LMap, LNUMBER,
                                   LCallable, LFunction, LPrimitive, LMacro,
                                   prettyPrintSExpr, prettyPrint )
 
+# The LispExpander class is currently unused.  It does not yet work perfectly.
 class LispExpander( object ):
    @staticmethod
    def expand( env: Environment, sExpr: Any ) -> Any:
@@ -65,6 +66,11 @@ class LispRuntimeFuncError( LispRuntimeError ):
       usage = lispCallable.usageStr
       errStr = f"ERROR '{fnName}': {errorMsg}\nUSAGE: {usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
       super().__init__( errStr )
+
+
+class LispArgBindingError( LispRuntimeError ):
+   def __init__( self, *args ) -> None:
+      super().__init__( self, *args )
 
 
 class LispInterpreter( Interpreter ):
@@ -170,7 +176,15 @@ class LispInterpreter( Interpreter ):
          argsToFn = [ LispInterpreter._lEval(env, argExpr) for argExpr in argsToFn ]
       
       # Call the function and return the results
-      return LispInterpreter._lApply( env, fnObj, *argsToFn )
+      try:
+         return LispInterpreter._lApply( env, fnObj, *argsToFn )
+      except LispRuntimeError as ex:
+         if isinstance(fnObj, LPrimitive):
+            raise
+         
+         msg = ex.args[-1]
+         raise LispRuntimeError( f'Error binding arguments in function "{fnObj.name}".\n{msg}')
+   
    
    @staticmethod
    def _lApply( env: Environment, lcallable: LCallable, *args ) -> Any:
@@ -211,10 +225,10 @@ class LispInterpreter( Interpreter ):
          # There are no more params to process. So argNum should be == or > argListLength.
          # So, if argNum < argListLength, then there are still unprocessed args.
          if argNum < argListLength:
-            raise LispRuntimeError( f'Too many arguments.  Received {argNum+1}.' )
+            raise LispArgBindingError( f'Too many arguments.  Received {argNum+1}.' )
          return          # All params used up.  Return gracefully
       if not isinstance(nextParam, LSymbol):
-         raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+         raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&OPTIONAL':
          paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, paramList, paramNum+1, argList, argNum )
@@ -224,10 +238,10 @@ class LispInterpreter( Interpreter ):
             nextParam = paramList[paramNum]
          except IndexError:
             if argNum < argListLength:
-               raise LispRuntimeError( f'Too many arguments.  Received {argNum+1}.' )
+               raise LispArgBindingError( f'Too many arguments.  Received {argNum+1}.' )
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
-            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+            raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&REST':
          paramNum, argNum = LispInterpreter._lbindRestArgs( env, paramList, paramNum+1, argList, argNum )
@@ -238,7 +252,7 @@ class LispInterpreter( Interpreter ):
          except IndexError:
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
-            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+            raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&KEY':
          paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum+1, argList, argNum )
@@ -249,13 +263,13 @@ class LispInterpreter( Interpreter ):
          except IndexError:
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
-            raise LispRuntimeError( f"Param {paramNum} expected to be a symbol." )
+            raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&AUX':
          paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum+1, argList, argNum )
    
       if paramNum < paramListLength:
-         raise LispRuntimeError( 'Too few parameters.' )
+         raise LispArgBindingError( 'Too few parameters.' )
 
    @staticmethod
    def _lbindPositionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
@@ -265,7 +279,7 @@ class LispInterpreter( Interpreter ):
          # Get the next parameter name.  Insure it's a symbol but doesn't start with '&'.
          paramName = paramList[paramNum]
          if not isinstance(paramName, LSymbol):
-            raise LispRuntimeError( f"Positional param {paramNum} expected to be a symbol." )
+            raise LispArgBindingError( f"Positional param {paramNum} expected to be a symbol." )
          if paramName.startswith('&'):
             break
          
@@ -273,7 +287,7 @@ class LispInterpreter( Interpreter ):
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LispRuntimeError( "Too few positional arguments." )
+            raise LispArgBindingError( "Too few positional arguments." )
          
          # Bind paramName to argVal
          env.bindLocal( paramName.strval, argVal )
@@ -292,7 +306,7 @@ class LispInterpreter( Interpreter ):
       
       # Prepare to loop over the optional parameters and arguments
       if paramNum >= paramListLength:
-         raise LispRuntimeError( f'Param expected after &Optional.' )
+         raise LispArgBindingError( f'Param expected after &Optional.' )
       
       while (paramNum < paramListLength):
          paramSpec = paramList[paramNum]
@@ -316,12 +330,12 @@ class LispInterpreter( Interpreter ):
             elif paramSpecLen == 3:
                varName, initForm, svarName = paramSpec
             else:
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<svar>]] ).' )
+               raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<svar>]] ).' )
 
             if svarName and (not isinstance(svarName, LSymbol)):
-               raise LispRuntimeFuncError( f'Parameter svar following {varName} must be a symbol.' )
+               raise LispArgBindingError( f'Parameter svar following {varName} must be a symbol.' )
          else:
-            raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
+            raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          paramNum += 1
         
          # Extract the next arguments's values
@@ -349,10 +363,10 @@ class LispInterpreter( Interpreter ):
       try:
          paramName = paramList[paramNum]
       except IndexError:
-         raise LispRuntimeError( f'Param name expected after &rest.' )
+         raise LispArgBindingError( f'Param name expected after &rest.' )
 
       if not isinstance(paramName, LSymbol ):
-         raise LispRuntimeError( 'Symbol expected after &rest.' )
+         raise LispArgBindingError( 'Symbol expected after &rest.' )
       
       theRestArgs = argList[argNum:]
       env.bindLocal( paramName.strval, LList(*theRestArgs) )
@@ -367,7 +381,7 @@ class LispInterpreter( Interpreter ):
       
       # Prepare to iterate over the parameters
       if paramNum >= paramListLength:
-         raise LispRuntimeError( f'Param name expected after &key.' )
+         raise LispArgBindingError( f'Param name expected after &key.' )
       keysDict = {}       # Mapping: parameterKeyWord -> (varName,svarName)
       varsDict = {}       # Mapping: varName -> value
       
@@ -385,7 +399,7 @@ class LispInterpreter( Interpreter ):
             try:
                keyVarSpec, *initFormSpec = paramSpec
             except ValueError:
-               raise LispRuntimeError( f'Too many default values for key parameter {paramSpec[0]}.' )
+               raise LispArgBindingError( f'Too many default values for key parameter {paramSpec[0]}.' )
             
             # Extract the keyName and varName from keyVarSpec
             if isinstance(keyVarSpec, LSymbol):
@@ -395,9 +409,9 @@ class LispInterpreter( Interpreter ):
                try:
                   keyName, varName = keyVarSpec
                except ValueError:
-                  raise LispRuntimeError( f'Key Var pair following &key must contain exactly two elements.' )
+                  raise LispArgBindingError( f'Key Var pair following &key must contain exactly two elements.' )
             else:
-               raise LispRuntimeError( f'&key key var pair must be either a symbol of a list (keySymbol varSymbol)' )
+               raise LispArgBindingError( f'&key key var pair must be either a symbol of a list (keySymbol varSymbol)' )
             
             # Extract initForm and svarName from initFormSpec
             initFormSpecLen = len(initFormSpec)
@@ -410,7 +424,7 @@ class LispInterpreter( Interpreter ):
             elif initFormSpecLen == 2:
                initForm, svarName = initFormSpec
             else:
-               raise LispRuntimeError( f'Too many arguments specified in a parameter keyword initialization list.' )
+               raise LispArgBindingError( f'Too many arguments specified in a parameter keyword initialization list.' )
          
          # Record the names and values into the appropriate dicts
          keysDict[keyName.strval] = (varName, svarName)
@@ -430,18 +444,18 @@ class LispInterpreter( Interpreter ):
          svarName = None
          svarVal = LList()
          if not isinstance(keyArg, LSymbol):
-            raise LispRuntimeError( f'Keyword expected, found {keyArg}.' )
+            raise LispArgBindingError( f'Keyword expected, found {keyArg}.' )
          if not keyArg.startswith(':'):
-            raise LispRuntimeError( f'Keyword expected, found {keyArg}.' )
+            raise LispArgBindingError( f'Keyword expected, found {keyArg}.' )
          keyArg = keyArg.strval[1:]  # Strip argKey of the leading colon :
          if (not allowOtherKeys) and (keyArg not in keysDict):
-            raise LispRuntimeError( f'Unexpected keyword found {keyArg}.' )
+            raise LispArgBindingError( f'Unexpected keyword found {keyArg}.' )
          
          argNum += 1
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LispRuntimeError( f'Keyword {keyArg} expected to be followed by a value.' )
+            raise LispArgBindingError( f'Keyword {keyArg} expected to be followed by a value.' )
          argNum += 1
          try:
             if allowOtherKeys:
@@ -450,7 +464,7 @@ class LispInterpreter( Interpreter ):
                varName,svarName = keysDict[keyArg]
             svarVal = env.getGlobalValue('T')
          except KeyError:
-            raise LispRuntimeError( 'Invalid key in argument list :{argKey}.' )
+            raise LispArgBindingError( 'Invalid key in argument list :{argKey}.' )
          
          # Record the bindings
          varsDict[varName.strval] = argVal
@@ -472,7 +486,7 @@ class LispInterpreter( Interpreter ):
       
       # Prepare to loop over the optional parameters and arguments
       if paramNum >= paramListLength:
-         raise LispRuntimeError( 'Param expected after &aux.' )
+         raise LispArgBindingError( 'Param expected after &aux.' )
       
       while (paramNum < paramListLength):
          paramSpec = paramList[paramNum]
@@ -480,21 +494,21 @@ class LispInterpreter( Interpreter ):
          # Extract the next parameter's name and value
          if isinstance( paramSpec, LSymbol ):
             if paramSpec.startswith('&'):
-               raise LispRuntimeError( f'{paramSpec} occurs after &aux.' )
+               raise LispArgBindingError( f'{paramSpec} occurs after &aux.' )
             varName = paramSpec
             initForm = LList( )
          elif isinstance( paramSpec, LList ):
             try:
                varName, initForm = paramSpec
             except:
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
+               raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
 
             if not isinstance(varName, LSymbol):
-               raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
+               raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
             
             initForm = LispInterpreter._lEval( env, initForm )
          else:
-            raise LispRuntimeError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
+            raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          
          # Bind the parameters
          env.bindLocal( varName.strval, initForm )
@@ -557,7 +571,7 @@ class LispInterpreter( Interpreter ):
       primitiveDict[ 'E'    ] = math.e
 
       class LDefPrimitive( object ):
-         '''Decorator to assist in the definition of a lisp primitive.'''
+         '''Decorator to simplifies the definition of a lisp primitive as a python function.'''
          def __init__( self, primitiveSymbol: str, params: str = '', specialForm: bool=False ) -> None:
             '''Arguments:
             primitiveSymbol, the string representation of the lisp symbol used
@@ -615,7 +629,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_macroexpand, 'Argument 1 expected to be a list.' )
 
          if len(theMacroCall) < 2:
-            raise LispRuntimeError( 'Macro call must be at least two elements in length.' )
+            raise LispRuntimeFuncError( LP_macroexpand, 'Macro call must be at least two elements in length.' )
          
          # Break the list contents into a function and a list of args
          primary, *exprArgs = theMacroCall
@@ -624,61 +638,67 @@ class LispInterpreter( Interpreter ):
          # Use this information to get the function definition
          macroDef = LispInterpreter._lEval( env, primary )
          if not isinstance( macroDef, LMacro ):
-            raise LispRuntimeError( 'Badly formed list expression.  The first element should evaluate to a macro.' )
+            raise LispRuntimeFuncError( LP_macroexpand, 'Badly formed list expression.  The first element should evaluate to a macro.' )
 
          expandedMacroBody = LispInterpreter._macroexpand( env, macroDef, *exprArgs )
          return LList( *expandedMacroBody )
 
       @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialForm=True )
       def LP_setf( env: Environment, *args ) -> Any:
-         try:
-            lval,rval = args
-         except ValueError:
-            raise LispRuntimeFuncError( LP_setf, '2 arguments expected.' )
-
-         rval = LispInterpreter._lEval(env, rval)
+         numArgs = len(args)
          
-         if isinstance(lval, LList):       # s-expression
-            if len(lval) == 0:
-               raise LispRuntimeFuncError( LP_setf, 'lvalue cannot be NIL.' )
-            
-            primitive = lval[0]
-            if primitive == 'AT':
-               try:
-                  primitive, keyOrIndex, mapOrLst = lval
-               except ValueError:
-                  raise LispRuntimeFuncError( LP_setf, 'lvalue expected 3 elements.' )
-               
-               theSelector = LispInterpreter._lEval(env,keyOrIndex)
-               theContainer = LispInterpreter._lEval(env,mapOrLst)
-               
-               if not isinstance(theContainer, (LList, LMap)):
-                  raise LispRuntimeFuncError( LP_setf, 'Invalid container type following \'AT\' primitive.' )
-
-               try:
-                  theContainer[theSelector] = rval
-               except (KeyError, IndexError):
-                  raise LispRuntimeFuncError( LP_setf, 'Invalid key or index.')
-               
-               return rval
-            else:
-               lval = LispInterpreter._lEval(env,lval)
-
-         if isinstance(lval, LSymbol ):
-            sym = lval
-            if isinstance(rval,(LFunction,LMacro)) and (rval.name == ''):
-               rval.name = sym
-            sym = str(sym)
+         if (numArgs % 2) != 0:
+            raise LispRuntimeFuncError( LP_setf, f'An even number of arguments is expected.  Received {numArgs}.' )
+         
+         rval = LList()
+         while len(args) > 0:
+            lval,rval,*args = args
    
-            # If sym exists somewhere in the symbol table hierarchy, set its
-            # value to rval.  If it doesn't exist, define it in the global
-            # symbol table and set its value to rval.
-            theSymTab = env.findDef( sym )
-            if theSymTab:
-               theSymTab.bindLocal( sym, rval )
-            else:
-               env.bindGlobal( sym, rval )
+            rval = LispInterpreter._lEval(env, rval)
+            
+            # Case where the lvalue is a symbol form:  (setf variable newValue)
+            if isinstance(lval, LSymbol ):
+               sym = lval
+               if isinstance(rval,(LFunction,LMacro)) and (rval.name == ''):
+                  rval.name = sym
+               sym = str(sym)
+      
+               # If sym exists somewhere in the symbol table hierarchy, set its
+               # value to rval.  If it doesn't exist, define it in the global
+               # symbol table and set its value to rval.
+               theSymTab = env.findDef( sym )
+               if theSymTab:
+                  theSymTab.bindLocal( sym, rval )
+               else:
+                  env.bindGlobal( sym, rval )
          
+            # Case where the lvalue is an 'at' form:  (setf (at key collection) newValue)
+            elif isinstance(lval, LList):       # s-expression
+               if len(lval) == 0:
+                  raise LispRuntimeFuncError( LP_setf, 'lvalue cannot be NIL or ().' )
+               
+               primitive = lval[0]
+               if primitive == 'AT':
+                  try:
+                     primitive, keyOrIndex, mapOrLst = lval
+                  except ValueError:
+                     raise LispRuntimeFuncError( LP_setf, 'lvalue \'at\' form expected 3 elements.' )
+                  
+                  theSelector = LispInterpreter._lEval(env,keyOrIndex)
+                  theContainer = LispInterpreter._lEval(env,mapOrLst)
+                  
+                  if not isinstance(theContainer, (LList, LMap)):
+                     raise LispRuntimeFuncError( LP_setf, 'Invalid container type following \'AT\' primitive.  Expected list or map.' )
+   
+                  try:
+                     theContainer[theSelector] = rval
+                  except (KeyError, IndexError):
+                     raise LispRuntimeFuncError( LP_setf, f'Invalid key or index supplied to \'AT\' form.  Received {theSelector}.' )
+                  
+                  return rval
+               else:
+                  lval = LispInterpreter._lEval(env,lval)
+   
          return rval
          
       @LDefPrimitive( 'undef!', '<symbol>', specialForm=True)
@@ -1435,7 +1455,7 @@ class LispInterpreter( Interpreter ):
          elif isinstance( num,  float ):
             return random.uniform(0.0, num)
          else:
-            raise LispRuntimeError( LP_random, 'Invalid argument type.' )
+            raise LispRuntimeFuncError( LP_random, 'Invalid argument type.' )
 
       # ==========
       # Predicates

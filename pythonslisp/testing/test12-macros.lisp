@@ -39,7 +39,7 @@
 %%% Unbound Variable: X.
 ==> 
 
->>> (zero 'x)
+>>> (zero x)
 ...
 
 ==> 0

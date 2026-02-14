@@ -80,38 +80,3 @@ class Environment( object ):
       return scope          # Returns None if the key isn't located.
 
 
-
-from time import perf_counter
-
-def testEnv(iterations=1000000) -> float:
-   env = Environment()
-   
-   start = perf_counter()
-   for i in range(iterations):
-      env.bindLocal(str(i), i)
-   return perf_counter() - start
-
-def testDict(iterations=1000000) -> float:
-   d = {}
-   env = Environment()
-   
-   start = perf_counter()
-   for i in range(iterations):
-      d[str(i)] = i
-   env.updateLocals(d)
-   return perf_counter() - start
-   
-   
-def main() -> None:
-   numIters = 1_000_000
-   
-   cost = testEnv( numIters )
-   print( f'testEnv {cost:15.8f}' )
-   print( )
-   
-   cost = testDict( numIters )
-   print( f'testDict {cost:15.8f}' )
-   
-
-if __name__ == '__main__':
-   main()
