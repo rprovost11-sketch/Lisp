@@ -99,8 +99,12 @@ class Listener( object ):
    def sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
       '''Read in and restore/execute a session log.  Returns if an exception occurs.'''
       inputText = None
-      with open( filename, 'r') as file:
-         inputText = file.read( )
+      try:
+         with open( filename, 'r') as file:
+            inputText = file.read( )
+      except FileNotFoundError:
+         print( f'File not found: "{filename}".' )
+         return
 
       for exprNum,exprPackage in enumerate(Listener._parseLog(inputText)):
          exprStr,outputStr,retValStr,errMsgStr = exprPackage
@@ -120,8 +124,12 @@ class Listener( object ):
       '''Test the interpreter by comparing evaluation results to a session log.
       Returns if an exception occurs.'''
       inputText = None
-      with open( filename, 'r') as file:
-         inputText = file.read( )
+      try:
+         with open( filename, 'r') as file:
+            inputText = file.read( )
+      except FileNotFoundError:
+         print( f'File not found: "{filename}".' )
+         return
 
       print( f'   Test file: {filename}... ', end='' )
       if verbosity >= 3:
@@ -332,7 +340,12 @@ class Listener( object ):
          raise ListenerCommandError( self._cmd_readsrc.__doc__ )
 
       filename: str = args[0].strip()
-      self._interp.evalFile( filename )
+      try:
+         self._interp.evalFile( filename )
+      except FileNotFoundError as ex:
+         print( f'File not found: "{filename}".' )
+         return
+      
       print( f'Source file read successfully: {filename}' )
 
    def _cmd_reboot( self, args: list[str] ) -> None:
@@ -347,10 +360,7 @@ class Listener( object ):
 
       print( '- Initializing interpreter' )
       print( '- Loading Runtime library' )
-      try:
-         self._interp.reboot( )                     # boot/Reboot the interpreter
-      except FileNotFoundError:
-         raise ListenerCommandError( 'Runtime library directory not found.' )
+      self._interp.reboot( )                     # boot/Reboot the interpreter
       print( 'Enter \']help\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Welcome!' )

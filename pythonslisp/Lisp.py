@@ -1,15 +1,15 @@
 import sys
 
-from pythonslisp.Listener import Listener, ListenerCommandError
+from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.25.0'
+VERSION      = '0.25.1'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'pythonslisp/testing'
 LIBRARY_DIR  = 'pythonslisp/lib'
-USAGE = '''python3.14 -m pythonslisp [lispSourceFile|-h|--help|-v|--version]
+USAGE = '''USAGE:  python3.14 -m pythonslisp [lispSourceFile|-h|--help|-v|--version]
 
 This command takes one optional argument.
 
@@ -27,15 +27,6 @@ def main( ) -> None:
    argv = sys.argv        # argument values
    argc = len(argv)       # argument count
    if argc == 1:
-      if argv[0] in ('-h', '--help'):
-         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
-         print( )
-         print( USAGE )
-         return
-      elif argv[0] in ('-v', '--version'):
-         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
-         return
-      
       # Enter the repl
       try:
          theListener = Listener( interp, language=LANGUAGE,
@@ -44,15 +35,28 @@ def main( ) -> None:
                                          email=EMAIL,
                                          testdir=TEST_DIR
                                          )
-      except ListenerCommandError as ex:
-         print( ex.args[-1] )
-         sys.exit(2)
+      except FileNotFoundError as ex:
+         print( 'Runtime library directory not found: "{LIBRARY_DIR}"' )
+         sys.exit(1)
       
       theListener.readEvalPrintLoop( )
    elif argc == 2:
+      if argv[1] in ('-h', '--help'):
+         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
+         print( )
+         print( USAGE )
+         return
+      elif argv[1] in ('-v', '--version'):
+         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
+         return
+      
       # Execute a lisp source file
       sourceFilename = argv[1]
-      interp.evalFile( sourceFilename )
+      try:
+         interp.evalFile( sourceFilename )
+      except FileNotFoundError as ex:
+         print( ex.args[-1] )
+         sys.exit(1)
    else:
       print( f'Error: Invalid number of arguments.\n{USAGE}', file=sys.stderr )
       sys.exit(1)
