@@ -28,32 +28,32 @@
 
 ==> NIL
 
->>> (and 1 1 1 )
+>>> (and t t t )
 ...
 
 ==> T
 
->>> (and 1 0 1 1 1)
+>>> (and t NIL t t t)
 ...
 
 ==> NIL
 
->>> (or 0 0 0 0)
+>>> (or nil nil nil nil)
 ...
 
 ==> NIL
 
->>> (or 1 0 0 0)
+>>> (or t nil nil nil)
 ...
 
 ==> T
 
->>> (not (and 1 1))
+>>> (not (and t t))
 ...
 
 ==> NIL
 
->>> (not (and 1 0))
+>>> (not (and t nil))
 ...
 
 ==> T

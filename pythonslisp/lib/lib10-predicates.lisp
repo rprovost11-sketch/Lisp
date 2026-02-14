@@ -1,28 +1,28 @@
 ; (null sexpr)
 ;
 ; Does sexpr evaluate to nil?
-(setf null not)
+(alias null not)
 
 ; Setup some aliases for the otherwise oddly named predicates.
 ;
-(setf isNil? null)
+(alias isNil? null)
 
-(setf isNumber? numberp)
+(alias isNumber? numberp)
 
-(setf isInteger? integerp)
+(alias isInteger? integerp)
 
-(setf isRational? rationalp)
+(alias isRational? rationalp)
 
-(setf isFloat? floatp)
+(alias isFloat? floatp)
 
-(setf isSymbol? symbolp)
+(alias isSymbol? symbolp)
 
-(setf isAtom? atom)
+(alias isAtom? atom)
 
-(setf isList? listp)
+(alias isList? listp)
 
-(setf isString? stringp)
+(alias isString? stringp)
 
-(setf isFunction? functionp)
+(alias isFunction? functionp)
 
 

@@ -149,13 +149,13 @@ class LispLexer( Lexer ):
       nextChar = buf.peekNextChar( )
       if nextChar in LispLexer.OCTAL_DIGIT:
          # consume an octal number up to a 3 digits
-         numCharsConsumed = buf.consumePast( LispLexer.OCTAL_DIGIT, maxCharsToConsume=3 )
+         numCharsConsumed = buf.consumePastWithMax( LispLexer.OCTAL_DIGIT, maxCharsToConsume=3 )
          if (numCharsConsumed < 0) or (numCharsConsumed > 3):
             raise ParseError( self, '1 to 3 octacl digits expected following escape character \\.' )
       elif nextChar == 'x':
          buf.consume( )    # consume the x
          # consume 2 digit hex number
-         numDigitsConsumed = buf.consumePast( LispLexer.HEX_DIGIT, maxCharsToConsume=2 )
+         numDigitsConsumed = buf.consumePastWithMax( LispLexer.HEX_DIGIT, maxCharsToConsume=2 )
          if numDigitsConsumed != 2:
             raise ParseError( self, 'Expected exactly two hex digits in escape sequence following \\x.' )
       elif nextChar == 'N':
@@ -172,13 +172,13 @@ class LispLexer( Lexer ):
       elif nextChar == 'u':
          buf.consume( )    # consume the u
          # consume 4 hex digits
-         numDigitsConsumed = buf.consumePast( LispLexer.HEX_DIGIT, maxCharsToConsume=4 )
+         numDigitsConsumed = buf.consumePastWithMax( LispLexer.HEX_DIGIT, maxCharsToConsume=4 )
          if numDigitsConsumed != 4:
             raise ParseError( self, 'Escape sequence expects exactly 4 hex digits following \\u.' )
       elif nextChar == 'U':
          buf.consume( )    # consume the U
          # consume 8 hex digits
-         numDigitsConsumed = buf.consumePast( LispLexer.HEX_DIGIT, maxCharsToConsume=8 )
+         numDigitsConsumed = buf.consumePastWithMax( LispLexer.HEX_DIGIT, maxCharsToConsume=8 )
          if numDigitsConsumed != 8:
             raise ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\u.' )
       elif nextChar in '\\\'\"abfnrtv':

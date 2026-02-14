@@ -3,7 +3,7 @@ from typing import Any
 
 class LexerState( object ):
    def __init__( self, filename: str = '', source: str = '', point: int = 0, mark: int = 0, lineNum: int = 0 ) -> None:
-      self.tok: int             = 0
+      self.lexer_tok: int             = 0
       self.buffer_filename:str = filename
       self.buffer_source: str   = source
       self.buffer_point: int    = point
@@ -22,15 +22,15 @@ class LexerBuffer( object ):
    def reset( self, source: str ) -> None:
       '''Re-initialize the instance over a new or the current string.'''
       self._filename = ''
-      self._source = source.rstrip()
+      self._source = source
       self._point    = 0
       self._mark     = 0
       self._lineNum  = 1
 
    def resetFromFile( self, filename: str ) -> None:
       self._filename = filename
-      with open(self._filename, 'r' ) as file:
-         self._source = file.read( ).rstrip()
+      with open(self._filename, 'r', encoding='utf-8') as file:
+         self._source = file.read( )
       self._point    = 0
       self._mark     = 0
       self._lineNum  = 1
@@ -51,7 +51,25 @@ class LexerBuffer( object ):
       except IndexError:
          pass          # Scanned past eof.  Return gracefully.
 
-   def consumePast( self, aCharSet: str, maxCharsToConsume: int=10000 ) -> int:
+   def consumePast( self, aCharSet: str ) -> None:
+      '''Consume up to the first character NOT in aCharSet.  Returns the number
+      of characters consumed.'''
+      try:
+         while self._source[self._point] in aCharSet:   # raises on EOF
+            self.consume( )
+      except IndexError:
+         pass    # scanned past eof.  Return gracefully.  Eof will be reported by
+
+   def consumeUpTo( self, aCharSet: str ) -> int:
+      '''Consume up to the first character in aCharSet.  Returns the number
+      of characters consumed.'''
+      try:
+         while self._source[self._point] not in aCharSet:   # raises on EOF
+            self.consume( )
+      except IndexError:
+         pass                # scanned past eof.  Return gracefully.
+
+   def consumePastWithMax( self, aCharSet: str, maxCharsToConsume: int ) -> int:
       '''Consume up to the first character NOT in aCharSet.  Returns the number
       of characters consumed.'''
       numCharsConsumed = 0
@@ -63,7 +81,7 @@ class LexerBuffer( object ):
          pass    # scanned past eof.  Return gracefully.  Eof will be reported by
       return numCharsConsumed
 
-   def consumeUpTo( self, aCharSet: str, maxCharsToConsume: int=10000 ) -> int:
+   def consumeUpToWithMax( self, aCharSet: str, maxCharsToConsume: int ) -> int:
       '''Consume up to the first character in aCharSet.  Returns the number
       of characters consumed.'''
       numCharsConsumed = 0
@@ -156,12 +174,12 @@ class Lexer( ABC ):
       '''Create a restore point (for backtracking).  The current
       state of the scanner is preserved under aStateName.'''
       stateInst = self.buffer.saveState( )
-      stateInst.tok = self._tok
+      stateInst.lexer_tok = self._tok
       return stateInst 
 
    def restoreState( self, stateInst: LexerState ) -> None:
       '''Restore a saved state (backtrack to the point where the restore point was made).'''
-      self._tok = stateInst.tok
+      self._tok = stateInst.lexer_tok
       self.buffer.restoreState( stateInst )
 
    @abstractmethod
@@ -184,7 +202,7 @@ class ParseError( Exception ):
 
    def _generateVerboseErrorString( self, srcfilename: str, lineNum: int, colNum: int, sourceLine: str, errorMsg: str ):
       indentStr = ' ' * ( colNum - 1 )
-      return f'Syntax Error: {srcfilename} ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'
+      return f'Syntax Error: "{srcfilename}" ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'
 
 
 class Parser( ABC ):

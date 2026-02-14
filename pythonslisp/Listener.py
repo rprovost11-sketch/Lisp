@@ -2,7 +2,6 @@ import io
 import os
 import datetime
 import time
-import sys
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -42,24 +41,27 @@ class Listener( object ):
    loop and listener commands for session logging, as well as testing and
    rebooting the intepreter.  Partly ripped off from Python's cmd module.'''
    def __init__( self, anInterpreter: Interpreter, testdir: str='', language: str='', version: str='', **kwargs ) -> None:
+      print( f'{language} {version}' )
+      print( '- Initialing Listener', flush=True )
       self._interp          = anInterpreter
       self._testdir         = testdir
       self._logFile: Any    = None
       self._instrumenting = False
-      print( f'{language} {version}' )
-      print( '- Listener initialized', flush=True )
       self._cmd_reboot( [ ] )
 
    def readEvalPrintLoop( self ) -> None:
       '''Execute a read-eval-print-loop.  Handles all exceptions internally.'''
       inputExprLineList: list[str] = [ ]
 
-      keepLooping = True
-      while keepLooping:
-         if len(inputExprLineList) == 0:
-            lineInput = self._prompt( '>>> ' )
-         else:
-            lineInput = self._prompt( '... ' )
+      while True:
+         # Read input from the user
+         try:
+            if len(inputExprLineList) == 0:
+               lineInput = self._prompt( '>>> ' )
+            else:
+               lineInput = self._prompt( '... ' )
+         except EOFError:
+            break
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
             inputExprStr = '\n'.join( inputExprLineList ).strip()
@@ -77,15 +79,15 @@ class Listener( object ):
                      print( f'-------------     Total execution time: {totalTime:15.8f} sec' )
 
             except StopIteration:
-               keepLooping = False
+               break
 
             except (Parser.ParseError, ListenerCommandError) as ex:
                self._writeErrorMsg( ex.args[-1] )
 
             except Exception as ex:   # Unknowns raised by the interpreter
                self._writeErrorMsg( ex.args[-1] )
-               exceptInfo = sys.exc_info( )
-               sys.excepthook( *exceptInfo )
+               #exceptInfo = sys.exc_info( )
+               #sys.excepthook( *exceptInfo )
 
             self._writeLn( )
             inputExprLineList = [ ]
@@ -130,9 +132,9 @@ class Listener( object ):
       for exprNum,exprPackage in enumerate(Listener._parseLog(inputText)):
          exprStr,expectedOutputStr,expectedRetValStr,expectedErrStr = exprPackage
          if verbosity == 2:
-            print( f'{str(exprNum).rjust(8)}.' )
+            print( f'{str(exprNum+1).rjust(8)}.' )
          elif verbosity == 3:
-            print( f'{str(exprNum).rjust(8)}> {exprStr}' )
+            print( f'{str(exprNum+1).rjust(8)}> {exprStr}' )
          
          expectedErrStr = expectedErrStr.rstrip()
 
@@ -232,22 +234,6 @@ class Listener( object ):
       self._writeLn( '' )
       self._writeLn( '==> 0')
 
-   def _cmd_dump( self, args: list[str] ) -> None:
-      '''Usage:  dump
-      Dump a stack trace of the last error.
-      '''
-      
-      if len(args) != 0:
-         raise ListenerCommandError( 'Zero arguments expected by listener command dump.' )
-      
-      exceptInfo = sys.last_exc
-      exceptInfo = sys.exc_info( )
-      if exceptInfo[0] is None:
-         print( 'No exception info available.' )
-         return
-      
-      sys.excepthook( *exceptInfo )
-
    def _cmd_exit( self, args: list[str] ) -> None:
       '''Usage:  exit
       Exit the listener.
@@ -270,7 +256,7 @@ class Listener( object ):
          try:
             doc=getattr(self, f'_cmd_{arg}').__doc__
             if doc:
-               raise ListenerCommandError(doc)
+               self._writeErrorMsg(doc)
          except AttributeError:
             pass
          raise ListenerCommandError( f"*** No help on {arg}." )
@@ -345,7 +331,7 @@ class Listener( object ):
       if len(args) != 1:
          raise ListenerCommandError( self._cmd_readsrc.__doc__ )
 
-      filename: str = args[0]
+      filename: str = args[0].strip()
       self._interp.evalFile( filename )
       print( f'Source file read successfully: {filename}' )
 
@@ -359,9 +345,12 @@ class Listener( object ):
       if self._logFile:
          raise ListenerCommandError( 'Please close the log before rebooting.' )
 
-      print( '- Interpreter initialized' )
-      print( '- Runtime library loaded' )
-      self._interp.reboot( )                     # boot/Reboot the interpreter
+      print( '- Initializing interpreter' )
+      print( '- Loading Runtime library' )
+      try:
+         self._interp.reboot( )                     # boot/Reboot the interpreter
+      except FileNotFoundError:
+         raise ListenerCommandError( 'Runtime library directory not found.' )
       print( 'Enter \']help\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Welcome!' )

@@ -144,7 +144,7 @@ class LispInterpreter( Interpreter ):
       s-expression in the form of a LispAST; eval will return the result.'''
       if isinstance( sExpr, LSymbol ):
          try:
-            return env.getValue3( sExpr.strval )
+            return env.getValue( sExpr.strval )
          except KeyError:
             if sExpr.isArgKey():
                return sExpr
@@ -426,25 +426,28 @@ class LispInterpreter( Interpreter ):
       
       # Iterate through the key args updating varsDict
       while argNum < argListLength:
-         argKey = argList[argNum]
+         keyArg = argList[argNum]
          svarName = None
-         svarVal = None
-         if not isinstance(argKey, LSymbol):
-            raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
-         if not argKey.startswith(':'):
-            raise LispRuntimeError( f'Keyword expected, found {argKey}.' )
-         argKey = argKey.strval[1:]  # Strip argKey of the leading colon :
-         if (not allowOtherKeys) and (argKey not in keysDict):
-            raise LispRuntimeError( f'Unexpected keyword found {argKey}.' )
+         svarVal = LList()
+         if not isinstance(keyArg, LSymbol):
+            raise LispRuntimeError( f'Keyword expected, found {keyArg}.' )
+         if not keyArg.startswith(':'):
+            raise LispRuntimeError( f'Keyword expected, found {keyArg}.' )
+         keyArg = keyArg.strval[1:]  # Strip argKey of the leading colon :
+         if (not allowOtherKeys) and (keyArg not in keysDict):
+            raise LispRuntimeError( f'Unexpected keyword found {keyArg}.' )
          
          argNum += 1
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LispRuntimeError( f'Keyword {argKey} expected to be followed by a value.' )
+            raise LispRuntimeError( f'Keyword {keyArg} expected to be followed by a value.' )
          argNum += 1
          try:
-            paramVar,svarName = keysDict[argKey]
+            if allowOtherKeys:
+               paramVar,svarName = keysDict.get(keyArg, (keyArg, None))
+            else:
+               paramVar,svarName = keysDict[keyArg]
             svarVal = env.getGlobalValue('T')
          except KeyError:
             raise LispRuntimeError( 'Invalid key in argument list :{argKey}.' )
@@ -600,7 +603,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_defmacro, "At least one body expression expected." )
 
          theFunc = LMacro( fnName, funcParams, LList(*funcBody) )
-         return env.bindGlobal( str(fnName), theFunc )
+         return env.bindGlobal( fnName.strval, theFunc )
 
       @LDefPrimitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)' )
       def LP_macroexpand( env: Environment, *args ) -> Any:
@@ -685,7 +688,7 @@ class LispInterpreter( Interpreter ):
          key = args[0]
          if not isinstance(key, LSymbol):
             raise LispRuntimeFuncError( LP_undef, 'Argument expected to be a symbol.' )
-         env.getGlobalEnv().undef( str(key) )
+         env.getGlobalEnv().undef( key.strval )
          return L_NIL
 
       @LDefPrimitive( 'symtab!' )
@@ -716,7 +719,7 @@ class LispInterpreter( Interpreter ):
          except ValueError:
             raise LispRuntimeFuncError( LP_lambda, '2 arguments expected.' )
 
-         return LFunction( LSymbol(""), funcParams, LList(*funcBody), closure=env )
+         return LFunction( LSymbol(""), funcParams, funcBody, closure=env )
 
       @LDefPrimitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
       def LP_let( env: Environment, *args ) -> Any:
@@ -738,7 +741,7 @@ class LispInterpreter( Interpreter ):
                varSpecLen = len(varSpec)
                if varSpecLen == 1:
                   varName = varSpec[0]
-                  initForm = List()
+                  initForm = LList()
                elif varSpecLen == 2:
                   varName, initForm = varSpec
                else:
@@ -779,7 +782,7 @@ class LispInterpreter( Interpreter ):
                varSpecLen = len(varSpec)
                if varSpecLen == 1:
                   varName = varSpec[0]
-                  initForm = List()
+                  initForm = LList()
                elif varSpecLen == 2:
                   varName, initForm = varSpec
                else:
@@ -808,13 +811,13 @@ class LispInterpreter( Interpreter ):
          numArgs = len(args)
          if not(2 <= numArgs <= 3):
             raise LispRuntimeFuncError( LP_if, '2 or 3 arguments expected.' )
-         condExpr,*rest = args
+         condExpr,conseq,*alt = args
 
          condValue = LispInterpreter._lEval( env, condExpr )
          if LispInterpreter._lTrue(condValue):
-            return LispInterpreter._lEval( env, rest[0])    # The THEN part
+            return LispInterpreter._lEval( env, conseq)    # The THEN part
          elif numArgs == 3:
-            return LispInterpreter._lEval( env, rest[1])    # The ELSE part
+            return LispInterpreter._lEval( env, alt[0])    # The ELSE part
          else:
             return L_NIL
 
@@ -834,7 +837,7 @@ class LispInterpreter( Interpreter ):
                raise LispRuntimeFuncError( LP_cond, f'Entry {caseNum+1} expects at least one body expression.' )
 
             if LispInterpreter._lTrue(LispInterpreter._lEval(env,testExpr)):
-               latestResult = None
+               latestResult = LList( )
                for sexpr in body:
                   latestResult = LispInterpreter._lEval( env, sexpr )
                return latestResult
@@ -931,7 +934,7 @@ class LispInterpreter( Interpreter ):
          if len(body) < 1:
             raise LispRuntimeFuncError( LP_while, 'At least one sexpr expected for the body.' )
 
-         latestResult = None
+         latestResult = LList()
          condResult = LispInterpreter._lEval(env, conditionExpr)
          while LispInterpreter._lTrue( condResult ):
             for expr in body:
@@ -965,9 +968,9 @@ class LispInterpreter( Interpreter ):
          if len(body) < 1:
             raise LispRuntimeFuncError( LP_dotimes, 'At least one sexpr expected for the loop body.' )
 
-         latestResult = None
+         latestResult = LList()
          for iterCount in range(count):
-            env.bindLocal( str(variable), iterCount )
+            env.bindLocal( variable.strval, iterCount )
             for sexpr in body:
                latestResult = LispInterpreter._lEval( env, sexpr )
          return latestResult
@@ -990,7 +993,7 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_foreach, "Argument 2 expected to evaluate to a list." )
 
          # Evaluate the body while there are elements left in the list
-         latestResult = L_NIL
+         latestResult = LList()
          for element in alist:
             env.bindLocal( str(varSymbol), element )
             for sexpr in body:
@@ -1134,7 +1137,7 @@ class LispInterpreter( Interpreter ):
             if isinstance(alist, LList):
                alist.append( value )
             else:
-               alist = L_NIL
+               alist = LList()
          except:
             raise LispRuntimeFuncError( LP_push, 'Invalid argument.' )
          return alist
@@ -1387,7 +1390,7 @@ class LispInterpreter( Interpreter ):
       @LDefPrimitive( 'acos', '<number>' )
       def LP_acos( env: Environment, *args ) -> Any:
          try:
-            return math.asin(args[0])
+            return math.acos(args[0])
          except:
             raise LispRuntimeFuncError( LP_acos, 'Invalid argument.' )
 
@@ -1459,7 +1462,7 @@ class LispInterpreter( Interpreter ):
       def LP_floatp( env: Environment,  *args ) -> Any:
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_floatp, '1 argument expected.' )
-         return L_T if isinstance( args[0], (float) ) else L_NIL
+         return L_T if isinstance( args[0], float ) else L_NIL
 
       @LDefPrimitive( 'symbolp', '<sexpr>' )
       def LP_symbolp( env: Environment, *args ) -> Any:
@@ -1645,8 +1648,8 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_and, '2 or more arguments exptected.' )
 
          for arg in args:
-            if (arg == 0) or (arg is L_NIL) or (arg is None):
-               return L_NIL
+            if not LispInterpreter._lTrue(arg):
+               return LList()
 
          return L_T
 
@@ -1656,10 +1659,10 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeFuncError( LP_or, '2 or more arguments exptected.' )
 
          for arg in args:
-            if (arg != 0) and (arg is not L_NIL) and (arg is not None):
+            if LispInterpreter._lTrue(arg):
                return L_T
 
-         return L_NIL
+         return LList()
 
       # ===============
       # Type Conversion
@@ -1692,7 +1695,7 @@ class LispInterpreter( Interpreter ):
          except (IndexError, TypeError):
             raise LispRuntimeFuncError( LP_rational, 'Invalid argument.' )
 
-      @LDefPrimitive( 'string', '<object1> <object22> ...' )
+      @LDefPrimitive( 'string', '<object1> <object2> ...' )
       def LP_string( env: Environment, *args ) -> Any:
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_string, '1 or more arguments exptected.' )
@@ -1710,7 +1713,7 @@ class LispInterpreter( Interpreter ):
 
       @LDefPrimitive( 'symbol', '<string1> <string2> ...'  )
       def LP_symbol( env: Environment, *args ) -> Any:
-         if len(args) <= 1:
+         if len(args) == 0:
             raise LispRuntimeFuncError( LP_symbol, '1 or more string argument expected.' )
 
          strList = [ str(arg) for arg in args ]
@@ -1792,8 +1795,8 @@ class LispInterpreter( Interpreter ):
       # ===============
       # System Level
       # ---------------
-      @LDefPrimitive( 'recurslimit', '&optional <newLimit>')
-      def LP_recurslimit( env: Environment, *args ) -> Any:
+      @LDefPrimitive( 'recursion-limit', '&optional <newLimit>')
+      def LP_recursionlimit( env: Environment, *args ) -> Any:
          numArgs = len(args)
          if numArgs == 0:
             return sys.getrecursionlimit()
@@ -1805,6 +1808,6 @@ class LispInterpreter( Interpreter ):
             except RecursionError:
                return LList()
          else:
-            raise LispRuntimeFuncError( LP_recurslimit, 'Only one optional arg is allowed.' )
+            raise LispRuntimeFuncError( LP_recursionlimit, 'Only one optional arg is allowed.' )
       
       return primitiveDict

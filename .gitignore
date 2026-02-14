@@ -5,5 +5,4 @@ cltl/
 dist/
 build/
 .vs/
-*.wpr
-*.wpu
+

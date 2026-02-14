@@ -1,6 +1,9 @@
 (defmacro defun (fnName argList &rest body)
    `(setf ,fnName (lambda (,@argList) ,@body)))
 
+(defmacro alias (new old)
+   `(setf ,new ,old))
+
 ; Prompt the user for input on the command line.
 (defun read_prompt (promptStr)
             (write! promptStr)

@@ -4,6 +4,21 @@ Development Tasks
 
 To Do
 -----
+- Make the LispInterpreter._bindX methods insert their name/value pairs into
+  a dictionary rather than directly into the environment.  Binding can then
+  return the dictionary which is used to updateLocals in the environment.
+- Make the LispInterpreter._bindX methods take a tuple instead of a list for
+  the argList parameter.  Right now other functions have to convert their
+  tuples to lists before calling _bindArguments.
+- Ask the AI how to implement the tail-call optimization.
+- Ask the AI how to implement compiler tracing or debugging hooks.
+- Break _lconstructPrimitives down into multiple functions:
+  _lconstructMathPrimitives, _lconstructIOPrimitives, etc.
+- Implement an online (help <symbol>) primitive which prints some documentation
+  about the primitive, function or macro.
+- See if macros are also supposed to support closures.
+
+
 - OPTIMIZATION: Move macro expansion completely out of expression evaluation.
   It should occur earlier (just after parsing).  Doing this will mean that
   macros are only expanded once instead of every time a line of code calling a
