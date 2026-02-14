@@ -4,7 +4,7 @@ from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.25.1'
+VERSION      = '0.25.2'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 TEST_DIR     = 'pythonslisp/testing'
@@ -15,10 +15,10 @@ This command takes one optional argument.
 
 - If no arguments are specified the Listener\'s repl will execute.
 - If a lisp source file name is provided as the only argument, Python\'s Lisp
-- will execute the source file.
+  will execute the source file.
 - If -h or --help is the argument, then lisp displays this help message then exits.
 - If -v or --version is the argument, then lisp displays the version number
-then exits.
+  then exits.
 '''
 
 def main( ) -> None:

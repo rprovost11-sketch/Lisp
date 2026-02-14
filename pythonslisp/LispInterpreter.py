@@ -181,7 +181,7 @@ class LispInterpreter( Interpreter ):
          env = Environment( lcallable.closure ) # Open a new scope on the function's closure env to support closures.
 
          # store the arguments as locals
-         LispInterpreter._lbindArguments( env, lcallable.params, list(args) ) #convert args from a tuple to a list
+         LispInterpreter._lbindArguments( env, lcallable.params, args ) #convert args from a tuple to a list
 
          # evaluate the body expressions.
          latestResult = LList()
@@ -198,7 +198,7 @@ class LispInterpreter( Interpreter ):
          return latestResult
 
    @staticmethod
-   def _lbindArguments( env: Environment, paramList: list[Any], argList: list[Any] ) -> None:
+   def _lbindArguments( env: Environment, paramList: list[Any], argList: tuple[Any] ) -> None:
       paramListLength = len(paramList)
       argListLength = len(argList)
 
@@ -258,7 +258,7 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( 'Too few parameters.' )
 
    @staticmethod
-   def _lbindPositionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+   def _lbindPositionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       paramListLength = len(paramList)
 
       while paramNum < paramListLength:
@@ -285,7 +285,7 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
    
    @staticmethod
-   def _lbindOptionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+   def _lbindOptionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''Syntax:  &optional {var | (var [initform [svar]])}*'''
       paramListLength = len(paramList)
       argListLength = len(argList)
@@ -344,7 +344,7 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
 
    @staticmethod
-   def _lbindRestArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+   def _lbindRestArgs( env:  Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''Syntax:  &rest var'''
       try:
          paramName = paramList[paramNum]
@@ -360,7 +360,7 @@ class LispInterpreter( Interpreter ):
       return paramNum + 1, argNum
 
    @staticmethod
-   def _lbindKeyArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+   def _lbindKeyArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [svar]])}* [&allow-other-keys]'''
       paramListLength = len(paramList)
       argListLength = len(argList)
@@ -445,15 +445,15 @@ class LispInterpreter( Interpreter ):
          argNum += 1
          try:
             if allowOtherKeys:
-               paramVar,svarName = keysDict.get(keyArg, (keyArg, None))
+               varName,svarName = keysDict.get(keyArg, (keyArg, None))
             else:
-               paramVar,svarName = keysDict[keyArg]
+               varName,svarName = keysDict[keyArg]
             svarVal = env.getGlobalValue('T')
          except KeyError:
             raise LispRuntimeError( 'Invalid key in argument list :{argKey}.' )
          
          # Record the bindings
-         varsDict[paramVar.strval] = argVal
+         varsDict[varName.strval] = argVal
          
          if svarName:
             varsDict[svarName.strval] = svarVal
@@ -464,7 +464,7 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
 
    @staticmethod
-   def _lbindAuxArgs( env: Environment, paramList: list[Any], paramNum: int, argList: list[Any], argNum: int ) -> (int, int):
+   def _lbindAuxArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''Syntax:  &aux {var | (var [initForm])}*
       These are not really arguments.  At least: these parameters get no corresponding arguments.
       These parameters are strictly local variables for the function.'''
@@ -509,7 +509,7 @@ class LispInterpreter( Interpreter ):
       env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
 
       # store the arguments as locals
-      LispInterpreter._lbindArguments( env, macroDef.params, list(args) ) #convert args from a tuple to a list
+      LispInterpreter._lbindArguments( env, macroDef.params, args ) #convert args from a tuple to a list
 
       # Evaluate each body expression; expanding each expr in turn to expand
       # the full macro body.  Place those expanded expressions in resultList.
