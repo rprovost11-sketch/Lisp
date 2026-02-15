@@ -6,10 +6,8 @@
          (writeln! "- Failed to increase recursion limit."))
       (uwriteln! "- No need to adjust recursion limit.")))
 
-; Compute the factorial - recursion test
-;
-; (fact n)
 (defun fact (n)
+         "Recursively compute the factorial of an arbitrary integer n.  For general testing of the interpreter."
          (if (= n 0)
              1
              (* n (fact (- n 1)))))
@@ -18,12 +16,14 @@
 ;
 ; (fib n)
 (defun fib (n)
+         "Recursively compute and return the nth fibonacci number."
          (if (<= n 2)
              1
              (+ (fib (- n 1))
                 (fib (- n 2)))))
 
 (defun d (expr)
+         "Compute the first derivative of an expression."
          (cond ((isNumber? expr)
                       0)
                ((isSymbol? expr)
@@ -37,4 +37,4 @@
                             ('expt     (list '*   (list '* (at 2 expr) (list 'pow (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))
                             ))))
 
-
+(uwriteln! "- For online help type \"(help)\" or \"(help <callable>)\"." )

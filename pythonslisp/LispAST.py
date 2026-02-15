@@ -50,38 +50,47 @@ class LSymbol( object ):
 # A map type will be introduced to Lisp represented by python dict.
 
 class LCallable( object ):
-   __slots__ = ('name', 'specialForm')
+   __slots__ = ('name', 'docString', 'specialForm')
    
-   def __init__( self, name: str, specialForm: bool = False ) -> None:
+   def __init__( self, name: str, docString: str = '', specialForm: bool = False ) -> None:
       self.name:str = name
+      self.docString:str = docString
       self.specialForm:bool = specialForm
 
 class LPrimitive( LCallable ):
-   __slots__ = ('pythonFn', 'usageStr', 'paramsStr')
+   __slots__ = ('pythonFn', 'paramsString')
    
-   def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, params: str, specialForm: bool=False ) -> None:
+   def __init__( self, fn: Callable[[Environment], Any], name: str, params: str, docString: str = '', specialForm: bool=False ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
-      self.usageStr = usage
-      self.paramsStr:str = params
-      super().__init__( name, specialForm )
+      self.paramsString:str = params
+      super().__init__( name, docString, specialForm )
+   
+   def usageString( self ):
+      return f'({self.name} {self.paramsString})'
 
 class LFunction( LCallable ):
    __slots__ = ('params', 'body', 'closure')
    
-   def __init__( self, name: LSymbol, params: list, bodyExprLst: list, closure: Environment ) -> None:
+   def __init__( self, name: LSymbol, params: list, docString: str, bodyExprLst: list, closure: Environment ) -> None:
       self.params: list = params
       self.body: list   = bodyExprLst
       self.closure: Environment = closure
-      super().__init__( name, specialForm=False )
+      super().__init__( name, docString, specialForm=False )
+   
+   def usageString( self ):
+      return f'(Function {self.name} {prettyPrintSExpr(self.params)} ...)'
 
 
 class LMacro( LCallable ):
    __slots__ = ('params', 'body')
    
-   def __init__( self, name: LSymbol, params: list, bodyExprList: list ) -> None:
+   def __init__( self, name: LSymbol, params: list, docString: str, bodyExprList: list ) -> None:
       self.params: list  = params
       self.body: list    = bodyExprList
-      super().__init__( name, specialForm=True )
+      super().__init__( name, docString, specialForm=True )
+   
+   def usageString( self ):
+      return f'(Macro {self.name} {prettyPrintSExpr(self.params)} ...)'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:
@@ -109,14 +118,11 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       resultStrLines.append(')\n')
       return '\n'.join(resultStrLines)
    elif isinstance(sExpr, LPrimitive):
-      if len(sExpr.usageStr) > 0:
-         return f'(Primitive {sExpr.name} ({sExpr.paramsStr}) ...)'
-      else:
-         return f'(Primitive {sExpr.name} (...) ...)'
+      return sExpr.usageString()
    elif isinstance(sExpr, LFunction):
-      return f"(Function {sExpr.name} {prettyPrintSExpr(sExpr.params)} ... )"
+      return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
-      return f"(Macro {sExpr.name} {prettyPrintSExpr(sExpr.params)} ... )"
+      return sExpr.usageString()
    else:
       return repr(sExpr)
 
@@ -143,14 +149,11 @@ def prettyPrint( sExpr: Any ) -> str:
       resultStrLines.append(')\n')
       return '\n'.join(resultStrLines)
    elif isinstance(sExpr, LPrimitive):
-      if len(sExpr.usageStr) > 0:
-         return f'(Primitive {sExpr.name} ({sExpr.paramsStr}) ...)'
-      else:
-         return f'(Primitive {sExpr.name} (...) ...)'
+      return sExpr.usageString()
    elif isinstance(sExpr, LFunction):
-      return f"(Function {sExpr.name} {prettyPrint(sExpr.params)} ... )"
+      return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
-      return f"(Macro {sExpr.name} {prettyPrint(sExpr.params)} ... )"
+      return sExpr.usageString()
    else:
       return str(sExpr)
 
