@@ -2,7 +2,7 @@ from fractions import Fraction
 from typing import Any
 
 from pythonslisp.Parser import Lexer, Parser, ParseError
-from pythonslisp.LispAST import LList, LSymbol
+from pythonslisp.LispAST import LSymbol
 
 """
 The Language
@@ -37,6 +37,7 @@ Grammar
 """
 
 class LispLexer( Lexer ):
+   # Character Classes
    WHITESPACE     = ' \t\n\r'
    SIGN           = '+-'
    DIGIT          = '0123456789'
@@ -50,6 +51,7 @@ class LispLexer( Lexer ):
    SYMBOL_FIRST   = ALPHA + SIGN + SYMBOL_OTHER
    SYMBOL_REST    = ALPHA + SIGN + SYMBOL_OTHER + DIGIT
 
+   # Token Definitions
    EOF_TOK            =   0
 
    SYMBOL_TOK         = 101    # Value tokens
@@ -317,7 +319,7 @@ class LispParser( Parser ):
 
    def _parse( self ) -> Any:
       # Parse all the sexpressions and insert them into a lisp progn function
-      bodyExpr = LList( LSymbol('progn') )
+      bodyExpr = [ LSymbol('progn') ]
       while self._scanner.peekToken() != LispLexer.EOF_TOK:
          bodyExpr.append( self._parseObject() )
 
@@ -359,22 +361,22 @@ class LispParser( Parser ):
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
-         ast = LList( LSymbol('QUOTE'), subordinate )
+         ast = [ LSymbol('QUOTE'), subordinate ]
       elif nextToken == LispLexer.BACK_QUOTE_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
-         ast = LList( LSymbol('BACKQUOTE'), subordinate )
+         ast = [ LSymbol('BACKQUOTE'), subordinate ]
       elif nextToken == LispLexer.COMMA_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
-         ast = LList( LSymbol('COMMA'), subordinate )
+         ast = [ LSymbol('COMMA'), subordinate ]
       elif nextToken == LispLexer.COMMA_AT_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
-         ast = LList( LSymbol('COMMA-AT'), subordinate )
+         ast = [ LSymbol('COMMA-AT'), subordinate ]
       elif nextToken == LispLexer.EOF_TOK:
          ast = None
       else:
@@ -382,10 +384,10 @@ class LispParser( Parser ):
 
       return ast
 
-   def _parseList( self ) -> LList:
+   def _parseList( self ) -> list:
       scn = self._scanner
       
-      theList = LList( )
+      theList = list( )
 
       # Open List
       nextToken = scn.peekToken()

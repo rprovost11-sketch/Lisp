@@ -202,7 +202,7 @@ class ParseError( Exception ):
 
    def _generateVerboseErrorString( self, srcfilename: str, lineNum: int, colNum: int, sourceLine: str, errorMsg: str ):
       indentStr = ' ' * ( colNum - 1 )
-      return f'Syntax Error: "{srcfilename}" ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^ {errorMsg}'
+      return f'Syntax Error: "{srcfilename}" ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^\n{errorMsg}'
 
 
 class Parser( ABC ):

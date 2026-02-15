@@ -4,7 +4,7 @@ class Environment( object ):
    def __init__( self, parent: (Environment|None)=None, **initialNameValDict: dict[str, Any]):
       self._bindings: dict[str, Any] = initialNameValDict.copy()
       self._parent: (Environment | None) = parent
-      self._GLOBAL_SCOPE: Environment = parent._GLOBAL_SCOPE if parent else self
+      self._GLOBAL_ENV: Environment = parent._GLOBAL_ENV if parent else self
 
    def updateLocals( self, newValues: dict[str, Any] ):
       self._bindings.update(newValues)
@@ -14,7 +14,7 @@ class Environment( object ):
       return value
 
    def bindGlobal( self, key: str, value: Any ) -> Any:
-      self._GLOBAL_SCOPE._bindings[ key ] = value
+      self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
    def getValue( self,  key: str) -> Any:
@@ -49,10 +49,10 @@ class Environment( object ):
       raise KeyError
 
    def getGlobalValue(self, key: str ) -> Any:
-      return self._GLOBAL_SCOPE._bindings[ key ]
+      return self._GLOBAL_ENV._bindings[ key ]
 
    def getGlobalEnv( self ) -> Environment:
-      return self._GLOBAL_SCOPE
+      return self._GLOBAL_ENV
 
    def undef( self, key: str ) -> None:
       scope: (Environment | None) = self

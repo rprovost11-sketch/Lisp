@@ -12,6 +12,23 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return f'\"{sExpr}\"'
    elif isinstance(sExpr, Fraction):
       return f'{sExpr.numerator}/{sExpr.denominator}'
+   elif isinstance(sExpr, list):
+      if len(sExpr) == 0:
+         return 'NIL'
+
+      mbrList = [ prettyPrintSExpr(mbr) for mbr in sExpr ]
+      mbrListStr = ' '.join(mbrList)
+      resultStr = f'({mbrListStr})'
+      return resultStr
+   elif isinstance(sExpr, dict):
+      resultStrLines = [ '(MAP' ]
+      for key in sorted(sExpr.keys()):
+         value = sExpr[ str(key) ]
+         key = prettyPrintSExpr(key)
+         value = prettyPrintSExpr( value )
+         resultStrLines.append( f'   ({key} {value})')
+      resultStrLines.append(')\n')
+      return '\n'.join(resultStrLines)
    else:
       return repr(sExpr)
 
@@ -20,6 +37,23 @@ def prettyPrint( sExpr: Any ) -> str:
    of a lisp object.'''
    if isinstance(sExpr, Fraction):
       return f'{sExpr.numerator}/{sExpr.denominator}'
+   elif isinstance(sExpr, list):
+      if len(sExpr) == 0:
+         return 'NIL'
+
+      mbrList = [ prettyPrint(mbr) for mbr in sExpr ]
+      mbrListStr = ' '.join(mbrList)
+      resultStr = f'({mbrListStr})'
+      return resultStr
+   elif isinstance(sExpr, dict):
+      resultStrLines = [ '(MAP' ]
+      for key in sorted(sExpr.keys()):
+         value = sExpr[ str(key) ]
+         key = prettyPrint(key)
+         value = prettyPrint( value )
+         resultStrLines.append( f'   ({key} {value})')
+      resultStrLines.append(')\n')
+      return '\n'.join(resultStrLines)
    else:
       return str(sExpr)
 
@@ -63,46 +97,9 @@ class LSymbol( object ):
       return self.strval.startswith(':')
 
 
-class LList( list ):
-   def __init__( self, *elements ) -> None:
-      super().__init__( elements )
+# Lisp lists will be represented by python list.
 
-   def __str__( self ) -> str:
-      if len(self) == 0:
-         return 'NIL'
-
-      mbrList = [ prettyPrintSExpr(mbr) for mbr in self ]
-      mbrListStr = ' '.join(mbrList)
-      resultStr = f'({mbrListStr})'
-      return resultStr
-
-   def __repr__( self ) -> str:
-      if len(self) == 0:
-         return 'NIL'
-
-      mbrList = [ prettyPrintSExpr(mbr) for mbr in self ]
-      mbrListStr = ' '.join(mbrList)
-      resultStr = f'({mbrListStr})'
-      return resultStr
-
-
-class LMap( dict ):
-   def __init__( self, **mapping ):
-      super().__init__(**mapping)
-
-   def __str__( self ) -> str:
-      return self.__repr__( )
-
-   def __repr__( self ) -> str:
-      resultStrLines = [ '(MAP' ]
-      for key in sorted(self.keys()):
-         value = super().__getitem__( str(key) )
-         key = prettyPrintSExpr(key)
-         value = prettyPrintSExpr( value )
-         resultStrLines.append( f'   ({key} {value})')
-      resultStrLines.append(')\n')
-      return '\n'.join(resultStrLines)
-
+# A map type will be introduced to Lisp represented by python dict.
 
 class LCallable( object ):
    __slots__ = ('name', 'specialForm')
@@ -132,31 +129,31 @@ class LPrimitive( LCallable ):
 class LFunction( LCallable ):
    __slots__ = ('params', 'body', 'closure')
    
-   def __init__( self, name: LSymbol, params: LList, bodyExprLst: LList, closure: Environment|None = None) -> None:
-      self.params: LList = params
-      self.body: LList   = bodyExprLst
-      self.closure: Environment | None = closure
+   def __init__( self, name: LSymbol, params: list, bodyExprLst: list, closure: Environment ) -> None:
+      self.params: list = params
+      self.body: list   = bodyExprLst
+      self.closure: Environment = closure
       super().__init__( name, specialForm=False )
 
    def __str__( self ) -> str:
-      return self.__repr__( )
+      return f"(Function {self.name} {prettyPrint(self.params)} ... )"
 
    def __repr__( self ) -> str:
-      return f"(Function {self.name} {self.params} ... )"
+      return f"(Function {self.name} {prettyPrintSExpr(self.params)} ... )"
 
 
 class LMacro( LCallable ):
    __slots__ = ('params', 'body')
    
-   def __init__( self, name: LSymbol, params: LList, bodyExprList: LList ) -> None:
-      self.params: LList  = params
-      self.body: LList    = bodyExprList
+   def __init__( self, name: LSymbol, params: list, bodyExprList: list ) -> None:
+      self.params: list  = params
+      self.body: list    = bodyExprList
       super().__init__( name, specialForm=True )
 
    def __str__( self ) -> str:
-      return self.__repr__()
+      return f"(Macro {self.name} {prettyPrint(self.params)} ... )"
 
    def __repr__( self ) -> str:
-      return f"(Macro {self.name} {self.params} ... )"
+      return f"(Macro {self.name} {prettyPrintSExpr(self.params)} ... )"
 
 
