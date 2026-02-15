@@ -7,54 +7,11 @@ from fractions import Fraction
 from typing import Callable, Any
 
 from pythonslisp.LispParser import LispParser
-from pythonslisp.Listener import Interpreter, retrieveFileList
+from pythonslisp.Listener import Interpreter, retrieveFileList, columnize
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import ( LSymbol, LNUMBER,
-                                  LCallable, LFunction, LPrimitive, LMacro,
-                                  prettyPrintSExpr, prettyPrint )
+from pythonslisp.LispAST import ( LSymbol, LNUMBER, prettyPrint, prettyPrintSExpr, 
+                                  LCallable, LFunction, LPrimitive, LMacro )
 
-# The LispExpander class is currently unused.  It does not yet fully work correctly.
-class LispExpander( object ):
-   @staticmethod
-   def expand( env: Environment, sExpr: Any ) -> Any:
-      if not isinstance(sExpr, list):
-         return sExpr
-      
-      if len(sExpr) == 0:
-         return list( )
-      
-      primary, *args = sExpr
-      if isinstance(primary, LSymbol):
-         if primary == 'DEFMACRO':
-            return sExpr
-         
-         try:
-            fnDef = env.getValue( primary.strval )
-         except KeyError:
-            fnDef = None
-         
-         if isinstance(fnDef, LMacro):
-            return LispExpander._expandMacro( env, fnDef, *args )
-         elif isinstance(fnDef, LPrimitive) and (fnDef.name == 'BACKQUOTE'):
-            return fnDef.pythonFn( env, *args )             # Invokes LP_backquote
-      
-      resultList = [ LispExpander.expand(env, subExpr) for subExpr in sExpr ]
-      return list( *resultList )
-   
-   @staticmethod
-   def _expandMacro( env: Environment, macroDef: LMacro, *args ):
-      env = Environment( env )
-      LispInterpreter._lbindArguments( env, macroDef.params, list(args) )
-      expandedBody = [ LispExpander.expand(env, bodySExpr) for bodySExpr in macroDef.body ]
-      
-      if len(expandedBody) == 0:
-         return expandedBody
-      elif len(expandedBody) == 1:
-         return LispExpander.expand( env, expandedBody[0] )
-      else:
-         expandedBody.insert( 0, LSymbol('PROGN') )
-         return expandedBody
-   
 class LispRuntimeError( Exception ):
    def __init__( self, *args ) -> None:
       super().__init__( self, *args )
@@ -106,7 +63,6 @@ class LispInterpreter( Interpreter ):
       LispInterpreter.outStrm = outStrm
       try:
          ast = self._parser.parse( source )
-         #ast = LispExpander.expand( self._env, ast )
          returnVal = LispInterpreter._lEval( self._env, ast )
       finally:
          LispInterpreter.outStrm = None
@@ -132,7 +88,6 @@ class LispInterpreter( Interpreter ):
       LispInterpreter.outStrm = outStrm
       try:
          ast = self._parser.parseFile( filename )
-         #ast = LispExpander.expand( self._env, ast )
          returnVal = LispInterpreter._lEval( self._env, ast )
       finally:
          LispInterpreter.outStrm = None
@@ -664,7 +619,7 @@ class LispInterpreter( Interpreter ):
                sym = lval
                if isinstance(rval,(LFunction,LMacro)) and (rval.name == ''):
                   rval.name = sym
-               sym = str(sym)
+               sym = sym.strval
       
                # If sym exists somewhere in the symbol table hierarchy, set its
                # value to rval.  If it doesn't exist, define it in the global
@@ -1018,7 +973,7 @@ class LispInterpreter( Interpreter ):
          # Evaluate the body while there are elements left in the list
          latestResult = list()
          for element in alist:
-            env.bindLocal( str(varSymbol), element )
+            env.bindLocal( varSymbol.strval, element )
             for sexpr in body:
                latestResult = LispInterpreter._lEval( env,  sexpr )
          return latestResult
@@ -1028,8 +983,7 @@ class LispInterpreter( Interpreter ):
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
 
-         result = LispInterpreter._lEval( env, args )
-         return result
+         return LispInterpreter._lEval( env, args )
 
       @LDefPrimitive( 'eval', '<sexpr>' )
       def LP_eval( env: Environment, *args ) -> Any:
@@ -1055,7 +1009,7 @@ class LispInterpreter( Interpreter ):
          if fnObj.specialForm:  # Macros and some primitives
             raise LispRuntimeFuncError( LP_apply, "First argument may not be a special form." )
          
-         # fn is not a special form: functions and most primitives
+         # fnObj is not a special form: functions and most primitives
          fnArgs = list( args[1:-1] )
          fnArgs.extend( listArg )
          
@@ -1828,5 +1782,62 @@ class LispInterpreter( Interpreter ):
                return list()
          else:
             raise LispRuntimeFuncError( LP_recursionlimit, 'Only one optional arg is allowed.' )
+      
+      @LDefPrimitive( 'help', '&optional callableSymbol' )
+      def LP_help( env: Environment, *args ) -> Any:
+         numArgs = len(args)
+         if numArgs > 1:
+            raise LispRuntimeFuncError( LP_help, f'Too many arguments.  Received {numArgs}' )
+         
+         if numArgs == 1:
+            callableObj = args[0]
+            if not isinstance(callableObj, LCallable):
+               raise LispRuntimeFuncError( LP_help, 'First argument expected to be a callable.' )
+            
+            if isinstance(callableObj, LPrimitive):
+               print( "   USAGE: ", callableObj.usageStr )
+            elif isinstance(callableObj, LFunction):
+               print( "   USAGE: ", prettyPrintSExpr(callableObj) )
+            elif isinstance(callableObj, LMacro):
+               print( "   USAGE: ", prettyPrintSExpr(callableObj) )
+         
+         elif numArgs == 0:
+            printCallableListing( env )
+         
+         return L_T
+      
+      def printCallableListing( env: Environment ) -> None:
+         primitivesList = []
+         functionsList = []
+         macrosList = []
+         for symbolStr in env.getGlobalEnv().localSymbols():
+            obj = env.getGlobalValue(symbolStr)
+            if isinstance(obj, LPrimitive):
+               primitivesList.append(obj.name)
+            elif isinstance(obj, LFunction):
+               name = obj.name
+               if isinstance(name, LSymbol):
+                  name = name.strval
+               functionsList.append(name)
+            elif isinstance(obj, LMacro):
+               name = obj.name
+               if isinstance(name, LSymbol):
+                  name = name.strval
+               macrosList.append(name)
+         
+         print( "Primitives" )
+         print( "==========" )
+         columnize( primitivesList, 78 )
+         print( )
+         
+         print( "Functions" )
+         print( "=========" )
+         columnize( functionsList, 78 )
+         print( )
+         
+         print( "Macros" )
+         print( "======" )
+         columnize( macrosList, 78 )
+         print( )
       
       return primitiveDict

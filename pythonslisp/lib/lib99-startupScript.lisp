@@ -3,10 +3,10 @@
    (if (< (recursion-Limit) newLimit)
       (if (recursion-Limit newLimit)
          (writef "- Recursion limit increased to {0:,d}\n" (list newLimit))
-         (write "- Failed to increase recursion limit."))
+         (writeln! "- Failed to increase recursion limit."))
       (uwriteln! "- No need to adjust recursion limit.")))
 
-; Compute the factorial
+; Compute the factorial - recursion test
 ;
 ; (fact n)
 (defun fact (n)
@@ -14,7 +14,7 @@
              1
              (* n (fact (- n 1)))))
 
-; Compute the Fibonacci number
+; Compute the Fibonacci number - recursion test
 ;
 ; (fib n)
 (defun fib (n)
@@ -30,11 +30,11 @@
                       1)
                ((isList? expr)
                       (case (first expr)
-                            ('+        (list '+   (d (at expr 1)) (d (at expr 2))))
-                            ('*        (list '+   (list '* (at expr 2) (d (at expr 1))) (list '* (at expr 1) (d (at expr 2)))))
-                            ('sin      (list 'cos (at expr 1)))
-                            ('cos      (list 'neg (list 'sin (at expr 1))))
-                            ('pow      (list '*   (list '* (at expr 2) (list 'pow (at expr 1) (- (at expr 2) 1))) (d (at expr 1))))
+                            ('+        (list '+   (d (at 1 expr)) (d (at 2 expr))))
+                            ('*        (list '+   (list '* (at 2 expr) (d (at 1 expr))) (list '* (at 1 expr) (d (at 2 expr)))))
+                            ('sin      (list 'cos (at 1 expr)))
+                            ('cos      (list '-   (list 'sin (at 1 expr))))
+                            ('expt     (list '*   (list '* (at 2 expr) (list 'pow (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))
                             ))))
 
 

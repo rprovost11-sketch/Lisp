@@ -4,14 +4,10 @@ Development Tasks
 
 To Do
 -----
-- Ask the AI how to implement the tail-call optimization.
+- Move all the help from the README.md to the online help in the interpreter.
 - Ask the AI how to implement compiler tracing or debugging hooks.
-- Implement an online (help <symbol>) primitive which prints some documentation
-  about the primitive, function or macro.
 - See if macros are also supposed to support closures.
 - Investigate nested backquotes.
-
-
 - OPTIMIZATION: Move macro expansion completely out of expression evaluation.
   It should occur earlier (just after parsing).  Doing this will mean that
   macros are only expanded once instead of every time a line of code calling a
@@ -38,6 +34,10 @@ To Do
 
 Completed
 ---------
+2026.02.15
+- Implement an online (help &optional <symbol>) primitive which prints some
+  documentation about the primitive, function or macro.
+
 2026.02.14
 - Make the LispInterpreter._bindX methods take a tuple instead of a list for
   the argList parameter.  Right now other functions have to convert their

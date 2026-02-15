@@ -396,6 +396,9 @@ Use: (setf (at <idx> <str>) <newValueExpr>)
                                         ;;    to go.  If setting, returns
                                         ;;    newLimit upon success otherwise
                                         ;;    nil.
+! (help &optional <callable>)           ;; Prints a current listing of callables
+                                        ;;    or help on a given callable.
+
 Library Functions & Macros
 ==========================
 

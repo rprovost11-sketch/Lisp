@@ -7,6 +7,8 @@ from typing import Any
 
 import pythonslisp.Parser as Parser
 
+### Utility Functions
+### =================
 def retrieveFileList( dirname ) -> list[str]:
    "Returns a list of all the filenames in the specified directory."
    testFileList = os.listdir( dirname )
@@ -14,10 +16,56 @@ def retrieveFileList( dirname ) -> list[str]:
    testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList ]
    return testFileList
 
-class ListenerCommandError( Exception ):
-   def __init__( self, message, *args, **kwargs ):
-      super().__init__( message )
+def columnize( lst: list[str], displaywidth: int=80 ) -> None:
+   """Display a list of strings as a compact set of columns.
 
+   Each column is only as wide as necessary.
+   Columns are separated by two spaces.
+   """
+   size = len(lst)
+   if size == 1:
+      print(str(lst[0]))
+      return
+   # Try every row count from 1 upwards
+   for nrows in range(1, len(lst)):
+      ncols = (size+nrows-1) // nrows
+      colwidths = []
+      totwidth = -2
+      for col in range(ncols):
+         colwidth = 0
+         for row in range(nrows):
+            i = row + nrows*col
+            if i >= size:
+               break
+            x = lst[i]
+            colwidth = max(colwidth, len(x))
+         colwidths.append(colwidth)
+         totwidth += colwidth + 2
+         if totwidth > displaywidth:
+            break
+      if totwidth <= displaywidth:
+         break
+   else:
+      nrows = len(lst)
+      ncols = 1
+      colwidths = [0]
+   for row in range(nrows):
+      texts = []
+      for col in range(ncols):
+         i = row + nrows*col
+         if i >= size:
+            x = ""
+         else:
+            x = lst[i]
+         texts.append(x)
+      while texts and not texts[-1]:
+         del texts[-1]
+      for col in range(len(texts)):
+         texts[col] = texts[col].ljust(colwidths[col])
+      print(str("  ".join(texts)))
+
+### The Listener Implementation
+### ===========================
 class Interpreter( ABC ):
    '''Interpreter interface expected by the Listener class.'''
    @abstractmethod
@@ -35,6 +83,10 @@ class Interpreter( ABC ):
    def evalFile( self, filename: str, outStrm=None ) -> None:
       pass
 
+
+class ListenerCommandError( Exception ):
+   def __init__( self, message, *args, **kwargs ):
+      super().__init__( message )
 
 class Listener( object ):
    '''Listener environment for interpreted languages.  Has a read-eval-print
@@ -276,7 +328,7 @@ class Listener( object ):
          print( )
          print(header)
          print('=' * len(header))
-         Listener._columnize(cmds, 69)
+         columnize(cmds, 69)
          print()
          print( "Type ']help <command>' for help on a command." )
          print( "Type ']<command> [ <args> ]' to execute a command." )
@@ -417,55 +469,6 @@ class Listener( object ):
       if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
          self._logFile.write( f'{prompt}{inputStr}\n' )
       return inputStr
-
-   @staticmethod
-   def _columnize( list: list[str], displaywidth: int=80 ) -> None:
-      """Display a list of strings as a compact set of columns.
-
-      Each column is only as wide as necessary.
-      Columns are separated by two spaces.
-      """
-      size = len(list)
-      if size == 1:
-         print(str(list[0]))
-         return
-      # Try every row count from 1 upwards
-      for nrows in range(1, len(list)):
-         ncols = (size+nrows-1) // nrows
-         colwidths = []
-         totwidth = -2
-         for col in range(ncols):
-            colwidth = 0
-            for row in range(nrows):
-               i = row + nrows*col
-               if i >= size:
-                  break
-               x = list[i]
-               colwidth = max(colwidth, len(x))
-            colwidths.append(colwidth)
-            totwidth += colwidth + 2
-            if totwidth > displaywidth:
-               break
-         if totwidth <= displaywidth:
-            break
-      else:
-         nrows = len(list)
-         ncols = 1
-         colwidths = [0]
-      for row in range(nrows):
-         texts = []
-         for col in range(ncols):
-            i = row + nrows*col
-            if i >= size:
-               x = ""
-            else:
-               x = list[i]
-            texts.append(x)
-         while texts and not texts[-1]:
-            del texts[-1]
-         for col in range(len(texts)):
-            texts[col] = texts[col].ljust(colwidths[col])
-         print(str("  ".join(texts)))
 
    @staticmethod
    def _parseLog( inputText: str ) -> list[tuple[str, str, str, str]]:

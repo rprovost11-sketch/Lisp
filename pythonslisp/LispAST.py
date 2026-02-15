@@ -5,58 +5,6 @@ from pythonslisp.Environment import Environment
 
 # #################
 # Lisp Function API
-def prettyPrintSExpr( sExpr: Any ) -> str:
-   '''Return a printable, formatted string representation
-   of a lisp object.'''
-   if isinstance(sExpr, str):
-      return f'\"{sExpr}\"'
-   elif isinstance(sExpr, Fraction):
-      return f'{sExpr.numerator}/{sExpr.denominator}'
-   elif isinstance(sExpr, list):
-      if len(sExpr) == 0:
-         return 'NIL'
-
-      mbrList = [ prettyPrintSExpr(mbr) for mbr in sExpr ]
-      mbrListStr = ' '.join(mbrList)
-      resultStr = f'({mbrListStr})'
-      return resultStr
-   elif isinstance(sExpr, dict):
-      resultStrLines = [ '(MAP' ]
-      for key in sorted(sExpr.keys()):
-         value = sExpr[ str(key) ]
-         key = prettyPrintSExpr(key)
-         value = prettyPrintSExpr( value )
-         resultStrLines.append( f'   ({key} {value})')
-      resultStrLines.append(')\n')
-      return '\n'.join(resultStrLines)
-   else:
-      return repr(sExpr)
-
-def prettyPrint( sExpr: Any ) -> str:
-   '''Return a printable, formatted string representation
-   of a lisp object.'''
-   if isinstance(sExpr, Fraction):
-      return f'{sExpr.numerator}/{sExpr.denominator}'
-   elif isinstance(sExpr, list):
-      if len(sExpr) == 0:
-         return 'NIL'
-
-      mbrList = [ prettyPrint(mbr) for mbr in sExpr ]
-      mbrListStr = ' '.join(mbrList)
-      resultStr = f'({mbrListStr})'
-      return resultStr
-   elif isinstance(sExpr, dict):
-      resultStrLines = [ '(MAP' ]
-      for key in sorted(sExpr.keys()):
-         value = sExpr[ str(key) ]
-         key = prettyPrint(key)
-         value = prettyPrint( value )
-         resultStrLines.append( f'   ({key} {value})')
-      resultStrLines.append(')\n')
-      return '\n'.join(resultStrLines)
-   else:
-      return str(sExpr)
-
 # ###############################
 # Lisp Runtime Object Definitions
 LNUMBER = (int,float,Fraction)
@@ -113,18 +61,9 @@ class LPrimitive( LCallable ):
    
    def __init__( self, fn: Callable[[Environment], Any], name: str, usage: str, params: str, specialForm: bool=False ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
-      self.usageStr:str = usage
+      self.usageStr = usage
       self.paramsStr:str = params
       super().__init__( name, specialForm )
-
-   def __str__( self ) -> str:
-      return self.__repr__()
-
-   def __repr__( self ) -> str:
-      if len(self.usageStr) > 0:
-         return f'(Primitive {self.name} ({self.paramsStr}) ...)'
-      else:
-         return f'(Primitive {self.name} (...) ...)'
 
 class LFunction( LCallable ):
    __slots__ = ('params', 'body', 'closure')
@@ -135,12 +74,6 @@ class LFunction( LCallable ):
       self.closure: Environment = closure
       super().__init__( name, specialForm=False )
 
-   def __str__( self ) -> str:
-      return f"(Function {self.name} {prettyPrint(self.params)} ... )"
-
-   def __repr__( self ) -> str:
-      return f"(Function {self.name} {prettyPrintSExpr(self.params)} ... )"
-
 
 class LMacro( LCallable ):
    __slots__ = ('params', 'body')
@@ -150,10 +83,74 @@ class LMacro( LCallable ):
       self.body: list    = bodyExprList
       super().__init__( name, specialForm=True )
 
-   def __str__( self ) -> str:
-      return f"(Macro {self.name} {prettyPrint(self.params)} ... )"
 
-   def __repr__( self ) -> str:
-      return f"(Macro {self.name} {prettyPrintSExpr(self.params)} ... )"
+def prettyPrintSExpr( sExpr: Any ) -> str:
+   '''Return a printable, formatted string representation
+   of a lisp object.'''
+   if isinstance(sExpr, str):
+      return f'\"{sExpr}\"'
+   elif isinstance(sExpr, Fraction):
+      return f'{sExpr.numerator}/{sExpr.denominator}'
+   elif isinstance(sExpr, list):
+      if len(sExpr) == 0:
+         return 'NIL'
 
+      mbrList = [ prettyPrintSExpr(mbr) for mbr in sExpr ]
+      mbrListStr = ' '.join(mbrList)
+      resultStr = f'({mbrListStr})'
+      return resultStr
+   elif isinstance(sExpr, dict):
+      resultStrLines = [ '(MAP' ]
+      for key in sorted(sExpr.keys()):
+         value = sExpr[ str(key) ]
+         key = prettyPrintSExpr(key)
+         value = prettyPrintSExpr( value )
+         resultStrLines.append( f'   ({key} {value})')
+      resultStrLines.append(')\n')
+      return '\n'.join(resultStrLines)
+   elif isinstance(sExpr, LPrimitive):
+      if len(sExpr.usageStr) > 0:
+         return f'(Primitive {sExpr.name} ({sExpr.paramsStr}) ...)'
+      else:
+         return f'(Primitive {sExpr.name} (...) ...)'
+   elif isinstance(sExpr, LFunction):
+      return f"(Function {sExpr.name} {prettyPrintSExpr(sExpr.params)} ... )"
+   elif isinstance(sExpr, LMacro):
+      return f"(Macro {sExpr.name} {prettyPrintSExpr(sExpr.params)} ... )"
+   else:
+      return repr(sExpr)
+
+def prettyPrint( sExpr: Any ) -> str:
+   '''Return a printable, formatted string representation
+   of a lisp object.'''
+   if isinstance(sExpr, Fraction):
+      return f'{sExpr.numerator}/{sExpr.denominator}'
+   elif isinstance(sExpr, list):
+      if len(sExpr) == 0:
+         return 'NIL'
+
+      mbrList = [ prettyPrint(mbr) for mbr in sExpr ]
+      mbrListStr = ' '.join(mbrList)
+      resultStr = f'({mbrListStr})'
+      return resultStr
+   elif isinstance(sExpr, dict):
+      resultStrLines = [ '(MAP' ]
+      for key in sorted(sExpr.keys()):
+         value = sExpr[ str(key) ]
+         key = prettyPrint(key)
+         value = prettyPrint( value )
+         resultStrLines.append( f'   ({key} {value})')
+      resultStrLines.append(')\n')
+      return '\n'.join(resultStrLines)
+   elif isinstance(sExpr, LPrimitive):
+      if len(sExpr.usageStr) > 0:
+         return f'(Primitive {sExpr.name} ({sExpr.paramsStr}) ...)'
+      else:
+         return f'(Primitive {sExpr.name} (...) ...)'
+   elif isinstance(sExpr, LFunction):
+      return f"(Function {sExpr.name} {prettyPrint(sExpr.params)} ... )"
+   elif isinstance(sExpr, LMacro):
+      return f"(Macro {sExpr.name} {prettyPrint(sExpr.params)} ... )"
+   else:
+      return str(sExpr)
 
