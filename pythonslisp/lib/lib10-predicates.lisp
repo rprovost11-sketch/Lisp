@@ -21,6 +21,8 @@
 
 (alias isList? listp)
 
+(alias isMap? mapp)
+
 (alias isString? stringp)
 
 (alias isFunction? functionp)

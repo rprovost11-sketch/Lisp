@@ -563,7 +563,7 @@ class LispInterpreter( Interpreter ):
       # -----------------
       @LDefPrimitive( 'defmacro', '<symbol> ( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_defmacro( env: Environment, *args ) -> Any:
-         """Define and return a new globally named macro.  The first expr of the body
+         """Defines and returns a new globally named macro.  The first expr of the body
 can be an optional documentation string."""
          try:
             fnName, funcParams, *funcBody = args
@@ -590,7 +590,7 @@ can be an optional documentation string."""
    
       @LDefPrimitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)' )
       def LP_macroexpand( env: Environment, *args ) -> Any:
-         """Perform the expansion of a macro and return the results of those expansions in a list."""         
+         """Performs the expansion of a macro and returns the results of those expansions in a list."""         
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
          theMacroCall = args[0]
@@ -614,12 +614,12 @@ can be an optional documentation string."""
    
       @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialForm=True )
       def LP_setf( env: Environment, *args ) -> Any:
-         """Update a variable's value.  The search fo the variable begins locally
-and proceeds to search ever less local scopes until the global scope is searched.
+         """Updates a variable's value, returns value.  The search fo the variable begins
+locally and proceeds to search ever less local scopes until the global scope is searched.
 If the variable is located in this search its value is updated.  If it's not located
 a new global is defined and set the value.
 
-Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>"""         
+Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""         
          numArgs = len(args)
          
          if (numArgs % 2) != 0:
@@ -678,7 +678,7 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>"""
          
       @LDefPrimitive( 'undef!', '<symbol>', specialForm=True )
       def LP_undef( env: Environment, *args ) -> Any:
-         """Undefine the global definition for a symbol."""
+         """Undefines the global definition for a symbol and returns nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_undef, '1 argument exptected.' )
          key = args[0]
@@ -689,7 +689,9 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>"""
    
       @LDefPrimitive( 'symtab!', '' )
       def LP_symtab( env: Environment, *args ) -> Any:
-         """Print the environment.  Each scope is printed on a separate line.  Local scope is first; global scope last."""         
+         """Prints the entire environment stack and returns nil.  Each scope is printed
+in a separate list and beins on a new line.  The local scope is first; global
+is last."""
          if len(args) > 0:
             raise LispRuntimeFuncError( LP_symtab, '0 arguments expected.' )
    
@@ -711,7 +713,9 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>"""
       # ------------------
       @LDefPrimitive( 'lambda', '( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_lambda( env: Environment, *args ) -> Any:
-         """Create and return a lambda function.  When evaluating such a function the body (the exprs) are evaluated within a nested scope."""
+         """Creates and returns an unnamed lambda function.  When evaluating such a
+function the body (the exprs) are evaluated within a nested scope.  This
+primitive captures the environment it is defined in to allow for closures."""
          try:
             funcParams, *funcBody = args
          except ValueError:
@@ -727,9 +731,10 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>"""
    
       @LDefPrimitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
       def LP_let( env: Environment, *args ) -> Any:
-         """Execute code in a nested scope.  var1,var2,... are local variables bound
-to initial values.  Initial values are not evaluated in order and are not evaluated
-in the new local scope."""
+         """Executes a list of expressions in sequence in a nested scope and returns
+the result of the last one.  var1,var2,... are local variables bound to
+results of expressions.  Variable initializations are not evaluated in
+sequence and are not evaluated in let's nested scope."""
          try:
             vardefs, *body = args
          except ValueError:
@@ -770,9 +775,11 @@ in the new local scope."""
    
       @LDefPrimitive( 'let*', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
       def LP_letstar( env: Environment, *args ) -> Any:
-         """Execute code in a nested scope.  var1,var2,... are local variables
-bound to initial values.  Initial values are evaluated in order and inside
-the new local scope."""         
+         """Executes a list of expressions in sequence in a nested scope and returns
+the result of the last one.  var1,var2,... are local variables bound to
+results of expressions.  Variable initializations are evaluated in sequence
+and are evaluated in let's nested scope.  So later initializer expressions may
+refer to variables already initialized."""
          try:
             vardefs, *body = args
          except ValueError:
@@ -811,7 +818,7 @@ the new local scope."""
    
       @LDefPrimitive( 'progn', '<sexpr1> <sexpr2> ...', specialForm=True )
       def LP_progn( env: Environment, *args ) -> Any:
-         """Evaluate each sexpression in turn.  Returns the result of the last sexpr evaluation."""
+         """Evaluates each sexpression in sequence.  Returns the result of the last evaluation."""
          lastResult = list()
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
@@ -819,8 +826,9 @@ the new local scope."""
    
       @LDefPrimitive( 'if', '<cond> <conseq> &optional <alt>', specialForm=True )
       def LP_if( env: Environment, *args ) -> Any:
-         """If evaluates the condition.  If t then consequence is evaluated and its
-result returned, otherwise alt is evaluated and its result returned."""         
+         """Evaluates the condition.  If truthy (non-nil) then consequence is
+evaluated and its result returned, otherwise alt is evaluated and its result
+is returned."""         
          numArgs = len(args)
          if not(2 <= numArgs <= 3):
             raise LispRuntimeFuncError( LP_if, '2 or 3 arguments expected.' )
@@ -836,9 +844,11 @@ result returned, otherwise alt is evaluated and its result returned."""
    
       @LDefPrimitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True )
       def LP_cond( env: Environment, *args ) -> Any:
-         """Evaluates each cond in order until one evaluates to true.  Then evaluates
-each expr in body and returns the result of the last expr evaluated.  All
-remaining conds and bodys are skipped."""         
+         """Evaluates each cond in order until one evaluates to truthy (non-nil).
+Then evaluates each expr in the paired body and returns the result of the
+last expr evaluated.  All remaining conds and bodys are skipped.  End the
+sequence with '(t <bodyn>)' to have code evaluated if no other condition
+is satisfied."""
          if len(args) < 1:
             raise LispRuntimeFuncError( LP_cond, '1 or more argument exptected.' )
          caseList = args
@@ -936,7 +946,7 @@ All remaining cases are skipped."""
       def LP_comma_at( env: Environment, *args ) -> Any:
          """Must occur within a backquote expr or it's an error.  Evaluates expr.
 Result must be a list.  Inserts the elements of the resulting list into the
-enclosing list."""         
+enclosing list (eliminating a level of parentheses)."""         
          nonlocal INSIDE_BACKQUOTE
          if not INSIDE_BACKQUOTE:
             raise LispRuntimeFuncError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
@@ -952,10 +962,10 @@ enclosing list."""
    
       @LDefPrimitive( 'while', '<cond> <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_while( env: Environment, *args ) -> Any:
-         """Perform a loop over the body sexprs.  Before iteration conditionExpr is
-evaluated.  If conditionExpr is t the iteration occurs.  However if
-conditionExpr evaluates to nil, it returns the result of the last body
-evaluation."""
+         """Perform a loop over the body sexprs.  Before each iteration conditionExpr
+is evaluated.  If it evaluates as truthy (non-nil) the exprs are evaluated
+in sequence.  However if conditionExpr evaluates to nil, the loop terminates
+and returns the result of the last expr evaluated."""
          try:
             conditionExpr, *body = args
          except ValueError:
@@ -972,11 +982,11 @@ evaluation."""
             condResult = LispInterpreter._lEval(env, conditionExpr )
          return latestResult
    
-      @LDefPrimitive( 'doTimes', '(<var> <integer>) <sexpr1> <sexpr2> ...', specialForm=True )
+      @LDefPrimitive( 'doTimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_dotimes( env: Environment, *args ) -> Any:
-         """Performs a loop countExpr times.  For each iteration of the loop variable
-is set to the loop number (starting with 0 for the first loop).  The value
-of the last sexpr evaluated is returned."""
+         """Performs a loop over a body of exprs countExpr times.  Before each iteration
+the loop variable is set to the next loop count number (starting with 0 for
+the first loop).  The value of the last sexpr evaluated is returned."""
          try:
             loopControl, *body = args
          except ValueError:
@@ -1038,7 +1048,7 @@ Returns the result of the very last evaluation."""
    
       @LDefPrimitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env: Environment, *args ) -> Any:
-         """Call a function with the args provided."""
+         """Calla a function with the args listed."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
    
@@ -1046,7 +1056,7 @@ Returns the result of the very last evaluation."""
    
       @LDefPrimitive( 'eval', '<sexpr>' )
       def LP_eval( env: Environment, *args ) -> Any:
-         """Evaluate expr in the current scope."""
+         """Evaluates expr in the current scope."""
          try:
             expr = args[0]
          except IndexError:
@@ -1055,8 +1065,11 @@ Returns the result of the very last evaluation."""
    
       @LDefPrimitive( 'apply', '<function> &rest <args> <argsList>' )
       def LP_apply( env: Environment, *args ) -> Any:
-         """Insert arg1,arg2,... in the front of listOfMoreArgs, then apply the
-function the the whole list of args."""
+         """Inserts arg1,arg2,... into the front of listOfMoreArgs, then applies the
+function the the whole list of args.  Returns the result of that function
+application.
+
+function is any callable that is not a special form."""
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_apply, "At least 2 arguments expected to apply." )
          
@@ -1080,7 +1093,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'parse', '<string>' )
       def LP_parse( env: Environment, *args ) -> Any:
-         """Parse the string as an sexpression and return the sexpression."""
+         """Parses the string as a Lisp sexpression and returns the resulting expression stree."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_parse, '1 string argument expected.' )
          theExprStr = args[0]
@@ -1089,7 +1102,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'python', '<string>' )
       def LP_python( env: Environment, *args ) -> Any:
-         """Execute some python code from Lisp."""
+         """Executes some python code from Lisp."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_python, '1 string argument expected by python.' )
          thePythonCode = args[0]
@@ -1103,7 +1116,7 @@ function the the whole list of args."""
       # -----------------------
       @LDefPrimitive( 'map', '(<key1> <val1>) (<key2> <val2>) ...', specialForm=True )
       def LP_map( env: Environment, *args ) -> Any:
-         """Construct a map of key-value pairs."""
+         """Constructs and returns a map of key-value pairs."""
          theMapping = dict()
          for entryNum,key_expr_pair in enumerate(args):
             try:
@@ -1122,7 +1135,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'car', '<list>' )
       def LP_car( env: Environment, *args ) -> Any:
-         """Return the first item in a list."""
+         """Returns the first item in a list."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_car, '1 argument expected.' )
          theList = args[0]
@@ -1137,7 +1150,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'cdr', '<list>' )
       def LP_cdr( env: Environment, *args ) -> Any:
-         """Return a copy of the list minus the first element."""
+         """Returns a copy of the list minus the first element."""
          numArgs = len(args)
          if numArgs != 1:
             raise LispRuntimeFuncError( LP_cdr, '1 argument expected.' )
@@ -1153,7 +1166,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'cons', '<obj> <list>' )
       def LP_cons( env: Environment, *args ) -> Any:
-         """Return a copy of list with obj inserted into the front of the list."""
+         """Returns a copy of list with obj inserted into the front of the copy."""
          try:
             obj,consList = args
          except:
@@ -1168,7 +1181,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'push!', '<list> <value>' )
       def LP_push( env: Environment, *args ) -> Any:
-         """Push a value onto the back of a list."""
+         """Pushes a value onto the back of a list."""
          try:
             alist, value = args
          except ValueError:
@@ -1185,7 +1198,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'pop!', '<list>' )
       def LP_pop( env: Environment, *args ) -> Any:
-         """Pop and return the last value of a list."""
+         """Pops and returns the last value of a list."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_pop, '1 argument expected.' )
          alist = args[0]
@@ -1198,7 +1211,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'at', '<keyOrIndex> <mapListOrStr>' )
       def LP_at( env: Environment, *args ) -> Any:
-         """Return the value at a specified index of a list, or specified key of a map."""
+         """Returns the value at a specified index of a list, or specified key of a map."""
          try:
             key,keyed = args
          except:
@@ -1217,7 +1230,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'at-delete', '<keyOrIndex> <mapOrList>' )
       def LP_atDelete( env: Environment, *args ) -> bool:
-         """Delete the item from the map or list specifed by keyOrIndex."""
+         """Deletes the key-value pair from a map or list specifed by keyOrIndex."""
          try:
             key, keyed = args
          except:
@@ -1235,7 +1248,7 @@ function the the whole list of args."""
       
       @LDefPrimitive( 'at-insert', '<index> <list> <newItem>' )
       def LP_atInsert( env: Environment, *args ) -> bool:
-         """Insert newItem into list as position index."""
+         """Inserts newItem into list at the position specified by index.  Returns newItem."""
          try:
             index, lst, newItem = args
          except:
@@ -1252,7 +1265,7 @@ function the the whole list of args."""
       
       @LDefPrimitive( 'append', '<list1> <list2> ...' )
       def LP_append( env: Environment, *args ) -> Any:
-         """Return a new list with the lists merged.  Order is retained."""
+         """Returns a new list with the contents of the argument lists merged.  Order is retained."""
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_append, 'At least 2 arguments expected.' )
    
@@ -1266,7 +1279,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'hasValue?', '<listOrMap> <value>' )
       def LP_hasValue( env: Environment, *args ) -> Any:
-         """Returns t if the list/map contains value."""
+         """Returns t if the list/map contains value otherwise nil."""
          try:
             keyed,aVal = args
          except:
@@ -1286,7 +1299,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'update!', '<map1> <map2>' )
       def LP_update( env: Environment, *args ) -> Any:
-         """Update map1's data with map2's."""
+         """Updates map1's data with map2's."""
          try:
             map1,map2 = args
          except:
@@ -1303,7 +1316,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'hasKey?', '<map> <key>' )
       def LP_hasKey( env: Environment, *args ) -> Any:
-         """Returns t if the key is in the map."""
+         """Returns t if the key is in the map otherwise nil."""
          try:
             aMap,aKey = args
          except:
@@ -1319,7 +1332,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'sorted', '<list>' )
       def LP_sorted( env: Environment, *args ) -> Any:
-         """Return a copy of the list sorted."""
+         """Returns a copy of the list sorted."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_sorted, "Exactly 1 argument exptected." )
          
@@ -1372,7 +1385,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( '//', '<number1> <number2>' )
       def LP_intdiv( env: Environment, *args ) -> Any:
-         """Return the integer division of numbers."""
+         """Return the integer division of two numbers."""
          try:
             return args[0] // args[1]
          except:
@@ -1388,7 +1401,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'gcd', '<integer1> <integer2> ...' )
       def LP_gcd( env: Environment,  *args ) -> Any:
-         """Returns the greatest common divisor of a list of integers."""
+         """Returns the greatest common divisor of some integers."""
          try:
             return math.gcd( *args )
          except:
@@ -1396,7 +1409,7 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'lcm', '<integer1> <integer2> ...' )
       def LP_lcm( env: Environment,  *args ) -> Any:
-         """Returns the least common multiple of a list of integers."""
+         """Returns the least common multiple of some integers."""
          try:
             return math.lcm( *args )
          except:
@@ -1404,8 +1417,8 @@ function the the whole list of args."""
    
       @LDefPrimitive( 'log', '<number> &optional (<base> 10)' )
       def LP_log( env: Environment, *args ) -> Any:
-         """Returns the log of a number.  The default is to use a log of base 10 but
-a second argument can be provided to specify a different base."""
+         """Returns the log of a number.  The default is to use a base of 10 but
+an optional second argument can be provided to specify any base."""
          numArgs = len(args)
          if not( 1 <= numArgs <= 2 ):
             raise LispRuntimeFuncError( LP_log, '1 or 2 arguments exptected.' )
@@ -1428,7 +1441,7 @@ a second argument can be provided to specify a different base."""
    
       @LDefPrimitive( 'sin', '<radians>' )
       def LP_sin( env: Environment, *args ) -> Any:
-         """Returns the sine of a number in radians."""
+         """Returns the sine of radians."""
          try:
             return math.sin(args[0])
          except:
@@ -1436,7 +1449,7 @@ a second argument can be provided to specify a different base."""
    
       @LDefPrimitive( 'cos', '<radians>' )
       def LP_cos( env: Environment, *args ) -> Any:
-         """Returns the cosine of a number in radians."""
+         """Returns the cosine of radians."""
          try:
             return math.cos(args[0])
          except:
@@ -1460,7 +1473,7 @@ a second argument can be provided to specify a different base."""
    
       @LDefPrimitive( 'atan', '<number1> &optional <number2>' )
       def LP_atan( env: Environment, *args ) -> Any:
-         """Returns the tangent or one or two numbers."""
+         """Returns the tangent or one or two numbers in radians."""
          numArgs = len(args)
          if numArgs == 1:
             nval = args[0]
@@ -1477,7 +1490,7 @@ a second argument can be provided to specify a different base."""
    
       @LDefPrimitive( 'min', '<number1> <number2> ...' )
       def LP_min( env: Environment, *args ) -> Any:
-         """Returns the lowest number of a set of numbers."""
+         """Returns the smallest of a set of numbers."""
          try:
             return min( *args )
          except:
@@ -1485,7 +1498,7 @@ a second argument can be provided to specify a different base."""
    
       @LDefPrimitive( 'max', '<number1> <number2> ...' )
       def LP_max( env: Environment, *args ) -> Any:
-         """Returns the largest number of a set of numbers."""
+         """Returns the largest of a set of numbers."""
          try:
             return max( *args )
          except:
@@ -1493,8 +1506,9 @@ a second argument can be provided to specify a different base."""
    
       @LDefPrimitive( 'random', '<integerOrFloat>' )
       def LP_random( env: Environment, *args ) -> Any:
-         """Returns a random int or float (whichever is the same type as the argument)
-between 0 and num inclusive."""
+         """Returns a random int or float in the range 0 <= n <= arg.  If the argument
+is an int the random number will be an int, if the argument is a float the
+random number will be a float."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_random, 'Exactly 1 number argument exptected.' )
          num = args[0]
@@ -1546,7 +1560,7 @@ between 0 and num inclusive."""
    
       @LDefPrimitive( 'atom', '<sexpr>' )
       def LP_atom( env: Environment, *args ) -> Any:
-         """Returns t if expr is an atom (int,float,string,map or nil)."""
+         """Returns t if expr is an atom (int,float,string,map or nil) otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_atom, '1 argument expected.' )
          arg = args[0]
@@ -1561,11 +1575,11 @@ between 0 and num inclusive."""
             raise LispRuntimeFuncError( LP_listp, '1 argument expected.' )
          return L_T if isinstance(args[0], list) else L_NIL
    
-      @LDefPrimitive( 'isMap?', '<sexpr>' )
-      def LP_isMap( env: Environment, *args ) -> Any:
+      @LDefPrimitive( 'mapp', '<sexpr>' )
+      def LP_mapp( env: Environment, *args ) -> Any:
          """Returns t if expr is a map otherwise nil."""
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_isMap, '1 argument expected.' )
+            raise LispRuntimeFuncError( LP_mapp, '1 argument expected.' )
          return L_T if isinstance(args[0], dict) else L_NIL
    
       @LDefPrimitive( 'stringp', '<sexpr>' )
@@ -1738,8 +1752,8 @@ between 0 and num inclusive."""
    
       @LDefPrimitive( 'and', '<boolean1> <boolean2> ...' )
       def LP_and( env: Environment, *args ) -> Any:
-         """Returns t if all arguments are non-nil.  Short-circuits: stops evaluating
-arguments upon encountering the first nill."""
+         """Returns t if all arguments are truthy (non-nil).
+Short-circuits: stops evaluating arguments upon encountering the first nill."""
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_and, '2 or more arguments exptected.' )
    
@@ -1752,8 +1766,8 @@ arguments upon encountering the first nill."""
    
       @LDefPrimitive( 'or', '<boolean1> <boolean2> ...' )
       def LP_or( env: Environment, *args ) -> Any:
-         """Returns t if at least one argument is non-nil.  Short-circuits:  stops
-evaluating upon encountering the first non-nil value."""
+         """Returns t if at least one argument is truthy (non-nil).
+Short-circuits:  stops evaluating upon encountering the first truthy value."""
          if len(args) < 2:
             raise LispRuntimeFuncError( LP_or, '2 or more arguments exptected.' )
    
@@ -1801,7 +1815,7 @@ containg a valid lisp number that can be expressed as a fraction."""
    
       @LDefPrimitive( 'string', '<object1> <object2> ...' )
       def LP_string( env: Environment, *args ) -> Any:
-         """PrettyPrint's as programmer readable strings each argument object and
+         """PrettyPrints as programmer readable strings each argument object and
 concatenates the results to form a new string."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_string, '1 or more arguments exptected.' )
@@ -1811,7 +1825,7 @@ concatenates the results to form a new string."""
    
       @LDefPrimitive( 'ustring', '<object1> <object2> ...' )
       def LP_ustring( env: Environment, *args ) -> Any:
-         """PrettyPrint's as user readable strings each argument object and
+         """PrettyPrints as user readable strings each argument object and
 concatenates the results to form a new string."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_ustring, '1 or more arguments exptected.' )
@@ -1821,7 +1835,7 @@ concatenates the results to form a new string."""
    
       @LDefPrimitive( 'symbol', '<string1> <string2> ...' )
       def LP_symbol( env: Environment, *args ) -> Any:
-         """PrettyPrint's as programmer readable strings each argument object and
+         """PrettyPrints as programmer readable strings each argument object and
 concatenates the results to form a new string which is used to define a new
 symbol object."""
          if len(args) == 0:
@@ -1836,8 +1850,9 @@ symbol object."""
       # ---------------
       @LDefPrimitive( 'writef', '<formatString> <MapOrList>' )
       def LP_writef( env: Environment, *args ) -> str:
-         """Write formatted text.  Takes a python f-string and a map or list of
-values for the f-string.  Returns the formatted output string."""
+         """Writes formatted text.  Returns the string that is written.
+Takes a python f-string and a map or list of values for the f-string.
+Returns the formatted output string."""
          try:
             formatString, mapOrList = args
          except ValueError:
@@ -1867,8 +1882,8 @@ Returns the last value printed."""
    
       @LDefPrimitive( 'writeLn!', '<obj1> <obj2> ...' )
       def LP_writeln( env: Environment, *args ) -> Any:
-         """Sequentially prettyPrints in programmer readable text the object listed.
-Terminate the output with a newline character.  Returns the last value printed."""
+         """Sequentially prettyPrints in programmer readable text the objects listed.
+Terminates the output with a newline character.  Returns the last value printed."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_writeln, '1 or more arguments expected.' )
          return lwrite( *args, end='\n' )
@@ -1891,8 +1906,8 @@ Terminate the output with a newline character.  Returns the last value printed."
    
       @LDefPrimitive( 'uwriteLn!', '<obj1> <obj2> ...' )
       def LP_uwriteln( env: Environment, *args ) -> Any:
-         """Sequentially prettyPrints in user readable text the object listed.
-Terminate the output with a newline character.  Returns the last value printed."""
+         """Sequentially prettyPrints in user readable text the objects listed.
+Terminates the output with a newline character.  Returns the last value printed."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_uwriteln, '1 or more arguments expected.' )
          return luwrite( *args, end='\n' )
@@ -1909,7 +1924,7 @@ Terminate the output with a newline character.  Returns the last value printed."
       @LDefPrimitive( 'readLn!', '' )
       def LP_readln( env: Environment, *args ) -> Any:
          """Reads and returns text input from the keyboard.  This function blocks
-while it waits for the input."""
+while it waits for the input return key to be pressed at the end of text entry."""
          if len(args) > 0:
             raise LispRuntimeFuncError( LP_readln, '0 arguments expected.' )
          return input()
@@ -1937,9 +1952,12 @@ returns newLimit upon success otherwise nil."""
       
       @LDefPrimitive( 'help', '&optional callableSymbol' )
       def LP_help( env: Environment, *args ) -> Any:
-         """Prints a set of tables for all the globally defined symbols currently
-available in Python's Lisp; or prints the usage and documentation for a
-specific primitive, function or macro."""
+         """Prints a set of tables for all the globally defined symbols and
+topics currently available in Python's Lisp. Or prints the usage and
+documentation for a specific callable (primitive, function or macro) or topic.
+
+Type '(help <callable>)' for available documentation on a callable.
+Type '(help "topic") for available documentation on the named topic."""
          numArgs = len(args)
          if numArgs > 1:
             raise LispRuntimeFuncError( LP_help, f'Too many arguments.  Received {numArgs}' )
