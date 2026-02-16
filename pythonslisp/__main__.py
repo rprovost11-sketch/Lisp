@@ -7,6 +7,7 @@ LANGUAGE     = 'Python\'s Lisp'
 VERSION      = '0.25.8'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
+PROJECT = 'https://github.com/rprovost11-sketch/Lisp'
 TEST_DIR     = 'pythonslisp/testing'
 LIBRARY_DIR  = 'pythonslisp/lib'
 USAGE = '''   USAGE:  python3.14 -m pythonslisp [lispSourceFile|-h|--help|-v|--version]
@@ -33,6 +34,7 @@ def main( ) -> None:
                                          version=VERSION,
                                          author=AUTHOR,
                                          email=EMAIL,
+                                         project=PROJECT,
                                          testdir=TEST_DIR
                                          )
       except FileNotFoundError as ex:

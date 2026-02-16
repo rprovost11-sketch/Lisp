@@ -6,15 +6,16 @@
          (writeln! "- Failed to increase recursion limit."))
       (uwriteln! "- No need to adjust recursion limit.")))
 
+;;; Inform the user of Python Lisp's online help system
+(uwriteln! "- For online help type \"(help)\" or \"(help <callable>)\"." )
+
+;;; Some function definitions for testing purposes
 (defun fact (n)
          "Recursively compute the factorial of an arbitrary integer n.  For general testing of the interpreter."
          (if (= n 0)
              1
              (* n (fact (- n 1)))))
 
-; Compute the Fibonacci number - recursion test
-;
-; (fib n)
 (defun fib (n)
          "Recursively compute and return the nth fibonacci number."
          (if (<= n 2)
@@ -37,4 +38,3 @@
                             ('expt     (list '*   (list '* (at 2 expr) (list 'pow (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))
                             ))))
 
-(uwriteln! "- For online help type \"(help)\" or \"(help <callable>)\"." )

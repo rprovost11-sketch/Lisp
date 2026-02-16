@@ -41,7 +41,7 @@ class LSymbol( object ):
    def startswith( self, asubstr:str ) -> bool:
       return self.strval.startswith(asubstr)
    
-   def isArgKey( self ):
+   def isKeyArg( self ):
       return self.strval.startswith(':')
 
 
@@ -78,7 +78,7 @@ class LFunction( LCallable ):
       super().__init__( name, docString, specialForm=False )
    
    def usageString( self ):
-      return f'(Function {self.name} {prettyPrintSExpr(self.params)} ...)'
+      return f'(Function {self.name} {prettyPrintSExpr(self.params)} ... )'
 
 
 class LMacro( LCallable ):
@@ -90,7 +90,7 @@ class LMacro( LCallable ):
       super().__init__( name, docString, specialForm=True )
    
    def usageString( self ):
-      return f'(Macro {self.name} {prettyPrintSExpr(self.params)} ...)'
+      return f'(Macro {self.name} {prettyPrintSExpr(self.params)} ... )'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:

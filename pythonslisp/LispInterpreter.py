@@ -6,11 +6,13 @@ import sys
 from fractions import Fraction
 from typing import Callable, Any
 
+from pythonslisp.helpTopics import topics
 from pythonslisp.LispParser import LispParser
 from pythonslisp.Listener import Interpreter, retrieveFileList, columnize
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import ( LSymbol, LNUMBER, prettyPrint, prettyPrintSExpr, 
-                                  LCallable, LFunction, LPrimitive, LMacro )
+from pythonslisp.LispAST import ( LSymbol, LNUMBER,
+                                  LCallable, LFunction, LPrimitive, LMacro,
+                                  prettyPrint, prettyPrintSExpr )
 
 class LispRuntimeError( Exception ):
    def __init__( self, *args ) -> None:
@@ -107,7 +109,7 @@ class LispInterpreter( Interpreter ):
          try:
             return env.getValue( sExpr.strval )
          except KeyError:
-            if sExpr.isArgKey():
+            if sExpr.isKeyArg():
                return sExpr
             raise LispRuntimeError( f'Unbound Variable: {sExpr.strval}.' )
       elif not isinstance(sExpr, list):  # atom or map
@@ -518,7 +520,7 @@ class LispInterpreter( Interpreter ):
    def _lconstructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
       primitiveDict: dict[str, Any] = { }
       INSIDE_BACKQUOTE = False
-
+      
       # ###################################
       # Lisp Object & Primitive Definitions
       # ###################################
@@ -559,9 +561,10 @@ class LispInterpreter( Interpreter ):
       # =================
       # Symbol Definition
       # -----------------
-      @LDefPrimitive( 'defmacro', '<symbol> ( <paramList> ) [<documentString>] <sexpr1> <sexpr2> ...', specialForm=True )
+      @LDefPrimitive( 'defmacro', '<symbol> ( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_defmacro( env: Environment, *args ) -> Any:
-         """Define and return a new globally named macro."""
+         """Define and return a new globally named macro.  The first expr of the body
+can be an optional documentation string."""
          try:
             fnName, funcParams, *funcBody = args
          except:
@@ -1943,6 +1946,14 @@ specific primitive, function or macro."""
          
          if numArgs == 1:
             callableObj = args[0]
+            if isinstance(callableObj, str):
+               topicName = callableObj.upper()
+               try:
+                  print(topics[topicName])
+               except KeyError:
+                  print( f'Unknown topic: "{topicName}"')
+               return L_T
+               
             if not isinstance(callableObj, LCallable):
                raise LispRuntimeFuncError( LP_help, 'First argument expected to be a callable.' )
             
@@ -1963,6 +1974,7 @@ specific primitive, function or macro."""
          functionsList = []
          macrosList = []
          othersList = []
+         topicsList = list(topics.keys())
          for symbolStr in env.getGlobalEnv().localSymbols():
             obj = env.getGlobalValue(symbolStr)
             if isinstance(obj, LPrimitive):
@@ -1990,6 +2002,10 @@ specific primitive, function or macro."""
          print( "======" )
          columnize( macrosList, 78 )
          print( )
-         print( "Type \"(help <callable>)\" for help on a given primitive, function or macro." )
+         print( "TOPICS" )
+         print( "======" )
+         columnize( topicsList, 78 )
+         print( )
+         print( "Type \"(help <command>)\" for help on a given primitive, function or macro.  Type \"(help <topicString>)\" for help on a topic." )
       
       return primitiveDict

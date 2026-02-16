@@ -92,8 +92,9 @@ class Listener( object ):
    '''Listener environment for interpreted languages.  Has a read-eval-print
    loop and listener commands for session logging, as well as testing and
    rebooting the intepreter.  Partly ripped off from Python's cmd module.'''
-   def __init__( self, anInterpreter: Interpreter, testdir: str='', language: str='', version: str='', **kwargs ) -> None:
-      print( f'{language} {version}' )
+   def __init__( self, anInterpreter: Interpreter, testdir: str='', **kwargs ) -> None:
+      print( '{language} {version} by {author}'.format(**kwargs) )
+      print( 'Project home {project}'.format(**kwargs) )
       print( '- Initialing Listener', flush=True )
       self._interp          = anInterpreter
       self._testdir         = testdir
