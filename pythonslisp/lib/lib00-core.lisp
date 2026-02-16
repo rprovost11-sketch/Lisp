@@ -1,5 +1,5 @@
 (defmacro defun (fnName argList &rest body)
-   "Define and return a new globally named function."
+   "Define and return a new globally named function.  The first expr in the body can be an optional documentation string."
    `(setf ,fnName (lambda (,@argList) ,@body)))
 
 (defmacro alias (new old)
