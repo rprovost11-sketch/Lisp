@@ -1962,37 +1962,44 @@ Type '(help "topic") for available documentation on the named topic."""
          if numArgs > 1:
             raise LispRuntimeFuncError( LP_help, f'Too many arguments.  Received {numArgs}' )
          
-         if numArgs == 1:
-            callableObj = args[0]
-            if isinstance(callableObj, str):
-               topicName = callableObj.upper()
-               try:
-                  print(topics[topicName])
-               except KeyError:
-                  print( f'Unknown topic: "{topicName}"')
-               return L_T
-               
-            if not isinstance(callableObj, LCallable):
-               raise LispRuntimeFuncError( LP_help, 'First argument expected to be a callable.' )
-            
-            print( "   USAGE: ", callableObj.usageString() )
-            print( )
-            if callableObj.docString != '':
-               valueStr = prettyPrint( callableObj.docString )
-               valueStr = bytes( valueStr, "utf-8" ).decode( "unicode_escape" ) # decode escape sequences
-               print( valueStr )
-         
          elif numArgs == 0:
-            printCallableListing( env )
+            printHelpListings( env )
+            return L_T
+         
+         # numArgs == 1
+         arg = args[0]
+         if isinstance(arg, str):
+            # Show help on a topic
+            topicName = arg.upper()
+            try:
+               print(topics[topicName])
+            except KeyError:
+               print( f'Unknown topic: "{topicName}"')
+            return L_T
+         
+         # insure arg is an LCallable
+         if not isinstance(arg, LCallable):
+            raise LispRuntimeFuncError( LP_help, 'First argument expected to be a callable.' )
+         callableObj = arg
+         
+         # Show help on the callableObj
+         print( "   USAGE: ", callableObj.usageString() )
+         print( )
+         if callableObj.docString != '':
+            valueStr = prettyPrint( callableObj.docString )
+            valueStr = bytes( valueStr, "utf-8" ).decode( "unicode_escape" ) # decode escape sequences
+            print( valueStr )
          
          return L_T
       
-      def printCallableListing( env: Environment ) -> None:
+      def printHelpListings( env: Environment ) -> None:
          primitivesList = []
          functionsList = []
          macrosList = []
-         othersList = []
+         varsList = []
          topicsList = list(topics.keys())
+         
+         # Bin the global symbols each into one of the lists defined above
          for symbolStr in env.getGlobalEnv().localSymbols():
             obj = env.getGlobalValue(symbolStr)
             if isinstance(obj, LPrimitive):
@@ -2001,12 +2008,13 @@ Type '(help "topic") for available documentation on the named topic."""
                functionsList.append(symbolStr)
             elif isinstance(obj, LMacro):
                macrosList.append(symbolStr)
-            else:
-               othersList.append(symbolStr)
+            elif not isinstance(obj, dict):   # obj isn't a map object, it's an LATOM
+               varsList.append(symbolStr)
          
+         # Print tables for each of the categories of symbols
          print( "Predefined Symbols" )
          print( "==================" )
-         columnize( othersList, 78)
+         columnize( varsList, 78)
          print( )
          print( "Primitives" )
          print( "==========" )
