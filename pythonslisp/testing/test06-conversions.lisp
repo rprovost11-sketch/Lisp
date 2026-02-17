@@ -36,4 +36,87 @@
 
 ==> (3.141592653589793 3/4 ASYMBOL "a string")
 
+>>> (rational 0.5)
+...
+
+==> 1/2
+
+>>> (rational 3)
+...
+
+==> 3/1
+
+>>> (rational 3/4)
+...
+
+==> 3/4
+
+>>> (rational 1.5)
+...
+
+==> 3/2
+
+>>> (ustring 42)
+...
+
+==> "42"
+
+>>> (ustring "hello")
+...
+
+==> "hello"
+
+>>> (ustring 'foo)
+...
+
+==> "FOO"
+
+>>> (string "hello")
+...
+
+==> ""hello""
+
+>>> (symbol "hello")
+...
+
+==> HELLO
+
+>>> (symbol "MAKE-" "POINT")
+...
+
+==> MAKE-POINT
+
+
+>>> ;;; Error: float rejects non-numeric strings
+... (float "hello")
+
+%%% ERROR 'FLOAT': Invalid argument.
+%%% USAGE: (FLOAT <number>)
+==>
+
+>>> ;;; Error: rational requires exactly one argument
+... (rational)
+
+%%% ERROR 'RATIONAL': Exactly 1 argument expected.
+%%% USAGE: (RATIONAL <number>)
+==>
+
+>>> (rational 1 2)
+
+%%% ERROR 'RATIONAL': Exactly 1 argument expected.
+%%% USAGE: (RATIONAL <number>)
+==>
+
+>>> ;;; Error: string/symbol require at least one argument
+... (string)
+
+%%% ERROR 'STRING': 1 or more arguments expected.
+%%% USAGE: (STRING <object1> <object2> ...)
+==>
+
+>>> (symbol)
+
+%%% ERROR 'SYMBOL': 1 or more string argument expected.
+%%% USAGE: (SYMBOL <string1> <string2> ...)
+==>
 

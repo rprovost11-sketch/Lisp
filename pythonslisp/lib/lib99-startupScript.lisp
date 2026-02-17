@@ -7,7 +7,7 @@
       (uwriteln! "- No need to adjust recursion limit.")))
 
 ;;; Inform the user of Python Lisp's online help system
-(uwriteln! "- For online help type \"(help)\" or \"(help <callable>)\"." )
+(uwriteln! "- For LOHS (lisp online help system) type \"(help)\" to begin." )
 
 ;;; Some function definitions for testing purposes
 (defun fact (n)
@@ -38,3 +38,7 @@
                             ('expt     (list '*   (list '* (at 2 expr) (list 'pow (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))
                             ))))
 
+(defun run-me ()
+   (let ( (ct 0) )
+      (dotimes (i 1000000)
+         (incf ct))))

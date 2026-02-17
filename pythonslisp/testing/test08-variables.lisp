@@ -164,7 +164,7 @@
 ...    (writeLn! var1)
 ...    (writeLn! var2)
 ...    (writeLn! var3)
-...    (let ( (var3 true) )
+...    (let ( (var3 T) )
 ...       (writeLn! var1)
 ...       (writeLn! var2)
 ...       (writeLn! var3)
@@ -177,15 +177,10 @@
 VAR3
 15
 -22/7
-a value
+"a value"
 15
 -22/7
-TRUE
-Symbol Table Dump:  Inner-Most Scope First
-------------------------------------------
-['VAR3']
-['VAR3']
-['*', '+', '-', '-INF', '/', '//', '/=', '<', '<=', '=', '>', '>=', 'ABS', 'ACOS', 'AND', 'APPEND', 'APPLY', 'ASIN', 'AT', 'ATAN', 'ATOM', 'ATSET!', 'AVERAGE', 'BACKQUOTE', 'CAAAAR', 'CAAADR', 'CAAAR', 'CAADAR', 'CAADDR', 'CAADR', 'CAAR', 'CADAAR', 'CADADR', 'CADAR', 'CADDAR', 'CADDDR', 'CADDR', 'CADR', 'CAR', 'CASE', 'CDAAAR', 'CDAADR', 'CDAAR', 'CDADAR', 'CDADDR', 'CDADR', 'CDAR', 'CDDAAR', 'CDDADR', 'CDDAR', 'CDDDAR', 'CDDDDR', 'CDDDR', 'CDDR', 'CDR', 'COMMA', 'COMMA-AT', 'COND', 'CONS', 'COPY', 'COS', 'D', 'DECF', 'DEEPCOPY', 'DEFMACRO', 'DEFSTRUCT', 'DEFUN', 'DIG', 'DOTIMES', 'E', 'EVAL', 'EVENP', 'EXP', 'EXPT', 'FACT', 'FIB', 'FIRST', 'FLOAT', 'FLOATP', 'FOREACH', 'FUNCALL', 'FUNCTIONP', 'GCD', 'GENSYM', 'HASKEY?', 'HASVALUE?', 'IF', 'INCF', 'INF', 'INTEGER', 'INTEGERP', 'IS?', 'ISATOM?', 'ISEVEN?', 'ISFLOAT?', 'ISFUNCTION?', 'ISINTEGER?', 'ISLIST?', 'ISMAP?', 'ISNEGATIVE?', 'ISNIL?', 'ISNUMBER?', 'ISODD?', 'ISPOSITIVE?', 'ISQRT', 'ISRATIONAL?', 'ISSTRING?', 'ISSYMBOL?', 'ISZERO?', 'LAMBDA', 'LCM', 'LET', 'LET*', 'LIST', 'LIST-LENGTH', 'LISTP', 'LN', 'LOG', 'MACROEXPAND', 'MAP', 'MAX', 'MIN', 'MINUSP', 'MOD', 'MYLIST', 'NAN', 'NIL', 'NOT', 'NULL', 'NUMBERP', 'ODDP', 'OR', 'PARSE', 'PI', 'PLUSP', 'POP!', 'PPRINT', 'PROGN', 'PUSH!', 'PYTHON', 'QUOTE', 'RANDOM', 'RATIONAL', 'RATIONALP', 'READLN!', 'READ_PROMPT', 'REMOVE', 'REST', 'REVERSE', 'REVERSE-AUX', 'SETF', 'SIGNUM', 'SIN', 'SQRT', 'STRING', 'STRINGP', 'SYMBOL', 'SYMBOLP', 'SYMTAB!', 'T', 'TAN', 'TREE-EQUAL', 'UNDEF!', 'UPDATE!', 'VAR1', 'VAR2', 'WHILE', 'WRITE!', 'WRITELN!', 'ZEROP']
+T
 ==> NIL
 
 >>> var1
@@ -203,3 +198,24 @@ Symbol Table Dump:  Inner-Most Scope First
 
 %%% Unbound Variable: VAR3.
 ==> 
+
+>>> ;;; Error: undef! requires exactly one symbol argument
+... (undef! 1 2)
+
+%%% ERROR 'UNDEF!': 1 argument expected.
+%%% USAGE: (UNDEF! <symbol>)
+==>
+
+>>> (undef! 1)
+
+%%% ERROR 'UNDEF!': Argument expected to be a symbol.
+%%% USAGE: (UNDEF! <symbol>)
+==>
+
+>>> ;;; Error: setf requires an even number of arguments
+... (setf myvar1 10 myvar2)
+
+%%% ERROR 'SETF': An even number of arguments is expected.  Received 3.
+%%% USAGE: (SETF <symbol> <sexpr>)
+==>
+

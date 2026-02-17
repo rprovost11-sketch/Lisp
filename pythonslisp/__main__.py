@@ -10,24 +10,47 @@ EMAIL        = 'ronLongo9@outlook.com'
 PROJECT = 'https://github.com/rprovost11-sketch/Lisp'
 TEST_DIR     = 'pythonslisp/testing'
 LIBRARY_DIR  = 'pythonslisp/lib'
-USAGE = '''   USAGE:  python3.14 -m pythonslisp [lispSourceFile|-h|--help|-v|--version]
+USAGE = '''   USAGE:  python3.14 -m pythonslisp [options] [lispSourceFile]
 
-This command takes one optional argument.
+Options:
+  -h, --help           Display this help message and exit
+  -v, --version        Display version number and exit
 
-- If no argument is specified the Listener\'s repl will execute.
-- If a lisp source file name is provided as the only argument, Python\'s Lisp
-  will execute the source file.
-- If -h or --help is the argument, then lisp displays this help message then exits.
-- If -v or --version is the argument, then lisp displays the version number
-  then exits.
+Arguments:
+  lispSourceFile       Lisp source file to execute
+
+- If no argument is specified, the Listener\'s REPL will execute.
+- If a lisp source file name is provided, Python\'s Lisp will execute it.
 '''
 
 def main( ) -> None:
+   argv = sys.argv        # argument values
+
+   # Parse options
+   source_file = None
+
+   for arg in argv[1:]:
+      if arg in ('-h', '--help'):
+         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
+         print( )
+         print( USAGE )
+         return
+      elif arg in ('-v', '--version'):
+         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
+         return
+      elif arg.startswith('-'):
+         print( f'Error: Unknown option: {arg}\n\n{USAGE}', file=sys.stderr )
+         sys.exit(1)
+      else:
+         # It's a source file
+         if source_file is not None:
+            print( f'Error: Multiple source files specified.\n\n{USAGE}', file=sys.stderr )
+            sys.exit(1)
+         source_file = arg
+
    interp = LispInterpreter( runtimeLibraryDir=LIBRARY_DIR )
 
-   argv = sys.argv        # argument values
-   argc = len(argv)       # argument count
-   if argc == 1:
+   if source_file is None:
       # Enter the repl
       try:
          theListener = Listener( interp, language=LANGUAGE,
@@ -38,30 +61,17 @@ def main( ) -> None:
                                          testdir=TEST_DIR
                                          )
       except FileNotFoundError as ex:
-         print( 'Runtime library directory not found: "{LIBRARY_DIR}"' )
+         print( f'Runtime library directory not found: "{LIBRARY_DIR}"' )
          sys.exit(1)
-      
+
       theListener.readEvalPrintLoop( )
-   elif argc == 2:
-      arg = argv[1]
-      if arg in ('-h', '--help'):
-         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
-         print( )
-         print( USAGE )
-         return
-      elif arg in ('-v', '--version'):
-         print( f'{LANGUAGE} v{VERSION} by {AUTHOR}' )
-         return
-      
+   else:
       # Execute a lisp source file
       try:
-         interp.evalFile( arg )
+         interp.evalFile( source_file )
       except FileNotFoundError as ex:
          print( ex.args[-1] )
          sys.exit(1)
-   else:
-      print( f'Error: Invalid number of arguments.\n\n{USAGE}', file=sys.stderr )
-      sys.exit(1)
 
 if __name__ == '__main__':
    main( )

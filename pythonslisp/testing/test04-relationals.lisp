@@ -193,4 +193,91 @@
 
 ==> NIL
 
+>>> (> 5 3)
+...
+
+==> T
+
+>>> (> 3 5)
+...
+
+==> NIL
+
+>>> (> 5 5)
+...
+
+==> NIL
+
+>>> (> 5 3 2)
+...
+
+==> T
+
+>>> (> 5 3 3)
+...
+
+==> NIL
+
+>>> (>= 5 3)
+...
+
+==> T
+
+>>> (>= 5 5)
+...
+
+==> T
+
+>>> (>= 3 5)
+...
+
+==> NIL
+
+>>> (>= 5 5 4)
+...
+
+==> T
+
+>>> (>= 5 5 6)
+...
+
+==> NIL
+
+
+>>> ;;; Error: relational operators need at least 2 arguments
+... (= 1)
+
+%%% ERROR '=': 2 or more arguments expected.
+%%% USAGE: (= <expr1> <expr2> ...)
+==>
+
+>>> (/= 1)
+
+%%% ERROR '/=': 2 or more arguments expected.
+%%% USAGE: (/= <expr1> <expr2> ...)
+==>
+
+>>> (< 1)
+
+%%% ERROR '<': 2 or more arguments expected.
+%%% USAGE: (< <expr1> <expr2> ...)
+==>
+
+>>> (<= 1)
+
+%%% ERROR '<=': 2 or more arguments expected.
+%%% USAGE: (<= <expr1> <expr2> ...)
+==>
+
+>>> (> 1)
+
+%%% ERROR '>': 2 or more arguments expected.
+%%% USAGE: (> <expr1> <expr2> ...)
+==>
+
+>>> (>= 1)
+
+%%% ERROR '>=': 2 or more arguments expected.
+%%% USAGE: (>= <expr1> <expr2> ...)
+==>
 

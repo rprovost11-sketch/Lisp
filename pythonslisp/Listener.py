@@ -89,13 +89,15 @@ class ListenerCommandError( Exception ):
       super().__init__( message )
 
 class Listener( object ):
-   '''Listener environment for interpreted languages.  Has a read-eval-print
-   loop and listener commands for session logging, as well as testing and
-   rebooting the intepreter.  Partly ripped off from Python's cmd module.'''
+   '''Listener environment for interpreted languages needing a repl.  Has
+   a read-eval-print-loop and listener commands for session logging, as well
+   as testing and rebooting the intepreter.  Partly ripped off from Python's
+   cmd module.'''
    def __init__( self, anInterpreter: Interpreter, testdir: str='', **kwargs ) -> None:
       print( '{language} {version} by {author}'.format(**kwargs) )
       print( 'Project home {project}'.format(**kwargs) )
-      print( '- Initialing Listener', flush=True )
+      print( )
+      print( '- Initializing Listener', flush=True )
       self._interp          = anInterpreter
       self._testdir         = testdir
       self._logFile: Any    = None
@@ -332,7 +334,7 @@ class Listener( object ):
          columnize(cmds, 69)
          print()
          print( "Type ']help <command>' for help on a command." )
-         print( "Type ']<command> [ <args> ]' to execute a command." )
+         print( "Type ']<command> [ <arg> ]' to execute a command." )
 
    def _cmd_instrument( self, args: list[str] ) -> None:
       '''Usage:  instrument
@@ -414,9 +416,11 @@ class Listener( object ):
       print( '- Initializing interpreter' )
       print( '- Loading Runtime library' )
       self._interp.reboot( )                     # boot/Reboot the interpreter
+      print( )
       print( 'Enter \']help\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
       print( 'Welcome!' )
+      print( )
 
    def _cmd_test( self, args: list[str] ) -> None:
       '''Usage:  test [<filename>]

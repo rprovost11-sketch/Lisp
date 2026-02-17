@@ -60,37 +60,37 @@ class LCallable( object ):
 class LPrimitive( LCallable ):
    __slots__ = ('pythonFn', 'paramsString')
    
-   def __init__( self, fn: Callable[[Environment], Any], name: str, params: str, docString: str = '', specialForm: bool=False ) -> None:
+   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', specialForm: bool=False ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
-      self.paramsString:str = params
+      self.paramsString:str = paramsString
       super().__init__( name, docString, specialForm )
    
    def usageString( self ):
       return f'({self.name} {self.paramsString})'
 
 class LFunction( LCallable ):
-   __slots__ = ('params', 'body', 'closure')
+   __slots__ = ('lambdaListAST', 'bodyAST', 'capturedEnvironment')
    
-   def __init__( self, name: LSymbol, params: list, docString: str, bodyExprLst: list, closure: Environment ) -> None:
-      self.params: list = params
-      self.body: list   = bodyExprLst
-      self.closure: Environment = closure
+   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: Environment ) -> None:
+      self.lambdaListAST: list = lambdaListAST
+      self.bodyAST: list   = bodyAST
+      self.capturedEnvironment: Environment = capturedEnvironment
       super().__init__( name, docString, specialForm=False )
    
    def usageString( self ):
-      return f'(Function {self.name} {prettyPrintSExpr(self.params)} ... )'
+      return f'(Function {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
 
 
 class LMacro( LCallable ):
-   __slots__ = ('params', 'body')
+   __slots__ = ('lambdaListAST', 'bodyAST')
    
-   def __init__( self, name: LSymbol, params: list, docString: str, bodyExprList: list ) -> None:
-      self.params: list  = params
-      self.body: list    = bodyExprList
+   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
+      self.lambdaListAST: list  = lambdaListAST
+      self.bodyAST: list    = bodyAST
       super().__init__( name, docString, specialForm=True )
    
    def usageString( self ):
-      return f'(Macro {self.name} {prettyPrintSExpr(self.params)} ... )'
+      return f'(Macro {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:
@@ -156,4 +156,3 @@ def prettyPrint( sExpr: Any ) -> str:
       return sExpr.usageString()
    else:
       return str(sExpr)
-

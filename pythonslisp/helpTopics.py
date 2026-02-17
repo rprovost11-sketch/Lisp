@@ -10,7 +10,7 @@ topics['LANGUAGE'] = """Lexemes
                          | 'e' ['+'|'-'] ('0' .. '9')+
                          | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]
                          )   # Supports integers, floats and fractions
-      StringLiteral:  '"' (^('"'))* '"'   # Supports python escape sequences
+      StringLiteral:  '"' { ^["] } '"'   # Supports all python escape sequences
       Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>#|'
                       { 'a..zA..Z+-~!$%^&*_=\\/?<>#|0..9' }
 
@@ -19,14 +19,24 @@ topics['LANGUAGE'] = """Lexemes
 
 Grammar
    Start:
-      Object* EOF
+      { Object } EOF
 
    Object:
       NumberLiteral | StringLiteral | Symbol | List | '#' | '|' | ':' | '[' | ']'
       | "'" Object | "`" Object | "," Object | ",@" Object
 
    List:
-      '(' Object* ')'"""
+      '(' Object* ')'
+   
+Notes
+- parentheses () indicate grouping
+- brackets [] surround optional parts
+- braces {} surround parts that can occur 0 or more times in a row
+- plus + follows parts that must occur 1 or more times in a row
+- pipes | separate alternatives
+- two dots .. separate parts that indicate a range
+- caret brackets ^[ ... ] define a character class that includes
+  all printable characters not found among those listed between the brackets."""
 
 topics['LAMBDA-LIST'] = """lambdaList -> ( {var}*
                 [ &optional {var | (var [initForm [svar]])}* ]
@@ -36,11 +46,11 @@ topics['LAMBDA-LIST'] = """lambdaList -> ( {var}*
                 [ &aux {var | (var [initForm])}* ] )
 
 Notes:
+- parentheses are taken literally as actual parentheses in lisp
 - braces indicate grouping
 - brackets surround optional parts
 - pipes separate alternative parts
-- asterisk indicates zero of more of the form it follows
-- parenthesis are taken listerally as actual parenthesis in lisp
-- symbols preceded by & are taken literally
-- The ordering of sections is not flexible"""
+- asterisks indicate zero of more of the form it follows
+- symbols beginning with & are taken literally
+- the ordering of sections is not flexible"""
 

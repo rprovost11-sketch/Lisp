@@ -1,6 +1,6 @@
-(defmacro defun (fnName argList &rest body)
+(defmacro defun (fnName lambda-list &rest body)
    "Define and return a new globally named function.  The first expr in the body can be an optional documentation string."
-   `(setf ,fnName (lambda (,@argList) ,@body)))
+   `(setf ,fnName (lambda (,@lambda-list) ,@body)))
 
 (defmacro alias (new old)
    "Define an alias for an existing named object."
@@ -227,33 +227,26 @@
                    (1
                                  nil)))
 
-(setf __symbolCounter 1)
-(defun gensym (&optional (prefix "G"))
-   "Generate a unique symbol with a prefix of 'G' or other value specified by\nthe user and affixing a counting-number."
-   (let
-      ((theSymbol (symbol prefix __symbolCounter)))
-      (incf __symbolCounter)
-      theSymbol))
+(let ( (symbolCounter 1) )
+   (defun gensym (&optional (prefix "G"))
+      "Generate a unique symbol with a prefix of 'G' or other value specified by\nthe user and affixing a counting-number."
+      (let
+         ((theSymbol (symbol prefix symbolCounter)))
+         (incf symbolCounter)
+         theSymbol)))
 
-; (macroexpand '(defstruct point x y))
-;(defmacro defstruct (typename &rest fields)
-;   `(setf ,typename (map (name ,typename)
-;                         (type ,typename)
-;                         (fileds ,fields)))
-;   (foreach fieldname fields
-;       (defmacro (symbol typename "-" fieldname) (inst)
-;          `(at ,fieldname inst)))
-;   `(defun ,(symbol typename "-p") (arg)
-;       (= (at arg 'type) ,typename))
-;   `(defun ,(symbol "make-" typename) ( )
-;       (let ( (newInst (map (type ,typename))) )
-;          (foreach fieldname ',fields
-;             (setf (at fieldname newInst) nil))
-;          newInst))
-;   `(defun ,(symbol "copy-" typename) (oldInst)
-;       (let ( (newInst (,(symbol "make-" typename))) )
-;          (foreach fieldname ',fields
-;             (setf fieldname newInst (at fieldname oldInst)))
-;          newInst))
-;   )
+(defmacro when (condition &rest body)
+   "Executes body if c is truthy (non-nil)."
+   `(if ,condition (progn ,@body)))
+
+(defmacro unless (condition &rest body)
+   "Executes body if c is falsy (nil)."
+   `(when (not ,condition) ,@body))
+
+(defun mapcar (fn lst)
+   "Apply fn to each element of lst and return the list of results."
+   (let ((result nil))
+      (foreach item lst
+         (setf result (append result (list (fn item)))))
+      result))
 

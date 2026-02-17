@@ -254,3 +254,102 @@
 
 ==> 6
 
+>>> (/ 12 2 3)
+...
+
+==> 2.0
+
+>>> (/ 10 4)
+...
+
+==> 2.5
+
+>>> (log 100)
+...
+
+==> 4.605170185988092
+
+>>> (asin 0)
+...
+
+==> 0.0
+
+>>> (asin 1)
+...
+
+==> 1.5707963267948966
+
+>>> (acos 0)
+...
+
+==> 1.5707963267948966
+
+>>> (acos 1)
+...
+
+==> 0.0
+
+>>> (atan 0)
+...
+
+==> 0.0
+
+>>> (atan 1)
+...
+
+==> 0.7853981633974483
+
+>>> (atan 0 1)
+...
+
+==> 0.0
+
+
+>>> ;;; Error: non-numeric argument to +
+... (+ "a" 1)
+
+%%% ERROR '+': Invalid argument.
+%%% USAGE: (+ <number1> <number2> ...)
+==>
+
+>>> ;;; Error: division by zero
+... (/ 1 0)
+
+%%% division by zero
+==>
+
+>>> ;;; Error: expt requires exactly two arguments
+... (expt 2)
+
+%%% ERROR 'EXPT': Exactly two arguments expected.
+%%% USAGE: (EXPT <base> <power>)
+==>
+
+>>> ;;; Error: log requires at least one argument
+... (log)
+
+%%% ERROR 'LOG': 1 or 2 arguments expected.
+%%% USAGE: (LOG <number> &optional (<base> 10))
+==>
+
+>>> ;;; Error: non-numeric argument to log
+... (log "a")
+
+%%% ERROR 'LOG': Invalid argument.
+%%% USAGE: (LOG <number> &optional (<base> 10))
+==>
+
+>>> ;;; Error: non-numeric argument to sin
+... (sin "a")
+
+%%% ERROR 'SIN': Invalid argument.
+%%% USAGE: (SIN <radians>)
+==>
+
+>>> ;;; Error: atan with no arguments
+... (atan)
+
+%%% ERROR 'ATAN': 1 or two arguments expected.
+%%% USAGE: (ATAN <number1> &optional <number2>)
+==>
+

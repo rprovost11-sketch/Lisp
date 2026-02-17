@@ -17,7 +17,7 @@ class Environment( object ):
       self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
-   def getValue( self,  key: str) -> Any:
+   def lookup( self,  key: str) -> Any:
       scope: (Environment | None) = self
       while scope:
          if key in scope._bindings:
@@ -25,20 +25,21 @@ class Environment( object ):
          scope = scope._parent
       raise KeyError
 
-   def getValue2( self, key: str) -> Any:
-      '''This is slover than getValue().  While the lookup is fast, the
-      exception handling (which is needed to traverse the parent list) is
-      exceedingly slow.  Here's the code I tested these functions on:
+   def lookup2( self, key: str) -> Any:
+      '''This is slover than lookup() even though lookup2() seems more
+      elegant.  While the lookup is fast, the exception handling (which is
+      needed to traverse the parent list) is exceedingly slow.  Here's the
+      code I tested these functions on:
          (defun test ()
             (let ()
                (let ()
                   (dotimes (i 1000000)
-                     pi e))))
+                     pi))))
       Looking up pi and e 1,000,000 times.  pi is defined globally, but the
       search for pi is started three scope levels in.
-         getValue()  eval time between 0.44 and 0.74 seconds.
-         getValue2() eval time between 4.52 and 6.28 seconds.
-      by calling the versions of getValue() from LispInterpreter._lEval()
+         lookup()  eval time between 0.44 and 0.74 seconds.
+         lookup2() eval time between 4.52 and 6.28 seconds.
+      by calling the versions of lookup() from LispInterpreter._lEval()
       '''
       scope: (Environment | None) = self
       while scope:
@@ -48,13 +49,13 @@ class Environment( object ):
             scope = scope._parent
       raise KeyError
 
-   def getGlobalValue(self, key: str ) -> Any:
+   def lookupGlobal(self, key: str ) -> Any:
       return self._GLOBAL_ENV._bindings[ key ]
 
    def getGlobalEnv( self ) -> Environment:
       return self._GLOBAL_ENV
 
-   def undef( self, key: str ) -> None:
+   def unbind( self, key: str ) -> None:
       scope: (Environment | None) = self
       while scope:
          if key in scope._bindings:

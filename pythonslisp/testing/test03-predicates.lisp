@@ -318,4 +318,196 @@
 
 ==> NIL
 
+>>> (functionp (lambda (x) x))
+...
+
+==> T
+
+>>> (functionp list)
+...
+
+==> T
+
+>>> (functionp reverse)
+...
+
+==> T
+
+>>> (integerp 42)
+...
+
+==> T
+
+>>> (integerp 3.14)
+...
+
+==> NIL
+
+>>> (integerp 1/2)
+...
+
+==> NIL
+
+>>> (rationalp 1/3)
+...
+
+==> T
+
+>>> (rationalp 42)
+...
+
+==> T
+
+>>> (rationalp 3.14)
+...
+
+==> NIL
+
+>>> (floatp 3.14)
+...
+
+==> T
+
+>>> (floatp 42)
+...
+
+==> NIL
+
+>>> (floatp 1/2)
+...
+
+==> NIL
+
+>>> (macrop when)
+...
+
+==> T
+
+>>> (macrop incf)
+...
+
+==> T
+
+>>> (macrop defstruct)
+...
+
+==> T
+
+>>> (macrop car)
+...
+
+==> NIL
+
+>>> (macrop +)
+...
+
+==> NIL
+
+>>> (isInteger? 5)
+...
+
+==> T
+
+>>> (isRational? 1/4)
+...
+
+==> T
+
+>>> (isFloat? 2.5)
+...
+
+==> T
+
+>>> (isNil? nil)
+...
+
+==> T
+
+>>> (isNil? t)
+...
+
+==> NIL
+
+>>> (isNumber? 42)
+...
+
+==> T
+
+>>> (isNumber? "hello")
+...
+
+==> NIL
+
+>>> (isString? "abc")
+...
+
+==> T
+
+>>> (isSymbol? 'foo)
+...
+
+==> T
+
+
+
+>>> ;;; Error: predicates require exactly one argument
+... (numberp)
+
+%%% ERROR 'NUMBERP': 1 argument expected.
+%%% USAGE: (NUMBERP <sexpr>)
+==>
+
+>>> (numberp 1 2)
+
+%%% ERROR 'NUMBERP': 1 argument expected.
+%%% USAGE: (NUMBERP <sexpr>)
+==>
+
+>>> (integerp)
+
+%%% ERROR 'INTEGERP': 1 argument expected.
+%%% USAGE: (INTEGERP <sexpr>)
+==>
+
+>>> (floatp)
+
+%%% ERROR 'FLOATP': 1 argument expected.
+%%% USAGE: (FLOATP <sexpr>)
+==>
+
+>>> (rationalp)
+
+%%% ERROR 'RATIONALP': 1 argument expected.
+%%% USAGE: (RATIONALP <sexpr>)
+==>
+
+>>> (symbolp)
+
+%%% ERROR 'SYMBOLP': 1 argument expected.
+%%% USAGE: (SYMBOLP <sexpr>)
+==>
+
+>>> (listp)
+
+%%% ERROR 'LISTP': 1 argument expected.
+%%% USAGE: (LISTP <sexpr>)
+==>
+
+>>> (stringp)
+
+%%% ERROR 'STRINGP': 1 argument expected.
+%%% USAGE: (STRINGP <sexpr>)
+==>
+
+>>> (functionp)
+
+%%% ERROR 'FUNCTIONP': 1 argument expected.
+%%% USAGE: (FUNCTIONP <sexpr>)
+==>
+
+>>> (macrop)
+
+%%% ERROR 'MACROP': 1 argument expected.
+%%% USAGE: (MACROP <sexpr>)
+==>
 

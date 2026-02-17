@@ -184,3 +184,37 @@
 ...
 
 ==> NIL
+
+>>> ;;; Error: hasKey? requires a map as first argument
+... (hasKey? 1 (map))
+
+%%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
+%%% USAGE: (HASKEY? <map> <key>)
+==>
+
+>>> ;;; Error: hasValue? requires a list or map as first argument
+... (hasValue? 1 '(1 2))
+
+%%% ERROR 'HASVALUE?': Invalid argument.  Argument 1 expected to be a list or map.
+%%% USAGE: (HASVALUE? <listOrMap> <value>)
+==>
+
+>>> ;;; Error: update! requires map arguments
+... (update! 1 (map))
+
+%%% ERROR 'UPDATE!': Argument 1 expected to be a map.
+%%% USAGE: (UPDATE! <map1> <map2>)
+==>
+
+>>> (update! (map) 1)
+
+%%% ERROR 'UPDATE!': Argument 2 expected to be a map.
+%%% USAGE: (UPDATE! <map1> <map2>)
+==>
+
+>>> (update!)
+
+%%% ERROR 'UPDATE!': 2 arguments expected.
+%%% USAGE: (UPDATE! <map1> <map2>)
+==>
+

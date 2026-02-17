@@ -34,6 +34,7 @@ class LispArgBindingError( LispRuntimeError ):
 
 class LispInterpreter( Interpreter ):
    outStrm = None
+   _setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
 
    def __init__( self, runtimeLibraryDir: (str|None)=None ) -> None:
       self._libDir = runtimeLibraryDir
@@ -64,8 +65,13 @@ class LispInterpreter( Interpreter ):
    def rawEval( self, source: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
-         ast = self._parser.parse( source )
-         returnVal = LispInterpreter._lEval( self._env, ast )
+         from pythonslisp.LispExpander import LispExpander
+         ast = self._parser.parse( source )   # (progn form1 form2 ...)
+         top_level_forms = ast[1:]            # strip progn wrapper
+         returnVal = list()
+         for form in top_level_forms:
+            form = LispExpander.expand( self._env, form )
+            returnVal = LispInterpreter._lEval( self._env, form )
       finally:
          LispInterpreter.outStrm = None
       return returnVal
@@ -76,11 +82,14 @@ class LispInterpreter( Interpreter ):
          parseStartTime = time.perf_counter()
          ast = self._parser.parse( source )
          parseTime = time.perf_counter() - parseStartTime
-         
-         #ast = LispExpander.expand( self._env, ast )
-         
+
+         from pythonslisp.LispExpander import LispExpander
          startTime = time.perf_counter()
-         returnVal = LispInterpreter._lEval( self._env, ast )
+         top_level_forms = ast[1:]
+         returnVal = list()
+         for form in top_level_forms:
+            form = LispExpander.expand( self._env, form )
+            returnVal = LispInterpreter._lEval( self._env, form )
          evalTime = time.perf_counter() - startTime
       finally:
          LispInterpreter.outStrm = None
@@ -89,8 +98,13 @@ class LispInterpreter( Interpreter ):
    def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
-         ast = self._parser.parseFile( filename )
-         returnVal = LispInterpreter._lEval( self._env, ast )
+         from pythonslisp.LispExpander import LispExpander
+         ast = self._parser.parseFile( filename )   # (progn form1 form2 ...)
+         top_level_forms = ast[1:]                  # strip progn wrapper
+         returnVal = list()
+         for form in top_level_forms:
+            form = LispExpander.expand( self._env, form )
+            returnVal = LispInterpreter._lEval( self._env, form )
       finally:
          LispInterpreter.outStrm = None
       return returnVal
@@ -102,86 +116,77 @@ class LispInterpreter( Interpreter ):
       return True
 
    @staticmethod
-   def _lEval( env: Environment, sExpr: Any ) -> Any:
-      '''This is the interpreter's main evaluation function.  Pass it any
-      s-expression in the form of a LispAST; eval will return the result.'''
-      if isinstance(sExpr, LSymbol):
+   def _lEval( env: Environment, sExprAST: Any ) -> Any:
+      '''This is a recursive tree-walk evaluator.  It's the interpreter's main
+      evaluation function.  Pass it any s-expression in the form of a LispAST;
+      eval will return the result.'''
+      if isinstance(sExprAST, LSymbol):
          try:
-            return env.getValue( sExpr.strval )
+            return env.lookup( sExprAST.strval )
          except KeyError:
-            if sExpr.isKeyArg():
-               return sExpr
-            raise LispRuntimeError( f'Unbound Variable: {sExpr.strval}.' )
-      elif not isinstance(sExpr, list):  # atom or map
-         return sExpr
+            if sExprAST.isKeyArg():
+               return sExprAST
+            raise LispRuntimeError( f'Unbound Variable: {sExprAST.strval}.' )
+      elif not isinstance(sExprAST, list):  # atom or map
+         return sExprAST
       
       # sExpr is a list expression - function call
       
-      if len(sExpr) == 0:
+      if len(sExprAST) == 0:
          return list( )  # An empty list always evaluates to an empty list
 
       # Break the list contents into a primary and a list of args
-      primary, *argsToFn = sExpr
+      primary, *argsToFn = sExprAST
 
       # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
-      fnObj = LispInterpreter._lEval( env, primary )
-      if not isinstance( fnObj, LCallable ):
+      function = LispInterpreter._lEval( env, primary )
+      if not isinstance( function, LCallable ):
          raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
       
       # Do the args need to be evaluated before calling the function?
-      if not fnObj.specialForm:
+      if not function.specialForm:
          argsToFn = [ LispInterpreter._lEval(env, argExpr) for argExpr in argsToFn ]
       
       # Call the function and return the results
-      return LispInterpreter._lApply( env, fnObj, *argsToFn )
+      return LispInterpreter._lApply( env, function, *argsToFn )
 
    @staticmethod
-   def _lApply( env: Environment, lcallable: LCallable, *args ) -> Any:
+   def _lApply( env: Environment, function: LCallable, *args ) -> Any:
       try:
-         if isinstance( lcallable, LPrimitive ):
-            return lcallable.pythonFn( env, *args )
-         elif isinstance( lcallable, LFunction ):
+         if isinstance( function, LPrimitive ):
+            return function.pythonFn( env, *args )
+         elif isinstance( function, LFunction ):
             #env = Environment( env )         # Open a new scope. Auto closes when env goes out of scope.
-            env = Environment( lcallable.closure ) # Open a new scope on the function's closure env to support closures.
+            env = Environment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
    
             # store the arguments as locals
-            LispInterpreter._lbindArguments( env, lcallable.params, args ) #convert args from a tuple to a list
+            LispInterpreter._lbindArguments( env, function.lambdaListAST, args ) #convert args from a tuple to a list
    
             # evaluate the body expressions.
             latestResult = list()
-            for sexpr in lcallable.body:
+            for sexpr in function.bodyAST:
                latestResult = LispInterpreter._lEval( env, sexpr )
             return latestResult
-         else:                     # LMacro
-            listOfExpandedSExprs = LispInterpreter._macroexpand( env, lcallable, *args )
-   
-            # Evaluate the expanded macro
-            latestResult = list()
-            for sexpr in listOfExpandedSExprs:
-               latestResult = LispInterpreter._lEval( env, sexpr )
-            return latestResult
+         else:   # LMacro — should have been expanded before reaching here
+            raise LispRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
       except LispArgBindingError as ex:
          errorMsg = ex.args[-1]
-         fnName = lcallable.name
-         if isinstance(lcallable, LFunction):
-            if fnName == '':
-               raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
-            else:
-               raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
+         fnName = function.name
+         if fnName == '':
+            raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
          else:
-            raise LispRuntimeError( f'Error binding arguments in call to macro "{fnName}".\n{errorMsg}')
-         
+            raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
 
    @staticmethod
-   def _lbindArguments( env: Environment, paramList: list[Any], argList: tuple[Any] ) -> None:
-      paramListLength = len(paramList)
+   def _lbindArguments( env: Environment, lambdaListAST: list[Any], argList: tuple[Any] ) -> None:
+      paramListLength = len(lambdaListAST)
       argListLength = len(argList)
 
-      paramNum, argNum = LispInterpreter._lbindPositionalArgs( env, paramList, 0, argList, 0 )
+      paramNum, argNum = LispInterpreter._lbindPositionalArgs( env, lambdaListAST, 0, argList, 0 )
       
       # Retrieve the next param which should be a symbol
       try:
-         nextParam = paramList[paramNum]
+         nextParam = lambdaListAST[paramNum]
       except IndexError:
          # There are no more params to process. So argNum should be == or > argListLength.
          # So, if argNum < argListLength, then there are still unprocessed args.
@@ -192,11 +197,11 @@ class LispInterpreter( Interpreter ):
          raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&OPTIONAL':
-         paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, paramList, paramNum+1, argList, argNum )
+         paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, lambdaListAST, paramNum+1, argList, argNum )
       
          # Retrieve the next param which should be a symbol
          try:
-            nextParam = paramList[paramNum]
+            nextParam = lambdaListAST[paramNum]
          except IndexError:
             if argNum < argListLength:
                raise LispArgBindingError( f'Too many arguments.  Received {argNum+1}.' )
@@ -205,40 +210,40 @@ class LispInterpreter( Interpreter ):
             raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&REST':
-         paramNum, argNum = LispInterpreter._lbindRestArgs( env, paramList, paramNum+1, argList, argNum )
+         paramNum, argNum = LispInterpreter._lbindRestArgs( env, lambdaListAST, paramNum+1, argList, argNum )
       
          # Retrieve the next param which should be a symbol
          try:
-            nextParam = paramList[paramNum]
+            nextParam = lambdaListAST[paramNum]
          except IndexError:
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
             raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&KEY':
-         paramNum, argNum = LispInterpreter._lbindKeyArgs( env, paramList, paramNum+1, argList, argNum )
+         paramNum, argNum = LispInterpreter._lbindKeyArgs( env, lambdaListAST, paramNum+1, argList, argNum )
       
          # Retrieve the next param which should be a symbol
          try:
-            nextParam = paramList[paramNum]
+            nextParam = lambdaListAST[paramNum]
          except IndexError:
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
             raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
       
       if nextParam == '&AUX':
-         paramNum, argNum = LispInterpreter._lbindAuxArgs( env, paramList, paramNum+1, argList, argNum )
+         paramNum, argNum = LispInterpreter._lbindAuxArgs( env, lambdaListAST, paramNum+1, argList, argNum )
    
       if paramNum < paramListLength:
          raise LispArgBindingError( 'Too few parameters.' )
 
    @staticmethod
-   def _lbindPositionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
-      paramListLength = len(paramList)
+   def _lbindPositionalArgs( env: Environment, lambdaListAST: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
+      paramListLength = len(lambdaListAST)
 
       while paramNum < paramListLength:
-         # Get the next parameter name.  Insure it's a symbol but doesn't start with '&'.
-         paramName = paramList[paramNum]
+         # Get the next parameter name.  Ensure it's a symbol but doesn't start with '&'.
+         paramName = lambdaListAST[paramNum]
          if not isinstance(paramName, LSymbol):
             raise LispArgBindingError( f"Positional param {paramNum} expected to be a symbol." )
          if paramName.startswith('&'):
@@ -260,9 +265,9 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
    
    @staticmethod
-   def _lbindOptionalArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
+   def _lbindOptionalArgs( env: Environment, lambdaListAST: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''Syntax:  &optional {var | (var [initform [svar]])}*'''
-      paramListLength = len(paramList)
+      paramListLength = len(lambdaListAST)
       argListLength = len(argList)
       
       # Prepare to loop over the optional parameters and arguments
@@ -270,7 +275,7 @@ class LispInterpreter( Interpreter ):
          raise LispArgBindingError( f'Param expected after &Optional.' )
       
       while (paramNum < paramListLength):
-         paramSpec = paramList[paramNum]
+         paramSpec = lambdaListAST[paramNum]
          
          # Extract the next parameter's values
          if isinstance( paramSpec, LSymbol ):
@@ -308,7 +313,7 @@ class LispInterpreter( Interpreter ):
             svarVal = list()   # Nil, False
          else:
             argNum += 1
-            svarVal = env.getGlobalValue('T')   # T, True
+            svarVal = env.lookupGlobal('T')   # T, True
 
          # Bind the parameters
          env.bindLocal( varName.strval, initForm )
@@ -319,10 +324,10 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
 
    @staticmethod
-   def _lbindRestArgs( env:  Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
+   def _lbindRestArgs( env:  Environment, lambdaListAST: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''Syntax:  &rest var'''
       try:
-         paramName = paramList[paramNum]
+         paramName = lambdaListAST[paramNum]
       except IndexError:
          raise LispArgBindingError( f'Param name expected after &rest.' )
 
@@ -335,9 +340,9 @@ class LispInterpreter( Interpreter ):
       return paramNum + 1, argNum
 
    @staticmethod
-   def _lbindKeyArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
+   def _lbindKeyArgs( env: Environment, lambdaListAST: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [svar]])}* [&allow-other-keys]'''
-      paramListLength = len(paramList)
+      paramListLength = len(lambdaListAST)
       argListLength = len(argList)
       
       # Prepare to iterate over the parameters
@@ -346,9 +351,9 @@ class LispInterpreter( Interpreter ):
       keysDict = {}       # Mapping: parameterKeyWord -> (varName,svarName)
       varsDict = {}       # Mapping: varName -> value
       
-      # Iterate throught the key parameters adding them to keysDict and varsDict
+      # Iterate through the key parameters adding them to keysDict and varsDict
       while paramNum < paramListLength:
-         paramSpec = paramList[paramNum]
+         paramSpec = lambdaListAST[paramNum]
          if isinstance(paramSpec, LSymbol):
             if paramSpec == '&ALLOW-OTHER-KEYS':
                break
@@ -394,7 +399,7 @@ class LispInterpreter( Interpreter ):
       
       allowOtherKeys = False
       if (paramNum < paramListLength):
-         nextParam = paramList[paramNum]
+         nextParam = lambdaListAST[paramNum]
          if isinstance(nextParam, LSymbol) and (nextParam == '&ALLOW-OTHER-KEYS'):
             allowOtherKeys = True
             paramNum += 1
@@ -423,7 +428,7 @@ class LispInterpreter( Interpreter ):
                varName,svarName = keysDict.get(keyArg, (keyArg, None))
             else:
                varName,svarName = keysDict[keyArg]
-            svarVal = env.getGlobalValue('T')
+            svarVal = env.lookupGlobal('T')
          except KeyError:
             raise LispArgBindingError( 'Invalid key in argument list :{argKey}.' )
          
@@ -439,18 +444,18 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
 
    @staticmethod
-   def _lbindAuxArgs( env: Environment, paramList: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
+   def _lbindAuxArgs( env: Environment, lambdaListAST: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
       '''Syntax:  &aux {var | (var [initForm])}*
       These are not really arguments.  At least: these parameters get no corresponding arguments.
       These parameters are strictly local variables for the function.'''
-      paramListLength = len(paramList)
+      paramListLength = len(lambdaListAST)
       
       # Prepare to loop over the optional parameters and arguments
       if paramNum >= paramListLength:
          raise LispArgBindingError( 'Param expected after &aux.' )
       
       while (paramNum < paramListLength):
-         paramSpec = paramList[paramNum]
+         paramSpec = lambdaListAST[paramNum]
          
          # Extract the next parameter's name and value
          if isinstance( paramSpec, LSymbol ):
@@ -461,7 +466,7 @@ class LispInterpreter( Interpreter ):
          elif isinstance(paramSpec, list):
             try:
                varName, initForm = paramSpec
-            except:
+            except ValueError:
                raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
 
             if not isinstance(varName, LSymbol):
@@ -478,17 +483,6 @@ class LispInterpreter( Interpreter ):
          paramNum += 1
       
       return paramNum, argNum
-   
-   @staticmethod
-   def _macroexpand( env: Environment, macroDef: LMacro, *args ) -> list[Any]:
-      env = Environment( env )      # Open a new scope.  Automatically closes when env goes out of scope
-
-      # store the arguments as locals
-      LispInterpreter._lbindArguments( env, macroDef.params, args ) #convert args from a tuple to a list
-
-      # Evaluate each body expression; expanding each expr in turn to expand
-      # the full macro body.  Place those expanded expressions in resultList.
-      return [ LispInterpreter._lEval(env, bodySExpr) for bodySExpr in macroDef.body ]
 
    @staticmethod
    def _lbackquoteExpand( env: Environment, expr: Any ) -> Any:
@@ -531,9 +525,9 @@ class LispInterpreter( Interpreter ):
       primitiveDict[ 'PI'   ] = math.pi
       primitiveDict[ 'E'    ] = math.e
 
-      class LDefPrimitive( object ):
-         '''Decorator to simplifies the definition of a lisp primitive as a python function.'''
-         def __init__( self, primitiveSymbol: str, params: str='', specialForm: bool=False ) -> None:
+      class primitive( object ):
+         '''Decorator to simplify the definition of a lisp primitive as a python function.'''
+         def __init__( self, primitiveSymbolString: str, paramsString: str='', specialForm: bool=False ) -> None:
             '''Arguments:
             primitiveSymbol, the string representation of the lisp symbol used
                to name the primitive in the interpreter.
@@ -544,16 +538,16 @@ class LispInterpreter( Interpreter ):
                unevaluated prior to its call. (Otherwise all arguments are
                evaluated prior to calling this function.)
             '''
-            self._name:str  = primitiveSymbol.upper( )
-            self._params:str = params
+            self._name:str  = primitiveSymbolString.upper( )
+            self._paramsString:str = paramsString
             self._specialForm:bool = specialForm
 
          def __call__( self, primitiveDef ):
-            '''primitiveDef is a python function to implmenet the lisp primitive.'''
+            '''primitiveDef is a python function to implement the lisp primitive.'''
             nonlocal primitiveDict
             docString = primitiveDef.__doc__ if primitiveDef.__doc__ != None else ''
             lPrimitivObj = LPrimitive( primitiveDef, self._name,
-                                       self._params, docString, 
+                                       self._paramsString, docString, 
                                        specialForm=self._specialForm )
             primitiveDict[ self._name ] = lPrimitivObj
             return lPrimitivObj
@@ -561,13 +555,13 @@ class LispInterpreter( Interpreter ):
       # =================
       # Symbol Definition
       # -----------------
-      @LDefPrimitive( 'defmacro', '<symbol> ( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'defmacro', '<symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_defmacro( env: Environment, *args ) -> Any:
          """Defines and returns a new globally named macro.  The first expr of the body
 can be an optional documentation string."""
          try:
             fnName, funcParams, *funcBody = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_defmacro, "3 or more arguments expected." )
    
          if not isinstance(fnName, LSymbol):
@@ -588,36 +582,48 @@ can be an optional documentation string."""
          theFunc = LMacro( fnName, funcParams, docString, funcBody )
          return env.bindGlobal( fnName.strval, theFunc )
    
-      @LDefPrimitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)' )
+      @primitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)' )
       def LP_macroexpand( env: Environment, *args ) -> Any:
-         """Performs the expansion of a macro and returns the results of those expansions in a list."""         
+         """Performs the expansion of a macro and returns the results of those expansions in a list."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
          theMacroCall = args[0]
-   
+
          if not isinstance(theMacroCall, list):
             raise LispRuntimeFuncError( LP_macroexpand, 'Argument 1 expected to be a list.' )
-   
+
          if len(theMacroCall) < 2:
             raise LispRuntimeFuncError( LP_macroexpand, 'Macro call must be at least two elements in length.' )
-         
+
          # Break the list contents into a function and a list of args
          primary, *exprArgs = theMacroCall
-   
+
          # fn is an LPrimitive, LFunction or a macro name symbol
          # Use this information to get the function definition
          macroDef = LispInterpreter._lEval( env, primary )
          if not isinstance( macroDef, LMacro ):
             raise LispRuntimeFuncError( LP_macroexpand, 'Badly formed list expression.  The first element should evaluate to a macro.' )
+
+         from pythonslisp.LispExpander import LispExpander
+         return [ LispExpander._expandMacroCall( env, macroDef, exprArgs ) ]
    
-         return LispInterpreter._macroexpand( env, macroDef, *exprArgs )
-   
-      @LDefPrimitive( 'setf', '<symbol> <sexpr>', specialForm=True )
+      @primitive( 'defsetf-internal', '<accessor-symbol> <field-symbol>' )
+      def LP_defsetf_internal( env: Environment, *args ) -> Any:
+         """Register a struct field accessor as a valid setf target."""
+         if len(args) != 2:
+            raise LispRuntimeFuncError( LP_defsetf_internal, '2 arguments expected.' )
+         accessor_sym, field_sym = args
+         if not isinstance(accessor_sym, LSymbol) or not isinstance(field_sym, LSymbol):
+            raise LispRuntimeFuncError( LP_defsetf_internal, 'Both arguments must be symbols.' )
+         LispInterpreter._setf_registry[accessor_sym.strval] = field_sym.strval
+         return accessor_sym
+
+      @primitive( 'setf', '<symbol> <sexpr>', specialForm=True )
       def LP_setf( env: Environment, *args ) -> Any:
-         """Updates a variable's value, returns value.  The search fo the variable begins
-locally and proceeds to search ever less local scopes until the global scope is searched.
-If the variable is located in this search its value is updated.  If it's not located
-a new global is defined and set the value.
+         """Updates a variable's value, returns value.  The search for the variable begins
+locally and proceeds to search ever less local scopes until the global scope
+is searched.  If the variable is located in this search its value is updated.
+If it's not located a new global is defined and set the value.
 
 Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""         
          numArgs = len(args)
@@ -671,26 +677,37 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
                      raise LispRuntimeFuncError( LP_setf, f'Invalid key or index supplied to \'AT\' form.  Received {theSelector}.' )
                   
                   return rval
+               elif isinstance(primitive, LSymbol) and primitive.strval in LispInterpreter._setf_registry:
+                  field_key = LispInterpreter._setf_registry[primitive.strval]
+                  if len(lval) != 2:
+                     raise LispRuntimeFuncError( LP_setf,
+                        f'Struct accessor setf expects exactly 1 instance argument, got {len(lval)-1}.' )
+                  instance = LispInterpreter._lEval(env, lval[1])
+                  if not isinstance(instance, dict):
+                     raise LispRuntimeFuncError( LP_setf,
+                        f'Expected a struct instance as argument to ({primitive.strval} ...).' )
+                  instance[field_key] = rval
+                  return rval
                else:
                   lval = LispInterpreter._lEval(env,lval)
-   
+
          return rval
-         
-      @LDefPrimitive( 'undef!', '<symbol>', specialForm=True )
+
+      @primitive( 'undef!', '<symbol>', specialForm=True )
       def LP_undef( env: Environment, *args ) -> Any:
          """Undefines the global definition for a symbol and returns nil."""
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_undef, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_undef, '1 argument expected.' )
          key = args[0]
          if not isinstance(key, LSymbol):
             raise LispRuntimeFuncError( LP_undef, 'Argument expected to be a symbol.' )
-         env.getGlobalEnv().undef( key.strval )
+         env.getGlobalEnv().unbind( key.strval )
          return L_NIL
    
-      @LDefPrimitive( 'symtab!', '' )
+      @primitive( 'symtab!', '' )
       def LP_symtab( env: Environment, *args ) -> Any:
          """Prints the entire environment stack and returns nil.  Each scope is printed
-in a separate list and beins on a new line.  The local scope is first; global
+in a separate list and begins on a new line.  The local scope is first; global
 is last."""
          if len(args) > 0:
             raise LispRuntimeFuncError( LP_symtab, '0 arguments expected.' )
@@ -711,11 +728,12 @@ is last."""
       # ==================
       # Control Structures
       # ------------------
-      @LDefPrimitive( 'lambda', '( <paramList> ) <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'lambda', '<lambda-list> <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_lambda( env: Environment, *args ) -> Any:
          """Creates and returns an unnamed lambda function.  When evaluating such a
 function the body (the exprs) are evaluated within a nested scope.  This
-primitive captures the environment it is defined in to allow for closures."""
+primitive captures the environment it is defined in to allow for closures.
+The first body expression can be a documentation string."""
          try:
             funcParams, *funcBody = args
          except ValueError:
@@ -727,9 +745,9 @@ primitive captures the environment it is defined in to allow for closures."""
          else:
             docString = ''
    
-         return LFunction( LSymbol(""), funcParams, docString, funcBody, closure=env )
+         return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
    
-      @LDefPrimitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
+      @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
       def LP_let( env: Environment, *args ) -> Any:
          """Executes a list of expressions in sequence in a nested scope and returns
 the result of the last one.  var1,var2,... are local variables bound to
@@ -773,7 +791,7 @@ sequence and are not evaluated in let's nested scope."""
             lastResult = LispInterpreter._lEval( env, sexpr )
          return lastResult
    
-      @LDefPrimitive( 'let*', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
+      @primitive( 'let*', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
       def LP_letstar( env: Environment, *args ) -> Any:
          """Executes a list of expressions in sequence in a nested scope and returns
 the result of the last one.  var1,var2,... are local variables bound to
@@ -816,7 +834,7 @@ refer to variables already initialized."""
             lastResult = LispInterpreter._lEval( env, sexpr )
          return lastResult
    
-      @LDefPrimitive( 'progn', '<sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'progn', '<sexpr1> <sexpr2> ...', specialForm=True )
       def LP_progn( env: Environment, *args ) -> Any:
          """Evaluates each sexpression in sequence.  Returns the result of the last evaluation."""
          lastResult = list()
@@ -824,7 +842,7 @@ refer to variables already initialized."""
             lastResult = LispInterpreter._lEval( env, expr )
          return lastResult
    
-      @LDefPrimitive( 'if', '<cond> <conseq> &optional <alt>', specialForm=True )
+      @primitive( 'if', '<cond> <conseq> &optional <alt>', specialForm=True )
       def LP_if( env: Environment, *args ) -> Any:
          """Evaluates the condition.  If truthy (non-nil) then consequence is
 evaluated and its result returned, otherwise alt is evaluated and its result
@@ -842,7 +860,7 @@ is returned."""
          else:
             return L_NIL
    
-      @LDefPrimitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True )
+      @primitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True )
       def LP_cond( env: Environment, *args ) -> Any:
          """Evaluates each cond in order until one evaluates to truthy (non-nil).
 Then evaluates each expr in the paired body and returns the result of the
@@ -850,7 +868,7 @@ last expr evaluated.  All remaining conds and bodys are skipped.  End the
 sequence with '(t <bodyn>)' to have code evaluated if no other condition
 is satisfied."""
          if len(args) < 1:
-            raise LispRuntimeFuncError( LP_cond, '1 or more argument exptected.' )
+            raise LispRuntimeFuncError( LP_cond, '1 or more argument expected.' )
          caseList = args
    
          for caseNum,case in enumerate(caseList):
@@ -870,15 +888,15 @@ is satisfied."""
    
          return list( )
    
-      @LDefPrimitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True )
+      @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True )
       def LP_case( env: Environment, *args ) -> Any:
          """Evaluates expr.  Finds the first val that equals expr's val.  Then
-evaluates each expr in body and returns the resolt of the last expr evaluated.
+evaluates each expr in body and returns the result of the last expr evaluated.
 All remaining cases are skipped."""         
          try:
             expr, *caseList = args
          except ValueError:
-            raise LispRuntimeFuncError( LP_case, '2 or more arguments exptected.' )
+            raise LispRuntimeFuncError( LP_case, '2 or more arguments expected.' )
          exprVal = LispInterpreter._lEval( env, expr )
    
          if len(caseList) < 1:
@@ -902,14 +920,14 @@ All remaining cases are skipped."""
    
          return L_NIL
    
-      @LDefPrimitive( 'quote', '<sexpr>', specialForm=True )
+      @primitive( 'quote', '<sexpr>', specialForm=True )
       def LP_quote( env: Environment, *args ) -> Any:
          """Returns expr without evaluating it."""
          if (len(args) != 1):
-            raise LispRuntimeFuncError( LP_quote, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_quote, '1 argument expected.' )
          return args[0]
    
-      @LDefPrimitive( 'backquote', '<sexpr>', specialForm=True )
+      @primitive( 'backquote', '<sexpr>', specialForm=True )
       def LP_backquote( env: Environment, *args ) -> Any:
          """Similar to quote but allows command comma-at expressions within expr."""
          nonlocal INSIDE_BACKQUOTE
@@ -917,7 +935,7 @@ All remaining cases are skipped."""
             raise LispRuntimeFuncError( LP_backquote, 'Cannot nest backquotes.')
    
          if (len(args) != 1):
-            raise LispRuntimeFuncError( LP_backquote, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_backquote, '1 argument expected.' )
          sExpr = args[0]
    
          try:
@@ -928,7 +946,7 @@ All remaining cases are skipped."""
    
          return expandedForm
    
-      @LDefPrimitive( 'comma', '<sexpr>', specialForm=True )
+      @primitive( 'comma', '<sexpr>', specialForm=True )
       def LP_comma( env: Environment, *args ) -> Any:
          """Must occur within a backquote expr or it's an error.  Evaluates expr
 (even if within a quoted expr) and returns it to the enclosing expr."""         
@@ -937,12 +955,12 @@ All remaining cases are skipped."""
             raise LispRuntimeFuncError( LP_comma, 'COMMA can only occur inside a BACKQUOTE.')
    
          if (len(args) != 1):
-            raise LispRuntimeFuncError( LP_comma, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_comma, '1 argument expected.' )
          subordinateExpr = args[0]
          result = LispInterpreter._lEval( env, subordinateExpr )
          return result
    
-      @LDefPrimitive( 'comma-at', '<sexpr>', specialForm=True )
+      @primitive( 'comma-at', '<sexpr>', specialForm=True )
       def LP_comma_at( env: Environment, *args ) -> Any:
          """Must occur within a backquote expr or it's an error.  Evaluates expr.
 Result must be a list.  Inserts the elements of the resulting list into the
@@ -952,7 +970,7 @@ enclosing list (eliminating a level of parentheses)."""
             raise LispRuntimeFuncError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
    
          if (len(args) != 1):
-            raise LispRuntimeFuncError( LP_comma_at, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_comma_at, '1 argument expected.' )
          subordinateExpr = args[0]
          result = LispInterpreter._lEval( env, subordinateExpr )
          if not isinstance(result, list):
@@ -960,7 +978,7 @@ enclosing list (eliminating a level of parentheses)."""
          retValue = [ LSymbol('COMMA-AT'), result ]
          return retValue
    
-      @LDefPrimitive( 'while', '<cond> <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'while', '<cond> <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_while( env: Environment, *args ) -> Any:
          """Perform a loop over the body sexprs.  Before each iteration conditionExpr
 is evaluated.  If it evaluates as truthy (non-nil) the exprs are evaluated
@@ -982,7 +1000,7 @@ and returns the result of the last expr evaluated."""
             condResult = LispInterpreter._lEval(env, conditionExpr )
          return latestResult
    
-      @LDefPrimitive( 'doTimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'doTimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_dotimes( env: Environment, *args ) -> Any:
          """Performs a loop over a body of exprs countExpr times.  Before each iteration
 the loop variable is set to the next loop count number (starting with 0 for
@@ -1018,14 +1036,14 @@ the first loop).  The value of the last sexpr evaluated is returned."""
                latestResult = LispInterpreter._lEval( env, sexpr )
          return latestResult
    
-      @LDefPrimitive( 'foreach', '<variable> <list> <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'foreach', '<variable> <list> <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_foreach( env: Environment, *args ) -> Any:
          """Perform a loop over the elements of list.  On each iteration var is set
 to the next element in the list, then the expr's are evaluated in order.
 Returns the result of the very last evaluation."""
          try:
             varSymbol, anExpr, *body = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_foreach, "3 or more arguments expected." )
    
          if not isinstance( varSymbol, LSymbol ):
@@ -1046,24 +1064,24 @@ Returns the result of the very last evaluation."""
                latestResult = LispInterpreter._lEval( env,  sexpr )
          return latestResult
    
-      @LDefPrimitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
+      @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env: Environment, *args ) -> Any:
-         """Calla a function with the args listed."""
+         """Calls a function with the args listed."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
    
          return LispInterpreter._lEval( env, args )
    
-      @LDefPrimitive( 'eval', '<sexpr>' )
+      @primitive( 'eval', '<sexpr>' )
       def LP_eval( env: Environment, *args ) -> Any:
          """Evaluates expr in the current scope."""
          try:
             expr = args[0]
          except IndexError:
-            raise LispRuntimeFuncError( LP_eval, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_eval, '1 argument expected.' )
          return LispInterpreter._lEval( env, expr )
    
-      @LDefPrimitive( 'apply', '<function> &rest <args> <argsList>' )
+      @primitive( 'apply', '<function> &rest <args> <argsList>' )
       def LP_apply( env: Environment, *args ) -> Any:
          """Inserts arg1,arg2,... into the front of listOfMoreArgs, then applies the
 function the the whole list of args.  Returns the result of that function
@@ -1079,7 +1097,7 @@ function is any callable that is not a special form."""
          
          primary = args[0]
          if isinstance(primary, LSymbol):
-            fnObj = env.getValue( primary.strval )
+            fnObj = env.lookup( primary.strval )
          
          if fnObj.specialForm:  # Macros and some primitives
             raise LispRuntimeFuncError( LP_apply, "First argument may not be a special form." )
@@ -1091,16 +1109,16 @@ function is any callable that is not a special form."""
          return LispInterpreter._lApply( env, fnObj, *fnArgs )
       
    
-      @LDefPrimitive( 'parse', '<string>' )
+      @primitive( 'parse', '<string>' )
       def LP_parse( env: Environment, *args ) -> Any:
-         """Parses the string as a Lisp sexpression and returns the resulting expression stree."""
+         """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_parse, '1 string argument expected.' )
          theExprStr = args[0]
          theExprAST = parseLispString( theExprStr )
          return theExprAST
    
-      @LDefPrimitive( 'python', '<string>' )
+      @primitive( 'python', '<string>' )
       def LP_python( env: Environment, *args ) -> Any:
          """Executes some python code from Lisp."""
          if len(args) != 1:
@@ -1114,14 +1132,14 @@ function is any callable that is not a special form."""
       # =======================
       # List & Map Manipulation
       # -----------------------
-      @LDefPrimitive( 'map', '(<key1> <val1>) (<key2> <val2>) ...', specialForm=True )
+      @primitive( 'map', '(<key1> <val1>) (<key2> <val2>) ...', specialForm=True )
       def LP_map( env: Environment, *args ) -> Any:
          """Constructs and returns a map of key-value pairs."""
          theMapping = dict()
          for entryNum,key_expr_pair in enumerate(args):
             try:
                key,expr = key_expr_pair
-            except:
+            except ValueError:
                raise LispRuntimeFuncError( LP_map, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
    
             if isinstance( key,  LSymbol ):
@@ -1133,7 +1151,7 @@ function is any callable that is not a special form."""
                raise LispRuntimeFuncError( LP_map, f'Entry {entryNum+1} has an invalid <key> type.' )
          return theMapping
    
-      @LDefPrimitive( 'car', '<list>' )
+      @primitive( 'car', '<list>' )
       def LP_car( env: Environment, *args ) -> Any:
          """Returns the first item in a list."""
          if len(args) != 1:
@@ -1148,7 +1166,7 @@ function is any callable that is not a special form."""
          except IndexError:
             return list( )
    
-      @LDefPrimitive( 'cdr', '<list>' )
+      @primitive( 'cdr', '<list>' )
       def LP_cdr( env: Environment, *args ) -> Any:
          """Returns a copy of the list minus the first element."""
          numArgs = len(args)
@@ -1164,39 +1182,32 @@ function is any callable that is not a special form."""
          except IndexError:
             return list( )
    
-      @LDefPrimitive( 'cons', '<obj> <list>' )
+      @primitive( 'cons', '<obj> <list>' )
       def LP_cons( env: Environment, *args ) -> Any:
          """Returns a copy of list with obj inserted into the front of the copy."""
          try:
             obj,consList = args
-         except:
-            raise LispRuntimeFuncError( LP_cons, '2 arguments exptected.' )
+         except ValueError:
+            raise LispRuntimeFuncError( LP_cons, '2 arguments expected.' )
    
-         try:
-            consList.insert( 0, obj )
-         except:
-            raise LispRuntimeFuncError( LP_cons, 'Invalid argument.' )
-   
+         consList = [ obj, *consList ]
          return consList
    
-      @LDefPrimitive( 'push!', '<list> <value>' )
+      @primitive( 'push!', '<list> <value>' )
       def LP_push( env: Environment, *args ) -> Any:
          """Pushes a value onto the back of a list."""
          try:
             alist, value = args
          except ValueError:
-            raise LispRuntimeFuncError( LP_push, '2 arguments exptected.' )
+            raise LispRuntimeFuncError( LP_push, '2 arguments expected.' )
    
-         try:
-            if isinstance(alist, list):
-               alist.append( value )
-            else:
-               alist = list()
-         except:
-            raise LispRuntimeFuncError( LP_push, 'Invalid argument.' )
+         if isinstance(alist, list):
+            alist.append( value )
+         else:
+            alist = list()
          return alist
    
-      @LDefPrimitive( 'pop!', '<list>' )
+      @primitive( 'pop!', '<list>' )
       def LP_pop( env: Environment, *args ) -> Any:
          """Pops and returns the last value of a list."""
          if len(args) != 1:
@@ -1205,16 +1216,17 @@ function is any callable that is not a special form."""
    
          try:
             value = alist.pop()
-         except:
+         except IndexError:
             raise LispRuntimeFuncError( LP_pop, 'Invalid argument.' )
          return value
    
-      @LDefPrimitive( 'at', '<keyOrIndex> <mapListOrStr>' )
+      @primitive( 'at', '<keyOrIndex> <mapListOrStr>' )
       def LP_at( env: Environment, *args ) -> Any:
-         """Returns the value at a specified index of a list, or specified key of a map."""
+         """Returns the value at a specified index of a list or string,
+         or specified key of a map."""
          try:
             key,keyed = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_at, '2 arguments expected.' )
    
          if not isinstance(keyed, (list, dict, str) ):
@@ -1228,12 +1240,12 @@ function is any callable that is not a special form."""
          except ( KeyError, IndexError ):
             raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
    
-      @LDefPrimitive( 'at-delete', '<keyOrIndex> <mapOrList>' )
+      @primitive( 'at-delete', '<keyOrIndex> <mapOrList>' )
       def LP_atDelete( env: Environment, *args ) -> bool:
-         """Deletes the key-value pair from a map or list specifed by keyOrIndex."""
+         """Deletes the key-value pair from a map or list specified by keyOrIndex."""
          try:
             key, keyed = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_atDelete, "Exactly 2 arguments expected." )
          
          if not isinstance( keyed, (list, dict) ):
@@ -1246,12 +1258,12 @@ function is any callable that is not a special form."""
          
          return L_T
       
-      @LDefPrimitive( 'at-insert', '<index> <list> <newItem>' )
+      @primitive( 'at-insert', '<index> <list> <newItem>' )
       def LP_atInsert( env: Environment, *args ) -> bool:
          """Inserts newItem into list at the position specified by index.  Returns newItem."""
          try:
             index, lst, newItem = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_atInsert, "Exactly 3 arguments expected." )
          
          if not isinstance(index, int):
@@ -1263,7 +1275,7 @@ function is any callable that is not a special form."""
          lst.insert( index, newItem )
          return newItem
       
-      @LDefPrimitive( 'append', '<list1> <list2> ...' )
+      @primitive( 'append', '<list1> <list2> ...' )
       def LP_append( env: Environment, *args ) -> Any:
          """Returns a new list with the contents of the argument lists merged.  Order is retained."""
          if len(args) < 2:
@@ -1277,12 +1289,12 @@ function is any callable that is not a special form."""
                resultList.append( item )
          return resultList
    
-      @LDefPrimitive( 'hasValue?', '<listOrMap> <value>' )
+      @primitive( 'hasValue?', '<listOrMap> <value>' )
       def LP_hasValue( env: Environment, *args ) -> Any:
          """Returns t if the list/map contains value otherwise nil."""
          try:
             keyed,aVal = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_hasValue, '2 arguments expected.' )
    
          if isinstance(keyed, list):
@@ -1292,18 +1304,15 @@ function is any callable that is not a special form."""
          else:
             raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.  Argument 1 expected to be a list or map.')
    
-         try:
-            return L_T if aVal in keyed else L_NIL    # T or NIL
-         except:
-            raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.')
+         return L_T if aVal in keyed else L_NIL    # T or NIL
    
-      @LDefPrimitive( 'update!', '<map1> <map2>' )
+      @primitive( 'update!', '<map1> <map2>' )
       def LP_update( env: Environment, *args ) -> Any:
          """Updates map1's data with map2's."""
          try:
             map1,map2 = args
-         except:
-            raise LispRuntimeFuncError( LP_update, '2 arguments exptected.' )
+         except ValueError:
+            raise LispRuntimeFuncError( LP_update, '2 arguments expected.' )
    
          if not isinstance( map1, dict ):
             raise LispRuntimeFuncError( LP_update, 'Argument 1 expected to be a map.' )
@@ -1314,12 +1323,12 @@ function is any callable that is not a special form."""
          map1.update( map2 )
          return map1
    
-      @LDefPrimitive( 'hasKey?', '<map> <key>' )
+      @primitive( 'hasKey?', '<map> <key>' )
       def LP_hasKey( env: Environment, *args ) -> Any:
          """Returns t if the key is in the map otherwise nil."""
          try:
             aMap,aKey = args
-         except:
+         except ValueError:
             raise LispRuntimeFuncError( LP_hasKey, '2 arguments expected.' )
    
          if not isinstance(aMap, dict):
@@ -1330,11 +1339,11 @@ function is any callable that is not a special form."""
    
          return L_T if aKey in aMap else L_NIL   # T or NIL
    
-      @LDefPrimitive( 'sorted', '<list>' )
+      @primitive( 'sorted', '<list>' )
       def LP_sorted( env: Environment, *args ) -> Any:
          """Returns a copy of the list sorted."""
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_sorted, "Exactly 1 argument exptected." )
+            raise LispRuntimeFuncError( LP_sorted, "Exactly 1 argument expected." )
          
          theList = args[0]
          if not isinstance(theList, list):
@@ -1345,7 +1354,7 @@ function is any callable that is not a special form."""
       # =====================
       # Arithmetic Operations
       # ---------------------
-      @LDefPrimitive( '+', '<number1> <number2> ...' )
+      @primitive( '+', '<number1> <number2> ...' )
       def LP_add( env: Environment, *args ) -> Any:
          """Returns the sum of numbers."""
          try:
@@ -1353,7 +1362,7 @@ function is any callable that is not a special form."""
          except TypeError:
             raise LispRuntimeFuncError( LP_add, 'Invalid argument.' )
    
-      @LDefPrimitive( '-', '<number1> <number2> ...' )
+      @primitive( '-', '<number1> <number2> ...' )
       def LP_sub( env: Environment, *args ) -> Any:
          """Returns the difference of numbers."""
          try:
@@ -1367,111 +1376,115 @@ function is any callable that is not a special form."""
          except TypeError:
             raise LispRuntimeFuncError( LP_sub, 'Invalid argument.' )
    
-      @LDefPrimitive( '*', '<number1> <number2> ...' )
+      @primitive( '*', '<number1> <number2> ...' )
       def LP_mul( env: Environment, *args ) -> Any:
          """Returns the product of numbers."""
          try:
             return functools.reduce( lambda x,y: x * y, iter(args) )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_mul, 'Invalid argument.' )
    
-      @LDefPrimitive( '/', '<number1> <number2> ...' )
+      @primitive( '/', '<number1> <number2> ...' )
       def LP_div( env: Environment, *args ) -> Any:
          """Returns the quotient of numbers."""
          try:
             return functools.reduce( lambda x,y: x / y, iter(args) )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_div, 'Invalid argument.' )
    
-      @LDefPrimitive( '//', '<number1> <number2>' )
+      @primitive( '//', '<number1> <number2>' )
       def LP_intdiv( env: Environment, *args ) -> Any:
          """Return the integer division of two numbers."""
          try:
             return args[0] // args[1]
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_intdiv, 'Invalid argument.' )
    
-      @LDefPrimitive( 'mod', '<number1> <number2>' )
+      @primitive( 'mod', '<number1> <number2>' )
       def LP_moddiv( env: Environment, *args ) -> Any:
          """Returns the integer remainder of division of two numbers."""
          try:
             return args[0] % args[1]
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_moddiv, 'Invalid argument.' )
    
-      @LDefPrimitive( 'gcd', '<integer1> <integer2> ...' )
+      @primitive( 'gcd', '<integer1> <integer2> ...' )
       def LP_gcd( env: Environment,  *args ) -> Any:
          """Returns the greatest common divisor of some integers."""
          try:
             return math.gcd( *args )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_gcd, 'Invalid argument.' )
    
-      @LDefPrimitive( 'lcm', '<integer1> <integer2> ...' )
+      @primitive( 'lcm', '<integer1> <integer2> ...' )
       def LP_lcm( env: Environment,  *args ) -> Any:
          """Returns the least common multiple of some integers."""
          try:
             return math.lcm( *args )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_lcm, 'Invalid argument.' )
    
-      @LDefPrimitive( 'log', '<number> &optional (<base> 10)' )
+      @primitive( 'log', '<number> &optional (<base> 10)' )
       def LP_log( env: Environment, *args ) -> Any:
          """Returns the log of a number.  The default is to use a base of 10 but
 an optional second argument can be provided to specify any base."""
          numArgs = len(args)
          if not( 1 <= numArgs <= 2 ):
-            raise LispRuntimeFuncError( LP_log, '1 or 2 arguments exptected.' )
+            raise LispRuntimeFuncError( LP_log, '1 or 2 arguments expected.' )
    
          try:
             num,*rest = args
             base = math.e if len(rest) == 0 else rest[0]
             return math.log(num,base)
-         except:
+         except (ValueError, TypeError):
             raise LispRuntimeFuncError( LP_log, 'Invalid argument.' )
    
-      @LDefPrimitive( 'expt', '<base> <power>' )
+      @primitive( 'expt', '<base> <power>' )
       def LP_expt( env: Environment, *args ) -> Any:
          """Returns base raised to a power."""
          try:
             base,power = args
-            return base ** power
-         except:
-            raise LispRuntimeFuncError( LP_expt, 'Invalid argument.' )
+            result = base ** power
+         except ValueError:
+            raise LispRuntimeFuncError( LP_expt, 'Exactly two arguments expected.' )
+         except TypeError:
+            raise LispRuntimeFuncError( LP_expt, 'Invalid argument type.  Arguments expected to be numbers.' )
    
-      @LDefPrimitive( 'sin', '<radians>' )
+         return result.real if isinstance(result, complex) else result
+   
+      @primitive( 'sin', '<radians>' )
       def LP_sin( env: Environment, *args ) -> Any:
          """Returns the sine of radians."""
          try:
             return math.sin(args[0])
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_sin, 'Invalid argument.' )
    
-      @LDefPrimitive( 'cos', '<radians>' )
+      @primitive( 'cos', '<radians>' )
       def LP_cos( env: Environment, *args ) -> Any:
          """Returns the cosine of radians."""
          try:
             return math.cos(args[0])
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_cos, 'Invalid argument.' )
    
-      @LDefPrimitive( 'asin', '<number>' )
+      @primitive( 'asin', '<number>' )
       def LP_asin( env: Environment, *args ) -> Any:
          """Returns the arcsine of a number in radians."""
          try:
             return math.asin(args[0])
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_asin, 'Invalid argument.' )
    
-      @LDefPrimitive( 'acos', '<number>' )
+      @primitive( 'acos', '<number>' )
       def LP_acos( env: Environment, *args ) -> Any:
          """Returns the arccosine of a number in radians."""
          try:
             return math.acos(args[0])
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_acos, 'Invalid argument.' )
    
-      @LDefPrimitive( 'atan', '<number1> &optional <number2>' )
+      @primitive( 'atan', '<number1> &optional <number2>' )
       def LP_atan( env: Environment, *args ) -> Any:
          """Returns the tangent or one or two numbers in radians."""
          numArgs = len(args)
@@ -1481,36 +1494,36 @@ an optional second argument can be provided to specify any base."""
          elif numArgs == 2:
             nval,dval = args
          else:
-            raise LispRuntimeFuncError( LP_atan, '1 or two arguments expcted.' )
+            raise LispRuntimeFuncError( LP_atan, '1 or two arguments expected.' )
    
          try:
             return math.atan( nval / dval )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_atan, 'Invalid argument.' )
    
-      @LDefPrimitive( 'min', '<number1> <number2> ...' )
+      @primitive( 'min', '<number1> <number2> ...' )
       def LP_min( env: Environment, *args ) -> Any:
          """Returns the smallest of a set of numbers."""
          try:
             return min( *args )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_min, 'Invalid argument.' )
    
-      @LDefPrimitive( 'max', '<number1> <number2> ...' )
+      @primitive( 'max', '<number1> <number2> ...' )
       def LP_max( env: Environment, *args ) -> Any:
          """Returns the largest of a set of numbers."""
          try:
             return max( *args )
-         except:
+         except TypeError:
             raise LispRuntimeFuncError( LP_max, 'Invalid argument.' )
    
-      @LDefPrimitive( 'random', '<integerOrFloat>' )
+      @primitive( 'random', '<integerOrFloat>' )
       def LP_random( env: Environment, *args ) -> Any:
          """Returns a random int or float in the range 0 <= n <= arg.  If the argument
 is an int the random number will be an int, if the argument is a float the
 random number will be a float."""
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_random, 'Exactly 1 number argument exptected.' )
+            raise LispRuntimeFuncError( LP_random, 'Exactly 1 number argument expected.' )
          num = args[0]
    
          if isinstance( num,  int ):
@@ -1523,42 +1536,42 @@ random number will be a float."""
       # ==========
       # Predicates
       # ----------
-      @LDefPrimitive( 'numberp', '<sexpr>' )
+      @primitive( 'numberp', '<sexpr>' )
       def LP_numberp( env: Environment, *args ) -> Any:
          """Returns t if expr is a number otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_numberp, '1 argument expected.' )
          return L_T if isinstance( args[0], LNUMBER ) else L_NIL
    
-      @LDefPrimitive( 'integerp', '<sexpr>' )
+      @primitive( 'integerp', '<sexpr>' )
       def LP_integerp( env: Environment,  *args ) -> Any:
          """Returns t if expr is an integer otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_integerp, '1 argument expected.' )
          return L_T if isinstance( args[0], int ) else L_NIL
    
-      @LDefPrimitive( 'rationalp', '<sexpr>' )
+      @primitive( 'rationalp', '<sexpr>' )
       def LP_rationalp( env: Environment,  *args ) -> Any:
          """Returns t if expr is an integer or fraction otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_rationalp, '1 argument expected.' )
          return L_T if isinstance( args[0], (int,Fraction) ) else L_NIL
    
-      @LDefPrimitive( 'floatp', '<sexpr>' )
+      @primitive( 'floatp', '<sexpr>' )
       def LP_floatp( env: Environment,  *args ) -> Any:
          """Returns t if expr is a float otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_floatp, '1 argument expected.' )
          return L_T if isinstance( args[0], float ) else L_NIL
    
-      @LDefPrimitive( 'symbolp', '<sexpr>' )
+      @primitive( 'symbolp', '<sexpr>' )
       def LP_symbolp( env: Environment, *args ) -> Any:
          """Returns t if expr is a symbol otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_symbolp, '1 argument expected.' )
          return L_T if isinstance( args[0], LSymbol ) else L_NIL
    
-      @LDefPrimitive( 'atom', '<sexpr>' )
+      @primitive( 'atom', '<sexpr>' )
       def LP_atom( env: Environment, *args ) -> Any:
          """Returns t if expr is an atom (int,float,string,map or nil) otherwise nil."""
          if len(args) != 1:
@@ -1568,35 +1581,35 @@ random number will be a float."""
             return L_T if len(arg) == 0 else L_NIL         # NIL or () is an atom even through it's a list.
          return L_T
    
-      @LDefPrimitive( 'listp', '<sexpr>' )
+      @primitive( 'listp', '<sexpr>' )
       def LP_listp( env: Environment, *args ) -> Any:
          """Returns t if expr is a list otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_listp, '1 argument expected.' )
          return L_T if isinstance(args[0], list) else L_NIL
    
-      @LDefPrimitive( 'mapp', '<sexpr>' )
+      @primitive( 'mapp', '<sexpr>' )
       def LP_mapp( env: Environment, *args ) -> Any:
          """Returns t if expr is a map otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_mapp, '1 argument expected.' )
          return L_T if isinstance(args[0], dict) else L_NIL
    
-      @LDefPrimitive( 'stringp', '<sexpr>' )
+      @primitive( 'stringp', '<sexpr>' )
       def LP_stringp( env: Environment, *args ) -> Any:
          """Returns t if expr is a string otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_stringp, '1 argument expected.' )
          return L_T if isinstance( args[0], str ) else L_NIL
    
-      @LDefPrimitive( 'functionp', '<sexpr>' )
+      @primitive( 'functionp', '<sexpr>' )
       def LP_functionp( env: Environment, *args ) -> Any:
          """Returns t if expr is a function otherwise nil."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_functionp, '1 argument expected.' )
          return L_T if isinstance( args[0], LFunction ) else L_NIL
    
-      @LDefPrimitive( 'macrop', '<sexpr>' )
+      @primitive( 'macrop', '<sexpr>' )
       def LP_macrop( env: Environment, *args ) -> Any:
          """Returns t if expr is a macro otherwise nil."""
          if len(args) != 1:
@@ -1606,20 +1619,20 @@ random number will be a float."""
       # ====================
       # Relational Operators
       # --------------------
-      @LDefPrimitive( 'is?', '<expr1> <expr2>' )
+      @primitive( 'is?', '<expr1> <expr2>' )
       def LP_is( env: Environment, *args ) -> Any:
          """Returns t if the two values are the same object otherwise nil."""
          try:
             arg1,arg2 = args
-         except:
-            raise LispRuntimeFuncError( LP_is, '2 arguments exptected.' )
+         except ValueError:
+            raise LispRuntimeFuncError( LP_is, '2 arguments expected.' )
    
          if isinstance(arg1, (int,float,str)):
             return L_T if (arg1 == arg2) else L_NIL
          else:
             return L_T if (arg1 is arg2) else L_NIL
    
-      @LDefPrimitive( '=', '<expr1> <expr2> ...' )
+      @primitive( '=', '<expr1> <expr2> ...' )
       def LP_equal( env: Environment, *args ) -> Any:
          """Returns t if the two exprs are the same value otherwise nil."""
          numArgs = len(args)
@@ -1639,7 +1652,7 @@ random number will be a float."""
    
          return L_T
    
-      @LDefPrimitive( '/=', '<expr1> <expr2> ...' )
+      @primitive( '/=', '<expr1> <expr2> ...' )
       def LP_notEqual( env: Environment, *args ) -> Any:
          """Returns t if the two exprs are different values otherwise nil."""
          numArgs = len(args)
@@ -1659,7 +1672,7 @@ random number will be a float."""
    
          return L_T
    
-      @LDefPrimitive( '<', '<expr1> <expr2> ...' )
+      @primitive( '<', '<expr1> <expr2> ...' )
       def LP_less( env: Environment, *args ) -> Any:
          """Returns t if the arguments are in ascending order."""
          numArgs = len(args)
@@ -1679,7 +1692,7 @@ random number will be a float."""
    
          return L_T
    
-      @LDefPrimitive( '<=', '<expr1> <expr2> ...' )
+      @primitive( '<=', '<expr1> <expr2> ...' )
       def LP_lessOrEqual( env: Environment, *args ) -> Any:
          """Returns t if the adjacent arguments are less-than-or-equal otherwise nil."""
          numArgs = len(args)
@@ -1699,7 +1712,7 @@ random number will be a float."""
    
          return L_T
    
-      @LDefPrimitive( '>', '<expr1> <expr2> ...' )
+      @primitive( '>', '<expr1> <expr2> ...' )
       def LP_greater( env: Environment, *args ) -> Any:
          """Returns t if the arguments are in descending order otherwise nil."""
          numArgs = len(args)
@@ -1719,7 +1732,7 @@ random number will be a float."""
    
          return L_T
    
-      @LDefPrimitive( '>=', '<expr1> <expr2> ...' )
+      @primitive( '>=', '<expr1> <expr2> ...' )
       def LP_greaterOrEqual( env: Environment, *args ) -> Any:
          """Returns t if the adjacent arguments are greater-than-or-equal otherwise nil."""
          numArgs = len(args)
@@ -1742,38 +1755,38 @@ random number will be a float."""
       # =================
       # Logical Operators
       # -----------------
-      @LDefPrimitive( 'not', '<boolean>' )
+      @primitive( 'not', '<boolean>' )
       def LP_not( env: Environment, *args ) -> Any:
          """Returns t if the argument is nil otherwise returns nil."""
          if len(args) != 1:
-            raise LispRuntimeFuncError( LP_not, '1 argument exptected.' )
+            raise LispRuntimeFuncError( LP_not, '1 argument expected.' )
          arg1 = args[0]
          return L_T if (isinstance(arg1,list) and (len(arg1)==0)) else L_NIL
    
-      @LDefPrimitive( 'and', '<boolean1> <boolean2> ...' )
+      @primitive( 'and', '<boolean1> <boolean2> ...', specialForm=True )
       def LP_and( env: Environment, *args ) -> Any:
          """Returns t if all arguments are truthy (non-nil).
-Short-circuits: stops evaluating arguments upon encountering the first nill."""
+Short-circuits: stops evaluating arguments upon encountering the first nil."""
          if len(args) < 2:
-            raise LispRuntimeFuncError( LP_and, '2 or more arguments exptected.' )
+            raise LispRuntimeFuncError( LP_and, '2 or more arguments expected.' )
    
          # short-circuits: returns nil on the first nil argument otherwise true
          for arg in args:
-            if not LispInterpreter._lTrue(arg):
+            if not LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
                return list()
    
          return L_T
    
-      @LDefPrimitive( 'or', '<boolean1> <boolean2> ...' )
+      @primitive( 'or', '<boolean1> <boolean2> ...', specialForm=True )
       def LP_or( env: Environment, *args ) -> Any:
          """Returns t if at least one argument is truthy (non-nil).
 Short-circuits:  stops evaluating upon encountering the first truthy value."""
          if len(args) < 2:
-            raise LispRuntimeFuncError( LP_or, '2 or more arguments exptected.' )
+            raise LispRuntimeFuncError( LP_or, '2 or more arguments expected.' )
    
          # short-circuits: returns t on first non-nil argument otherwise nil
          for arg in args:
-            if LispInterpreter._lTrue(arg):
+            if LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
                return L_T
    
          return list()
@@ -1781,7 +1794,7 @@ Short-circuits:  stops evaluating upon encountering the first truthy value."""
       # ===============
       # Type Conversion
       # ---------------
-      @LDefPrimitive( 'float', '<number>' )
+      @primitive( 'float', '<number>' )
       def LP_float( env: Environment, *args ) -> Any:
          """Returns val as a float.  Val can be any number type or a string containing a valid lisp float."""
          try:
@@ -1789,7 +1802,7 @@ Short-circuits:  stops evaluating upon encountering the first truthy value."""
          except (ValueError, IndexError):
             raise LispRuntimeFuncError( LP_float, 'Invalid argument.' )
    
-      @LDefPrimitive( 'integer', '<number> &optional (<base> 10)' )
+      @primitive( 'integer', '<number> &optional (<base> 10)' )
       def LP_integer( env: Environment, *args ) -> Any:
          """Returns val as an integer.  Val can be any number type or a string containing a valid lisp integer."""
          numArgs = len(args)
@@ -1801,10 +1814,10 @@ Short-circuits:  stops evaluating upon encountering the first truthy value."""
          except TypeError:
             raise LispRuntimeFuncError( LP_integer, 'Invalid argument.' )
    
-      @LDefPrimitive( 'rational', '<number>' )
+      @primitive( 'rational', '<number>' )
       def LP_rational( env: Environment, *args ) -> Any:
          """Returns its argument as a fraction.  Val can be any number or a string
-containg a valid lisp number that can be expressed as a fraction."""
+containing a valid lisp number that can be expressed as a fraction."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_rational, 'Exactly 1 argument expected.' )
    
@@ -1813,27 +1826,27 @@ containg a valid lisp number that can be expressed as a fraction."""
          except (IndexError, TypeError):
             raise LispRuntimeFuncError( LP_rational, 'Invalid argument.' )
    
-      @LDefPrimitive( 'string', '<object1> <object2> ...' )
+      @primitive( 'string', '<object1> <object2> ...' )
       def LP_string( env: Environment, *args ) -> Any:
          """PrettyPrints as programmer readable strings each argument object and
 concatenates the results to form a new string."""
          if len(args) == 0:
-            raise LispRuntimeFuncError( LP_string, '1 or more arguments exptected.' )
+            raise LispRuntimeFuncError( LP_string, '1 or more arguments expected.' )
    
          resultStrs = [ prettyPrintSExpr(sExpr) for sExpr in args ]
          return ''.join(resultStrs)
    
-      @LDefPrimitive( 'ustring', '<object1> <object2> ...' )
+      @primitive( 'ustring', '<object1> <object2> ...' )
       def LP_ustring( env: Environment, *args ) -> Any:
          """PrettyPrints as user readable strings each argument object and
 concatenates the results to form a new string."""
          if len(args) == 0:
-            raise LispRuntimeFuncError( LP_ustring, '1 or more arguments exptected.' )
+            raise LispRuntimeFuncError( LP_ustring, '1 or more arguments expected.' )
    
          resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
          return ''.join(resultStrs)
    
-      @LDefPrimitive( 'symbol', '<string1> <string2> ...' )
+      @primitive( 'symbol', '<string1> <string2> ...' )
       def LP_symbol( env: Environment, *args ) -> Any:
          """PrettyPrints as programmer readable strings each argument object and
 concatenates the results to form a new string which is used to define a new
@@ -1841,14 +1854,14 @@ symbol object."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_symbol, '1 or more string argument expected.' )
    
-         strList = [ prettyPrintSExpr(arg) for arg in args ]
+         strList = [ prettyPrint(arg) for arg in args ]
          symstr = ''.join(strList)
          return LSymbol(symstr)
    
       # ===============
       # I/O
       # ---------------
-      @LDefPrimitive( 'writef', '<formatString> <MapOrList>' )
+      @primitive( 'writef', '<formatString> <MapOrList>' )
       def LP_writef( env: Environment, *args ) -> str:
          """Writes formatted text.  Returns the string that is written.
 Takes a python f-string and a map or list of values for the f-string.
@@ -1872,7 +1885,7 @@ Returns the formatted output string."""
          print( outputStr, end='', file=LispInterpreter.outStrm )
          return outputStr
       
-      @LDefPrimitive( 'write!', '<obj1> <obj2> ...', )
+      @primitive( 'write!', '<obj1> <obj2> ...', )
       def LP_write( env: Environment, *args ) -> Any:
          """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed."""
@@ -1880,7 +1893,7 @@ Returns the last value printed."""
             raise LispRuntimeFuncError( LP_write, '1 or more arguments expected.' )
          return lwrite( *args, end='' )
    
-      @LDefPrimitive( 'writeLn!', '<obj1> <obj2> ...' )
+      @primitive( 'writeLn!', '<obj1> <obj2> ...' )
       def LP_writeln( env: Environment, *args ) -> Any:
          """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  Returns the last value printed."""
@@ -1897,14 +1910,14 @@ Terminates the output with a newline character.  Returns the last value printed.
             print( end=end, file=LispInterpreter.outStrm )
          return values[-1]
    
-      @LDefPrimitive( 'uwrite!', '<obj1> <obj2> ...' )
+      @primitive( 'uwrite!', '<obj1> <obj2> ...' )
       def LP_uwrite( env: Environment, *args ) -> Any:
          """Sequentially prettyPrints in user readable text the objects listed.  Returns the last value printed."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_uwrite, '1 or more arguments expected.' )
          return luwrite( *args, end='' )
    
-      @LDefPrimitive( 'uwriteLn!', '<obj1> <obj2> ...' )
+      @primitive( 'uwriteLn!', '<obj1> <obj2> ...' )
       def LP_uwriteln( env: Environment, *args ) -> Any:
          """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  Returns the last value printed."""
@@ -1921,7 +1934,7 @@ Terminates the output with a newline character.  Returns the last value printed.
             print( end=end, file=LispInterpreter.outStrm )
          return values[-1]
    
-      @LDefPrimitive( 'readLn!', '' )
+      @primitive( 'readLn!', '' )
       def LP_readln( env: Environment, *args ) -> Any:
          """Reads and returns text input from the keyboard.  This function blocks
 while it waits for the input return key to be pressed at the end of text entry."""
@@ -1932,7 +1945,7 @@ while it waits for the input return key to be pressed at the end of text entry."
       # ===============
       # System Level
       # ---------------
-      @LDefPrimitive( 'recursion-limit', '&optional <newLimit>', )
+      @primitive( 'recursion-limit', '&optional <newLimit>', )
       def LP_recursionlimit( env: Environment, *args ) -> Any:
          """Returns or sets the system recursion limit.  The higher the integer
 argument the deeper the recursion will be allowed to go.  If setting,
@@ -1950,7 +1963,7 @@ returns newLimit upon success otherwise nil."""
          else:
             raise LispRuntimeFuncError( LP_recursionlimit, 'Only one optional arg is allowed.' )
       
-      @LDefPrimitive( 'help', '&optional callableSymbol' )
+      @primitive( 'help', '&optional callableSymbol' )
       def LP_help( env: Environment, *args ) -> Any:
          """Prints a set of tables for all the globally defined symbols and
 topics currently available in Python's Lisp. Or prints the usage and
@@ -1977,7 +1990,7 @@ Type '(help "topic") for available documentation on the named topic."""
                print( f'Unknown topic: "{topicName}"')
             return L_T
          
-         # insure arg is an LCallable
+         # ensure arg is an LCallable
          if not isinstance(arg, LCallable):
             raise LispRuntimeFuncError( LP_help, 'First argument expected to be a callable.' )
          callableObj = arg
@@ -1996,25 +2009,22 @@ Type '(help "topic") for available documentation on the named topic."""
          primitivesList = []
          functionsList = []
          macrosList = []
-         varsList = []
-         topicsList = list(topics.keys())
+         topicsList = [ f'"{topic}"' for topic in sorted(topics.keys()) ]
          
          # Bin the global symbols each into one of the lists defined above
          for symbolStr in env.getGlobalEnv().localSymbols():
-            obj = env.getGlobalValue(symbolStr)
+            obj = env.lookupGlobal(symbolStr)
             if isinstance(obj, LPrimitive):
                primitivesList.append(symbolStr)
             elif isinstance(obj, LFunction):
                functionsList.append(symbolStr)
             elif isinstance(obj, LMacro):
                macrosList.append(symbolStr)
-            elif not isinstance(obj, dict):   # obj isn't a map object, it's an LATOM
-               varsList.append(symbolStr)
          
          # Print tables for each of the categories of symbols
          print( "Predefined Symbols" )
          print( "==================" )
-         columnize( varsList, 78)
+         print( "E  NIL  PI  T")
          print( )
          print( "Primitives" )
          print( "==========" )
@@ -2032,6 +2042,7 @@ Type '(help "topic") for available documentation on the named topic."""
          print( "======" )
          columnize( topicsList, 78 )
          print( )
-         print( "Type \"(help <command>)\" for help on a given primitive, function or macro.  Type \"(help <topicString>)\" for help on a topic." )
+         print( "Type '(help <callable>)' for available documentation on a callable.")
+         print( "Type '(help \"topic\") for available documentation on the named topic.")
       
       return primitiveDict

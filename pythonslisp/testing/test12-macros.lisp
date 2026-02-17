@@ -63,3 +63,25 @@
 ...
 
 ==> ((A 1 "a" "b" "c"))
+
+>>> ;;; Error: macroexpand requires exactly one argument
+... (macroexpand)
+
+%%% ERROR 'MACROEXPAND': Exactly 1 argument expected.
+%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
+==>
+
+>>> ;;; Error: macroexpand argument must be a list
+... (macroexpand 1)
+
+%%% ERROR 'MACROEXPAND': Argument 1 expected to be a list.
+%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
+==>
+
+>>> ;;; Error: macroexpand list must have at least two elements
+... (macroexpand '(1))
+
+%%% ERROR 'MACROEXPAND': Macro call must be at least two elements in length.
+%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
+==>
+

@@ -43,8 +43,8 @@ Design Features (the code not lisp)
 - Complete lexical analyzer and LL(1) recursive descent parser.
 
 
-### USAGE ###
-=============
+### CLI USAGE ###
+=================
 
 Run the repl.
 
@@ -54,9 +54,27 @@ Execute a lisp source file.
 
           > python3 -m pythonslisp <lispSourceFile.lisp>
 
-Note that the repl contains online documentation for all of the runtime
-callables (primitives, functions and macros).  To enter the help system
-in the repl enter "(help)" at the repl prompt without the quotation marks.
+For various information requests there are.
+
+          > python3 -m pythonslisp (-h|--help|-v|--version)
+
+Note that the repl provides access to two online documentation systems.  There 
+is the listener command help system accessible by typing ']help' in the repl.
+Then there is the Lisp online help system (LOHS) accessible by evaluating the
+sexpression '(help)'.
+
+These two help systems provide access to different things.  The listener
+command help system provides documentation for commands recognized by the
+listener.  The LOHS provides access to documentation for all lisp callables
+(primitives, functions and macros) as well as to various help topics of
+interest to the lisp programmer.
+
+The LOHS is dynamic.  As the user defines new functions and macros their
+documentation becomes available in the help system.  Specifically the
+documentation system will display a "function header" which includes the
+function name and its lambda list (formal parameter list).  This will be
+followed by any text in the documentation string coded by the lisp programmer.
+
 
 API: Using Lisp as a Package
 ============================
@@ -107,21 +125,24 @@ and pass it some python code in a lisp string.
 
 Primarily your program will interact with pythonslisp.LispAST,
 pythonslisp.LispInterpreter, pythonslisp.LispParser and pythonslisp.Parser.
+
 Methods prefixed by _ are considered private.  Private methods are
 implementation details for the given class and probably not useful to you.
 Moreover, given that they are not intended for public use, they are likely to
-change without notice in future revisions.  The remaining functions and methods,
-those without _, are public and are useful to the python programmer.  Note that
-the public interface for the class pythonslisp.Parser.LispLexer is actually
-found in the base class pythonslisp.Parser.Lexer.  LispLexer only implements
-private methods needed by the base class.
+change without notice in future revisions.
 
-Note that eval() functions in the interpreter that include the label
-'instrumented' are designed for testing the performance of the interpreter.
-These special versions of eval() return a tuple of three values: return value,
-parse time in seconds, evaluation time in seconds.  They are probably not that
-useful to the python developer.  They are used by the listener's repl to
-report performance characteristics during interactive sessions.
+The remaining functions and methods, those without _, are public and are useful
+to the python programmer.  Note that the public interface for the class
+pythonslisp.Parser.LispLexer is actually found in the base class
+pythonslisp.Parser.Lexer.  LispLexer only implements private methods needed by
+the base class.
+
+eval() functions in the interpreter that include the label 'instrumented' are
+designed for testing the performance of the interpreter.  These special
+versions of eval() return a tuple of three values: return value, parse time in
+seconds, evaluation time in seconds.  They are probably not that useful to the
+python developer.  They are used by the listener's repl to report performance
+characteristics during interactive sessions.
 
 Modification of the Package
 ===========================
@@ -136,6 +157,6 @@ Regarding Exceptions in the Interpreter and AST
   to the lisp programmer.  However, you generally don't want to wrap a call to
   LispInterpreter._lEval() (or a call to something that calls _lEval()) in a try
   block.  Doing so might prevent the higher level exceptions from percolating up
-  and being caught by the listener so it can report them to the lisp programmer
-  as verious kinds of lisp errors.  Ideally no low level python exceptions
+  and being caught by the listener for reporting to the lisp programmer as
+  various kinds of lisp errors.  Ideally no low level python exceptions
   would ever reach the try block in the Listener class's repl.

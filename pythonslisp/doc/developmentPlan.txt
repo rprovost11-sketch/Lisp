@@ -4,25 +4,18 @@ Development Tasks
 
 To Do
 -----
-- Move all the help from the README.md to the online help in the interpreter.
 - Ask the AI how to implement compiler tracing or debugging hooks.
 - See if macros are also supposed to support closures.
 - Investigate nested backquotes.
-- OPTIMIZATION: Move macro expansion completely out of expression evaluation.
-  It should occur earlier (just after parsing).  Doing this will mean that
-  macros are only expanded once instead of every time a line of code calling a
-  macro is evaluated.
 - OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
   can scan the AST for errors such as the wrong number or types of arguments to
   a primitive.  This would eliminate a lot of the runtime error checking
   currently in the primitive definitions and hence speed up the interpreter.
 - implement stream IO primitives.
-- implement structs.
 - implement packages.  A package x is a symbol in the global namespace which
   refers to another Environment instance which contains all the symbols of
   a package (lisp source file).  For any symbol y in the package p, this
   can be accessed with the notation p::y.
-- Produce more test files including error testing and listener command testing.
 - Figure out how to make an environment scope that is parent to the GLOBAL
   Environment in which the built-ins are defined.  They cannot be redefined,
   only temporarily covered up by a descendent environment.
@@ -31,12 +24,25 @@ To Do
   return 0 then perhaps the nil list would truly be immutable.
 - Research how it might be possible to implement Scheme's tail recursion
   optimization in the evaluator.
+- Investigate rewriting the evaluator as a loop that manages its own stack
+  object and function calls.  Would it speed things up?  Would it simplify
+  implementation of the tail recursion optimization?
 
 Completed
 ---------
+2026.02.17
+- implement structs.
+
+2026.02.16
+- OPTIMIZATION: Move macro expansion completely out of expression evaluation.
+  It should occur earlier (just after parsing).  Doing this will mean that
+  macros are only expanded once instead of every time a line of code calling a
+  macro is evaluated.
+
 2026.02.15
 - Implement an online (help &optional <symbol>) primitive which prints some
   documentation about the primitive, function or macro.
+- Move all the help from the README.md to the online help in the interpreter.
 
 2026.02.14
 - Make the LispInterpreter._bindX methods take a tuple instead of a list for
@@ -52,7 +58,7 @@ Completed
   evaluating to themselves.
 
 2025.12.15
-- Comleted encapsulation of the common lisp interpreter into the LispInterpreter
+- Completed encapsulation of the common lisp interpreter into the LispInterpreter
   class.  It's now possible, if I choose, to implement a SchemeInterpreter
   class that reuses all of the remaining code.
 

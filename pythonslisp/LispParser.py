@@ -16,17 +16,17 @@ Lexemes
                          ( '/' ('0' .. '9')+
                          | 'e' ['+'|'-'] ('0' .. '9')+
                          | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]
-                         )
-      StringLiteral:  '"' (^('"'))* '"'
-      Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>'
-                      { 'a..zA..Z+-~!$%^&*_=\\/?<>0..9' }
+                         )   # Supports integers, floats and fractions
+      StringLiteral:  '"' { ^["] } '"'   # Supports all python escape sequences
+      Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>#|'
+                      { 'a..zA..Z+-~!$%^&*_=\\/?<>#|0..9' }
 
    Predefined Symbols
          'nil', 't', 'e', 'pi'
 
 Grammar
    Start:
-      Object* EOF
+      { Object } EOF
 
    Object:
       NumberLiteral | StringLiteral | Symbol | List | '#' | '|' | ':' | '[' | ']'
@@ -111,7 +111,7 @@ class LispLexer( Lexer ):
       except ParseError:
          raise
 
-      except:
+      except Exception:
          return LispLexer.EOF_TOK
 
    def _scanStringLiteral( self ) -> int:
@@ -153,7 +153,7 @@ class LispLexer( Lexer ):
          # consume an octal number up to a 3 digits
          numCharsConsumed = buf.consumePastWithMax( LispLexer.OCTAL_DIGIT, maxCharsToConsume=3 )
          if (numCharsConsumed < 0) or (numCharsConsumed > 3):
-            raise ParseError( self, '1 to 3 octacl digits expected following escape character \\.' )
+            raise ParseError( self, '1 to 3 octal digits expected following escape character \\.' )
       elif nextChar == 'x':
          buf.consume( )    # consume the x
          # consume 2 digit hex number
@@ -335,7 +335,7 @@ class LispParser( Parser ):
 
       nextToken = self._scanner.peekToken( )
       if nextToken == LispLexer.SYMBOL_TOK:
-         lex = self._scanner.getLexeme( )   # Make symbols case insensative
+         lex = self._scanner.getLexeme( )   # Make symbols case insensitive
          ast = LSymbol(lex)
          self._scanner.consume( )
       elif nextToken == LispLexer.OPEN_PAREN_TOK:
