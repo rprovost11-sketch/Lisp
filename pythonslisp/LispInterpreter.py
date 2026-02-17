@@ -178,7 +178,48 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
 
    @staticmethod
+   def _lvalidateNoDuplicateParams( lambdaListAST: list[Any] ) -> None:
+      '''Pre-pass: verify no variable name appears more than once in a lambda list.'''
+      seen: set[str] = set()
+
+      def _check( name: Any, context: str ) -> None:
+         if not isinstance(name, LSymbol):
+            return     # other validation will catch non-symbols
+         if name.startswith('&'):
+            return     # &-keywords are not parameter names
+         if name.strval in seen:
+            raise LispArgBindingError( f'Duplicate parameter name {name.strval} in {context}.' )
+         seen.add( name.strval )
+
+      index = 0
+      lambdaListLen = len( lambdaListAST )
+      while index < lambdaListLen:
+         spec = lambdaListAST[index]
+
+         if isinstance( spec, LSymbol ):
+            if spec == '&REST':
+               index += 1
+               if index < lambdaListLen:
+                  _check( lambdaListAST[index], '&REST' )
+            elif not spec.startswith('&'):
+               _check( spec, 'positional parameters' )
+
+         elif isinstance( spec, list ) and len(spec) > 0:
+            # First element is either a symbol (var) or a list ((keyword var))
+            keyVarSpec = spec[0]
+            if isinstance( keyVarSpec, LSymbol ):
+               _check( keyVarSpec, 'lambda list' )
+            elif isinstance( keyVarSpec, list ) and len(keyVarSpec) >= 2:
+               _check( keyVarSpec[1], '&KEY (keyword var) pair' )
+            # Check svar: 3rd element if present (for &optional and &key)
+            if len(spec) >= 3:
+               _check( spec[2], 'supplied-p variable' )
+
+         index += 1
+
+   @staticmethod
    def _lbindArguments( env: Environment, lambdaListAST: list[Any], argList: tuple[Any] ) -> None:
+      LispInterpreter._lvalidateNoDuplicateParams( lambdaListAST )
       paramListLength = len(lambdaListAST)
       argListLength = len(argList)
 
@@ -191,20 +232,20 @@ class LispInterpreter( Interpreter ):
          # There are no more params to process. So argNum should be == or > argListLength.
          # So, if argNum < argListLength, then there are still unprocessed args.
          if argNum < argListLength:
-            raise LispArgBindingError( f'Too many arguments.  Received {argNum+1}.' )
+            raise LispArgBindingError( f'Too many arguments.  Received {argListLength}.' )
          return          # All params used up.  Return gracefully
       if not isinstance(nextParam, LSymbol):
          raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
-      
+
       if nextParam == '&OPTIONAL':
          paramNum, argNum = LispInterpreter._lbindOptionalArgs( env, lambdaListAST, paramNum+1, argList, argNum )
-      
+
          # Retrieve the next param which should be a symbol
          try:
             nextParam = lambdaListAST[paramNum]
          except IndexError:
             if argNum < argListLength:
-               raise LispArgBindingError( f'Too many arguments.  Received {argNum+1}.' )
+               raise LispArgBindingError( f'Too many arguments.  Received {argListLength}.' )
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
             raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
@@ -233,9 +274,15 @@ class LispInterpreter( Interpreter ):
       
       if nextParam == '&AUX':
          paramNum, argNum = LispInterpreter._lbindAuxArgs( env, lambdaListAST, paramNum+1, argList, argNum )
-   
+      elif nextParam.startswith('&'):
+         _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
+         if nextParam.strval in _KNOWN_KEYWORDS:
+            raise LispArgBindingError( f'{nextParam} is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.' )
+         else:
+            raise LispArgBindingError( f'Unknown lambda list keyword: {nextParam}.' )
+
       if paramNum < paramListLength:
-         raise LispArgBindingError( 'Too few parameters.' )
+         raise LispArgBindingError( f'Unexpected content at position {paramNum} in lambda list.' )
 
    @staticmethod
    def _lbindPositionalArgs( env: Environment, lambdaListAST: list[Any], paramNum: int, argList: tuple[Any], argNum: int ) -> (int, int):
@@ -270,10 +317,7 @@ class LispInterpreter( Interpreter ):
       paramListLength = len(lambdaListAST)
       argListLength = len(argList)
       
-      # Prepare to loop over the optional parameters and arguments
-      if paramNum >= paramListLength:
-         raise LispArgBindingError( f'Param expected after &Optional.' )
-      
+      # Loop over the optional parameters and arguments
       while (paramNum < paramListLength):
          paramSpec = lambdaListAST[paramNum]
          
@@ -298,18 +342,25 @@ class LispInterpreter( Interpreter ):
             else:
                raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<svar>]] ).' )
 
+            if not isinstance(varName, LSymbol):
+               raise LispArgBindingError( 'Parameter variable in &OPTIONAL spec must be a symbol.' )
+            if varName.startswith('&'):
+               raise LispArgBindingError( f'Lambda list keyword {varName} cannot be used as a variable name in &OPTIONAL spec.' )
             if svarName and (not isinstance(svarName, LSymbol)):
                raise LispArgBindingError( f'Parameter svar following {varName} must be a symbol.' )
+            if isinstance(svarName, LSymbol) and svarName.startswith('&'):
+               raise LispArgBindingError( f'Lambda list keyword {svarName} cannot be used as a supplied-p variable in &OPTIONAL spec.' )
          else:
             raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          paramNum += 1
         
-         # Extract the next arguments's values
+         # Extract the next argument's value
+         originalInitForm = initForm                  # save before potential overwrite
          if argNum < argListLength:
             initForm = argList[argNum]
-         
+
          if (argNum >= argListLength) or (isinstance(initForm, LSymbol) and (initForm.startswith(':'))):
-            initForm = LispInterpreter._lEval( env, initForm )
+            initForm = LispInterpreter._lEval( env, originalInitForm )   # evaluate the spec default
             svarVal = list()   # Nil, False
          else:
             argNum += 1
@@ -331,7 +382,7 @@ class LispInterpreter( Interpreter ):
       except IndexError:
          raise LispArgBindingError( f'Param name expected after &rest.' )
 
-      if not isinstance(paramName, LSymbol ):
+      if not isinstance(paramName, LSymbol ) or paramName.startswith('&'):
          raise LispArgBindingError( 'Symbol expected after &rest.' )
       
       theRestArgs = argList[argNum:]
@@ -344,44 +395,46 @@ class LispInterpreter( Interpreter ):
       '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [svar]])}* [&allow-other-keys]'''
       paramListLength = len(lambdaListAST)
       argListLength = len(argList)
-      
-      # Prepare to iterate over the parameters
-      if paramNum >= paramListLength:
-         raise LispArgBindingError( f'Param name expected after &key.' )
-      keysDict = {}       # Mapping: parameterKeyWord -> (varName,svarName)
-      varsDict = {}       # Mapping: varName -> value
-      
-      # Iterate through the key parameters adding them to keysDict and varsDict
+
+      keysDict = {}         # keyStr -> (varName, svarName, initForm)
+      keyParamOrder = []    # ordered list of keyStr for incremental evaluation
+
+      # ---- Phase 1: Parse key parameter specs (store initForms, don't evaluate yet) ----
       while paramNum < paramListLength:
          paramSpec = lambdaListAST[paramNum]
          if isinstance(paramSpec, LSymbol):
-            if paramSpec == '&ALLOW-OTHER-KEYS':
+            if paramSpec.startswith('&'):
                break
             keyName = paramSpec
             varName = paramSpec
             initForm = list()
             svarName = None
          elif isinstance(paramSpec, list):
-            try:
-               keyVarSpec, *initFormSpec = paramSpec
-            except ValueError:
-               raise LispArgBindingError( f'Too many default values for key parameter {paramSpec[0]}.' )
-            
+            if len(paramSpec) == 0:
+               raise LispArgBindingError( f'Empty parameter spec () in &KEY lambda list.' )
+            keyVarSpec, *initFormSpec = paramSpec
+
             # Extract the keyName and varName from keyVarSpec
             if isinstance(keyVarSpec, LSymbol):
+               if keyVarSpec.startswith('&'):
+                  raise LispArgBindingError( f'Lambda list keyword {keyVarSpec} cannot be used as a variable name in &KEY spec.' )
                keyName = keyVarSpec
                varName = keyVarSpec
             elif isinstance(keyVarSpec, list):
                try:
                   keyName, varName = keyVarSpec
                except ValueError:
-                  raise LispArgBindingError( f'Key Var pair following &key must contain exactly two elements.' )
+                  raise LispArgBindingError( f'Key Var pair following &KEY must contain exactly two elements.' )
+               if not isinstance(keyName, LSymbol) or not keyName.startswith(':'):
+                  raise LispArgBindingError( f'The key in a &KEY (keyword var) pair must be a keyword symbol (e.g. :mykey).' )
+               if not isinstance(varName, LSymbol):
+                  raise LispArgBindingError( f'Variable in &KEY (keyword var) pair must be a symbol.' )
             else:
-               raise LispArgBindingError( f'&key key var pair must be either a symbol of a list (keySymbol varSymbol)' )
-            
+               raise LispArgBindingError( f'&KEY key/var spec must be either a symbol or a list (:keySymbol varSymbol).' )
+
             # Extract initForm and svarName from initFormSpec
             initFormSpecLen = len(initFormSpec)
-            if initFormSpec == 0:
+            if initFormSpecLen == 0:
                initForm = list()
                svarName = None
             elif initFormSpecLen == 1:
@@ -389,58 +442,79 @@ class LispInterpreter( Interpreter ):
                svarName = None
             elif initFormSpecLen == 2:
                initForm, svarName = initFormSpec
+               if svarName and not isinstance(svarName, LSymbol):
+                  raise LispArgBindingError( f'svar for &KEY parameter {varName} must be a symbol.' )
+               if isinstance(svarName, LSymbol) and svarName.startswith('&'):
+                  raise LispArgBindingError( f'Lambda list keyword {svarName} cannot be used as a supplied-p variable in &KEY spec.' )
             else:
                raise LispArgBindingError( f'Too many arguments specified in a parameter keyword initialization list.' )
-         
-         # Record the names and values into the appropriate dicts
-         keysDict[keyName.strval] = (varName, svarName)
-         varsDict[varName.strval] = LispInterpreter._lEval(env, initForm)
+         else:
+            raise LispArgBindingError( f'Parameter spec following &KEY must be a symbol or a list.' )
+
+         keyStr = keyName.strval[1:] if keyName.startswith(':') else keyName.strval
+         keysDict[keyStr] = (varName, svarName, initForm)
+         keyParamOrder.append( keyStr )
          paramNum += 1
-      
+
+      # ---- Phase 2: Handle &allow-other-keys in lambda list ----
       allowOtherKeys = False
       if (paramNum < paramListLength):
          nextParam = lambdaListAST[paramNum]
          if isinstance(nextParam, LSymbol) and (nextParam == '&ALLOW-OTHER-KEYS'):
             allowOtherKeys = True
             paramNum += 1
-      
-      # Iterate through the key args updating varsDict
+
+      # ---- Phase 3: Scan supplied keyword arguments ----
+      # Pre-scan for :allow-other-keys in args (CL 3.4.1.4.1)
+      scanIdx = argNum
+      while scanIdx + 1 < argListLength:
+         scanArg = argList[scanIdx]
+         if isinstance(scanArg, LSymbol) and scanArg.strval == ':ALLOW-OTHER-KEYS':
+            if argList[scanIdx + 1] != list():   # non-NIL value enables it
+               allowOtherKeys = True
+            break
+         scanIdx += 2
+
+      # Collect supplied keyword arguments (first occurrence wins per CL 3.4.1.4.1)
+      suppliedArgs = {}    # keyStr -> argVal
       while argNum < argListLength:
          keyArg = argList[argNum]
-         svarName = None
-         svarVal = list()
-         if not isinstance(keyArg, LSymbol):
+         if (not isinstance(keyArg, LSymbol)) or (not keyArg.startswith(':')):
             raise LispArgBindingError( f'Keyword expected, found {keyArg}.' )
-         if not keyArg.startswith(':'):
-            raise LispArgBindingError( f'Keyword expected, found {keyArg}.' )
-         keyArg = keyArg.strval[1:]  # Strip argKey of the leading colon :
-         if (not allowOtherKeys) and (keyArg not in keysDict):
-            raise LispArgBindingError( f'Unexpected keyword found {keyArg}.' )
-         
+         keyArgStr = keyArg.strval[1:]  # Strip the leading colon
          argNum += 1
+         
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LispArgBindingError( f'Keyword {keyArg} expected to be followed by a value.' )
+            raise LispArgBindingError( f'Keyword {keyArgStr} expected to be followed by a value.' )
          argNum += 1
-         try:
-            if allowOtherKeys:
-               varName,svarName = keysDict.get(keyArg, (keyArg, None))
-            else:
-               varName,svarName = keysDict[keyArg]
-            svarVal = env.lookupGlobal('T')
-         except KeyError:
-            raise LispArgBindingError( 'Invalid key in argument list :{argKey}.' )
-         
-         # Record the bindings
-         varsDict[varName.strval] = argVal
-         
-         if svarName:
-            varsDict[svarName.strval] = svarVal
-      
-      # Update env's locals with varsDict
-      env.updateLocals( varsDict )
-      
+
+         # :allow-other-keys is always accepted; skip binding if not a declared key param
+         if keyArgStr == 'ALLOW-OTHER-KEYS' and keyArgStr not in keysDict:
+            continue
+
+         if (not allowOtherKeys) and (keyArgStr not in keysDict):
+            raise LispArgBindingError( f'Unexpected keyword found {keyArgStr}.' )
+
+         # First occurrence wins; skip unknown keys when allowOtherKeys
+         if keyArgStr in keysDict and keyArgStr not in suppliedArgs:
+            suppliedArgs[keyArgStr] = argVal
+
+      # ---- Phase 4: Bind key parameters incrementally (CL 3.4.1 eval order) ----
+      nilVal = list()
+      tVal = env.lookupGlobal('T')
+      for keyStr in keyParamOrder:
+         varName, svarName, initForm = keysDict[keyStr]
+         if keyStr in suppliedArgs:
+            env.bindLocal( varName.strval, suppliedArgs[keyStr] )
+            if svarName:
+               env.bindLocal( svarName.strval, tVal )
+         else:
+            env.bindLocal( varName.strval, LispInterpreter._lEval( env, initForm ) )
+            if svarName:
+               env.bindLocal( svarName.strval, nilVal )
+
       return paramNum, argNum
 
    @staticmethod
@@ -450,31 +524,31 @@ class LispInterpreter( Interpreter ):
       These parameters are strictly local variables for the function.'''
       paramListLength = len(lambdaListAST)
       
-      # Prepare to loop over the optional parameters and arguments
-      if paramNum >= paramListLength:
-         raise LispArgBindingError( 'Param expected after &aux.' )
-      
       while (paramNum < paramListLength):
          paramSpec = lambdaListAST[paramNum]
-         
+
          # Extract the next parameter's name and value
          if isinstance( paramSpec, LSymbol ):
             if paramSpec.startswith('&'):
-               raise LispArgBindingError( f'{paramSpec} occurs after &aux.' )
+               raise LispArgBindingError( f'{paramSpec} occurs after &AUX.' )
             varName = paramSpec
             initForm = list( )
          elif isinstance(paramSpec, list):
-            try:
+            paramSpecLen = len(paramSpec)
+            if paramSpecLen == 1:
+               varName = paramSpec[0]
+               initForm = list()
+            elif paramSpecLen == 2:
                varName, initForm = paramSpec
-            except ValueError:
-               raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
+            else:
+               raise LispArgBindingError( 'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
 
-            if not isinstance(varName, LSymbol):
-               raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> <defaultvalue> [<svar>] ).' )
-            
+            if not isinstance(varName, LSymbol) or varName.startswith('&'):
+               raise LispArgBindingError( 'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
+
             initForm = LispInterpreter._lEval( env, initForm )
          else:
-            raise LispArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
+            raise LispArgBindingError( 'Parameter spec following &AUX must be a <variable> or a list of (<variable> [<defaultvalue>]).' )
          
          # Bind the parameters
          env.bindLocal( varName.strval, initForm )

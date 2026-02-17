@@ -4,7 +4,7 @@ Development Tasks
 
 To Do
 -----
-- Ask the AI how to implement compiler tracing or debugging hooks.
+- Ask the AI how to implement tracing or debugging hooks.
 - See if macros are also supposed to support closures.
 - Investigate nested backquotes.
 - OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
@@ -32,6 +32,8 @@ Completed
 ---------
 2026.02.17
 - implement structs.
+- updated the test suite to full coverage.  Now includes test cases and error
+  testing.  New tests for closures and short-circuiting and and or primitives.
 
 2026.02.16
 - OPTIMIZATION: Move macro expansion completely out of expression evaluation.
