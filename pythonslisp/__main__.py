@@ -1,15 +1,17 @@
+import os
 import sys
 
 from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.25.8'
+VERSION      = '0.26.0'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 PROJECT = 'https://github.com/rprovost11-sketch/Lisp'
-TEST_DIR     = 'pythonslisp/testing'
-LIBRARY_DIR  = 'pythonslisp/lib'
+_PACKAGE_DIR = os.path.dirname( os.path.abspath( __file__ ) )
+TEST_DIR     = os.path.join( _PACKAGE_DIR, 'testing' )
+LIBRARY_DIR  = os.path.join( _PACKAGE_DIR, 'lib' )
 USAGE = '''   USAGE:  python3.14 -m pythonslisp [options] [lispSourceFile]
 
 Options:
@@ -68,9 +70,10 @@ def main( ) -> None:
    else:
       # Execute a lisp source file
       try:
+         interp.reboot()
          interp.evalFile( source_file )
       except FileNotFoundError as ex:
-         print( ex.args[-1] )
+         print( f'File not found: "{ex.filename}"', file=sys.stderr )
          sys.exit(1)
 
 if __name__ == '__main__':

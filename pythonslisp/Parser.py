@@ -52,8 +52,7 @@ class LexerBuffer( object ):
          pass          # Scanned past eof.  Return gracefully.
 
    def consumePast( self, aCharSet: str ) -> None:
-      '''Consume up to the first character NOT in aCharSet.  Returns the number
-      of characters consumed.'''
+      '''Consume up to the first character NOT in aCharSet.'''
       try:
          while self._source[self._point] in aCharSet:   # raises on EOF
             self.consume( )
@@ -61,8 +60,7 @@ class LexerBuffer( object ):
          pass    # scanned past eof.  Return gracefully.  Eof will be reported by
 
    def consumeUpTo( self, aCharSet: str ) -> int:
-      '''Consume up to the first character in aCharSet.  Returns the number
-      of characters consumed.'''
+      '''Consume up to the first character in aCharSet.'''
       try:
          while self._source[self._point] not in aCharSet:   # raises on EOF
             self.consume( )
@@ -122,7 +120,7 @@ class LexerBuffer( object ):
 
    def scanColNum( self ) -> int:
       '''Return the column numm (first column is 1) of point.'''
-      return self._point - self._linePos( )
+      return self._point - self._linePos( ) + 1
 
    def scanLineTxt( self ) -> str:
       '''Return the complete text of the line currently pointed to by point.'''

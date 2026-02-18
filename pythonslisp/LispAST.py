@@ -10,8 +10,8 @@ from pythonslisp.Environment import Environment
 LNUMBER = (int,float,Fraction)
 LATOM   = (int,float,Fraction,str)
 
-class LSymbol( object ):
-   __slots__ = ('strval')
+class LSymbol:
+   __slots__ = ('strval', )
    
    def __init__( self, val: str ) -> None:
       self.strval = val.upper()
@@ -29,6 +29,9 @@ class LSymbol( object ):
          return self.strval == other
       else:
          return False
+
+   def __hash__( self ) -> int:
+      return hash(self.strval)
 
    def __ne__( self, other: Any ) -> bool:
       if isinstance(other, LSymbol):
@@ -49,7 +52,7 @@ class LSymbol( object ):
 
 # A map type will be introduced to Lisp represented by python dict.
 
-class LCallable( object ):
+class LCallable:
    __slots__ = ('name', 'docString', 'specialForm')
    
    def __init__( self, name: str, docString: str = '', specialForm: bool = False ) -> None:
@@ -87,7 +90,7 @@ class LMacro( LCallable ):
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
-      super().__init__( name, docString, specialForm=True )
+      super().__init__( name.strval, docString, specialForm=True )
    
    def usageString( self ):
       return f'(Macro {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
@@ -111,11 +114,11 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
    elif isinstance(sExpr, dict):
       resultStrLines = [ '(MAP' ]
       for key in sorted(sExpr.keys()):
-         value = sExpr[ str(key) ]
+         value = sExpr[ key ]
          key = prettyPrintSExpr(key)
          value = prettyPrintSExpr( value )
          resultStrLines.append( f'   ({key} {value})')
-      resultStrLines.append(')\n')
+      resultStrLines.append(')')
       return '\n'.join(resultStrLines)
    elif isinstance(sExpr, LPrimitive):
       return sExpr.usageString()
@@ -142,11 +145,11 @@ def prettyPrint( sExpr: Any ) -> str:
    elif isinstance(sExpr, dict):
       resultStrLines = [ '(MAP' ]
       for key in sorted(sExpr.keys()):
-         value = sExpr[ str(key) ]
+         value = sExpr[ key ]
          key = prettyPrint(key)
          value = prettyPrint( value )
          resultStrLines.append( f'   ({key} {value})')
-      resultStrLines.append(')\n')
+      resultStrLines.append(')')
       return '\n'.join(resultStrLines)
    elif isinstance(sExpr, LPrimitive):
       return sExpr.usageString()

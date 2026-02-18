@@ -78,10 +78,10 @@
 %%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
 ==>
 
->>> ;;; Error: macroexpand list must have at least two elements
+>>> ;;; Error: macroexpand with non-macro
 ... (macroexpand '(1))
 
-%%% ERROR 'MACROEXPAND': Macro call must be at least two elements in length.
+%%% ERROR 'MACROEXPAND': Badly formed list expression.  The first element should evaluate to a macro.
 %%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
 ==>
 

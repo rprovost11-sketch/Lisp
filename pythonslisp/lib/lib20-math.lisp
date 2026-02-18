@@ -1,8 +1,8 @@
 (defun signum (num)
    "Returns 0 if the argument is zero, 1 if the argument is positive, or -1 if the argument is negative."
-   (if (zerop num)
-      0
-      (/ num (abs num))))
+   (cond ((zerop num)   0)
+         ((> num 0)     1)
+         (1            -1)))
 
 (defun sqrt (num)
    "Returns the square root of the argument."

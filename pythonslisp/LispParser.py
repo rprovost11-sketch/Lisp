@@ -74,45 +74,38 @@ class LispLexer( Lexer ):
    def _scanNextToken( self ) -> int:
       buf = self.buffer
 
-      try:
-         self._skipWhitespaceAndComments( )
+      self._skipWhitespaceAndComments( )
 
-         nextChar = buf.peekNextChar( )
-         if nextChar == '':
-            return LispLexer.EOF_TOK
-         elif nextChar == '(':
-            buf.consume( )
-            return LispLexer.OPEN_PAREN_TOK
-         elif nextChar == ')':
-            buf.consume( )
-            return LispLexer.CLOSE_PAREN_TOK
-         elif nextChar == "'":
-            buf.consume( )
-            return LispLexer.SINGLE_QUOTE_TOK
-         elif nextChar == '`':
-            buf.consume( )
-            return LispLexer.BACK_QUOTE_TOK
-         elif nextChar == ',':
-            buf.consume( )
-            nextChar = buf.peekNextChar( )
-            if nextChar == '@':
-               buf.consume( )
-               return LispLexer.COMMA_AT_TOK
-            return LispLexer.COMMA_TOK
-         elif nextChar == '"':
-            return self._scanStringLiteral( )
-         elif nextChar in LispLexer.SIGN_OR_DIGIT:
-            return self._scanNumOrSymbol( )
-         elif nextChar in LispLexer.SYMBOL_FIRST:
-            return self._scanSymbol( )
-         else:
-            raise ParseError( self, 'Unknown Token' )
-
-      except ParseError:
-         raise
-
-      except Exception:
+      nextChar = buf.peekNextChar( )
+      if nextChar == '':
          return LispLexer.EOF_TOK
+      elif nextChar == '(':
+         buf.consume( )
+         return LispLexer.OPEN_PAREN_TOK
+      elif nextChar == ')':
+         buf.consume( )
+         return LispLexer.CLOSE_PAREN_TOK
+      elif nextChar == "'":
+         buf.consume( )
+         return LispLexer.SINGLE_QUOTE_TOK
+      elif nextChar == '`':
+         buf.consume( )
+         return LispLexer.BACK_QUOTE_TOK
+      elif nextChar == ',':
+         buf.consume( )
+         nextChar = buf.peekNextChar( )
+         if nextChar == '@':
+            buf.consume( )
+            return LispLexer.COMMA_AT_TOK
+         return LispLexer.COMMA_TOK
+      elif nextChar == '"':
+         return self._scanStringLiteral( )
+      elif nextChar in LispLexer.SIGN_OR_DIGIT:
+         return self._scanNumOrSymbol( )
+      elif nextChar in LispLexer.SYMBOL_FIRST:
+         return self._scanSymbol( )
+      else:
+         raise ParseError( self, 'Unknown Token' )
 
    def _scanStringLiteral( self ) -> int:
       buf = self.buffer
@@ -152,7 +145,7 @@ class LispLexer( Lexer ):
       if nextChar in LispLexer.OCTAL_DIGIT:
          # consume an octal number up to a 3 digits
          numCharsConsumed = buf.consumePastWithMax( LispLexer.OCTAL_DIGIT, maxCharsToConsume=3 )
-         if (numCharsConsumed < 0) or (numCharsConsumed > 3):
+         if numCharsConsumed > 3:
             raise ParseError( self, '1 to 3 octal digits expected following escape character \\.' )
       elif nextChar == 'x':
          buf.consume( )    # consume the x
@@ -182,7 +175,7 @@ class LispLexer( Lexer ):
          # consume 8 hex digits
          numDigitsConsumed = buf.consumePastWithMax( LispLexer.HEX_DIGIT, maxCharsToConsume=8 )
          if numDigitsConsumed != 8:
-            raise ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\u.' )
+            raise ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\U.' )
       elif nextChar in '\\\'\"abfnrtv':
          # consume 1 character
          buf.consume( )
@@ -358,24 +351,28 @@ class LispParser( Parser ):
          ast = lex[1:-1]
          self._scanner.consume( )
       elif nextToken == LispLexer.SINGLE_QUOTE_TOK:
-         lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
+         if subordinate is None:
+            raise ParseError( self._scanner, 'Unexpected end of input after quote.' )
          ast = [ LSymbol('QUOTE'), subordinate ]
       elif nextToken == LispLexer.BACK_QUOTE_TOK:
-         lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
+         if subordinate is None:
+            raise ParseError( self._scanner, 'Unexpected end of input after backquote.' )
          ast = [ LSymbol('BACKQUOTE'), subordinate ]
       elif nextToken == LispLexer.COMMA_TOK:
-         lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
+         if subordinate is None:
+            raise ParseError( self._scanner, 'Unexpected end of input after comma.' )
          ast = [ LSymbol('COMMA'), subordinate ]
       elif nextToken == LispLexer.COMMA_AT_TOK:
-         lex = self._scanner.getLexeme( )
          self._scanner.consume( )
          subordinate = self._parseObject( )
+         if subordinate is None:
+            raise ParseError( self._scanner, 'Unexpected end of input after comma-at.' )
          ast = [ LSymbol('COMMA-AT'), subordinate ]
       elif nextToken == LispLexer.EOF_TOK:
          ast = None

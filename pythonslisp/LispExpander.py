@@ -68,7 +68,9 @@ class LispExpander:
         else:
             # Macro was expanded - recursively expand the result
             # (handles nested macro calls)
-            return LispExpander.expand(env, expanded_once, max_iterations)
+            if max_iterations <= 1:
+                raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
+            return LispExpander.expand(env, expanded_once, max_iterations - 1)
 
     @staticmethod
     def _expandOnce(env: Environment, sexpr: list) -> Any:
@@ -143,7 +145,7 @@ class LispExpander:
         return result
 
     @staticmethod
-    def expandWithDebug(env: Environment, sexpr: Any) -> tuple[Any, list[str]]:
+    def expandWithDebug(env: Environment, sexpr: Any, max_iterations: int = 1000) -> tuple[Any, list[str]]:
         """
         Expand macros and return both result and expansion trace.
         Useful for debugging and understanding macro expansion.
@@ -152,19 +154,26 @@ class LispExpander:
             (expanded_sexpr, trace_list)
         """
         trace = []
+        iterations_remaining = [max_iterations]   # mutable container for nested access
 
         def expand_traced(sexpr, depth=0):
             indent = "  " * depth
 
             if isinstance(sexpr, list) and len(sexpr) > 0:
+                # Don't expand inside quote — the content is literal data
+                if isinstance(sexpr[0], LSymbol) and sexpr[0].strval == 'QUOTE':
+                    return sexpr
                 primary = sexpr[0]
                 if isinstance(primary, LSymbol):
                     try:
                         fn = env.lookup(primary.strval)
                         if isinstance(fn, LMacro):
-                            trace.append(f"{indent}Expanding: {_format_sexpr(sexpr)}")
+                            if iterations_remaining[0] <= 0:
+                                raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
+                            iterations_remaining[0] -= 1
+                            trace.append(f"{indent}Expanding: {LispExpander._format_sexpr(sexpr)}")
                             expanded_once = LispExpander._expandOnce(env, sexpr)
-                            trace.append(f"{indent}       => {_format_sexpr(expanded_once)}")
+                            trace.append(f"{indent}       => {LispExpander._format_sexpr(expanded_once)}")
                             return expand_traced(expanded_once, depth + 1)
                     except KeyError:
                         pass
@@ -178,10 +187,11 @@ class LispExpander:
         expanded = expand_traced(sexpr)
         return expanded, trace
 
-def _format_sexpr(sexpr: Any) -> str:
-    """Format s-expression for debug output (keep it short)."""
-    from pythonslisp.LispAST import prettyPrintSExpr
-    s = prettyPrintSExpr(sexpr)
-    if len(s) > 60:
-        return s[:60] + "..."
-    return s
+    @staticmethod
+    def _format_sexpr(sexpr: Any) -> str:
+        """Format s-expression for debug output (keep it short)."""
+        from pythonslisp.LispAST import prettyPrintSExpr
+        s = prettyPrintSExpr(sexpr)
+        if len(s) > 60:
+            return s[:60] + "..."
+        return s

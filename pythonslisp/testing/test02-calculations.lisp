@@ -329,14 +329,14 @@
 ... (log)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG <number> &optional (<base> 10))
+%%% USAGE: (LOG <number> &optional <base>)
 ==>
 
 >>> ;;; Error: non-numeric argument to log
 ... (log "a")
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional (<base> 10))
+%%% USAGE: (LOG <number> &optional <base>)
 ==>
 
 >>> ;;; Error: non-numeric argument to sin

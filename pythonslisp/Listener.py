@@ -69,7 +69,7 @@ def columnize( lst: list[str], displaywidth: int=80 ) -> None:
 class Interpreter( ABC ):
    '''Interpreter interface expected by the Listener class.'''
    @abstractmethod
-   def reboot( self ):
+   def reboot( self, outStrm=None ) -> None:
       '''Reboot the interpreter.'''
       pass
 
@@ -85,8 +85,7 @@ class Interpreter( ABC ):
 
 
 class ListenerCommandError( Exception ):
-   def __init__( self, message, *args, **kwargs ):
-      super().__init__( message )
+   pass
 
 class Listener( object ):
    '''Listener environment for interpreted languages needing a repl.  Has
@@ -137,10 +136,10 @@ class Listener( object ):
                break
 
             except (Parser.ParseError, ListenerCommandError) as ex:
-               self._writeErrorMsg( ex.args[-1] )
+               self._writeErrorMsg( ex.args[-1] if ex.args else str(ex) )
 
             except Exception as ex:   # Unknowns raised by the interpreter
-               self._writeErrorMsg( ex.args[-1] )
+               self._writeErrorMsg( ex.args[-1] if ex.args else str(ex) )
                #exceptInfo = sys.exc_info( )
                #sys.excepthook( *exceptInfo )
 
@@ -152,7 +151,8 @@ class Listener( object ):
                inputExprLineList.append( lineInput )
 
    def sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
-      '''Read in and restore/execute a session log.  Returns if an exception occurs.'''
+      '''Read in and restore/execute a session log.
+      Raises if an evaluation error occurs.'''
       inputText = None
       try:
          with open( filename, 'r') as file:
@@ -209,9 +209,9 @@ class Listener( object ):
          try:
             actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
          except Parser.ParseError as ex:
-            actualErrorStr = ex.args[-1]
+            actualErrorStr = ex.args[-1] if ex.args else str(ex)
          except Exception as ex:   # Unknowns raised by the interpreter
-            actualErrorStr = ex.args[-1]
+            actualErrorStr = ex.args[-1] if ex.args else str(ex)
          
          actualOutputStr = outputStream.getvalue().strip()
 
@@ -227,6 +227,13 @@ class Listener( object ):
             numPassed += 1
 
          # Report Results
+         if passFail == 'Failed!':
+            if not retVal_passed:
+               print( f'         RETURN: expected [{expectedRetValStr}] got [{actualRetValStr}]' )
+            if not outVal_passed:
+               print( f'         OUTPUT: expected [{expectedOutputStr}] got [{actualOutputStr}]' )
+            if not errVal_passed:
+               print( f'         ERROR:  expected [{expectedErrStr}] got [{actualErrorStr}]' )
          print( f'         {passFail}\n' )
 
       # Summarize results for test file
@@ -245,11 +252,10 @@ class Listener( object ):
       cmdParts  = listenerCommand[1:].split( ' ' )
       cmd,*args = cmdParts
 
-      try:
-         func = getattr(self, f'_cmd_{cmd}')
-         func(args)
-      except AttributeError:
+      func = getattr(self, f'_cmd_{cmd}', None)
+      if func is None:
          raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
+      func(args)
 
    def _cmd_close( self, args: list[str] ) -> None:
       '''Usage:  close
@@ -305,7 +311,7 @@ class Listener( object ):
          raise ListenerCommandError( self._cmd_exit.__doc__ )
 
       if self._logFile is not None:
-         self._cmd_close( [''] )
+         self._cmd_close( [] )
 
       print( 'Bye.' )
       raise StopIteration( )
@@ -321,8 +327,7 @@ class Listener( object ):
             if doc:
                self._writeErrorMsg(doc)
          except AttributeError:
-            pass
-         raise ListenerCommandError( f"*** No help on {arg}." )
+            raise ListenerCommandError( f"*** No help on {arg}." )
       else:
          header = "Listener Commands"
          names = dir(self.__class__)
@@ -424,12 +429,16 @@ class Listener( object ):
 
    def _cmd_test( self, args: list[str] ) -> None:
       '''Usage:  test [<filename>]
+      
       Test the interpreter using a log file.
       Read and execute a log file.  Compare the output, return value, and error
       messages to the those in the log file.  If no test file is specified the
-      listener will run the full standard suite of tests.
-      Note: It's reccomended that you reboot the interpreter using ]reboot both
-      before and after running tests.
+      listener will run the full standard suite of tests in the testing
+      directory.
+      
+      Note: Testing reboots the interpreter before every test set and at the
+      end of testing to insure a clean environment.  Any work you've done
+      will be lost.
       '''
       numArgs = len(args)
       if numArgs > 1:
@@ -444,20 +453,21 @@ class Listener( object ):
       else:
          filenameList = retrieveFileList( self._testdir )
 
+      outStrm = io.StringIO()
+      
       # Conduct the testing
       testSummaryList: list[tuple[str, str]] = [ ]
       for filename in filenameList:
+         self._interp.reboot( outStrm=outStrm )
          testResultMsg = self.sessionLog_test( filename, verbosity=3 )
          testSummaryList.append( (filename, testResultMsg) )
+      self._interp.reboot( outStrm=outStrm )
 
       # Summarize Test Results
       print( '\n\nTest Report' )
       print( '===========')
       for filename, testSummary in testSummaryList:
-         print( f'{filename:55} {testSummary}' )
-
-      print( '\nWARNING: Testing leaves the interpreter in an unknown state. ' +
-             'It\'s reccomended that you reboot the interpreter using the listener command ]reboot.' )
+         print( f'{os.path.basename(filename):40} {testSummary}' )
 
    def _writeLn( self, value: str='', file=None ) -> None:
       print( value, file=file, flush=True )
@@ -502,28 +512,28 @@ class Listener( object ):
             if line.startswith( '>>> ' ):
                expr = line[ 4: ]
                line = next(lineIter)
-               while not eof and line.startswith( '...' ):
+               while line.startswith( '...' ):
                   expr += line[ 4: ]
                   line = next(lineIter)
 
             # Parse Output from the evaluation (such as write statements)
-            while not line.startswith( ('==> ','... ','>>> ', '%%% ') ):
+            while not line.startswith( ('==> ','... ','>>> ', '%%% ') ) and line.rstrip() != '==>':
                # Parse written output
                output += line
                line = next(lineIter)
 
             # Parse Return Value
-            if line.startswith( '==> ' ):
-               retVal = line[ 4: ]
+            if line.startswith( '==> ' ) or line.rstrip() == '==>':
+               retVal = line[ 4: ] if len(line) > 4 else ''
                line = next(lineIter)
-               while not eof and not line.startswith( ('==> ','... ','>>> ','%%% ') ):
+               while not line.startswith( ('==> ','... ','>>> ','%%% ') ) and line.rstrip() != '==>':
                   retVal += line
                   line = next(lineIter)
 
             if line.startswith( '%%% '):
                errMsg = line[4:]
                line = next(lineIter)
-               while not eof and line.startswith( '%%% ' ):
+               while line.startswith( '%%% ' ):
                   errMsg += line[4:]
                   line = next(lineIter)
 

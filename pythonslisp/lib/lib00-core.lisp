@@ -178,7 +178,7 @@
    "Remove a symbol from a list."
          (cond
             ((null lst)           nil)
-            ((= sym (first lst))  (rest lst))
+            ((= sym (first lst))  (remove sym (rest lst)))
             (1                    (cons (first lst) (remove sym (rest lst))))))
 
 (defun list-length (lst)
