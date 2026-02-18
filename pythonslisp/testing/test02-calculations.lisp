@@ -315,7 +315,8 @@
 >>> ;;; Error: division by zero
 ... (/ 1 0)
 
-%%% division by zero
+%%% ERROR '/': division by zero
+%%% USAGE: (/ <number1> <number2> ...)
 ==>
 
 >>> ;;; Error: expt requires exactly two arguments
@@ -349,7 +350,7 @@
 >>> ;;; Error: atan with no arguments
 ... (atan)
 
-%%% ERROR 'ATAN': 1 or two arguments expected.
+%%% ERROR 'ATAN': 1 or 2 arguments expected.
 %%% USAGE: (ATAN <number1> &optional <number2>)
 ==>
 

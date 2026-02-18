@@ -6,3 +6,5 @@ dist/
 build/
 .vs/
 .claude/
+CLAUDE.md
+pythonslisp.egg-info/

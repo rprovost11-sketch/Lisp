@@ -16,7 +16,7 @@ def retrieveFileList( dirname ) -> list[str]:
    testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList ]
    return testFileList
 
-def columnize( lst: list[str], displaywidth: int=80 ) -> None:
+def columnize( lst: list[str], displaywidth: int=80, outstrm=None ) -> None:
    """Display a list of strings as a compact set of columns.
 
    Each column is only as wide as necessary.
@@ -24,7 +24,7 @@ def columnize( lst: list[str], displaywidth: int=80 ) -> None:
    """
    size = len(lst)
    if size == 1:
-      print(str(lst[0]))
+      print(str(lst[0]), file=outstrm )
       return
    # Try every row count from 1 upwards
    for nrows in range(1, len(lst)):
@@ -62,7 +62,7 @@ def columnize( lst: list[str], displaywidth: int=80 ) -> None:
          del texts[-1]
       for col in range(len(texts)):
          texts[col] = texts[col].ljust(colwidths[col])
-      print(str("  ".join(texts)))
+      print(str("  ".join(texts)), file=outstrm )
 
 ### The Listener Implementation
 ### ===========================
@@ -241,12 +241,12 @@ class Listener( object ):
       numFailed = numTests - numPassed
       resultMessage = ''
       if numFailed == 0:
-         resultMessage = 'ALL TESTS PASSED!'
+         resultMessage = f'{numTests:4d} TESTS PASSED!'
       else:
          resultMessage = f'({numFailed}/{numTests}) Failed.'
 
       print( resultMessage )
-      return resultMessage
+      return resultMessage, numTests
 
    def _runListenerCommand( self, listenerCommand: str ) -> None:
       cmdParts  = listenerCommand[1:].split( ' ' )
@@ -454,13 +454,15 @@ class Listener( object ):
          filenameList = retrieveFileList( self._testdir )
 
       outStrm = io.StringIO()
+      totalTestsRun = 0
       
       # Conduct the testing
       testSummaryList: list[tuple[str, str]] = [ ]
       for filename in filenameList:
          self._interp.reboot( outStrm=outStrm )
-         testResultMsg = self.sessionLog_test( filename, verbosity=3 )
+         testResultMsg, numTestsRunThisFile = self.sessionLog_test( filename, verbosity=3 )
          testSummaryList.append( (filename, testResultMsg) )
+         totalTestsRun += numTestsRunThisFile
       self._interp.reboot( outStrm=outStrm )
 
       # Summarize Test Results
@@ -468,6 +470,9 @@ class Listener( object ):
       print( '===========')
       for filename, testSummary in testSummaryList:
          print( f'{os.path.basename(filename):40} {testSummary}' )
+      print( )
+      print( f'Total test files: {len(filenameList)}.')
+      print( f'Total test cases: {totalTestsRun}.')
 
    def _writeLn( self, value: str='', file=None ) -> None:
       print( value, file=file, flush=True )
@@ -527,7 +532,10 @@ class Listener( object ):
                retVal = line[ 4: ] if len(line) > 4 else ''
                line = next(lineIter)
                while not line.startswith( ('==> ','... ','>>> ','%%% ') ) and line.rstrip() != '==>':
-                  retVal += line
+                  if line.startswith( ';' ):
+                     expr += line
+                  else:
+                     retVal += line
                   line = next(lineIter)
 
             if line.startswith( '%%% '):

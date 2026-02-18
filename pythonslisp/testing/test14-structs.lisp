@@ -259,7 +259,7 @@
 >>> (point-x 42)
 ...
 
-%%% ERROR 'AT': Invalid argument.  List or Map expected.
+%%% ERROR 'AT': Invalid argument.  List, Map, or String expected.
 %%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
 ==>
 
