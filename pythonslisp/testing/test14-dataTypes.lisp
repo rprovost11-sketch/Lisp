@@ -284,3 +284,194 @@
 %%% Unexpected keyword found Z.
 ==>
 
+; ========================
+; type-of — mainstream cases
+; ------------------------
+
+; nil → NULL
+>>> (type-of nil)
+...
+
+==> NULL
+
+; positive integer
+>>> (type-of 42)
+...
+
+==> INTEGER
+
+; negative integer
+>>> (type-of -7)
+...
+
+==> INTEGER
+
+; float
+>>> (type-of 3.14)
+...
+
+==> FLOAT
+
+; ratio (Fraction)
+>>> (type-of (/ (rational 3) 4))
+...
+
+==> RATIO
+
+; string
+>>> (type-of "hello")
+...
+
+==> STRING
+
+; symbol
+>>> (type-of 'foo)
+...
+
+==> SYMBOL
+
+; non-empty list
+>>> (type-of '(1 2 3))
+...
+
+==> CONS
+
+; plain map — no STRUCT-TYPE key → HASH-TABLE
+>>> (type-of (map (x 1) (y 2)))
+...
+
+==> HASH-TABLE
+
+; named function — define it first, then query
+>>> (defun fn14 (x) (* x x))
+...
+
+==> (Function FN14 (X) ... )
+
+>>> (type-of fn14)
+...
+
+==> FUNCTION
+
+; built-in macro
+>>> (type-of when)
+...
+
+==> MACRO
+
+; built-in primitive
+>>> (type-of car)
+...
+
+==> PRIMITIVE
+
+; struct instances — defined earlier in this file
+>>> (type-of p0)
+...
+
+==> POINT
+
+>>> (type-of p1)
+...
+
+==> POINT
+
+>>> (type-of bob)
+...
+
+==> PERSON
+
+>>> (type-of n1)
+...
+
+==> NODE
+
+>>> (type-of lbl)
+...
+
+==> LABELED
+
+; ========================
+; type-of — edge cases
+; ------------------------
+
+; T is a symbol, not a boolean
+>>> (type-of t)
+...
+
+==> SYMBOL
+
+; zero is still an integer
+>>> (type-of 0)
+...
+
+==> INTEGER
+
+; negative float
+>>> (type-of -1.5)
+...
+
+==> FLOAT
+
+; empty string
+>>> (type-of "")
+...
+
+==> STRING
+
+; quoted empty list is NIL → NULL type
+>>> (type-of '())
+...
+
+==> NULL
+
+; single-element list is still CONS
+>>> (type-of (list 1))
+...
+
+==> CONS
+
+; (rational 1) is 1/1 — a Fraction, not an integer
+>>> (type-of (rational 1))
+...
+
+==> RATIO
+
+; anonymous lambda → FUNCTION
+>>> (type-of (lambda (x) x))
+...
+
+==> FUNCTION
+
+; result of type-of is always a symbol
+>>> (symbolp (type-of 42))
+...
+
+==> T
+
+; type-of on a type symbol → SYMBOL
+>>> (type-of (type-of 42))
+...
+
+==> SYMBOL
+
+; ========================
+; type-of — error cases
+; ------------------------
+
+; zero arguments
+>>> (type-of)
+...
+
+%%% ERROR 'TYPE-OF': 1 argument expected.
+%%% USAGE: (TYPE-OF <sexpr>)
+==>
+
+; too many arguments
+>>> (type-of 1 2)
+...
+
+%%% ERROR 'TYPE-OF': 1 argument expected.
+%%% USAGE: (TYPE-OF <sexpr>)
+==>
+

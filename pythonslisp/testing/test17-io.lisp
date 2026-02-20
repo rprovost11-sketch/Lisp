@@ -93,3 +93,149 @@ x=99
 %%% USAGE: (WRITEF <formatString> <MapOrList>)
 ==>
 
+; ============================================================
+; Additional write!/uwrite!/writeLn!/uwriteLn! coverage
+; ============================================================
+
+; --- write! with various types ---
+
+>>> ;;; write! with NIL
+... (write! NIL)
+NIL
+==> NIL
+
+>>> ;;; write! with T
+... (write! T)
+T
+==> T
+
+>>> ;;; write! with float
+... (write! 3.14)
+3.14
+==> 3.14
+
+>>> ;;; write! with fraction
+... (write! 1/3)
+1/3
+==> 1/3
+
+>>> ;;; write! with symbol
+... (write! 'foo)
+FOO
+==> FOO
+
+>>> ;;; write! with list
+... (write! '(1 2 3))
+(1 2 3)
+==> (1 2 3)
+
+>>> ;;; write! with nested list
+... (write! '(a (b c) d))
+(A (B C) D)
+==> (A (B C) D)
+
+>>> ;;; write! with empty list
+... (write! '())
+NIL
+==> NIL
+
+; --- uwrite! with various types ---
+
+>>> ;;; uwrite! with NIL
+... (uwrite! NIL)
+NIL
+==> NIL
+
+>>> ;;; uwrite! with T
+... (uwrite! T)
+T
+==> T
+
+>>> ;;; uwrite! with float
+... (uwrite! 3.14)
+3.14
+==> 3.14
+
+>>> ;;; uwrite! with fraction
+... (uwrite! 1/3)
+1/3
+==> 1/3
+
+>>> ;;; uwrite! with symbol
+... (uwrite! 'foo)
+FOO
+==> FOO
+
+>>> ;;; uwrite! with list
+... (uwrite! '(1 2 3))
+(1 2 3)
+==> (1 2 3)
+
+; --- uwrite!/uwriteLn! with multiple arguments ---
+
+>>> ;;; uwrite! with multiple args concatenates
+... (uwrite! 1 2 3)
+123
+==> 3
+
+>>> ;;; uwriteLn! with multiple args
+... (uwriteLn! 4 5 6)
+456
+
+==> 6
+
+; --- write! vs uwrite! string quoting ---
+
+>>> ;;; write! with multiple strings keeps quotes
+... (write! "a" "b" "c")
+"a""b""c"
+==> "c"
+
+>>> ;;; uwrite! with multiple strings omits quotes
+... (uwrite! "a" "b" "c")
+abc
+==> "c"
+
+; --- mixed types in multi-arg ---
+
+>>> ;;; write! with mixed types (string + int)
+... (write! "x=" 42)
+"x="42
+==> 42
+
+>>> ;;; uwrite! with mixed types (string + int)
+... (uwrite! "x=" 42)
+x=42
+==> 42
+
+; --- return value is last argument ---
+
+>>> ;;; write! returns last of multiple int args
+... (write! 10 20 30)
+102030
+==> 30
+
+>>> ;;; write! returns last arg when string
+... (write! 1 "end")
+1"end"
+==> "end"
+
+>>> ;;; uwrite! returns last arg when string
+... (uwrite! 1 "end")
+1end
+==> "end"
+
+; --- writeLn!/uwriteLn! multi-arg ---
+
+>>> ;;; writeLn! with multiple string args
+... (writeLn! "a" "b")
+"a""b"
+
+==> "b"
+
+>>> ;;; uwriteLn! with multiple string args
+... (uwriteLn! "a" "b")
+ab
+
+==> "b"
+

@@ -14,6 +14,9 @@ from pythonslisp.LispAST import ( LSymbol, LNUMBER,
                                   LCallable, LFunction, LPrimitive, LMacro,
                                   prettyPrint, prettyPrintSExpr )
 
+L_T = LSymbol( 'T' )
+L_NIL = []
+
 class LispRuntimeError( Exception ):
    pass
 
@@ -41,7 +44,7 @@ class LispInterpreter( Interpreter ):
    def reboot( self, outStrm=None ) -> None:
       # Load in the primitives
       primitiveDict: dict[str, Any] = LispInterpreter._lconstructPrimitives( self._parser.parse )
-      self._env:Environment = Environment( parent=None, **primitiveDict )  # Create the GLOBAL environment
+      self._env:Environment = Environment( parent=None, initialBindings=primitiveDict )  # Create the GLOBAL environment
 
       # Load in the runtime library
       if self._libDir:
@@ -66,7 +69,7 @@ class LispInterpreter( Interpreter ):
          from pythonslisp.LispExpander import LispExpander
          ast = self._parser.parse( source )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]            # strip progn wrapper
-         returnVal = list()
+         returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
@@ -84,7 +87,7 @@ class LispInterpreter( Interpreter ):
          from pythonslisp.LispExpander import LispExpander
          startTime = time.perf_counter()
          top_level_forms = ast[1:]
-         returnVal = list()
+         returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
@@ -99,7 +102,7 @@ class LispInterpreter( Interpreter ):
          from pythonslisp.LispExpander import LispExpander
          ast = self._parser.parseFile( filename )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]                  # strip progn wrapper
-         returnVal = list()
+         returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
@@ -131,37 +134,35 @@ class LispInterpreter( Interpreter ):
       # sExpr is a list expression - function call
       
       if len(sExprAST) == 0:
-         return list( )  # An empty list always evaluates to an empty list
-
-      # Break the list contents into a primary and a list of args
-      primary, *argsToFn = sExprAST
+         return L_NIL  # An empty list always evaluates to an empty list
 
       # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
+      primary = sExprAST[0]
       function = LispInterpreter._lEval( env, primary )
       if not isinstance( function, LCallable ):
          raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
-      
-      # Do the args need to be evaluated before calling the function?
-      if not function.specialForm:
-         argsToFn = [ LispInterpreter._lEval(env, argExpr) for argExpr in argsToFn ]
-      
-      # Call the function and return the results
-      return LispInterpreter._lApply( env, function, *argsToFn )
+
+      # Call the function with its arguments
+      if function.specialForm:
+         return LispInterpreter._lApply( env, function, sExprAST[1:] )
+      else:
+         nArgs = len(sExprAST)
+         evalArgs = [ LispInterpreter._lEval(env, sExprAST[i]) for i in range(1, nArgs) ]
+         return LispInterpreter._lApply( env, function, evalArgs )
 
    @staticmethod
-   def _lApply( env: Environment, function: LCallable, *args ) -> Any:
+   def _lApply( env: Environment, function: LCallable, args: Sequence ) -> Any:
       try:
          if isinstance( function, LPrimitive ):
             return function.pythonFn( env, *args )
          elif isinstance( function, LFunction ):
-            #env = Environment( env )         # Open a new scope. Auto closes when env goes out of scope.
             env = Environment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
-   
+
             # store the arguments as locals
-            LispInterpreter._lbindArguments( env, function.lambdaListAST, args ) #convert args from a tuple to a list
-   
+            LispInterpreter._lbindArguments( env, function.lambdaListAST, args )
+
             # evaluate the body expressions.
-            latestResult = list()
+            latestResult = L_NIL
             for sexpr in function.bodyAST:
                latestResult = LispInterpreter._lEval( env, sexpr )
             return latestResult
@@ -561,7 +562,7 @@ class LispInterpreter( Interpreter ):
       '''Expand a backquote List expression.'''
       if isinstance(expr, list):
          if len(expr) == 0:
-            return list( )
+            return expr
 
          primary = expr[0]
          if ( (primary == 'COMMA') or (primary == 'COMMA-AT') ):
@@ -578,7 +579,7 @@ class LispInterpreter( Interpreter ):
                   resultList.append( elt )
             else:
                resultList.append( resultListElt )
-         return list(resultList)
+         return resultList
       else:
          return expr
 
@@ -590,8 +591,6 @@ class LispInterpreter( Interpreter ):
       # ###################################
       # Lisp Object & Primitive Definitions
       # ###################################
-      L_T = LSymbol( 'T' )
-      L_NIL = list( )
       primitiveDict[ 'T'    ] = L_T
       primitiveDict[ 'NIL'  ] = L_NIL
       primitiveDict[ 'PI'   ] = math.pi
@@ -864,7 +863,7 @@ sequence and are not evaluated in let's nested scope."""
             initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
 
          # Open the new scope
-         env = Environment( env, **initDict )     # Open a new scope. Auto closes when env goes out of scope.
+         env = Environment( env, initialBindings=initDict )     # Open a new scope. Auto closes when env goes out of scope.
    
          # Evaluate each body sexpr in the new env/scope
          lastResult = L_NIL
@@ -921,7 +920,7 @@ refer to variables already initialized."""
       @primitive( 'progn', '<sexpr1> <sexpr2> ...', specialForm=True )
       def LP_progn( env: Environment, *args ) -> Any:
          """Evaluates each sexpression in sequence.  Returns the result of the last evaluation."""
-         lastResult = list()
+         lastResult = L_NIL
          for expr in args:
             lastResult = LispInterpreter._lEval( env, expr )
          return lastResult
@@ -934,13 +933,12 @@ is returned."""
          numArgs = len(args)
          if not(2 <= numArgs <= 3):
             raise LispRuntimeFuncError( LP_if, '2 or 3 arguments expected.' )
-         condExpr,conseq,*alt = args
-   
-         condValue = LispInterpreter._lEval( env, condExpr )
+
+         condValue = LispInterpreter._lEval( env, args[0] )
          if LispInterpreter._lTrue(condValue):
-            return LispInterpreter._lEval( env, conseq)    # The THEN part
+            return LispInterpreter._lEval( env, args[1])    # The THEN part
          elif numArgs == 3:
-            return LispInterpreter._lEval( env, alt[0])    # The ELSE part
+            return LispInterpreter._lEval( env, args[2])    # The ELSE part
          else:
             return L_NIL
    
@@ -965,12 +963,12 @@ is satisfied."""
                raise LispRuntimeFuncError( LP_cond, f'Entry {caseNum+1} expects at least one body expression.' )
    
             if LispInterpreter._lTrue(LispInterpreter._lEval(env,testExpr)):
-               latestResult = list( )
+               latestResult = L_NIL
                for sexpr in body:
                   latestResult = LispInterpreter._lEval( env, sexpr )
                return latestResult
-   
-         return list( )
+
+         return L_NIL
    
       @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True )
       def LP_case( env: Environment, *args ) -> Any:
@@ -1076,7 +1074,7 @@ and returns the result of the last expr evaluated."""
          if len(body) < 1:
             raise LispRuntimeFuncError( LP_while, 'At least one sexpr expected for the body.' )
    
-         latestResult = list()
+         latestResult = L_NIL
          condResult = LispInterpreter._lEval(env, conditionExpr)
          while LispInterpreter._lTrue( condResult ):
             for expr in body:
@@ -1113,7 +1111,7 @@ the first loop).  The value of the last sexpr evaluated is returned."""
          if len(body) < 1:
             raise LispRuntimeFuncError( LP_dotimes, 'At least one sexpr expected for the loop body.' )
    
-         latestResult = list()
+         latestResult = L_NIL
          loopEnv = Environment( env )
          for iterCount in range(count):
             loopEnv.bindLocal( variable.strval, iterCount )
@@ -1142,7 +1140,7 @@ Returns the result of the very last evaluation."""
             raise LispRuntimeFuncError( LP_foreach, "Argument 2 expected to evaluate to a list." )
    
          # Evaluate the body while there are elements left in the list
-         latestResult = list()
+         latestResult = L_NIL
          loopEnv = Environment( env )
          for element in alist:
             loopEnv.bindLocal( varSymbol.strval, element )
@@ -1156,8 +1154,7 @@ Returns the result of the very last evaluation."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
    
-         primary, *argsToFn = args
-         return LispInterpreter._lApply( env, primary, *argsToFn )
+         return LispInterpreter._lApply( env, args[0], args[1:] )
    
       @primitive( 'eval', '<sexpr>' )
       def LP_eval( env: Environment, *args ) -> Any:
@@ -1199,7 +1196,7 @@ function is any callable that is not a special form."""
          fnArgs = list( args[1:-1] )
          fnArgs.extend( listArg )
          
-         return LispInterpreter._lApply( env, fnObj, *fnArgs )
+         return LispInterpreter._lApply( env, fnObj, fnArgs )
       
    
       @primitive( 'parse', '<string>' )
@@ -1267,8 +1264,8 @@ function is any callable that is not a special form."""
          try:
             return theList[0]
          except IndexError:
-            return list( )
-   
+            return L_NIL
+
       @primitive( 'cdr', '<list>' )
       def LP_cdr( env: Environment, *args ) -> Any:
          """Returns a copy of the list minus the first element."""
@@ -1743,7 +1740,37 @@ random number will be a float."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macrop, '1 argument expected.' )
          return L_T if isinstance( args[0], LMacro ) else L_NIL
-   
+
+      @primitive( 'type-of', '<sexpr>' )
+      def LP_typeof( env: Environment, *args ) -> Any:
+         """Returns the type of its argument as a symbol (CL type-of conventions)."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_typeof, '1 argument expected.' )
+         arg = args[0]
+         if isinstance( arg, list ):
+            return LSymbol('NULL') if len(arg) == 0 else LSymbol('CONS')
+         elif isinstance( arg, int ):
+            return LSymbol('INTEGER')
+         elif isinstance( arg, float ):
+            return LSymbol('FLOAT')
+         elif isinstance( arg, Fraction ):
+            return LSymbol('RATIO')
+         elif isinstance( arg, str ):
+            return LSymbol('STRING')
+         elif isinstance( arg, LSymbol ):
+            return LSymbol('SYMBOL')
+         elif isinstance( arg, dict ):
+            struct_type = arg.get('STRUCT-TYPE')   # map stores symbol keys as strings
+            return struct_type if struct_type is not None else LSymbol('HASH-TABLE')
+         elif isinstance( arg, LFunction ):
+            return LSymbol('FUNCTION')
+         elif isinstance( arg, LMacro ):
+            return LSymbol('MACRO')
+         elif isinstance( arg, LPrimitive ):
+            return LSymbol('PRIMITIVE')
+         else:
+            return LSymbol('T')
+
       # ====================
       # Relational Operators
       # --------------------
@@ -1913,7 +1940,7 @@ Short-circuits: stops evaluating arguments upon encountering the first nil."""
          # short-circuits: returns nil on the first nil argument otherwise true
          for arg in args:
             if not LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
-               return list()
+               return L_NIL
    
          return L_T
    
@@ -1928,8 +1955,8 @@ Short-circuits:  stops evaluating upon encountering the first truthy value."""
          for arg in args:
             if LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
                return L_T
-   
-         return list()
+
+         return L_NIL
    
       # ===============
       # Type Conversion

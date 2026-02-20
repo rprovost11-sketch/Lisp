@@ -1,5 +1,6 @@
 import io
 import os
+import sys
 import datetime
 import time
 from abc import ABC, abstractmethod
@@ -13,7 +14,8 @@ def retrieveFileList( dirname ) -> list[str]:
    "Returns a list of all the filenames in the specified directory."
    testFileList = os.listdir( dirname )
    testFileList.sort()
-   testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList ]
+   testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList
+                    if os.path.isfile( f'{dirname}/{testFileName}' ) ]
    return testFileList
 
 def columnize( lst: list[str], displaywidth: int=80, outstrm=None ) -> None:
@@ -63,6 +65,13 @@ def columnize( lst: list[str], displaywidth: int=80, outstrm=None ) -> None:
       for col in range(len(texts)):
          texts[col] = texts[col].ljust(colwidths[col])
       print(str("  ".join(texts)), file=outstrm )
+
+def write_multiFile( outputString: str, *fileList ):
+   """Write output to multiple output streams using print.
+   fileList is a python list containing output file objects.
+   An output file object of None prints directly to the screen."""
+   for fileStream in fileList:
+      print( outputString, end='\n', flush=True, file=fileStream )
 
 ### The Listener Implementation
 ### ===========================
@@ -453,31 +462,57 @@ class Listener( object ):
       else:
          filenameList = retrieveFileList( self._testdir )
 
+      # Create runs directory and output file
+      runsDir = os.path.join(self._testdir, 'runs')
+      os.makedirs(runsDir, exist_ok=True)
+      timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H%M%S')
+      runFilename = os.path.join(runsDir, f'test-{timestamp}.run')
+      runFile = open(runFilename, 'w')
+
       outStrm = io.StringIO()
       totalTestsRun = 0
-      
-      # Conduct the testing
+
+      # Conduct the testing — redirect stdout to file
       testSummaryList: list[tuple[str, str]] = [ ]
-      for filename in filenameList:
-         self._interp.reboot( outStrm=outStrm )
-         testResultMsg, numTestsRunThisFile = self.sessionLog_test( filename, verbosity=3 )
-         testSummaryList.append( (filename, testResultMsg) )
-         totalTestsRun += numTestsRunThisFile
+      savedStdout = sys.stdout
+      sys.stdout = runFile
+      try:
+         for filename in filenameList:
+            self._interp.reboot( outStrm=outStrm )
+            testResultMsg, numTestsRunThisFile = self.sessionLog_test( filename, verbosity=3 )
+            testSummaryList.append( (filename, testResultMsg) )
+            totalTestsRun += numTestsRunThisFile
+      finally:
+         sys.stdout = savedStdout
       self._interp.reboot( outStrm=outStrm )
 
-      # Summarize Test Results
-      print( '\n\nTest Report' )
-      print( '===========')
+      # Summarize Test Results — print to both screen and file
+      reportLines = [
+         '\n\nTest Report',
+         '===========',
+      ]
       for filename, testSummary in testSummaryList:
-         print( f'{os.path.basename(filename):40} {testSummary}' )
-      print( )
-      print( f'Total test files: {len(filenameList)}.')
-      print( f'Total test cases: {totalTestsRun}.')
+         reportLines.append( f'{os.path.basename(filename):40} {testSummary}' )
+      reportLines.append( '' )
+      reportLines.append( f'Total test files: {len(filenameList)}.' )
+      reportLines.append( f'Total test cases: {totalTestsRun}.' )
+
+      for line in reportLines:
+         print( line )
+         print( line, file=runFile )
+
+      runFile.close()
+      print( f'\nTest output: {runFilename}' )
 
    def _writeLn( self, value: str='', file=None ) -> None:
-      print( value, file=file, flush=True )
       if self._logFile:
-         self._logFile.write( value + '\n' )
+         write_multiFile( value, file, self._logFile )
+      else:
+         write_multiFile( value, file )
+      
+      #print( value, flush=True )
+      #if self._logFile:
+         #print( value, file=self._logFile, flush=True )
 
    def _writeErrorMsg( self, errMsg: str, file=None ):
       errMsgLinesOfText = errMsg.splitlines()
@@ -487,7 +522,7 @@ class Listener( object ):
    def _prompt( self, prompt: str='' ) -> str:
       inputStr: str = input( prompt ).strip()
       if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
-         self._logFile.write( f'{prompt}{inputStr}\n' )
+         self._logFile.write( f'{prompt}{inputStr}' )
       return inputStr
 
    @staticmethod

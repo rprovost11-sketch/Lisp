@@ -2,106 +2,145 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 class LexerState( object ):
-   def __init__( self, filename: str = '', source: str = '', point: int = 0, mark: int = 0, lineNum: int = 0 ) -> None:
-      self.lexer_tok: int             = 0
-      self.buffer_filename:str = filename
+   def __init__( self, filename: str = '', source: str = '', sourceLen: int = 0,
+                       nextChar: str = '', point: int = 0, mark: int = 0, lineNum: int = 0 ) -> None:
+      self.lexer_tok: int              = 0
+      self.buffer_filename:str  = filename
       self.buffer_source: str   = source
+      self.buffer_sourceLen: int = sourceLen
+      self.buffer_nextChar: str = nextChar
       self.buffer_point: int    = point
       self.buffer_mark: int     = mark
       self.buffer_lineNum: int  = lineNum
 
 class LexerBuffer( object ):
+   __slots__ = ('_filename', '_source', '_sourceLen', '_nextChar', '_point', '_mark', '_lineNum')
+
    def __init__( self ) -> None:
       '''Initialize a scanner buffer instance.'''
-      self._filename:str = ''  # the source filename
-      self._source:str  = ''   # the string to be analyzed lexically
-      self._point:int   = 0    # the current scanner position
-      self._mark:int    = 0    # the first character of the lexeme currently being scanned
-      self._lineNum:int = 1    # the current line number
+      self._filename:str  = ''  # the source filename
+      self._source:str    = ''  # the string to be analyzed lexically
+      self._sourceLen:int = 0   # cached len(self._source); constant between resets
+      self._nextChar:str  = ''  # cached lookahead character at _point
+      self._point:int     = 0   # the current scanner position
+      self._mark:int      = 0   # the first character of the lexeme currently being scanned
+      self._lineNum:int   = 1   # the current line number
 
    def reset( self, source: str ) -> None:
       '''Re-initialize the instance over a new or the current string.'''
-      self._filename = ''
-      self._source = source
-      self._point    = 0
-      self._mark     = 0
-      self._lineNum  = 1
+      self._filename  = ''
+      self._source    = source
+      self._sourceLen = len(source)
+      self._nextChar  = source[0] if self._sourceLen > 0 else ''
+      self._point     = 0
+      self._mark      = 0
+      self._lineNum   = 1
 
    def resetFromFile( self, filename: str ) -> None:
       self._filename = filename
       with open(self._filename, 'r', encoding='utf-8') as file:
          self._source = file.read( )
-      self._point    = 0
-      self._mark     = 0
-      self._lineNum  = 1
+      self._sourceLen = len(self._source)
+      self._nextChar  = self._source[0] if self._sourceLen > 0 else ''
+      self._point     = 0
+      self._mark      = 0
+      self._lineNum   = 1
       
    def peekNextChar( self ) -> str:
       '''Return the next character in the buffer or an empty string if eof.'''
-      try:
-         return self._source[ self._point ]        # raises IndexError on EOF
-      except IndexError:
-         return ''
+      return self._nextChar
 
    def consume( self ) -> None:
       '''Advance the point by one character in the buffer.'''
-      try:
-         if self._source[ self._point ] == '\n':   # raises on EOF
-            self._lineNum += 1
-         self._point += 1
-      except IndexError:
-         pass          # Scanned past eof.  Return gracefully.
+      if self._nextChar == '':
+         return
+      if self._nextChar == '\n':
+         self._lineNum += 1
+      self._point += 1
+      if self._point < self._sourceLen:
+         self._nextChar = self._source[self._point]
+      else:
+         self._nextChar = ''
 
-   def consumePast( self, aCharSet: str ) -> None:
+   def consumePast( self, aCharSet ) -> None:
       '''Consume up to the first character NOT in aCharSet.'''
-      try:
-         while self._source[self._point] in aCharSet:   # raises on EOF
-            self.consume( )
-      except IndexError:
-         pass    # scanned past eof.  Return gracefully.  Eof will be reported by
+      src = self._source
+      pos = self._point
+      end = self._sourceLen
+      if '\n' not in aCharSet:
+         while pos < end and src[pos] in aCharSet:
+            pos += 1
+      else:
+         while pos < end and src[pos] in aCharSet:
+            if src[pos] == '\n':
+               self._lineNum += 1
+            pos += 1
+      self._point = pos
+      self._nextChar = src[pos] if pos < end else ''
 
-   def consumeUpTo( self, aCharSet: str ) -> int:
+   def consumeUpTo( self, aCharSet ) -> None:
       '''Consume up to the first character in aCharSet.'''
-      try:
-         while self._source[self._point] not in aCharSet:   # raises on EOF
-            self.consume( )
-      except IndexError:
-         pass                # scanned past eof.  Return gracefully.
+      src = self._source
+      pos = self._point
+      end = self._sourceLen
+      while pos < end and src[pos] not in aCharSet:
+         if src[pos] == '\n':
+            self._lineNum += 1
+         pos += 1
+      self._point = pos
+      self._nextChar = src[pos] if pos < end else ''
 
-   def consumePastWithMax( self, aCharSet: str, maxCharsToConsume: int ) -> int:
-      '''Consume up to the first character NOT in aCharSet.  Returns the number
-      of characters consumed.'''
-      numCharsConsumed = 0
-      try:
-         while (self._source[self._point] in aCharSet) and (numCharsConsumed < maxCharsToConsume):   # raises on EOF
-            self.consume( )
-            numCharsConsumed += 1
-      except IndexError:
-         pass    # scanned past eof.  Return gracefully.  Eof will be reported by
-      return numCharsConsumed
+   def consumePastWithMax( self, aCharSet, maxCharsToConsume: int ) -> int:
+      '''Consume up to maxCharsToConsume characters while in aCharSet.
+      Returns the number of characters consumed.'''
+      src = self._source
+      pos = self._point
+      end = self._sourceLen
+      count = 0
+      if '\n' not in aCharSet:
+         while pos < end and count < maxCharsToConsume and src[pos] in aCharSet:
+            pos += 1
+            count += 1
+      else:
+         while pos < end and count < maxCharsToConsume and src[pos] in aCharSet:
+            if src[pos] == '\n':
+               self._lineNum += 1
+            pos += 1
+            count += 1
+      self._point = pos
+      self._nextChar = src[pos] if pos < end else ''
+      return count
 
-   def consumeUpToWithMax( self, aCharSet: str, maxCharsToConsume: int ) -> int:
-      '''Consume up to the first character in aCharSet.  Returns the number
-      of characters consumed.'''
-      numCharsConsumed = 0
-      try:
-         while (self._source[self._point] not in aCharSet) and (numCharsConsumed < maxCharsToConsume):   # raises on EOF
-            self.consume( )
-            numCharsConsumed += 1
-      except IndexError:
-         pass                # scanned past eof.  Return gracefully.
-      return numCharsConsumed
+   def consumeUpToWithMax( self, aCharSet, maxCharsToConsume: int ) -> int:
+      '''Consume up to maxCharsToConsume characters while NOT in aCharSet.
+      Returns the number of characters consumed.'''
+      src = self._source
+      pos = self._point
+      end = self._sourceLen
+      count = 0
+      while pos < end and count < maxCharsToConsume and src[pos] not in aCharSet:
+         if src[pos] == '\n':
+            self._lineNum += 1
+         pos += 1
+         count += 1
+      self._point = pos
+      self._nextChar = src[pos] if pos < end else ''
+      return count
 
    def saveState( self ) -> LexerState:
       return LexerState( filename=self._filename, source=self._source,
+                           sourceLen=self._sourceLen, nextChar=self._nextChar,
                            point=self._point, mark=self._mark,
                            lineNum=self._lineNum )
 
    def restoreState( self, stateInst: LexerState ) -> None:
-      self._filename = stateInst.buffer_filename
-      self._source   = stateInst.buffer_source
-      self._point    = stateInst.buffer_point
-      self._mark     = stateInst.buffer_mark
-      self._lineNum  = stateInst.buffer_lineNum
+      self._filename  = stateInst.buffer_filename
+      self._source    = stateInst.buffer_source
+      self._sourceLen = stateInst.buffer_sourceLen
+      self._nextChar  = stateInst.buffer_nextChar
+      self._point     = stateInst.buffer_point
+      self._mark      = stateInst.buffer_mark
+      self._lineNum   = stateInst.buffer_lineNum
 
    def markStartOfLexeme( self ) -> None:
       '''Set mark to the current vlaue of point to record the start of a lex.'''
@@ -133,8 +172,8 @@ class LexerBuffer( object ):
 
    def _linePos( self ) -> int:
       '''Return the index into the buffer string of the first character of the current line.'''
-      if self._point >= len(self._source):
-         theLinePos = self._source.rfind( '\n', 0, len(self._source) - 1 ) + 1
+      if self._point >= self._sourceLen:
+         theLinePos = self._source.rfind( '\n', 0, self._sourceLen - 1 ) + 1
       else:
          theLinePos = self._source.rfind( '\n', 0, self._point ) + 1
       return 0 if theLinePos < 0 else theLinePos

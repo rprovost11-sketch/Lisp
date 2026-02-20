@@ -1,8 +1,10 @@
 from typing import Any
 
-class Environment( object ):
-   def __init__( self, parent: (Environment|None)=None, **initialNameValDict: dict[str, Any]):
-      self._bindings: dict[str, Any] = initialNameValDict.copy()
+class Environment:
+   __slots__ = ('_bindings', '_parent', '_GLOBAL_ENV')
+
+   def __init__( self, parent: (Environment|None)=None, initialBindings: (dict[str, Any]|None)=None ):
+      self._bindings: dict[str, Any] = initialBindings if initialBindings is not None else {}
       self._parent: (Environment | None) = parent
       self._GLOBAL_ENV: Environment = parent._GLOBAL_ENV if parent else self
 
@@ -52,9 +54,6 @@ class Environment( object ):
    def lookupGlobal(self, key: str ) -> Any:
       return self._GLOBAL_ENV._bindings[ key ]
 
-   def getGlobalEnv( self ) -> Environment:
-      return self._GLOBAL_ENV
-
    def unbind( self, key: str ) -> None:
       scope: (Environment | None) = self
       while scope:
@@ -62,6 +61,9 @@ class Environment( object ):
             del scope._bindings[ key ]
             return
          scope = scope._parent
+
+   def getGlobalEnv( self ) -> Environment:
+      return self._GLOBAL_ENV
 
    def localSymbols( self ) -> list[str]:
       return sorted( self._bindings.keys() )

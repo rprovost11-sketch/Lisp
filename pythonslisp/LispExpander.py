@@ -20,7 +20,7 @@ from pythonslisp.LispAST import LSymbol, LMacro
 class LispExpander:
     """Handles macro expansion as a separate compilation phase."""
     @staticmethod
-    def expand(env: Environment, sexpr: Any, max_iterations: int = 1000) -> Any:
+    def expand(env: Environment, sexpr: Any, maxIterations: int = 1000) -> Any:
         """
         Recursively expand all macros in sexpr.
 
@@ -48,7 +48,7 @@ class LispExpander:
             return sexpr  # Atoms (numbers, strings) don't expand
 
         elif len(sexpr) == 0:
-            return list()  # Empty list doesn't expand
+            return sexpr  # Empty list doesn't expand
 
         # Don't expand inside quote — the content is literal data, not code
         if isinstance(sexpr[0], LSymbol) and sexpr[0].strval == 'QUOTE':
@@ -58,19 +58,19 @@ class LispExpander:
         # Strategy: Try to expand, then recursively expand the result
         # This handles nested macros: (unless ...) → (when ...) → (if ...)
 
-        expanded_once = LispExpander._expandOnce(env, sexpr)
+        expandedOnce = LispExpander._expandOnce(env, sexpr)
 
         # Did anything change?
-        if expanded_once is sexpr:
+        if expandedOnce is sexpr:
             # No macro expansion happened at top level
             # Recursively expand elements
-            return [LispExpander.expand(env, elt, max_iterations) for elt in sexpr]
+            return [LispExpander.expand(env, elt, maxIterations) for elt in sexpr]
         else:
             # Macro was expanded - recursively expand the result
             # (handles nested macro calls)
-            if max_iterations <= 1:
+            if maxIterations <= 1:
                 raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
-            return LispExpander.expand(env, expanded_once, max_iterations - 1)
+            return LispExpander.expand(env, expandedOnce, maxIterations - 1)
 
     @staticmethod
     def _expandOnce(env: Environment, sexpr: list) -> Any:
@@ -93,11 +93,11 @@ class LispExpander:
         # Check if primary is a symbol that's bound to a macro
         if isinstance(primary, LSymbol):
             try:
-                fn = env.lookup(primary.strval)
-                if isinstance(fn, LMacro):
+                callableObj = env.lookup(primary.strval)
+                if isinstance(callableObj, LMacro):
                     # It's a macro call - expand it!
                     args = sexpr[1:]  # Arguments to the macro
-                    expanded = LispExpander._expandMacroCall(env, fn, args)
+                    expanded = LispExpander._expandMacroCall(env, callableObj, args)
                     return expanded
             except KeyError:
                 # Symbol not bound - not a macro
@@ -124,28 +124,28 @@ class LispExpander:
             Expanded s-expression (still an AST, not evaluated)
         """
         # Import here to avoid circular dependency
-        from pythonslisp.LispInterpreter import LispInterpreter
+        from pythonslisp.LispInterpreter import LispInterpreter, L_NIL
 
         # Create new environment for macro expansion
         # This is where macro parameters get bound
-        expansion_env = Environment(env)
+        expansionEnv = Environment(env)
 
         # Bind macro parameters to (unevaluated) arguments
         # Example: (when cond body...) binds cond=(> x 0), body=[(print x)]
-        LispInterpreter._lbindArguments(expansion_env, macro.lambdaListAST, argsList)
+        LispInterpreter._lbindArguments(expansionEnv, macro.lambdaListAST, argsList)
 
         # Evaluate macro body to generate the expansion
         # This typically evaluates a backquote expression
         # Example: `(if ,cond (progn ,@body))
         #       → (if (> x 0) (progn (print x)))
-        result = list()
+        result = L_NIL
         for bodySExpr in macro.bodyAST:
-            result = LispInterpreter._lEval(expansion_env, bodySExpr)
+            result = LispInterpreter._lEval(expansionEnv, bodySExpr)
 
         return result
 
     @staticmethod
-    def expandWithDebug(env: Environment, sexpr: Any, max_iterations: int = 1000) -> tuple[Any, list[str]]:
+    def expandWithDebug(env: Environment, sexpr: Any, maxIterations: int = 1000) -> tuple[Any, list[str]]:
         """
         Expand macros and return both result and expansion trace.
         Useful for debugging and understanding macro expansion.
@@ -154,9 +154,9 @@ class LispExpander:
             (expanded_sexpr, trace_list)
         """
         trace = []
-        iterations_remaining = [max_iterations]   # mutable container for nested access
+        iterationsRemaining = [maxIterations]   # mutable container for nested access
 
-        def expand_traced(sexpr, depth=0):
+        def expandTraced(sexpr, depth=0):
             indent = "  " * depth
 
             if isinstance(sexpr, list) and len(sexpr) > 0:
@@ -168,27 +168,27 @@ class LispExpander:
                     try:
                         fn = env.lookup(primary.strval)
                         if isinstance(fn, LMacro):
-                            if iterations_remaining[0] <= 0:
+                            if iterationsRemaining[0] <= 0:
                                 raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
-                            iterations_remaining[0] -= 1
-                            trace.append(f"{indent}Expanding: {LispExpander._format_sexpr(sexpr)}")
+                            iterationsRemaining[0] -= 1
+                            trace.append(f"{indent}Expanding: {LispExpander._formatSExpr(sexpr)}")
                             expanded_once = LispExpander._expandOnce(env, sexpr)
-                            trace.append(f"{indent}       => {LispExpander._format_sexpr(expanded_once)}")
-                            return expand_traced(expanded_once, depth + 1)
+                            trace.append(f"{indent}       => {LispExpander._formatSExpr(expanded_once)}")
+                            return expandTraced(expanded_once, depth + 1)
                     except KeyError:
                         pass
 
             # Recursively expand elements
             if isinstance(sexpr, list):
-                return [expand_traced(elt, depth) for elt in sexpr]
+                return [expandTraced(elt, depth) for elt in sexpr]
             else:
                 return sexpr
 
-        expanded = expand_traced(sexpr)
+        expanded = expandTraced(sexpr)
         return expanded, trace
 
     @staticmethod
-    def _format_sexpr(sexpr: Any) -> str:
+    def _formatSExpr(sexpr: Any) -> str:
         """Format s-expression for debug output (keep it short)."""
         from pythonslisp.LispAST import prettyPrintSExpr
         s = prettyPrintSExpr(sexpr)
