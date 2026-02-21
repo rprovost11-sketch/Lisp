@@ -176,7 +176,7 @@
 ... (defun square22 (x) "Returns x squared" (* x x))
 ...
 
-==> (Function SQUARE22 (X) ... )
+==> (FUNCTION SQUARE22 (X) ... )
 
 >>> (square22 7)
 ...
@@ -197,16 +197,10 @@
 
 ==> 1/1
 
-; --- string/ustring from symbol ---
+; --- string from symbol ---
 
 >>> ;;; string converts symbol to string (programmer mode)
 ... (string 'abc)
-...
-
-==> "ABC"
-
->>> ;;; ustring converts symbol to string (user mode)
-... (ustring 'abc)
 ...
 
 ==> "ABC"

@@ -29,7 +29,7 @@
 >>> (string 3.5 "Hello" 1/2 )
 ...
 
-==> "3.5"Hello"1/2"
+==> "3.5Hello1/2"
 
 >>> (list pi 3/4 'asymbol "a string")
 ...
@@ -56,25 +56,12 @@
 
 ==> 3/2
 
->>> (ustring 42)
-...
-
-==> "42"
-
->>> (ustring "hello")
-...
-
-==> "hello"
-
->>> (ustring 'foo)
-...
-
 ==> "FOO"
 
 >>> (string "hello")
 ...
 
-==> ""hello""
+==> "hello"
 
 >>> (symbol "hello")
 ...

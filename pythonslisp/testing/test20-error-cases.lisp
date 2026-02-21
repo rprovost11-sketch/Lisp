@@ -374,41 +374,41 @@
 >>> (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> ;;; let first arg must be list
 ... (let 1 2)
 
 %%% ERROR 'LET': The first argument to let expected to be a list of variable initializations.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> ;;; let var spec first element must be symbol
 ... (let ((1 2)) 1)
 
 %%% ERROR 'LET': First element of a variable initializer pair expected to be a symbol.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> ;;; let var spec must be 1 or 2 elements
 ... (let ((x 1 2)) 1)
 
 %%% ERROR 'LET': Variable initializer spec expected to be 1 or 2 elements long.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> (let*)
 
 %%% ERROR 'LET*': 2 or more arguments expected.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> ;;; let* first arg must be list
 ... (let* 1 2)
 
 %%% ERROR 'LET*': The first argument to let expected to be a list of variable initializations.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 ; --- Macro / lambda errors ---
@@ -416,34 +416,34 @@
 >>> (defmacro)
 
 %%% ERROR 'DEFMACRO': 3 or more arguments expected.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <body>)
 ==>
 
 >>> ;;; defmacro first arg must be symbol
 ... (defmacro 1 () 1)
 
 %%% ERROR 'DEFMACRO': Argument 1 expected to be a symbol.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <body>)
 ==>
 
 >>> ;;; defmacro second arg must be list
 ... (defmacro foo 1 1)
 
 %%% ERROR 'DEFMACRO': Argument 2 expected to be a list of params.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <body>)
 ==>
 
 >>> (lambda)
 
 %%% ERROR 'LAMBDA': 2 arguments expected.
-%%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
+%%% USAGE: (LAMBDA <lambda-list> &optional <body>)
 ==>
 
 >>> ;;; lambda with no body
 ... (lambda ())
 
 %%% ERROR 'LAMBDA': At least one body expression expected.
-%%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
+%%% USAGE: (LAMBDA <lambda-list> &optional <body>)
 ==>
 
 ; --- Quote / backquote errors ---
@@ -565,12 +565,6 @@
 
 %%% ERROR 'STRING': 1 or more arguments expected.
 %%% USAGE: (STRING <object1> <object2> ...)
-==>
-
->>> (ustring)
-
-%%% ERROR 'USTRING': 1 or more arguments expected.
-%%% USAGE: (USTRING <object1> <object2> ...)
 ==>
 
 >>> (symbol)

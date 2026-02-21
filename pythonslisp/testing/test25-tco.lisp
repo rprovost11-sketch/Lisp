@@ -16,7 +16,7 @@
 ...       (tco-count-down (- n 1))))
 ...
 
-==> (Function TCO-COUNT-DOWN (N) ... )
+==> (FUNCTION TCO-COUNT-DOWN (N) ... )
 
 >>> ;;; count down from 100000 -- would crash without TCO
 ... (tco-count-down 100000)
@@ -45,7 +45,7 @@
 ...       (tco-fact (- n 1) (* n acc))))
 ...
 
-==> (Function TCO-FACT (N ACC) ... )
+==> (FUNCTION TCO-FACT (N ACC) ... )
 
 >>> ;;; factorial of 10 with accumulator
 ... (tco-fact 10 1)
@@ -78,14 +78,14 @@
 ...    (if (= n 0) t (tco-odd? (- n 1))))
 ...
 
-==> (Function TCO-EVEN? (N) ... )
+==> (FUNCTION TCO-EVEN? (N) ... )
 
 >>> ;;; define tco-odd?: mutually tail-recursive odd predicate
 ... (defun tco-odd? (n)
 ...    (if (= n 0) nil (tco-even? (- n 1))))
 ...
 
-==> (Function TCO-ODD? (N) ... )
+==> (FUNCTION TCO-ODD? (N) ... )
 
 >>> ;;; 10000 is even -- would crash without TCO (mutual recursion)
 ... (tco-even? 10000)
@@ -133,7 +133,7 @@
 ...          (tco-let-loop m))))
 ...
 
-==> (Function TCO-LET-LOOP (N) ... )
+==> (FUNCTION TCO-LET-LOOP (N) ... )
 
 >>> ;;; 100000 iterations through let -- would crash without TCO
 ... (tco-let-loop 100000)
@@ -157,7 +157,7 @@
 ...          (tco-letstar-loop m))))
 ...
 
-==> (Function TCO-LETSTAR-LOOP (N) ... )
+==> (FUNCTION TCO-LETSTAR-LOOP (N) ... )
 
 >>> ;;; 100000 iterations through let* -- would crash without TCO
 ... (tco-letstar-loop 100000)
@@ -179,7 +179,7 @@
 ...          (t (tco-cond-loop (- n 1)))))
 ...
 
-==> (Function TCO-COND-LOOP (N) ... )
+==> (FUNCTION TCO-COND-LOOP (N) ... )
 
 >>> ;;; 100000 iterations through cond -- would crash without TCO
 ... (tco-cond-loop 100000)
@@ -202,7 +202,7 @@
 ...       (nil (tco-case-loop (- n 1)))))
 ...
 
-==> (Function TCO-CASE-LOOP (N) ... )
+==> (FUNCTION TCO-CASE-LOOP (N) ... )
 
 >>> ;;; 100000 iterations through case -- would crash without TCO
 ... (tco-case-loop 100000)
@@ -227,7 +227,7 @@
 ...          (tco-progn-loop (- n 1)))))
 ...
 
-==> (Function TCO-PROGN-LOOP (N) ... )
+==> (FUNCTION TCO-PROGN-LOOP (N) ... )
 
 >>> ;;; 100000 iterations through progn -- would crash without TCO
 ... (tco-progn-loop 100000)
@@ -250,7 +250,7 @@
 ...       (funcall 'tco-funcall-loop (- n 1))))
 ...
 
-==> (Function TCO-FUNCALL-LOOP (N) ... )
+==> (FUNCTION TCO-FUNCALL-LOOP (N) ... )
 
 >>> ;;; 100000 iterations via funcall -- would crash without TCO
 ... (tco-funcall-loop 100000)
@@ -273,7 +273,7 @@
 ...       (apply 'tco-apply-loop (list (- n 1)))))
 ...
 
-==> (Function TCO-APPLY-LOOP (N) ... )
+==> (FUNCTION TCO-APPLY-LOOP (N) ... )
 
 >>> ;;; 100000 iterations via apply -- would crash without TCO
 ... (tco-apply-loop 100000)
@@ -296,7 +296,7 @@
 ...       (+ 1 (tco-non-tail (- n 1)))))
 ...
 
-==> (Function TCO-NON-TAIL (N) ... )
+==> (FUNCTION TCO-NON-TAIL (N) ... )
 
 >>> ;;; non-tail recursion with depth 100 -- should still work
 ... (tco-non-tail 100)
@@ -325,7 +325,7 @@
 ...       (tco-sum (- n 1) (+ acc n))))
 ...
 
-==> (Function TCO-SUM (N ACC) ... )
+==> (FUNCTION TCO-SUM (N ACC) ... )
 
 >>> ;;; sum of 1..1000 = 500500
 ... (tco-sum 1000 0)

@@ -77,7 +77,7 @@
 ...          nil)))
 ...
 
-==> (Function FIND-FIRST (PRED LST) ... )
+==> (FUNCTION FIND-FIRST (PRED LST) ... )
 
 >>> ;;; finds 4 (first even) and exits early
 ... (find-first 'evenp '(1 3 5 4 7))
@@ -114,7 +114,7 @@
 ...             (/ a b)))))
 ...
 
-==> (Function SAFE-DIVIDE (A B) ... )
+==> (FUNCTION SAFE-DIVIDE (A B) ... )
 
 >>> ;;; normal division (Python / always returns float for int/int)
 ... (safe-divide 10 2)

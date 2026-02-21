@@ -198,12 +198,6 @@ class LispInterpreter( Interpreter ):
         (\'ct\', env, then_body, remaining_clauses, clause_num, fn)   CondTest
         (\'cs\', env, case_list, fn)                                   CaseStart
         (\'ck\', env, key_val, case_body, remaining, case_num, fn)    CaseKey
-        (\'wc\', env, cond_expr, body, last_body_result)              WhileCond
-        (\'wb\', env, cond_expr, body)                                 WhileBody
-        (\'di\', env, var_sym, body, fn)                              DoTimesInit
-        (\'dt\', loop_env, var_str, body, next_i, total)              DoTimesBody
-        (\'fi\', env, var_sym, body, fn)                              ForeachInit
-        (\'fe\', loop_env, var_str, alist, body, next_i)              ForeachBody
         (\'cc\', k)                                                    CallCC sentinel
       '''
       while True:
@@ -1114,7 +1108,7 @@ class LispInterpreter( Interpreter ):
       # =================
       # Symbol Definition
       # -----------------
-      @primitive( 'defmacro', '<symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'defmacro', '<symbol> <lambda-list> &optional <body>', specialForm=True )
       def LP_defmacro( env: Environment, *args ) -> Any:
          """Defines and returns a new globally named macro.  The first expr of the body
 can be an optional documentation string."""
@@ -1287,7 +1281,7 @@ is last."""
       # ==================
       # Control Structures
       # ------------------
-      @primitive( 'lambda', '<lambda-list> <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'lambda', '<lambda-list> &optional <body>', specialForm=True )
       def LP_lambda( env: Environment, *args ) -> Any:
          """Creates and returns an unnamed lambda function.  When evaluating such a
 function the body (the exprs) are evaluated within a nested scope.  This
@@ -1312,7 +1306,7 @@ The first body expression can be a documentation string."""
 
          return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
    
-      @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
+      @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>', specialForm=True )
       def LP_let( env: Environment, *args ) -> Any:
          """Executes a list of expressions in sequence in a nested scope and returns
 the result of the last one.  var1,var2,... are local variables bound to
@@ -1359,7 +1353,7 @@ sequence and are not evaluated in let's nested scope."""
             lastResult = LispInterpreter._lEval( env, sexpr )
          return lastResult
    
-      @primitive( 'let*', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
+      @primitive( 'let*', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>', specialForm=True )
       def LP_letstar( env: Environment, *args ) -> Any:
          """Executes a list of expressions in sequence in a nested scope and returns
 the result of the last one.  var1,var2,... are local variables bound to
@@ -1413,7 +1407,7 @@ refer to variables already initialized."""
             lastResult = LispInterpreter._lEval( env, expr )
          return lastResult
    
-      @primitive( 'if', '<cond> <conseq> &optional <alt>', specialForm=True )
+      @primitive( 'if', '<cond> <conseq> &optional (<alt> nil)', specialForm=True )
       def LP_if( env: Environment, *args ) -> Any:
          """Evaluates the condition.  If truthy (non-nil) then consequence is
 evaluated and its result returned, otherwise alt is evaluated and its result
@@ -1919,7 +1913,7 @@ enclosing list (eliminating a level of parentheses)."""
          except TypeError:
             raise LispRuntimeFuncError( LP_lcm, 'Invalid argument.' )
    
-      @primitive( 'log', '<number> &optional <base>' )
+      @primitive( 'log', '<number> &optional ( <base> e )' )
       def LP_log( env: Environment, *args ) -> Any:
          """Returns the logarithm of a number.  With one argument, returns the natural
 logarithm (base e).  An optional second argument specifies the base."""
@@ -2391,16 +2385,6 @@ containing a valid lisp number that can be expressed as a fraction."""
 concatenates the results to form a new string."""
          if len(args) == 0:
             raise LispRuntimeFuncError( LP_string, '1 or more arguments expected.' )
-   
-         resultStrs = [ prettyPrintSExpr(sExpr) for sExpr in args ]
-         return ''.join(resultStrs)
-   
-      @primitive( 'ustring', '<object1> <object2> ...' )
-      def LP_ustring( env: Environment, *args ) -> Any:
-         """PrettyPrints as user readable strings each argument object and
-concatenates the results to form a new string."""
-         if len(args) == 0:
-            raise LispRuntimeFuncError( LP_ustring, '1 or more arguments expected.' )
    
          resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
          return ''.join(resultStrs)

@@ -36,7 +36,7 @@
 ...    )
 ...
 
-==> (Function COUNTDOWN1 (NUM) ... )
+==> (FUNCTION COUNTDOWN1 (NUM) ... )
 
 >>> (countdown1 5)
 ...
@@ -58,7 +58,7 @@
 ... )
 ...
 
-==> (Function COUNTDOWN2 (NUM) ... )
+==> (FUNCTION COUNTDOWN2 (NUM) ... )
 
 >>> (countdown2 3)
 3
@@ -144,6 +144,6 @@
 ... (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 

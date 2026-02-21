@@ -99,6 +99,7 @@
 ==> 1
 
 
+;;; Test short-circuiting
 >>> (and nil (writeLn! "should not print"))
 ...
 

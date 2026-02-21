@@ -74,26 +74,6 @@
 
 ==> "some string value"
 
->>> (setf var1 "some string value")
-...
-
-==> "some string value"
-
->>> var1
-...
-
-==> "some string value"
-
->>> (setf var1 "some string value")
-...
-
-==> "some string value"
-
->>> var1
-...
-
-==> "some string value"
-
 >>> (let ()
 ...    (- var2)
 ...    (if (= var1 "my value")

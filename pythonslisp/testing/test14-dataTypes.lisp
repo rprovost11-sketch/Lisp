@@ -285,10 +285,10 @@
 ==>
 
 ; ========================
-; type-of — mainstream cases
+; type-of mainstream cases
 ; ------------------------
 
-; nil → NULL
+; nil NULL
 >>> (type-of nil)
 ...
 
@@ -336,17 +336,17 @@
 
 ==> CONS
 
-; plain map — no STRUCT-TYPE key → HASH-TABLE
+; plain map no STRUCT-TYPE key → HASH-TABLE
 >>> (type-of (map (x 1) (y 2)))
 ...
 
 ==> HASH-TABLE
 
-; named function — define it first, then query
+; named function define it first, then query
 >>> (defun fn14 (x) (* x x))
 ...
 
-==> (Function FN14 (X) ... )
+==> (FUNCTION FN14 (X) ... )
 
 >>> (type-of fn14)
 ...
@@ -365,7 +365,7 @@
 
 ==> PRIMITIVE
 
-; struct instances — defined earlier in this file
+; struct instances defined earlier in this file
 >>> (type-of p0)
 ...
 
@@ -391,9 +391,9 @@
 
 ==> LABELED
 
-; ========================
-; type-of — edge cases
-; ------------------------
+; ==================
+; type-of edge cases
+; ------------------
 
 ; T is a symbol, not a boolean
 >>> (type-of t)

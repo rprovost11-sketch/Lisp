@@ -25,14 +25,14 @@
 ... (log 0)
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG <number> &optional ( <base> e ))
 ==>
 
 >>> ;;; log of negative is domain error
 ... (log -1)
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG <number> &optional ( <base> e ))
 ==>
 
 ; --- eval argument count errors ---

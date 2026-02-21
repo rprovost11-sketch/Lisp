@@ -32,14 +32,14 @@
 ... (if)
 
 %%% ERROR 'IF': 2 or 3 arguments expected.
-%%% USAGE: (IF <cond> <conseq> &optional <alt>)
+%%% USAGE: (IF <cond> <conseq> &optional (<alt> nil))
 ==>
 
 >>> ;;; if with too many arguments
 ... (if t 1 2 3)
 
 %%% ERROR 'IF': 2 or 3 arguments expected.
-%%% USAGE: (IF <cond> <conseq> &optional <alt>)
+%%% USAGE: (IF <cond> <conseq> &optional (<alt> nil))
 ==>
 
 ; --- COND additional error paths ---
@@ -105,7 +105,7 @@
 ... (defmacro foo () "docstring")
 
 %%% ERROR 'DEFMACRO': At least one body expression expected after docstring.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <body>)
 ==>
 
 ; --- LAMBDA docstring-only error ---
@@ -114,7 +114,7 @@
 ... (lambda () "docstring")
 
 %%% ERROR 'LAMBDA': At least one body expression expected after docstring.
-%%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
+%%% USAGE: (LAMBDA <lambda-list> &optional <body>)
 ==>
 
 ; --- LET additional error path ---
@@ -123,7 +123,7 @@
 ... (let (1) x)
 
 %%% ERROR 'LET': Variable initializer spec expected to be a symbol or a list.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 ; --- LET* additional error paths ---
@@ -132,21 +132,21 @@
 ... (let* ((1 2)) 1)
 
 %%% ERROR 'LET*': First element of a variable initializer pair expected to be a symbol.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> ;;; let* initializer spec too long
 ... (let* ((x 1 2)) 1)
 
 %%% ERROR 'LET*': Variable initializer spec expected to be 1 or 2 elements long.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 >>> ;;; let* with non-symbol non-list initializer
 ... (let* (1) x)
 
 %%% ERROR 'LET*': Variable initializer spec expected to be a symbol or a list.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) &optional <body>)
 ==>
 
 ; --- Arithmetic argument count errors ---
@@ -285,21 +285,21 @@
 ... (log)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG <number> &optional ( <base> e ))
 ==>
 
 >>> ;;; log with too many arguments
 ... (log 1 2 3)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG <number> &optional ( <base> e ))
 ==>
 
 >>> ;;; log with non-number
 ... (log "a")
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG <number> &optional ( <base> e ))
 ==>
 
 ; --- Predicate argument count errors ---
@@ -487,7 +487,7 @@
 ... (defmacro emptyb22 ())
 
 %%% ERROR 'DEFMACRO': At least one body expression expected.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <body>)
 ==>
 
 ; --- APPLY additional error paths ---
