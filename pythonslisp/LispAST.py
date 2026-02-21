@@ -86,14 +86,37 @@ class LFunction( LCallable ):
 
 class LMacro( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST')
-   
+
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
       super().__init__( name.strval, docString, specialForm=True )
-   
+
    def usageString( self ):
       return f'(Macro {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+
+
+class LContinuation( LCallable ):
+   """A first-class escape continuation captured by call/cc.
+
+   capturedStack holds a snapshot of the CEK continuation stack K at the
+   moment call/cc was called.  targetStack is the live stack object that
+   belongs to the _lEval frame that created this continuation — used to
+   route ContinuationInvoked exceptions back to the right _lEval wrapper.
+   callccIsActive is True while the call/cc body is still executing; it is
+   set to False once the body returns normally or once the continuation is
+   invoked, preventing the escape continuation from being used afterwards.
+   """
+   __slots__ = ('capturedStack', 'callccIsActive', 'targetStack')
+
+   def __init__( self, capturedStack: list, targetStack: list ) -> None:
+      self.capturedStack:list  = capturedStack
+      self.callccIsActive:bool = True
+      self.targetStack:list    = targetStack
+      super().__init__( '<continuation>', '', specialForm=False )
+
+   def usageString( self ):
+      return '#<continuation>'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:
@@ -126,6 +149,8 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
       return sExpr.usageString()
+   elif isinstance(sExpr, LContinuation):
+      return sExpr.usageString()
    else:
       return repr(sExpr)
 
@@ -156,6 +181,8 @@ def prettyPrint( sExpr: Any ) -> str:
    elif isinstance(sExpr, LFunction):
       return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
+      return sExpr.usageString()
+   elif isinstance(sExpr, LContinuation):
       return sExpr.usageString()
    else:
       return str(sExpr)

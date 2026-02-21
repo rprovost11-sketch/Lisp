@@ -243,6 +243,39 @@
    "Executes body if c is falsy (nil)."
    `(when (not ,condition) ,@body))
 
+(defmacro while (condition &rest body)
+   "Evaluates body repeatedly while condition is truthy.
+   Returns the result of the last body expression, or NIL if the loop never ran."
+   `(let ((--while-- nil))
+      (setf --while-- (lambda (--last--)
+                         (if ,condition
+                             (funcall --while-- (progn ,@body))
+                             --last--)))
+      (funcall --while-- nil)))
+
+(defmacro dotimes (control &rest body)
+   "Evaluates body countExpr times with var bound to 0, 1, ..., count-1.
+   Returns the result of the last body expression, or NIL if count <= 0."
+   (let ((var   (car control))
+         (count (cadr control)))
+      `(let ((--dotimes-- nil))
+         (setf --dotimes-- (lambda (,var --end-- --last--)
+                              (if (< ,var --end--)
+                                  (funcall --dotimes-- (+ ,var 1) --end-- (progn ,@body))
+                                  --last--)))
+         (funcall --dotimes-- 0 ,count nil))))
+
+(defmacro foreach (var lst &rest body)
+   "Evaluates body once per element of lst with var bound to each element.
+   Returns the result of the last body expression, or NIL if lst is empty."
+   `(let ((--foreach-- nil))
+      (setf --foreach-- (lambda (--rest-- --last--)
+                           (if --rest--
+                               (let ((,var (car --rest--)))
+                                 (funcall --foreach-- (cdr --rest--) (progn ,@body)))
+                               --last--)))
+      (--foreach-- ,lst nil)))
+
 (defun mapcar (fn lst)
    "Apply fn to each element of lst and return the list of results."
    (let ((result nil))

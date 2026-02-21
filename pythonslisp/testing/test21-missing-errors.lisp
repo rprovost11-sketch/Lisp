@@ -149,15 +149,6 @@
 %%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
 ==>
 
-; --- FOREACH additional error path ---
-
->>> ;;; foreach with no body expressions
-... (foreach x '(1 2))
-
-%%% ERROR 'FOREACH': At least one sexpr expected for the loop body.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
-==>
-
 ; --- Arithmetic argument count errors ---
 
 >>> ;;; sin with no arguments
@@ -613,15 +604,6 @@
 
 %%% ERROR 'SORTED': Argument 1 expected to be a list.
 %%% USAGE: (SORTED <list>)
-==>
-
-; --- FOREACH: non-list evaluated argument ---
-
->>> ;;; foreach with non-list as collection
-... (foreach x 42 (write! x))
-
-%%% ERROR 'FOREACH': Argument 2 expected to evaluate to a list.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
 ==>
 
 ; --- COND: bad entry in non-first position ---

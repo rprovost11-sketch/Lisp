@@ -515,9 +515,19 @@ class Listener( object ):
          #print( value, file=self._logFile, flush=True )
 
    def _writeErrorMsg( self, errMsg: str, file=None ):
-      errMsgLinesOfText = errMsg.splitlines()
-      for errMsgLine in errMsgLinesOfText:
-         self._writeLn( f'%%% {errMsgLine}', file=file )
+      outStream  = file                                 # None means stdout
+      colorize   = sys.stdout.isatty() and (outStream is None)
+      _RED, _RST = '\033[31m', '\033[0m'
+      for errMsgLine in errMsg.splitlines():
+         plainLine = f'%%% {errMsgLine}'
+         # Write to terminal (colored when running interactively)
+         if colorize:
+            print( f'{_RED}{plainLine}{_RST}', end='\n', flush=True )
+         else:
+            print( plainLine, end='\n', flush=True, file=outStream )
+         # Write to log file always uncolored
+         if self._logFile:
+            print( plainLine, end='\n', flush=True, file=self._logFile )
 
    def _prompt( self, prompt: str='' ) -> str:
       inputStr: str = input( prompt ).strip()

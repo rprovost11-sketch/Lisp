@@ -1,10 +1,4 @@
-;;; Increase the recursion limit to 10,000
-(let ( (newLimit 10000) )
-   (if (< (recursion-Limit) newLimit)
-      (if (recursion-Limit newLimit)
-         (writef "- Recursion limit increased to {0:,d}\n" (list newLimit))
-         (writeln! "- Failed to increase recursion limit."))
-      (uwriteln! "- No need to adjust recursion limit.")))
+;;; CEK machine evaluator has no recursion limit.
 
 ;;; Inform the user of Python Lisp's online help system
 (uwriteln! "- For LOHS (lisp online help system) type \"(help)\" to begin." )

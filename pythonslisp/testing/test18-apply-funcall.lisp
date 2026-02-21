@@ -83,13 +83,7 @@
 
 ==> "hello world"
 
-; --- recursion-limit ---
-
->>> ;;; recursion-limit returns current limit
-... (integerp (recursion-limit))
-...
-
-==> T
+; --- recursion-limit primitive removed (CEK machine has no recursion limit) ---
 
 ; --- funcall errors ---
 
@@ -155,18 +149,4 @@
 %%% USAGE: (EVAL <sexpr>)
 ==>
 
-; --- recursion-limit errors ---
 
->>> ;;; Error: recursion-limit with non-integer
-... (recursion-limit "a")
-
-%%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% USAGE: (RECURSION-LIMIT &optional <newLimit>)
-==>
-
->>> ;;; Error: recursion-limit with too many args
-... (recursion-limit 1 2)
-
-%%% ERROR 'RECURSION-LIMIT': Only one optional arg is allowed.
-%%% USAGE: (RECURSION-LIMIT &optional <newLimit>)
-==>

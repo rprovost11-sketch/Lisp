@@ -343,10 +343,4 @@
 
 ==> "ababab"
 
-; --- recursion-limit returns integer ---
-
->>> ;;; recursion-limit returns an integer
-... (integerp (recursion-limit))
-...
-
-==> T
+; --- recursion-limit primitive removed (CEK machine has no recursion limit) ---

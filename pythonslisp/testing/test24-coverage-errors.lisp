@@ -124,21 +124,6 @@
 %%% USAGE: (PYTHON <string>)
 ==>
 
-; --- recursion-limit errors ---
-
->>> ;;; recursion-limit with non-integer
-... (recursion-limit "abc")
-
-%%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% USAGE: (RECURSION-LIMIT &optional <newLimit>)
-==>
-
->>> ;;; recursion-limit with too many args
-... (recursion-limit 1 2)
-
-%%% ERROR 'RECURSION-LIMIT': Only one optional arg is allowed.
-%%% USAGE: (RECURSION-LIMIT &optional <newLimit>)
-==>
 
 ; --- library function argument count errors ---
 

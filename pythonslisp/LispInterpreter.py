@@ -2,7 +2,6 @@ import functools
 import math
 import random
 import time
-import sys
 from fractions import Fraction
 from typing import Callable, Any, Sequence
 
@@ -11,7 +10,7 @@ from pythonslisp.LispParser import LispParser, ParseError
 from pythonslisp.Listener import Interpreter, retrieveFileList, columnize
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, LNUMBER,
-                                  LCallable, LFunction, LPrimitive, LMacro,
+                                  LCallable, LFunction, LPrimitive, LMacro, LContinuation,
                                   prettyPrint, prettyPrintSExpr )
 
 L_T = LSymbol( 'T' )
@@ -31,6 +30,23 @@ class LispRuntimeFuncError( LispRuntimeError ):
 
 class LispArgBindingError( LispRuntimeError ):
    pass
+
+
+class ContinuationInvoked( Exception ):
+   '''Raised when an escape continuation is invoked.
+
+   Propagates up through re-entrant _lEval calls (from while, doTimes,
+   foreach, etc.) until it reaches the _lEval whose local stack object
+   matches targetStack.  That wrapper then restores the stack and restarts
+   the CEK loop with the supplied value.
+   '''
+   __slots__ = ('value', 'restoreStack', 'targetStack', 'continuation')
+
+   def __init__( self, value: Any, restoreStack: list, targetStack: list, continuation: Any ) -> None:
+      self.value        = value
+      self.restoreStack = restoreStack
+      self.targetStack  = targetStack
+      self.continuation = continuation
 
 
 class LispInterpreter( Interpreter ):
@@ -117,64 +133,536 @@ class LispInterpreter( Interpreter ):
       return True
 
    @staticmethod
-   def _lEval( env: Environment, sExprAST: Any ) -> Any:
-      '''This is a recursive tree-walk evaluator.  It's the interpreter's main
-      evaluation function.  Pass it any s-expression in the form of a LispAST;
-      eval will return the result.'''
-      if isinstance(sExprAST, LSymbol):
-         try:
-            return env.lookup( sExprAST.strval )
-         except KeyError:
-            if sExprAST.isKeyArg():
-               return sExprAST
-            raise LispRuntimeError( f'Unbound Variable: {sExprAST.strval}.' )
-      elif not isinstance(sExprAST, list):  # atom or map
-         return sExprAST
-      
-      # sExpr is a list expression - function call
-      
-      if len(sExprAST) == 0:
-         return L_NIL  # An empty list always evaluates to an empty list
-
-      # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
-      primary = sExprAST[0]
-      function = LispInterpreter._lEval( env, primary )
-      if not isinstance( function, LCallable ):
-         raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
-
-      # Call the function with its arguments
-      if function.specialForm:
-         return LispInterpreter._lApply( env, function, sExprAST[1:] )
-      else:
-         nArgs = len(sExprAST)
-         evalArgs = [ LispInterpreter._lEval(env, sExprAST[i]) for i in range(1, nArgs) ]
-         return LispInterpreter._lApply( env, function, evalArgs )
+   def _parse_let_bindings( fn: Any, vardefs: list ) -> list:
+      '''Parse LET/LET* binding specs. Returns list of (varname_str, initexpr) tuples.'''
+      pairs = []
+      for varSpec in vardefs:
+         if isinstance(varSpec, LSymbol):
+            pairs.append( (varSpec.strval, L_NIL) )
+         elif isinstance(varSpec, list):
+            vs_len = len(varSpec)
+            if vs_len == 1:
+               if not isinstance(varSpec[0], LSymbol):
+                  raise LispRuntimeFuncError( fn, 'First element of a variable initializer pair expected to be a symbol.' )
+               pairs.append( (varSpec[0].strval, L_NIL) )
+            elif vs_len == 2:
+               if not isinstance(varSpec[0], LSymbol):
+                  raise LispRuntimeFuncError( fn, 'First element of a variable initializer pair expected to be a symbol.' )
+               pairs.append( (varSpec[0].strval, varSpec[1]) )
+            else:
+               raise LispRuntimeFuncError( fn, 'Variable initializer spec expected to be 1 or 2 elements long.' )
+         else:
+            raise LispRuntimeFuncError( fn, 'Variable initializer spec expected to be a symbol or a list.' )
+      return pairs
 
    @staticmethod
-   def _lApply( env: Environment, function: LCallable, args: Sequence ) -> Any:
+   def _lEval( env: Environment, sExprAST: Any ) -> Any:
+      '''Start the CEK machine for a single top-level expression.
+
+      Wraps _lEvalLoop in a restart loop so that escape continuations invoked
+      from inside re-entrant _lEval calls (while, doTimes, foreach …) can
+      propagate a ContinuationInvoked exception back to the _lEval that owns
+      the target stack and have it restore state and continue correctly.
+      '''
+      stack     = [('halt',)]
+      expr      = sExprAST
+      need_eval = True
+      val       = None
+      while True:
+         try:
+            return LispInterpreter._lEvalLoop( stack, expr, env, need_eval, val )
+         except ContinuationInvoked as ci:
+            if ci.targetStack is stack:
+               ci.continuation.callccIsActive = False
+               stack.clear()
+               stack.extend( ci.restoreStack )
+               val       = ci.value
+               need_eval = False
+               expr      = None    # irrelevant; apply phase uses envs from frames
+            else:
+               raise              # for an outer _lEval's stack
+
+   @staticmethod
+   def _lEvalLoop( stack: list, expr: Any, env: Environment, need_eval: bool, val: Any ) -> Any:
+      '''Iterative CEK machine evaluator loop.
+
+      Continuation stack frames (tuples):
+        (\'ah\', env, raw_args)                                       ApplyHead
+        (\'aa\', env, fn, evaled, remaining)                          ApplyArg  (mutable list)
+        (\'if\', env, then_e, else_e)                                 If
+        (\'body\', env, remaining)                                     Body/Progn
+        (\'and\', env, remaining)                                      And
+        (\'or\',  env, remaining)                                      Or
+        (\'li\', orig_env, new_env, var, remaining_pairs, coll, body) LetInit
+        (\'ls\', new_env, var, remaining_specs, body)                  LetStar
+        (\'ct\', env, then_body, remaining_clauses, clause_num, fn)   CondTest
+        (\'cs\', env, case_list, fn)                                   CaseStart
+        (\'ck\', env, key_val, case_body, remaining, case_num, fn)    CaseKey
+        (\'wc\', env, cond_expr, body, last_body_result)              WhileCond
+        (\'wb\', env, cond_expr, body)                                 WhileBody
+        (\'di\', env, var_sym, body, fn)                              DoTimesInit
+        (\'dt\', loop_env, var_str, body, next_i, total)              DoTimesBody
+        (\'fi\', env, var_sym, body, fn)                              ForeachInit
+        (\'fe\', loop_env, var_str, alist, body, next_i)              ForeachBody
+        (\'cc\', k)                                                    CallCC sentinel
+      '''
+      while True:
+         if need_eval:
+            # ---- EVAL PHASE ----
+            if isinstance(expr, LSymbol):
+               try:
+                  val = env.lookup( expr.strval )
+               except KeyError:
+                  if expr.isKeyArg():
+                     val = expr
+                  else:
+                     raise LispRuntimeError( f'Unbound Variable: {expr.strval}.' )
+            elif not isinstance(expr, list):
+               val = expr
+            elif len(expr) == 0:
+               val = L_NIL
+            else:
+               # List: push ApplyHead continuation, evaluate head next
+               stack.append( ('ah', env, expr[1:]) )
+               expr = expr[0]
+               continue   # stay in eval phase
+            need_eval = False
+
+         # ---- APPLY PHASE ----
+         while True:
+            frame = stack[-1]
+            tag   = frame[0]
+
+            # Fast-path: ApplyArg accumulation (hottest path, zero allocation)
+            if tag == 'aa':
+               frame[3].append(val)          # mutate evaled list in-place
+               if frame[4]:                  # remaining (reversed) non-empty
+                  env = frame[1]
+                  expr = frame[4].pop()      # O(1) pop from reversed list
+                  need_eval = True; break
+               else:
+                  fenv = frame[1]; fn = frame[2]; evaled = frame[3]
+                  stack.pop()
+                  val, need_eval, expr, env = LispInterpreter._cek_apply(stack, fenv, fn, evaled)
+                  if need_eval: break
+               continue                      # need_eval=False: continue apply phase
+
+            # Halt sentinel
+            if tag == 'halt':
+               return val
+
+            # --- ApplyHead ---
+            if tag == 'ah':
+               stack.pop()
+               _, fenv, raw_args = frame
+               fn = val
+               if not isinstance(fn, LCallable):
+                  raise LispRuntimeError(
+                     f"Badly formed list expression '{fn}'.  "
+                     f"The first element should evaluate to a callable." )
+
+               if fn.specialForm:
+                  fname = fn.name
+
+                  if fname == 'PROGN':
+                     if not raw_args:
+                        val = L_NIL
+                     elif len(raw_args) == 1:
+                        expr = raw_args[0]; env = fenv; need_eval = True; break
+                     else:
+                        stack.append( ('body', fenv, list(raw_args[1:])) )
+                        expr = raw_args[0]; env = fenv; need_eval = True; break
+
+                  elif fname == 'IF':
+                     n = len(raw_args)
+                     if not (2 <= n <= 3):
+                        raise LispRuntimeFuncError( fn, '2 or 3 arguments expected.' )
+                     then_e = raw_args[1]
+                     else_e = raw_args[2] if n == 3 else L_NIL
+                     stack.append( ('if', fenv, then_e, else_e) )
+                     expr = raw_args[0]; env = fenv; need_eval = True; break
+
+                  elif fname == 'AND':
+                     if len(raw_args) < 2:
+                        raise LispRuntimeFuncError( fn, '2 or more arguments expected.' )
+                     stack.append( ('and', fenv, list(raw_args[1:])) )
+                     expr = raw_args[0]; env = fenv; need_eval = True; break
+
+                  elif fname == 'OR':
+                     if len(raw_args) < 2:
+                        raise LispRuntimeFuncError( fn, '2 or more arguments expected.' )
+                     stack.append( ('or', fenv, list(raw_args[1:])) )
+                     expr = raw_args[0]; env = fenv; need_eval = True; break
+
+                  elif fname == 'LET':
+                     if len(raw_args) < 1:
+                        raise LispRuntimeFuncError( fn, '2 or more arguments expected.' )
+                     vardefs = raw_args[0]
+                     body    = list(raw_args[1:])
+                     if not isinstance(vardefs, list):
+                        raise LispRuntimeFuncError( fn, 'The first argument to let expected to be a list of variable initializations.' )
+                     new_env = Environment(fenv)
+                     pairs   = LispInterpreter._parse_let_bindings(fn, vardefs)
+                     if not pairs:
+                        if not body:
+                           val = L_NIL
+                        elif len(body) == 1:
+                           expr = body[0]; env = new_env; need_eval = True; break
+                        else:
+                           stack.append( ('body', new_env, body[1:]) )
+                           expr = body[0]; env = new_env; need_eval = True; break
+                     else:
+                        first_var, first_init = pairs[0]
+                        stack.append( ('li', fenv, new_env, first_var, pairs[1:], [], body) )
+                        expr = first_init; env = fenv; need_eval = True; break
+
+                  elif fname == 'LET*':
+                     if len(raw_args) < 1:
+                        raise LispRuntimeFuncError( fn, '2 or more arguments expected.' )
+                     vardefs = raw_args[0]
+                     body    = list(raw_args[1:])
+                     if not isinstance(vardefs, list):
+                        raise LispRuntimeFuncError( fn, 'The first argument to let expected to be a list of variable initializations.' )
+                     new_env = Environment(fenv)
+                     specs   = LispInterpreter._parse_let_bindings(fn, vardefs)
+                     if not specs:
+                        if not body:
+                           val = L_NIL
+                        elif len(body) == 1:
+                           expr = body[0]; env = new_env; need_eval = True; break
+                        else:
+                           stack.append( ('body', new_env, body[1:]) )
+                           expr = body[0]; env = new_env; need_eval = True; break
+                     else:
+                        first_var, first_init = specs[0]
+                        stack.append( ('ls', new_env, first_var, specs[1:], body) )
+                        expr = first_init; env = new_env; need_eval = True; break
+
+                  elif fname == 'COND':
+                     if len(raw_args) < 1:
+                        raise LispRuntimeFuncError( fn, '1 or more argument expected.' )
+                     clauses = list(raw_args)
+                     try:
+                        test_expr, *then_body = clauses[0]
+                     except (ValueError, TypeError):
+                        raise LispRuntimeFuncError( fn, 'Entry 1 does not contain a (<cond:expr> <body:expr>) pair.' )
+                     if len(then_body) < 1:
+                        raise LispRuntimeFuncError( fn, 'Entry 1 expects at least one body expression.' )
+                     stack.append( ('ct', fenv, then_body, clauses[1:], 2, fn) )
+                     expr = test_expr; env = fenv; need_eval = True; break
+
+                  elif fname == 'CASE':
+                     if len(raw_args) < 1:
+                        raise LispRuntimeFuncError( fn, '2 or more arguments expected.' )
+                     key_expr  = raw_args[0]
+                     case_list = list(raw_args[1:])
+                     if not case_list:
+                        raise LispRuntimeFuncError( fn, 'At least one case expected.' )
+                     stack.append( ('cs', fenv, case_list, fn) )
+                     expr = key_expr; env = fenv; need_eval = True; break
+
+                  else:
+                     # All other special forms (setf, lambda, quote, etc.): call directly
+                     val = fn.pythonFn(fenv, *raw_args)
+                     # stay in apply phase
+
+               else:
+                  # Normal (non-special) function: evaluate args
+                  if not raw_args:
+                     val, need_eval, expr, env = LispInterpreter._cek_apply(stack, fenv, fn, [])
+                     if need_eval:
+                        break
+                  else:
+                     stack.append( ['aa', fenv, fn, [], list(reversed(raw_args[1:]))] )
+                     expr = raw_args[0]; env = fenv; need_eval = True; break
+
+            # --- If ---
+            elif tag == 'if':
+               stack.pop()
+               _, fenv, then_e, else_e = frame
+               expr = then_e if LispInterpreter._lTrue(val) else else_e
+               env = fenv; need_eval = True; break
+
+            # --- Body / Progn ---
+            elif tag == 'body':
+               stack.pop()
+               _, fenv, remaining = frame
+               if not remaining:
+                  pass   # val is the result; continue apply phase
+               elif len(remaining) == 1:
+                  expr = remaining[0]; env = fenv; need_eval = True; break   # TCO
+               else:
+                  stack.append( ('body', fenv, remaining[1:]) )
+                  expr = remaining[0]; env = fenv; need_eval = True; break
+
+            # --- And ---
+            elif tag == 'and':
+               stack.pop()
+               _, fenv, remaining = frame
+               if not LispInterpreter._lTrue(val):
+                  val = L_NIL      # short-circuit to NIL
+               elif not remaining:
+                  val = L_T        # all truthy: return T
+               else:
+                  stack.append( ('and', fenv, remaining[1:]) )
+                  expr = remaining[0]; env = fenv; need_eval = True; break
+
+            # --- Or ---
+            elif tag == 'or':
+               stack.pop()
+               _, fenv, remaining = frame
+               if LispInterpreter._lTrue(val):
+                  val = L_T        # short-circuit: return T
+               elif not remaining:
+                  val = L_NIL      # all falsy
+               else:
+                  stack.append( ('or', fenv, remaining[1:]) )
+                  expr = remaining[0]; env = fenv; need_eval = True; break
+
+            # --- LetInit ---
+            elif tag == 'li':
+               stack.pop()
+               _, orig_env, new_env, var_to_bind, remaining_pairs, collected, body = frame
+               collected = collected + [(var_to_bind, val)]
+               if not remaining_pairs:
+                  for vname, vval in collected:
+                     new_env.bindLocal(vname, vval)
+                  if not body:
+                     val = L_NIL
+                  elif len(body) == 1:
+                     expr = body[0]; env = new_env; need_eval = True; break   # TCO
+                  else:
+                     stack.append( ('body', new_env, body[1:]) )
+                     expr = body[0]; env = new_env; need_eval = True; break
+               else:
+                  next_var, next_init = remaining_pairs[0]
+                  stack.append( ('li', orig_env, new_env, next_var, remaining_pairs[1:], collected, body) )
+                  expr = next_init; env = orig_env; need_eval = True; break
+
+            # --- LetStar ---
+            elif tag == 'ls':
+               stack.pop()
+               _, new_env, var_to_bind, remaining_specs, body = frame
+               new_env.bindLocal(var_to_bind, val)
+               if not remaining_specs:
+                  if not body:
+                     val = L_NIL
+                  elif len(body) == 1:
+                     expr = body[0]; env = new_env; need_eval = True; break   # TCO
+                  else:
+                     stack.append( ('body', new_env, body[1:]) )
+                     expr = body[0]; env = new_env; need_eval = True; break
+               else:
+                  next_var, next_init = remaining_specs[0]
+                  stack.append( ('ls', new_env, next_var, remaining_specs[1:], body) )
+                  expr = next_init; env = new_env; need_eval = True; break
+
+            # --- CondTest ---
+            elif tag == 'ct':
+               stack.pop()
+               _, fenv, then_body, remaining_clauses, clause_num, fn = frame
+               if LispInterpreter._lTrue(val):
+                  if len(then_body) == 1:
+                     expr = then_body[0]; env = fenv; need_eval = True; break   # TCO
+                  else:
+                     stack.append( ('body', fenv, then_body[1:]) )
+                     expr = then_body[0]; env = fenv; need_eval = True; break
+               elif not remaining_clauses:
+                  val = L_NIL
+               else:
+                  clause = remaining_clauses[0]
+                  try:
+                     test_expr, *then_body2 = clause
+                  except (ValueError, TypeError):
+                     raise LispRuntimeFuncError( fn, f'Entry {clause_num} does not contain a (<cond:expr> <body:expr>) pair.' )
+                  if len(then_body2) < 1:
+                     raise LispRuntimeFuncError( fn, f'Entry {clause_num} expects at least one body expression.' )
+                  stack.append( ('ct', fenv, then_body2, remaining_clauses[1:], clause_num + 1, fn) )
+                  expr = test_expr; env = fenv; need_eval = True; break
+
+            # --- CaseStart ---
+            elif tag == 'cs':
+               stack.pop()
+               _, fenv, case_list, fn = frame
+               key_val = val
+               if not case_list:
+                  val = L_NIL
+               else:
+                  first_case = case_list[0]
+                  try:
+                     case_expr, *case_body = first_case
+                  except (ValueError, TypeError):
+                     raise LispRuntimeFuncError( fn, 'Entry 1 does not contain a (<val> <body>) pair.' )
+                  if len(case_body) < 1:
+                     raise LispRuntimeFuncError( fn, 'Case body expected.' )
+                  stack.append( ('ck', fenv, key_val, case_body, case_list[1:], 2, fn) )
+                  expr = case_expr; env = fenv; need_eval = True; break
+
+            # --- CaseKey ---
+            elif tag == 'ck':
+               stack.pop()
+               _, fenv, key_val, case_body, remaining_cases, case_num, fn = frame
+               if val == key_val:
+                  if len(case_body) == 1:
+                     expr = case_body[0]; env = fenv; need_eval = True; break   # TCO
+                  else:
+                     stack.append( ('body', fenv, case_body[1:]) )
+                     expr = case_body[0]; env = fenv; need_eval = True; break
+               elif not remaining_cases:
+                  val = L_NIL
+               else:
+                  next_case = remaining_cases[0]
+                  try:
+                     case_expr2, *case_body2 = next_case
+                  except (ValueError, TypeError):
+                     raise LispRuntimeFuncError( fn, f'Entry {case_num} does not contain a (<val> <body>) pair.' )
+                  if len(case_body2) < 1:
+                     raise LispRuntimeFuncError( fn, 'Case body expected.' )
+                  stack.append( ('ck', fenv, key_val, case_body2, remaining_cases[1:], case_num + 1, fn) )
+                  expr = case_expr2; env = fenv; need_eval = True; break
+
+            # --- CallCC sentinel ---
+            elif tag == 'cc':
+               stack.pop()
+               _, k = frame
+               k.callccIsActive = False   # user fn returned without calling k
+               # val passes through as the result of the call/cc expression
+
+            else:
+               raise LispRuntimeError( f'Unknown CEK frame type: {tag}' )
+
+
+   @staticmethod
+   def _copy_stack( stack: list ) -> list:
+      '''Snapshot the CEK continuation stack for call/cc.
+
+      Tuples (all frame types except 'aa') are immutable and safe to share.
+      'aa' frames are mutable lists — the frame itself and its evaled/remaining
+      inner lists are copied so the saved and live stacks do not alias each other.
+      Environments are intentionally shared: a continuation should see the same
+      variable bindings as any closure captured at the same point.
+      '''
+      result = []
+      for frame in stack:
+         if isinstance(frame, list):           # only 'aa' frames are lists
+            result.append( [frame[0], frame[1], frame[2],
+                             list(frame[3]),   # evaled    — copy
+                             list(frame[4])] ) # remaining — copy
+         else:
+            result.append(frame)               # tuple: immutable, share safely
+      return result
+
+   @staticmethod
+   def _cek_apply( stack: list, env: Environment, fn: LCallable, args: list ) -> tuple:
+      '''Apply fn to args in CEK style.
+      Returns (val, need_eval, new_expr, new_env).
+      If need_eval is True:  caller should evaluate new_expr in new_env.
+      If need_eval is False: val is the result (new_expr and new_env are None).
+      Intercepts FUNCALL, APPLY, and EVAL for tail-call optimisation.
+      '''
       try:
-         if isinstance( function, LPrimitive ):
-            return function.pythonFn( env, *args )
-         elif isinstance( function, LFunction ):
-            env = Environment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
+         if isinstance(fn, LPrimitive):
+            fname = fn.name
 
-            # store the arguments as locals
-            LispInterpreter._lbindArguments( env, function.lambdaListAST, args )
+            if fname == 'FUNCALL':
+               if not args:
+                  raise LispRuntimeFuncError( fn, "1 or more arguments expected" )
+               real_fn = args[0]
+               if isinstance(real_fn, LSymbol):
+                  try:
+                     real_fn = env.lookup( real_fn.strval )
+                  except KeyError:
+                     raise LispRuntimeFuncError( fn, f'First argument "{real_fn}" expected to be the name of a callable.' )
+               if not isinstance(real_fn, LCallable):
+                  raise LispRuntimeFuncError( fn, "First argument expected to be a callable." )
+               return LispInterpreter._cek_apply(stack, env, real_fn, args[1:])
 
-            # evaluate the body expressions.
-            latestResult = L_NIL
-            for sexpr in function.bodyAST:
-               latestResult = LispInterpreter._lEval( env, sexpr )
-            return latestResult
-         else:   # LMacro — should have been expanded before reaching here
-            raise LispRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
+            elif fname == 'APPLY':
+               if len(args) < 2:
+                  raise LispRuntimeFuncError( fn, "At least 2 arguments expected to apply." )
+               list_arg = args[-1]
+               if not isinstance(list_arg, list):
+                  raise LispRuntimeFuncError( fn, "Last argument expected to be a list." )
+               primary = args[0]
+               if isinstance(primary, LCallable):
+                  fn_obj = primary
+               elif isinstance(primary, LSymbol):
+                  try:
+                     fn_obj = env.lookup( primary.strval )
+                  except KeyError:
+                     raise LispRuntimeFuncError( fn, f'First argument "{primary}" expected to be the name of a callable.' )
+               else:
+                  raise LispRuntimeFuncError( fn, "First argument expected to be a symbol." )
+               if fn_obj.specialForm:
+                  raise LispRuntimeFuncError( fn, "First argument may not be a special form." )
+               fn_args = list(args[1:-1]) + list(list_arg)
+               return LispInterpreter._cek_apply(stack, env, fn_obj, fn_args)
+
+            elif fname == 'EVAL':
+               if len(args) != 1:
+                  raise LispRuntimeFuncError( fn, '1 argument expected.' )
+               return (None, True, args[0], env)
+
+            elif fname == 'CALL/CC':
+               if len(args) != 1:
+                  raise LispRuntimeFuncError( fn, '1 argument expected.' )
+               user_fn = args[0]
+               if isinstance(user_fn, LSymbol):
+                  try:
+                     user_fn = env.lookup( user_fn.strval )
+                  except KeyError:
+                     raise LispRuntimeFuncError( fn, f'Argument "{user_fn}" is not bound.' )
+               if not isinstance(user_fn, LCallable):
+                  raise LispRuntimeFuncError( fn, 'Argument must be a callable.' )
+               if user_fn.specialForm:
+                  raise LispRuntimeFuncError( fn, 'Argument may not be a special form.' )
+               # Capture the current continuation (everything waiting for our result)
+               k = LContinuation( LispInterpreter._copy_stack(stack), stack )
+               # Push sentinel so we know when the user fn returns without calling k
+               stack.append( ('cc', k) )
+               # Call the user function with k as its sole argument
+               return LispInterpreter._cek_apply( stack, env, user_fn, [k] )
+
+            else:
+               return (fn.pythonFn(env, *args), False, None, None)
+
+         elif isinstance(fn, LFunction):
+            fn_env = Environment( fn.capturedEnvironment )
+            LispInterpreter._lbindArguments( fn_env, fn.lambdaListAST, args )
+            body = fn.bodyAST
+            if not body:
+               return (L_NIL, False, None, None)
+            if len(body) > 1:
+               stack.append( ('body', fn_env, list(body[1:])) )
+            return (None, True, body[0], fn_env)   # TCO: tail-call into body
+
+         elif isinstance(fn, LMacro):
+            raise LispRuntimeError( f'Macro "{fn.name}" was not expanded before evaluation.' )
+
+         elif isinstance(fn, LContinuation):
+            if len(args) != 1:
+               raise LispRuntimeError( "Continuation expects exactly 1 argument." )
+            if not fn.callccIsActive:
+               raise LispRuntimeError( "Escape continuation invoked outside its dynamic extent." )
+            # Raise ContinuationInvoked so it propagates through any re-entrant
+            # _lEval calls (while, doTimes, …) up to the _lEval that owns the
+            # target stack, which will restore the stack and restart the CEK loop.
+            raise ContinuationInvoked(
+               args[0],
+               LispInterpreter._copy_stack(fn.capturedStack),
+               fn.targetStack,
+               fn )
+
+         else:
+            raise LispRuntimeError( "Cannot apply non-callable value." )
+
       except LispArgBindingError as ex:
          errorMsg = ex.args[-1]
-         fnName = function.name
+         fnName = fn.name if hasattr(fn, 'name') else ''
          if fnName == '':
-            raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
+            raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}' )
          else:
-            raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
+            raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}' )
 
    @staticmethod
    def _lvalidateNoDuplicateParams( lambdaListAST: list[Any] ) -> None:
@@ -1060,101 +1548,11 @@ enclosing list (eliminating a level of parentheses)."""
          retValue = [ LSymbol('COMMA-AT'), result ]
          return retValue
    
-      @primitive( 'while', '<cond> <sexpr1> <sexpr2> ...', specialForm=True )
-      def LP_while( env: Environment, *args ) -> Any:
-         """Perform a loop over the body sexprs.  Before each iteration conditionExpr
-is evaluated.  If it evaluates as truthy (non-nil) the exprs are evaluated
-in sequence.  However if conditionExpr evaluates to nil, the loop terminates
-and returns the result of the last expr evaluated."""
-         try:
-            conditionExpr, *body = args
-         except ValueError:
-            raise LispRuntimeFuncError( LP_while, '2 arguments expected.' )
-   
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_while, 'At least one sexpr expected for the body.' )
-   
-         latestResult = L_NIL
-         condResult = LispInterpreter._lEval(env, conditionExpr)
-         while LispInterpreter._lTrue( condResult ):
-            for expr in body:
-               latestResult = LispInterpreter._lEval( env, expr )
-            condResult = LispInterpreter._lEval(env, conditionExpr )
-         return latestResult
-   
-      @primitive( 'doTimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
-      def LP_dotimes( env: Environment, *args ) -> Any:
-         """Performs a loop over a body of exprs countExpr times.  Before each iteration
-the loop variable is set to the next loop count number (starting with 0 for
-the first loop).  The value of the last sexpr evaluated is returned."""
-         try:
-            loopControl, *body = args
-         except ValueError:
-            raise LispRuntimeFuncError( LP_dotimes, '2 or more arguments expected.' )
-   
-         if not isinstance(loopControl, list):
-            raise LispRuntimeFuncError( LP_dotimes, 'Argument 1 expected to be a list.' )
-   
-         try:
-            variable, countExpr = loopControl
-         except ValueError:
-            raise LispRuntimeFuncError( LP_dotimes, 'Argument 1 expected to contain two elements.' )
-   
-         if not isinstance( variable, LSymbol ):
-            raise LispRuntimeFuncError( LP_dotimes, 'Argument 1 of the control list expected to be a symbol.' )
-   
-         count = LispInterpreter._lEval( env, countExpr )
-   
-         if not isinstance( count, int ):
-            raise LispRuntimeFuncError( LP_dotimes, 'Argument 2 of the control list expected to be an integer' )
-   
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_dotimes, 'At least one sexpr expected for the loop body.' )
-   
-         latestResult = L_NIL
-         loopEnv = Environment( env )
-         for iterCount in range(count):
-            loopEnv.bindLocal( variable.strval, iterCount )
-            for sexpr in body:
-               latestResult = LispInterpreter._lEval( loopEnv, sexpr )
-         return latestResult
-
-      @primitive( 'foreach', '<variable> <list> <sexpr1> <sexpr2> ...', specialForm=True )
-      def LP_foreach( env: Environment, *args ) -> Any:
-         """Perform a loop over the elements of list.  On each iteration var is set
-to the next element in the list, then the expr's are evaluated in order.
-Returns the result of the very last evaluation."""
-         try:
-            varSymbol, anExpr, *body = args
-         except ValueError:
-            raise LispRuntimeFuncError( LP_foreach, "3 or more arguments expected." )
-   
-         if not isinstance( varSymbol, LSymbol ):
-            raise LispRuntimeFuncError( LP_foreach, "Argument 1 expected to be a symbol." )
-   
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_foreach, 'At least one sexpr expected for the loop body.' )
-   
-         alist = LispInterpreter._lEval( env, anExpr )
-         if not isinstance(alist, list):
-            raise LispRuntimeFuncError( LP_foreach, "Argument 2 expected to evaluate to a list." )
-   
-         # Evaluate the body while there are elements left in the list
-         latestResult = L_NIL
-         loopEnv = Environment( env )
-         for element in alist:
-            loopEnv.bindLocal( varSymbol.strval, element )
-            for sexpr in body:
-               latestResult = LispInterpreter._lEval( loopEnv, sexpr )
-         return latestResult
-   
       @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env: Environment, *args ) -> Any:
-         """Calls a function with the args listed."""
-         if len(args) == 0:
-            raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
-   
-         return LispInterpreter._lApply( env, args[0], args[1:] )
+         """Calls a function with the args listed.
+         Handled by the CEK machine (_cek_apply); this body is never reached."""
+         raise LispRuntimeError( 'Internal error: FUNCALL must be handled by the CEK machine.' )
    
       @primitive( 'eval', '<sexpr>' )
       def LP_eval( env: Environment, *args ) -> Any:
@@ -1166,37 +1564,19 @@ Returns the result of the very last evaluation."""
    
       @primitive( 'apply', '<function> &rest <args> <argsList>' )
       def LP_apply( env: Environment, *args ) -> Any:
-         """Inserts arg1,arg2,... into the front of listOfMoreArgs, then applies the
-function the the whole list of args.  Returns the result of that function
-application.
+         """Applies a function to a list of args.
+         Handled by the CEK machine (_cek_apply); this body is never reached."""
+         raise LispRuntimeError( 'Internal error: APPLY must be handled by the CEK machine.' )
 
-function is any callable that is not a special form."""
-         if len(args) < 2:
-            raise LispRuntimeFuncError( LP_apply, "At least 2 arguments expected to apply." )
-         
-         listArg = args[-1]
-         if not isinstance(listArg, list):
-            raise LispRuntimeFuncError( LP_apply, "Last argument expected to be a list." )
-         
-         primary = args[0]
-         if isinstance(primary, LCallable):
-            fnObj = primary
-         elif isinstance(primary, LSymbol):
-            try:
-               fnObj = env.lookup( primary.strval )
-            except KeyError:
-               raise LispRuntimeFuncError( LP_apply, f'First argument "{primary}" expected to be the name of a callable.')
-         else:
-            raise LispRuntimeFuncError( LP_apply, "First argument expected to be a symbol.")
-         
-         if fnObj.specialForm:  # Macros and some primitives
-            raise LispRuntimeFuncError( LP_apply, "First argument may not be a special form." )
-         
-         # fnObj is not a special form: functions and most primitives
-         fnArgs = list( args[1:-1] )
-         fnArgs.extend( listArg )
-         
-         return LispInterpreter._lApply( env, fnObj, fnArgs )
+      @primitive( 'call/cc', '<callable>' )
+      def LP_callcc( env: Environment, *args ) -> Any:
+         """Calls callable with the current escape continuation as its sole argument.
+         The continuation, when invoked, immediately returns its argument as the
+         value of the enclosing call/cc expression, bypassing any intervening
+         computation.  The continuation becomes inactive once the callable returns
+         normally without having invoked it.
+         Handled by the CEK machine (_cek_apply); this body is never reached."""
+         raise LispRuntimeError( 'Internal error: CALL/CC must be handled by the CEK machine.' )
       
    
       @primitive( 'parse', '<string>' )
@@ -1741,6 +2121,13 @@ random number will be a float."""
             raise LispRuntimeFuncError( LP_macrop, '1 argument expected.' )
          return L_T if isinstance( args[0], LMacro ) else L_NIL
 
+      @primitive( 'continuationp', '<sexpr>' )
+      def LP_continuationp( env: Environment, *args ) -> Any:
+         """Returns t if expr is an escape continuation captured by call/cc, otherwise nil."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_continuationp, '1 argument expected.' )
+         return L_T if isinstance( args[0], LContinuation ) else L_NIL
+
       @primitive( 'type-of', '<sexpr>' )
       def LP_typeof( env: Environment, *args ) -> Any:
          """Returns the type of its argument as a symbol (CL type-of conventions)."""
@@ -1768,6 +2155,8 @@ random number will be a float."""
             return LSymbol('MACRO')
          elif isinstance( arg, LPrimitive ):
             return LSymbol('PRIMITIVE')
+         elif isinstance( arg, LContinuation ):
+            return LSymbol('CONTINUATION')
          else:
             return LSymbol('T')
 
@@ -2138,24 +2527,6 @@ while it waits for the input return key to be pressed at the end of text entry."
       # ===============
       # System Level
       # ---------------
-      @primitive( 'recursion-limit', '&optional <newLimit>', )
-      def LP_recursionlimit( env: Environment, *args ) -> Any:
-         """Returns or sets the system recursion limit.  The higher the integer
-argument the deeper the recursion will be allowed to go.  If setting,
-returns newLimit upon success."""
-         numArgs = len(args)
-         if numArgs == 0:
-            return sys.getrecursionlimit()
-         elif numArgs == 1:
-            try:
-               newLimit = int(args[0])
-               sys.setrecursionlimit(newLimit)
-               return newLimit
-            except (TypeError, ValueError):
-               raise LispRuntimeFuncError( LP_recursionlimit, 'Argument must be an integer.' )
-         else:
-            raise LispRuntimeFuncError( LP_recursionlimit, 'Only one optional arg is allowed.' )
-      
       @primitive( 'help', '&optional callableSymbol' )
       def LP_help( env: Environment, *args ) -> Any:
          """Prints a set of tables for all the globally defined symbols and
