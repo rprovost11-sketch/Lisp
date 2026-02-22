@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 from typing import Any, Callable
 
 from pythonslisp.Environment import Environment
@@ -7,8 +8,10 @@ from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispExceptions import LispRuntimeError, LispRuntimeFuncError
 from pythonslisp.LispInterpreter import LispInterpreter
 from pythonslisp.LispParser import ParseError
-from pythonslisp.helpTopics import topics
 from pythonslisp.Listener import columnize
+
+
+HELP_DIR = Path(__file__).parent.parent / 'help'
 
 
 def register(primitive, parseLispString: Callable) -> None:
@@ -47,7 +50,7 @@ def register(primitive, parseLispString: Callable) -> None:
       primitivesList = []
       functionsList  = []
       macrosList     = []
-      topicsList     = [ f'"{topic}"' for topic in sorted(topics.keys()) ]
+      topicsList     = [ f'"{f.stem}"' for f in sorted(HELP_DIR.glob('*.txt')) ] if HELP_DIR.exists() else []
       outStrm  = LispInterpreter.outStrm
       outFile  = outStrm or sys.stdout
       useColor = hasattr(outFile, 'isatty') and outFile.isatty()
@@ -237,9 +240,10 @@ Type '(help "topic")' for available documentation on the named topic."""
       arg = args[0]
       if isinstance(arg, str):
          topicName = arg.upper()
-         try:
-            print(topics[topicName], file=LispInterpreter.outStrm )
-         except KeyError:
+         topicFile = HELP_DIR / f'{topicName}.txt'
+         if topicFile.exists():
+            print( topicFile.read_text( encoding='utf-8' ), file=LispInterpreter.outStrm )
+         else:
             print( f'Unknown topic: "{topicName}"', file=LispInterpreter.outStrm )
          return L_T
 
@@ -262,3 +266,35 @@ Type '(help "topic")' for available documentation on the named topic."""
          print( valueStr, file=outStrm )
 
       return L_T
+
+   @primitive( 'define-help-topic', '<name-string> <text-string>' )
+   def LP_define_help_topic( env: Environment, *args ) -> Any:
+      """Defines a new help topic by writing a text file to the help directory.
+The topic is immediately available via (help \"name\").  Returns the topic name
+as a symbol.  An existing topic with the same name is overwritten."""
+      if len(args) != 2:
+         raise LispRuntimeFuncError( LP_define_help_topic, '2 arguments expected.' )
+      name, text = args
+      if not isinstance( name, str ):
+         raise LispRuntimeFuncError( LP_define_help_topic, 'Argument 1 must be a string (topic name).' )
+      if not isinstance( text, str ):
+         raise LispRuntimeFuncError( LP_define_help_topic, 'Argument 2 must be a string (topic text).' )
+      HELP_DIR.mkdir( exist_ok=True )
+      topicFile = HELP_DIR / f'{name.upper()}.txt'
+      topicFile.write_text( text, encoding='utf-8' )
+      return LSymbol( name )
+
+   @primitive( 'undefine-help-topic', '<name-string>' )
+   def LP_undefine_help_topic( env: Environment, *args ) -> Any:
+      """Removes a help topic by deleting its file from the help directory.
+Returns T if the topic existed and was removed, NIL if the topic was not found."""
+      if len(args) != 1:
+         raise LispRuntimeFuncError( LP_undefine_help_topic, '1 argument expected.' )
+      name = args[0]
+      if not isinstance( name, str ):
+         raise LispRuntimeFuncError( LP_undefine_help_topic, 'Argument 1 must be a string (topic name).' )
+      topicFile = HELP_DIR / f'{name.upper()}.txt'
+      if topicFile.exists():
+         topicFile.unlink()
+         return L_T
+      return L_NIL

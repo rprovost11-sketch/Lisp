@@ -1,0 +1,15 @@
+lambdaList -> ( {var}*
+                [ &optional {var | (var [initForm [svar]])}* ]
+                [ &rest var ]
+                [ &key {var | ({var | (keyword var)} [initForm [svar]]) }*
+                       [&allow-other-keys] ]
+                [ &aux {var | (var [initForm])}* ] )
+
+Notes:
+- parentheses are taken literally as actual parentheses in lisp
+- braces indicate grouping
+- brackets surround optional parts
+- pipes separate alternative parts
+- asterisks indicate zero of more of the form it follows
+- symbols beginning with & are taken literally
+- the ordering of sections is not flexible

@@ -44,6 +44,7 @@ Completed
   mutating methods to make them report runtime errors.  Override __len__() to
   return 0 then perhaps the nil list would truly be immutable.
 - Tracing!  We have debug tracing.
+- Implemented user-defined help topics.
 
 2026.02.17
 - implement structs.
