@@ -165,3 +165,27 @@ def prettyPrint( sExpr: Any ) -> str:
       return sExpr.usageString()
    else:
       return str(sExpr)
+
+
+# Canonical Lisp constants — defined here so LispAST has no upstream deps
+L_T: LSymbol = LSymbol('T')
+
+class LNil(list):
+   """The canonical NIL singleton.  Immutable — mutation methods raise LispRuntimeError."""
+   def _immutable(self, *a, **kw):
+      from pythonslisp.LispExceptions import LispRuntimeError
+      raise LispRuntimeError("NIL is immutable.")
+   append      = _immutable
+   insert      = _immutable
+   pop         = _immutable
+   remove      = _immutable
+   clear       = _immutable
+   sort        = _immutable
+   reverse     = _immutable
+   extend      = _immutable
+   __setitem__ = _immutable
+   __delitem__ = _immutable
+   __iadd__    = _immutable
+   __imul__    = _immutable
+
+L_NIL: LNil = LNil()

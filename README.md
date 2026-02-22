@@ -80,12 +80,11 @@ API: Using Lisp as a Package
 ============================
 
 The easiest way to use the package is to import then instantiate a
-LispInterpreter, passing it info on where to find a runtime library.  Next,
-if you want access to the functions and macros defined in the lisp runtime
-library, you want to call reboot() which initializes/reinitializes the
-interpreter.  Next use its eval() functions to call into lisp.  Everything is
-persistent across calls to these eval functions so you can mix and match which
-one you use at any given time.
+LispInterpreter.  Next, if you want access to the functions and macros defined
+in the lisp runtime library, you want to call reboot() which initializes/
+reinitializes the interpreter and loads the lisp library.  Next use its eval()
+functions to call into lisp.  Everything is persistent across calls to these
+eval functions so you can mix and match which one you use at any given time.
 
 The example below simply defines a fibonacci function in lisp, then calls the
 function from python and prints the results.
@@ -93,7 +92,7 @@ function from python and prints the results.
           from pythonslisp.LispInterpreter import LispInterpreter
           from pythonslisp.LispAST import prettyPrintSExpr
 
-          interp = LispInterpreter( runtimeLibraryDir='pythonslisp/lib' )
+          interp = LispInterpreter( )
           interp.reboot()
           interp.rawEval( '''(defun fibo (num)
                                  (if (< num 2)
@@ -116,7 +115,7 @@ LispInterpreter's eval functions can handle any number of lisp expressions
 in the string argument.  The return value is always the value of the result
 of evaluating the last expression in the string.
 
-Calling python from lisp is even easier.  Just call the python lisp primitive
+Calling python from lisp is just as easy.  Just call the python lisp primitive
 and pass it some python code in a lisp string.
 
           # Simply call python
