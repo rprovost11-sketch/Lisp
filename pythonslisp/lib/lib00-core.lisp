@@ -7,7 +7,7 @@
    `(setf ,new ,old))
 
 ; Prompt the user for input on the command line.
-(defun read_prompt (promptStr)
+(defun read-prompt (promptStr)
    "Prompt the user for input and return the user input as a string."
             (write! promptStr)
             (readLn!)          )
@@ -181,11 +181,6 @@
             ((= sym (first lst))  (remove sym (rest lst)))
             (1                    (cons (first lst) (remove sym (rest lst))))))
 
-(defun list-length (lst)
-   "Compute the length of a list."
-         (if (null lst)
-             0
-             (+ 1 (list-length (rest lst)))))
 
 (defun reverse (lst)
    "Return a copy of a list in reverse order."
@@ -196,17 +191,17 @@
              destLst
              (reverse-aux (cons (first srcLst) destLst) (rest srcLst))))
 
-(defun copy (lst)
+(defun copy-list (lst)
    "Return a shallow copy of a list."
          (reverse (reverse lst)))
 
-(defun deepCopy (expr)
+(defun copy-tree (expr)
    "Return a deep copy of a list."
          (cond ((null   expr)  '( ))
                 ((isAtom?   expr)  expr)
                 ((isString? expr)  expr)
-                ((isList?   expr)  (cons (deepcopy (first expr))
-                                         (deepcopy (rest  expr)))) ))
+                ((isList?   expr)  (cons (copy-tree (first expr))
+                                         (copy-tree (rest  expr)))) ))
 
 (defun dig (aTree aPath)
    "Given a nested structure of lists and maps, this function will execute\na depth-first traversal down aPath - a list of map keys and list indicies.\nReturns the object in that location."
@@ -246,7 +241,64 @@
 (defun mapcar (fn lst)
    "Apply fn to each element of lst and return the list of results."
    (let ((result nil))
-      (foreach item lst
+      (dolist (item lst)
          (setf result (append result (list (fn item)))))
       result))
+
+(defun last (lst)
+   "Returns a list containing only the last element of lst."
+   (cond ((null lst)       nil)
+         ((null (cdr lst)) lst)
+         (1                (last (cdr lst)))))
+
+(defun nthcdr (n lst)
+   "Returns the result of calling cdr n times on lst."
+   (if (= n 0)
+       lst
+       (nthcdr (- n 1) (cdr lst))))
+
+(defun butlast (lst &optional (n 1))
+   "Returns a copy of lst with the last n elements removed."
+   (if (< (length lst) (+ n 1))
+       nil
+       (cons (first lst) (butlast (rest lst) n))))
+
+(defun member (item lst)
+   "Returns the tail of lst starting at the first occurrence of item, or NIL."
+   (cond ((null lst)            nil)
+         ((= item (first lst))  lst)
+         (1                     (member item (rest lst)))))
+
+(defun assoc (key alist)
+   "Returns the first pair in alist whose car equals key, or NIL."
+   (cond ((null alist)                   nil)
+         ((= key (first (first alist)))  (first alist))
+         (1                              (assoc key (rest alist)))))
+
+(defun every (fn lst)
+   "Returns T if fn returns true for every element of lst, NIL otherwise."
+   (cond ((null lst)              t)
+         ((null (fn (first lst))) nil)
+         (1                       (every fn (rest lst)))))
+
+(defun some (fn lst)
+   "Returns T if fn returns true for at least one element of lst, NIL otherwise."
+   (cond ((null lst)         nil)
+         ((fn (first lst))   t)
+         (1                  (some fn (rest lst)))))
+
+(defun reduce (fn lst)
+   "Cumulatively apply fn to lst elements left to right, reducing to a single value."
+   (if (null lst)
+       (error "reduce: list must not be empty")
+       (let ((acc (first lst)))
+          (dolist (item (rest lst))
+             (setf acc (fn acc item)))
+          acc)))
+
+(defun mapc (fn lst)
+   "Apply fn to each element of lst for side effects. Returns lst."
+   (dolist (item lst)
+      (fn item))
+   lst)
 

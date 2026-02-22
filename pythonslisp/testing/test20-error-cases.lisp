@@ -223,11 +223,11 @@
 %%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
 ==>
 
->>> ;;; sorted with incomparable types
-... (sorted (list 3 "a" 1))
+>>> ;;; sort with incomparable types
+... (sort (list 3 "a" 1))
 
-%%% ERROR 'SORTED': Cannot sort a list with incomparable types.
-%%% USAGE: (SORTED <list>)
+%%% ERROR 'SORT': Cannot sort a list with incomparable types.
+%%% USAGE: (SORT <list>)
 ==>
 
 ; --- Arg count errors for list ops ---
@@ -376,72 +376,72 @@
 %%% USAGE: (WHILE <cond> <sexpr1> <sexpr2> ...)
 ==>
 
->>> (doTimes)
+>>> (dotimes)
 
 %%% ERROR 'DOTIMES': 2 or more arguments expected.
 %%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; doTimes with no body
-... (doTimes (i 3))
+>>> ;;; dotimes with no body
+... (dotimes (i 3))
 
 %%% ERROR 'DOTIMES': At least one sexpr expected for the loop body.
 %%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; doTimes control list must be a list
-... (doTimes i 1)
+>>> ;;; dotimes control list must be a list
+... (dotimes i 1)
 
 %%% ERROR 'DOTIMES': Argument 1 expected to be a list.
 %%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; doTimes control list must have 2 elements
-... (doTimes (i 3 4) 1)
+>>> ;;; dotimes control list must have 2 elements
+... (dotimes (i 3 4) 1)
 
 %%% ERROR 'DOTIMES': Argument 1 expected to contain two elements.
 %%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; doTimes variable must be a symbol
-... (doTimes (1 3) 1)
+>>> ;;; dotimes variable must be a symbol
+... (dotimes (1 3) 1)
 
 %%% ERROR 'DOTIMES': Argument 1 of the control list expected to be a symbol.
 %%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; doTimes count must be integer
-... (doTimes (i "a") 1)
+>>> ;;; dotimes count must be integer
+... (dotimes (i "a") 1)
 
 %%% ERROR 'DOTIMES': Argument 2 of the control list expected to be an integer
 %%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> (foreach)
+>>> (dolist)
 
-%%% ERROR 'FOREACH': 3 or more arguments expected.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
+%%% ERROR 'DOLIST': 2 or more arguments expected.
+%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; foreach with too few args
-... (foreach x)
+>>> ;;; dolist with bad control spec
+... (dolist x (write! x))
 
-%%% ERROR 'FOREACH': 3 or more arguments expected.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
+%%% ERROR 'DOLIST': Argument 1 must be a (variable list) control spec.
+%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; foreach variable must be a symbol
-... (foreach 1 '(a b) (write! 1))
+>>> ;;; dolist variable must be a symbol
+... (dolist (1 '(a b)) (write! 1))
 
-%%% ERROR 'FOREACH': Argument 1 expected to be a symbol.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
+%%% ERROR 'DOLIST': Control spec variable must be a Symbol.
+%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; foreach list must be a list
-... (foreach x 42 (write! x))
+>>> ;;; dolist list must evaluate to a list
+... (dolist (x 42) (write! x))
 
-%%% ERROR 'FOREACH': Argument 2 expected to evaluate to a list.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
+%%% ERROR 'DOLIST': Control spec list must evaluate to a List.
+%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
 ==>
 
 >>> (case)
@@ -570,19 +570,15 @@
 %%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
 ==>
 
->>> ;;; macroexpand arg must be a list
+>>> ;;; macroexpand non-list returns unchanged
 ... (macroexpand 1)
 
-%%% ERROR 'MACROEXPAND': Argument 1 expected to be a list.
-%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
-==>
+==> 1
 
->>> ;;; macroexpand first element must be a macro
+>>> ;;; macroexpand non-macro head returns form unchanged
 ... (macroexpand '(1))
 
-%%% ERROR 'MACROEXPAND': Badly formed list expression.  The first element should evaluate to a macro.
-%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
-==>
+==> (1)
 
 ; --- setf / undef! / symtab! errors ---
 

@@ -71,8 +71,8 @@
 (defun average (&rest values)
    "Compute and return the average of a list of number values."
    (let ( (accum  0) )
-      (foreach value values
+      (dolist (value values)
          (incf accum value))
-      (/ accum (list-length values))))
+      (/ accum (length values))))
 
 

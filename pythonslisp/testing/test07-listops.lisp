@@ -113,12 +113,12 @@
 
 ==> (10 20 30)
 
->>> (sorted (list 3 1 2))
+>>> (sort (list 3 1 2))
 ...
 
 ==> (1 2 3)
 
->>> (sorted (list "b" "a" "c"))
+>>> (sort (list "b" "a" "c"))
 ...
 
 ==> ("a" "b" "c")
@@ -165,10 +165,10 @@
 %%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
 ==>
 
->>> ;;; Error: sorted requires a list argument
-... (sorted 1)
+>>> ;;; Error: sort requires a list argument
+... (sort 1)
 
-%%% ERROR 'SORTED': Argument 1 expected to be a list.
-%%% USAGE: (SORTED <list>)
+%%% ERROR 'SORT': Argument 1 expected to be a list.
+%%% USAGE: (SORT <list>)
 ==>
 

@@ -100,10 +100,10 @@
 
 ==> (10 99 30)
 
-; --- deepCopy on map ---
+; --- copy-tree on map ---
 
->>> ;;; deepCopy preserves map structure
-... (deepCopy (map (a 1) (b 2)))
+>>> ;;; copy-tree preserves map structure
+... (copy-tree (map (a 1) (b 2)))
 ...
 
 ==> (MAP
@@ -119,10 +119,10 @@
 
 ==> 3
 
-; --- sorted with strings ---
+; --- sort with strings ---
 
->>> ;;; sorted works on string lists
-... (sorted '("c" "a" "b"))
+>>> ;;; sort works on string lists
+... (sort '("c" "a" "b"))
 ...
 
 ==> ("a" "b" "c")
@@ -283,13 +283,25 @@
 
 ==> 0.7853981633974483
 
-; --- list-length with nested list ---
+; --- length ---
 
->>> ;;; list-length counts top-level elements only
-... (list-length '((1 2) 3))
+>>> ;;; length counts top-level elements only
+... (length '((1 2) 3))
 ...
 
 ==> 2
+
+>>> ;;; length of a string
+... (length "abc")
+...
+
+==> 3
+
+>>> ;;; list-length alias still works
+... (list-length '(1 2 3))
+...
+
+==> 3
 
 ; --- lambda with &rest used standalone ---
 
@@ -350,3 +362,39 @@
 ...
 
 ==> T
+
+; --- boundp ---
+
+>>> (setf bptest 42)
+...
+
+==> 42
+
+>>> (boundp 'bptest)
+...
+
+==> T
+
+>>> (boundp 'no-such-var-xyz)
+...
+
+==> NIL
+
+; --- symbol-name ---
+
+>>> (symbol-name 'hello)
+...
+
+==> "HELLO"
+
+>>> (symbol-name 'car)
+...
+
+==> "CAR"
+
+; --- error ---
+
+>>> (error "something went wrong")
+
+%%% something went wrong
+==>

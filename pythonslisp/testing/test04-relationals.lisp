@@ -281,3 +281,50 @@
 %%% USAGE: (>= <expr1> <expr2> ...)
 ==>
 
+
+; --- string comparisons ---
+
+>>> (= "abc" "abc")
+...
+
+==> T
+
+>>> (= "abc" "ABC")
+...
+
+==> NIL
+
+>>> (< "abc" "abd")
+...
+
+==> T
+
+>>> (> "z" "a")
+...
+
+==> T
+
+>>> (string= "hello" "hello")
+...
+
+==> T
+
+>>> (string< "apple" "banana")
+...
+
+==> T
+
+>>> (string> "zebra" "apple")
+...
+
+==> T
+
+>>> (string<= "abc" "abc")
+...
+
+==> T
+
+>>> (string>= "b" "a")
+...
+
+==> T

@@ -50,8 +50,10 @@ class LispExpander:
         elif len(sexpr) == 0:
             return sexpr  # Empty list doesn't expand
 
-        # Don't expand inside quote — the content is literal data, not code
-        if isinstance(sexpr[0], LSymbol) and sexpr[0].strval == 'QUOTE':
+        # Don't expand inside quote or backquote — content is literal data/template.
+        # Macros inside a backquote template are expanded when the template is
+        # instantiated (i.e. when the enclosing macro is called), not at defmacro time.
+        if isinstance(sexpr[0], LSymbol) and sexpr[0].strval in ('QUOTE', 'BACKQUOTE'):
             return sexpr
 
         # Non-empty list - could be a macro call
@@ -160,8 +162,8 @@ class LispExpander:
             indent = "  " * depth
 
             if isinstance(sexpr, list) and len(sexpr) > 0:
-                # Don't expand inside quote — the content is literal data
-                if isinstance(sexpr[0], LSymbol) and sexpr[0].strval == 'QUOTE':
+                # Don't expand inside quote or backquote — content is literal data/template
+                if isinstance(sexpr[0], LSymbol) and sexpr[0].strval in ('QUOTE', 'BACKQUOTE'):
                     return sexpr
                 primary = sexpr[0]
                 if isinstance(primary, LSymbol):

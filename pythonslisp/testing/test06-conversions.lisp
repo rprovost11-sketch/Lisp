@@ -120,3 +120,75 @@
 %%% USAGE: (SYMBOL <string1> <string2> ...)
 ==>
 
+; --- string-upcase / string-downcase ---
+
+>>> (string-upcase "hello")
+...
+
+==> "HELLO"
+
+>>> (string-downcase "WORLD")
+...
+
+==> "world"
+
+>>> (string-upcase "already UP")
+...
+
+==> "ALREADY UP"
+
+>>> (string-downcase "mixed Case 123")
+...
+
+==> "mixed case 123"
+
+; --- string-trim / string-left-trim / string-right-trim ---
+
+>>> (string-trim " " "  hello  ")
+...
+
+==> "hello"
+
+>>> (string-left-trim " " "  hello  ")
+...
+
+==> "hello  "
+
+>>> (string-right-trim " " "  hello  ")
+...
+
+==> "  hello"
+
+>>> (string-trim "xy" "xyhelloyx")
+...
+
+==> "hello"
+
+; --- char-code / code-char ---
+
+>>> (char-code "a")
+...
+
+==> 97
+
+>>> (char-code "A")
+...
+
+==> 65
+
+>>> (code-char 97)
+...
+
+==> "a"
+
+>>> (code-char 65)
+...
+
+==> "A"
+
+>>> ;;; round-trip
+... (code-char (char-code "z"))
+...
+
+==> "z"
+

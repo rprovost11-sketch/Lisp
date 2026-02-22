@@ -268,3 +268,47 @@
 
 ==> 1
 
+
+; --- floor / ceiling / round ---
+
+>>> (floor 3.7)
+...
+
+==> 3
+
+>>> (floor -3.7)
+...
+
+==> -4
+
+>>> (ceiling 3.2)
+...
+
+==> 4
+
+>>> (ceiling -3.2)
+...
+
+==> -3
+
+>>> (round 3.5)
+...
+
+==> 4
+
+>>> (round 2.5)
+...
+
+==> 2
+
+>>> ;;; floor with divisor
+... (floor 7 2)
+...
+
+==> 3
+
+>>> ;;; ceiling with divisor
+... (ceiling 7 2)
+...
+
+==> 4

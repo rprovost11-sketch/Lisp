@@ -98,7 +98,7 @@
 
 ==> 30
 
->>> (copy (list 1 2 3))
+>>> (copy-list (list 1 2 3))
 ...
 
 ==> (1 2 3)
@@ -133,12 +133,12 @@
 
 ==> NIL
 
->>> (list-length (list 1 2 3))
+>>> (length (list 1 2 3))
 ...
 
 ==> 3
 
->>> (list-length nil)
+>>> (length nil)
 ...
 
 ==> 0
@@ -158,3 +158,161 @@
 
 ==> (B C)
 
+
+; --- endp ---
+
+>>> (endp '())
+...
+
+==> T
+
+>>> (endp '(1 2 3))
+...
+
+==> NIL
+
+; --- last ---
+
+>>> (last '(1 2 3))
+...
+
+==> (3)
+
+>>> (last '(a))
+...
+
+==> (A)
+
+>>> (last '())
+...
+
+==> NIL
+
+; --- nthcdr ---
+
+>>> (nthcdr 0 '(a b c d))
+...
+
+==> (A B C D)
+
+>>> (nthcdr 2 '(a b c d))
+...
+
+==> (C D)
+
+>>> (nthcdr 4 '(a b c d))
+...
+
+==> NIL
+
+; --- butlast ---
+
+>>> (butlast '(1 2 3 4))
+...
+
+==> (1 2 3)
+
+>>> (butlast '(1 2 3 4) 2)
+...
+
+==> (1 2)
+
+>>> (butlast '(1 2 3) 3)
+...
+
+==> NIL
+
+; --- member ---
+
+>>> (member 2 '(1 2 3 4))
+...
+
+==> (2 3 4)
+
+>>> (member 'b '(a b c))
+...
+
+==> (B C)
+
+>>> (member 9 '(1 2 3))
+...
+
+==> NIL
+
+; --- assoc ---
+
+>>> (assoc 'b '((a 1) (b 2) (c 3)))
+...
+
+==> (B 2)
+
+>>> (assoc 'z '((a 1) (b 2)))
+...
+
+==> NIL
+
+; --- every / some ---
+
+>>> (every numberp '(1 2 3))
+...
+
+==> T
+
+>>> (every numberp '(1 "a" 3))
+...
+
+==> NIL
+
+>>> (every numberp '())
+...
+
+==> T
+
+>>> (some numberp '(a 1 b))
+...
+
+==> T
+
+>>> (some numberp '(a b c))
+...
+
+==> NIL
+
+>>> (some numberp '())
+...
+
+==> NIL
+
+; --- reduce ---
+
+>>> (reduce + '(1 2 3 4))
+...
+
+==> 10
+
+>>> (reduce * '(1 2 3 4))
+...
+
+==> 24
+
+>>> (reduce + '(42))
+...
+
+==> 42
+
+; --- mapc ---
+
+>>> (setf mresult '())
+...
+
+==> NIL
+
+>>> (mapc (lambda (x) (setf mresult (cons (* x x) mresult))) '(1 2 3))
+...
+
+==> (1 2 3)
+
+>>> mresult
+...
+
+==> (9 4 1)

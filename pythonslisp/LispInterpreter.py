@@ -558,36 +558,60 @@ class LispInterpreter( Interpreter ):
       return paramNum, argNum
 
    @staticmethod
-   def _lbackquoteExpand( env: Environment, expr: Any ) -> Any:
-      '''Expand a backquote List expression.'''
-      if isinstance(expr, list):
-         if len(expr) == 0:
-            return expr
+   def _lbackquoteExpand( env: Environment, expr: Any, depth: int = 1 ) -> Any:
+      '''Expand a backquote expression, tracking nesting depth.
+      depth=1 is the innermost (active) backquote level.  Commas and
+      splices are only evaluated at depth 1; at deeper levels they are
+      preserved as template structure for the inner backquote.'''
+      if not isinstance(expr, list):
+         return expr       # atoms/symbols pass through unchanged at any depth
 
-         primary = expr[0]
-         if ( (primary == 'COMMA') or (primary == 'COMMA-AT') ):
-            result = LispInterpreter._lEval(env, expr)
-            return result
-
-         resultList: list[Any] = [ ]
-         for listElt in expr:
-            resultListElt = LispInterpreter._lbackquoteExpand( env, listElt )
-            if ( isinstance(resultListElt, list) and
-                 (len(resultListElt) > 0) and
-                 (resultListElt[0] == LSymbol('COMMA-AT')) ):
-               for elt in resultListElt[1]:
-                  resultList.append( elt )
-            else:
-               resultList.append( resultListElt )
-         return resultList
-      else:
+      if len(expr) == 0:
          return expr
+
+      primary = expr[0]
+
+      if primary == 'BACKQUOTE':
+         # Nested backquote — increase depth, process content, rewrap
+         inner = LispInterpreter._lbackquoteExpand( env, expr[1], depth + 1 )
+         return [ LSymbol('BACKQUOTE'), inner ]
+
+      if primary == 'COMMA':
+         if depth == 1:
+            return LispInterpreter._lEval( env, expr[1] )
+         else:
+            inner = LispInterpreter._lbackquoteExpand( env, expr[1], depth - 1 )
+            return [ LSymbol('COMMA'), inner ]
+
+      if primary == 'COMMA-AT':
+         if depth == 1:
+            result = LispInterpreter._lEval( env, expr[1] )
+            if not isinstance( result, list ):
+               raise LispRuntimeFuncError( env.lookup('COMMA-AT'), 'Argument 1 must evaluate to a List.' )
+            return [ LSymbol('COMMA-AT'), result ]
+         else:
+            inner = LispInterpreter._lbackquoteExpand( env, expr[1], depth - 1 )
+            return [ LSymbol('COMMA-AT'), inner ]
+
+      # Regular list — process each element at the same depth.
+      # Splice COMMA-AT sentinels only at depth 1.
+      resultList: list[Any] = [ ]
+      for listElt in expr:
+         resultListElt = LispInterpreter._lbackquoteExpand( env, listElt, depth )
+         if ( depth == 1 and
+              isinstance(resultListElt, list) and
+              len(resultListElt) > 0 and
+              resultListElt[0] == LSymbol('COMMA-AT') ):
+            for elt in resultListElt[1]:
+               resultList.append( elt )
+         else:
+            resultList.append( resultListElt )
+      return resultList
 
    @staticmethod
    def _lconstructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
       primitiveDict: dict[str, Any] = { }
-      INSIDE_BACKQUOTE = False
-      
+
       # ###################################
       # Lisp Object & Primitive Definitions
       # ###################################
@@ -658,28 +682,48 @@ can be an optional documentation string."""
    
       @primitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)' )
       def LP_macroexpand( env: Environment, *args ) -> Any:
-         """Performs the expansion of a macro and returns the results of those expansions in a list."""
+         """Fully expands a macro call at the top level, looping until the form is no
+longer headed by a macro.  Non-macro and non-list forms are returned unchanged."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
-         theMacroCall = args[0]
-
-         if not isinstance(theMacroCall, list):
-            raise LispRuntimeFuncError( LP_macroexpand, 'Argument 1 expected to be a list.' )
-
-         if len(theMacroCall) < 1:
-            raise LispRuntimeFuncError( LP_macroexpand, 'Macro call must be at least one element in length.' )
-
-         # Break the list contents into a function and a list of args
-         primary, *exprArgs = theMacroCall
-
-         # fn is an LPrimitive, LFunction or a macro name symbol
-         # Use this information to get the function definition
-         macroDef = LispInterpreter._lEval( env, primary )
-         if not isinstance( macroDef, LMacro ):
-            raise LispRuntimeFuncError( LP_macroexpand, 'Badly formed list expression.  The first element should evaluate to a macro.' )
 
          from pythonslisp.LispExpander import LispExpander
-         return [ LispExpander._expandMacroCall( env, macroDef, exprArgs ) ]
+         form = args[0]
+         while isinstance(form, list) and len(form) >= 1:
+            primary = form[0]
+            if not isinstance(primary, LSymbol):
+               break
+            try:
+               macroDef = env.lookup( primary.strval )
+            except KeyError:
+               break
+            if not isinstance( macroDef, LMacro ):
+               break
+            form = LispExpander._expandMacroCall( env, macroDef, form[1:] )
+         return form
+
+      @primitive( 'macroexpand-1', '\'(<macroName> <arg1> <arg2> ...)' )
+      def LP_macroexpand_1( env: Environment, *args ) -> Any:
+         """Expands a macro call exactly once.  Returns the form unchanged if it is
+not a macro call."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_macroexpand_1, 'Exactly 1 argument expected.' )
+
+         form = args[0]
+         if not isinstance(form, list) or len(form) < 1:
+            return form
+         primary = form[0]
+         if not isinstance(primary, LSymbol):
+            return form
+         try:
+            macroDef = env.lookup( primary.strval )
+         except KeyError:
+            return form
+         if not isinstance( macroDef, LMacro ):
+            return form
+
+         from pythonslisp.LispExpander import LispExpander
+         return LispExpander._expandMacroCall( env, macroDef, form[1:] )
    
       @primitive( 'defsetf-internal', '<accessor-symbol> <field-symbol>' )
       def LP_defsetf_internal( env: Environment, *args ) -> Any:
@@ -796,6 +840,20 @@ is last."""
    
          return L_NIL
    
+      @primitive( 'boundp', '<symbol>' )
+      def LP_boundp( env: Environment, *args ) -> Any:
+         """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_boundp, '1 argument expected.' )
+         sym = args[0]
+         if not isinstance( sym, LSymbol ):
+            raise LispRuntimeFuncError( LP_boundp, 'Argument 1 must be a Symbol.' )
+         try:
+            env.lookup( sym.strval )
+            return L_T
+         except KeyError:
+            return L_NIL
+
       # ==================
       # Control Structures
       # ------------------
@@ -1011,54 +1069,22 @@ All remaining cases are skipped."""
    
       @primitive( 'backquote', '<sexpr>', specialForm=True )
       def LP_backquote( env: Environment, *args ) -> Any:
-         """Similar to quote but allows command comma-at expressions within expr."""
-         nonlocal INSIDE_BACKQUOTE
-         if INSIDE_BACKQUOTE:
-            raise LispRuntimeFuncError( LP_backquote, 'Cannot nest backquotes.')
-   
+         """Similar to quote but allows comma and comma-at expressions within expr.
+Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
          if (len(args) != 1):
             raise LispRuntimeFuncError( LP_backquote, '1 argument expected.' )
          sExpr = args[0]
-   
-         try:
-            INSIDE_BACKQUOTE = True
-            expandedForm = LispInterpreter._lbackquoteExpand( env, sExpr )
-         finally:
-            INSIDE_BACKQUOTE = False
-   
-         return expandedForm
-   
+         return LispInterpreter._lbackquoteExpand( env, sExpr )
+
       @primitive( 'comma', '<sexpr>', specialForm=True )
       def LP_comma( env: Environment, *args ) -> Any:
-         """Must occur within a backquote expr or it's an error.  Evaluates expr
-(even if within a quoted expr) and returns it to the enclosing expr."""         
-         nonlocal INSIDE_BACKQUOTE
-         if not INSIDE_BACKQUOTE:
-            raise LispRuntimeFuncError( LP_comma, 'COMMA can only occur inside a BACKQUOTE.')
-   
-         if (len(args) != 1):
-            raise LispRuntimeFuncError( LP_comma, '1 argument expected.' )
-         subordinateExpr = args[0]
-         result = LispInterpreter._lEval( env, subordinateExpr )
-         return result
-   
+         """Must occur within a backquote expr or it's an error."""
+         raise LispRuntimeFuncError( LP_comma, 'COMMA can only occur inside a BACKQUOTE.')
+
       @primitive( 'comma-at', '<sexpr>', specialForm=True )
       def LP_comma_at( env: Environment, *args ) -> Any:
-         """Must occur within a backquote expr or it's an error.  Evaluates expr.
-Result must be a list.  Inserts the elements of the resulting list into the
-enclosing list (eliminating a level of parentheses)."""         
-         nonlocal INSIDE_BACKQUOTE
-         if not INSIDE_BACKQUOTE:
-            raise LispRuntimeFuncError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
-   
-         if (len(args) != 1):
-            raise LispRuntimeFuncError( LP_comma_at, '1 argument expected.' )
-         subordinateExpr = args[0]
-         result = LispInterpreter._lEval( env, subordinateExpr )
-         if not isinstance(result, list):
-            raise LispRuntimeFuncError( LP_comma_at, 'Argument 1 must evaluate to a List.' )
-         retValue = [ LSymbol('COMMA-AT'), result ]
-         return retValue
+         """Must occur within a backquote expr or it's an error."""
+         raise LispRuntimeFuncError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
    
       @primitive( 'while', '<cond> <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_while( env: Environment, *args ) -> Any:
@@ -1082,7 +1108,7 @@ and returns the result of the last expr evaluated."""
             condResult = LispInterpreter._lEval(env, conditionExpr )
          return latestResult
    
-      @primitive( 'doTimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
+      @primitive( 'dotimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
       def LP_dotimes( env: Environment, *args ) -> Any:
          """Performs a loop over a body of exprs countExpr times.  Before each iteration
 the loop variable is set to the next loop count number (starting with 0 for
@@ -1148,6 +1174,35 @@ Returns the result of the very last evaluation."""
                latestResult = LispInterpreter._lEval( loopEnv, sexpr )
          return latestResult
    
+      @primitive( 'dolist', '(<variable> <list>) <sexpr1> <sexpr2> ...', specialForm=True )
+      def LP_dolist( env: Environment, *args ) -> Any:
+         """Iterate over the elements of list, binding variable to each in turn.
+Returns the result of the last body expression, or NIL if the list is empty."""
+         if len(args) < 1:
+            raise LispRuntimeFuncError( LP_dolist, '2 or more arguments expected.' )
+
+         controlSpec = args[0]
+         body = args[1:]
+
+         if not isinstance( controlSpec, list ) or len(controlSpec) != 2:
+            raise LispRuntimeFuncError( LP_dolist, 'Argument 1 must be a (variable list) control spec.' )
+
+         varSymbol, listExpr = controlSpec
+         if not isinstance( varSymbol, LSymbol ):
+            raise LispRuntimeFuncError( LP_dolist, 'Control spec variable must be a Symbol.' )
+
+         alist = LispInterpreter._lEval( env, listExpr )
+         if not isinstance( alist, list ):
+            raise LispRuntimeFuncError( LP_dolist, 'Control spec list must evaluate to a List.' )
+
+         latestResult = L_NIL
+         loopEnv = Environment( env )
+         for element in alist:
+            loopEnv.bindLocal( varSymbol.strval, element )
+            for sexpr in body:
+               latestResult = LispInterpreter._lEval( loopEnv, sexpr )
+         return latestResult
+
       @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
       def LP_funcall( env: Environment, *args ) -> Any:
          """Calls a function with the args listed."""
@@ -1441,7 +1496,7 @@ function is any callable that is not a special form."""
    
          return L_T if aKey in aMap else L_NIL   # T or NIL
    
-      @primitive( 'sorted', '<list>' )
+      @primitive( 'sort', '<list>' )
       def LP_sorted( env: Environment, *args ) -> Any:
          """Returns a copy of the list sorted."""
          if len(args) != 1:
@@ -1624,6 +1679,48 @@ logarithm (base e).  An optional second argument specifies the base."""
          else:
             raise LispRuntimeFuncError( LP_atan, '1 or 2 arguments expected.' )
    
+      @primitive( 'floor', '<number> &optional <divisor>' )
+      def LP_floor( env: Environment, *args ) -> Any:
+         """Returns the largest integer <= number (or <= number/divisor).
+Returns only the primary value; remainder is discarded."""
+         if len(args) not in (1, 2):
+            raise LispRuntimeFuncError( LP_floor, '1 or 2 arguments expected.' )
+         try:
+            if len(args) == 1:
+               return math.floor( args[0] )
+            else:
+               return math.floor( args[0] / args[1] )
+         except (TypeError, ValueError, ZeroDivisionError) as e:
+            raise LispRuntimeFuncError( LP_floor, f'Invalid argument: {e}' )
+
+      @primitive( 'ceiling', '<number> &optional <divisor>' )
+      def LP_ceiling( env: Environment, *args ) -> Any:
+         """Returns the smallest integer >= number (or >= number/divisor).
+Returns only the primary value; remainder is discarded."""
+         if len(args) not in (1, 2):
+            raise LispRuntimeFuncError( LP_ceiling, '1 or 2 arguments expected.' )
+         try:
+            if len(args) == 1:
+               return math.ceil( args[0] )
+            else:
+               return math.ceil( args[0] / args[1] )
+         except (TypeError, ValueError, ZeroDivisionError) as e:
+            raise LispRuntimeFuncError( LP_ceiling, f'Invalid argument: {e}' )
+
+      @primitive( 'round', '<number> &optional <divisor>' )
+      def LP_round( env: Environment, *args ) -> Any:
+         """Rounds number to the nearest integer (ties go to even, per CL).
+Returns only the primary value; remainder is discarded."""
+         if len(args) not in (1, 2):
+            raise LispRuntimeFuncError( LP_round, '1 or 2 arguments expected.' )
+         try:
+            if len(args) == 1:
+               return round( args[0] )
+            else:
+               return round( args[0] / args[1] )
+         except (TypeError, ValueError, ZeroDivisionError) as e:
+            raise LispRuntimeFuncError( LP_round, f'Invalid argument: {e}' )
+
       @primitive( 'min', '<number1> <number2> ...' )
       def LP_min( env: Environment, *args ) -> Any:
          """Returns the smallest of a set of numbers."""
@@ -1696,6 +1793,15 @@ random number will be a float."""
             raise LispRuntimeFuncError( LP_symbolp, '1 argument expected.' )
          return L_T if isinstance( args[0], LSymbol ) else L_NIL
    
+      @primitive( 'symbol-name', '<symbol>' )
+      def LP_symbol_name( env: Environment, *args ) -> Any:
+         """Returns the name of a symbol as a string."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_symbol_name, '1 argument expected.' )
+         if not isinstance( args[0], LSymbol ):
+            raise LispRuntimeFuncError( LP_symbol_name, 'Argument 1 must be a Symbol.' )
+         return args[0].strval
+
       @primitive( 'atom', '<sexpr>' )
       def LP_atom( env: Environment, *args ) -> Any:
          """Returns t if expr is an atom (int,float,string,map or nil) otherwise nil."""
@@ -1713,6 +1819,16 @@ random number will be a float."""
             raise LispRuntimeFuncError( LP_listp, '1 argument expected.' )
          return L_T if isinstance(args[0], list) else L_NIL
    
+      @primitive( 'length', '<sequence>' )
+      def LP_length( env: Environment, *args ) -> Any:
+         """Returns the number of elements in a list, string, or map."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_length, '1 argument expected.' )
+         arg = args[0]
+         if isinstance(arg, (list, str, dict)):
+            return len(arg)
+         raise LispRuntimeFuncError( LP_length, 'Argument 1 must be a List, String, or Map.' )
+
       @primitive( 'mapp', '<sexpr>' )
       def LP_mapp( env: Environment, *args ) -> Any:
          """Returns t if expr is a map otherwise nil."""
@@ -1726,7 +1842,79 @@ random number will be a float."""
          if len(args) != 1:
             raise LispRuntimeFuncError( LP_stringp, '1 argument expected.' )
          return L_T if isinstance( args[0], str ) else L_NIL
-   
+
+      @primitive( 'string-upcase', '<string>' )
+      def LP_string_upcase( env: Environment, *args ) -> Any:
+         """Returns a copy of string with all characters converted to uppercase."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_string_upcase, '1 argument expected.' )
+         if not isinstance( args[0], str ):
+            raise LispRuntimeFuncError( LP_string_upcase, 'Argument 1 must be a String.' )
+         return args[0].upper()
+
+      @primitive( 'string-downcase', '<string>' )
+      def LP_string_downcase( env: Environment, *args ) -> Any:
+         """Returns a copy of string with all characters converted to lowercase."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_string_downcase, '1 argument expected.' )
+         if not isinstance( args[0], str ):
+            raise LispRuntimeFuncError( LP_string_downcase, 'Argument 1 must be a String.' )
+         return args[0].lower()
+
+      @primitive( 'string-trim', '<char-bag> <string>' )
+      def LP_string_trim( env: Environment, *args ) -> Any:
+         """Removes leading and trailing characters in char-bag from string."""
+         if len(args) != 2:
+            raise LispRuntimeFuncError( LP_string_trim, '2 arguments expected.' )
+         charBag, s = args[0], args[1]
+         if not isinstance( charBag, str ):
+            raise LispRuntimeFuncError( LP_string_trim, 'Argument 1 (char-bag) must be a String.' )
+         if not isinstance( s, str ):
+            raise LispRuntimeFuncError( LP_string_trim, 'Argument 2 must be a String.' )
+         return s.strip( charBag )
+
+      @primitive( 'string-left-trim', '<char-bag> <string>' )
+      def LP_string_left_trim( env: Environment, *args ) -> Any:
+         """Removes leading characters in char-bag from string."""
+         if len(args) != 2:
+            raise LispRuntimeFuncError( LP_string_left_trim, '2 arguments expected.' )
+         charBag, s = args[0], args[1]
+         if not isinstance( charBag, str ):
+            raise LispRuntimeFuncError( LP_string_left_trim, 'Argument 1 (char-bag) must be a String.' )
+         if not isinstance( s, str ):
+            raise LispRuntimeFuncError( LP_string_left_trim, 'Argument 2 must be a String.' )
+         return s.lstrip( charBag )
+
+      @primitive( 'string-right-trim', '<char-bag> <string>' )
+      def LP_string_right_trim( env: Environment, *args ) -> Any:
+         """Removes trailing characters in char-bag from string."""
+         if len(args) != 2:
+            raise LispRuntimeFuncError( LP_string_right_trim, '2 arguments expected.' )
+         charBag, s = args[0], args[1]
+         if not isinstance( charBag, str ):
+            raise LispRuntimeFuncError( LP_string_right_trim, 'Argument 1 (char-bag) must be a String.' )
+         if not isinstance( s, str ):
+            raise LispRuntimeFuncError( LP_string_right_trim, 'Argument 2 must be a String.' )
+         return s.rstrip( charBag )
+
+      @primitive( 'char-code', '<char>' )
+      def LP_char_code( env: Environment, *args ) -> Any:
+         """Returns the integer character code of a single-character string."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_char_code, '1 argument expected.' )
+         if not isinstance( args[0], str ) or len( args[0] ) != 1:
+            raise LispRuntimeFuncError( LP_char_code, 'Argument 1 must be a single-character String.' )
+         return ord( args[0] )
+
+      @primitive( 'code-char', '<integer>' )
+      def LP_code_char( env: Environment, *args ) -> Any:
+         """Returns the single-character string corresponding to an integer character code."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_code_char, '1 argument expected.' )
+         if not isinstance( args[0], int ):
+            raise LispRuntimeFuncError( LP_code_char, 'Argument 1 must be an Integer.' )
+         return chr( args[0] )
+
       @primitive( 'functionp', '<sexpr>' )
       def LP_functionp( env: Environment, *args ) -> Any:
          """Returns t if expr is a function otherwise nil."""
@@ -2127,6 +2315,14 @@ Terminates the output with a newline character.  Returns the last value printed.
             print( end=end, file=LispInterpreter.outStrm )
          return values[-1]
    
+      @primitive( 'terpri', '' )
+      def LP_terpri( env: Environment, *args ) -> Any:
+         """Outputs a newline character.  Returns NIL."""
+         if len(args) > 0:
+            raise LispRuntimeFuncError( LP_terpri, '0 arguments expected.' )
+         print( end='\n', file=LispInterpreter.outStrm )
+         return L_NIL
+
       @primitive( 'readLn!', '' )
       def LP_readln( env: Environment, *args ) -> Any:
          """Reads and returns text input from standard input.  This function blocks
@@ -2134,10 +2330,20 @@ while it waits for the input return key to be pressed at the end of text entry."
          if len(args) > 0:
             raise LispRuntimeFuncError( LP_readln, '0 arguments expected.' )
          return input()
-   
+
       # ===============
       # System Level
       # ---------------
+
+      @primitive( 'error', '<message-string>' )
+      def LP_error( env: Environment, *args ) -> Any:
+         """Signals a runtime error with the given message string."""
+         if len(args) != 1:
+            raise LispRuntimeFuncError( LP_error, '1 argument expected.' )
+         if not isinstance( args[0], str ):
+            raise LispRuntimeFuncError( LP_error, 'Argument 1 must be a String.' )
+         raise LispRuntimeError( args[0] )
+      
       @primitive( 'recursion-limit', '&optional <newLimit>', )
       def LP_recursionlimit( env: Environment, *args ) -> Any:
          """Returns or sets the system recursion limit.  The higher the integer

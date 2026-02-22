@@ -92,12 +92,10 @@
 
 ; --- MACROEXPAND additional error path ---
 
->>> ;;; macroexpand with empty list
+>>> ;;; macroexpand empty list returns NIL
 ... (macroexpand '())
 
-%%% ERROR 'MACROEXPAND': Macro call must be at least one element in length.
-%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
-==>
+==> NIL
 
 ; --- DEFMACRO docstring-only error ---
 
@@ -149,14 +147,13 @@
 %%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
 ==>
 
-; --- FOREACH additional error path ---
+; --- DOLIST additional error path ---
 
->>> ;;; foreach with no body expressions
-... (foreach x '(1 2))
+>>> ;;; dolist with no body expressions is allowed (returns NIL)
+... (dolist (x '(1 2)))
+...
 
-%%% ERROR 'FOREACH': At least one sexpr expected for the loop body.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
-==>
+==> NIL
 
 ; --- Arithmetic argument count errors ---
 
@@ -606,22 +603,22 @@
 %%% USAGE: (HELP &optional callableSymbol)
 ==>
 
-; --- SORTED: non-list argument ---
+; --- SORT: non-list argument ---
 
->>> ;;; sorted with non-list argument
-... (sorted 'abc)
+>>> ;;; sort with non-list argument
+... (sort 'abc)
 
-%%% ERROR 'SORTED': Argument 1 expected to be a list.
-%%% USAGE: (SORTED <list>)
+%%% ERROR 'SORT': Argument 1 expected to be a list.
+%%% USAGE: (SORT <list>)
 ==>
 
-; --- FOREACH: non-list evaluated argument ---
+; --- DOLIST: non-list evaluated argument ---
 
->>> ;;; foreach with non-list as collection
-... (foreach x 42 (write! x))
+>>> ;;; dolist with non-list as collection
+... (dolist (x 42) (write! x))
 
-%%% ERROR 'FOREACH': Argument 2 expected to evaluate to a list.
-%%% USAGE: (FOREACH <variable> <list> <sexpr1> <sexpr2> ...)
+%%% ERROR 'DOLIST': Control spec list must evaluate to a List.
+%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
 ==>
 
 ; --- COND: bad entry in non-first position ---

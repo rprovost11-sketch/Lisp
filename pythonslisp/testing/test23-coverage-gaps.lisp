@@ -160,25 +160,25 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 ==> "o"
 
-; --- sorted edge cases ---
+; --- sort edge cases ---
 
->>> ;;; sorted with duplicates preserved
-... (sorted '(3 1 2 1))
+>>> ;;; sort with duplicates preserved
+... (sort '(3 1 2 1))
 
 ==> (1 1 2 3)
 
->>> ;;; sorted with rationals
-... (sorted (list 1/2 1/3 1/4))
+>>> ;;; sort with rationals
+... (sort (list 1/2 1/3 1/4))
 
 ==> (1/4 1/3 1/2)
 
->>> ;;; sorted with mixed int/float
-... (sorted (list 1 2.5 3))
+>>> ;;; sort with mixed int/float
+... (sort (list 1 2.5 3))
 
 ==> (1 2.5 3)
 
->>> ;;; sorted empty list
-... (sorted '())
+>>> ;;; sort empty list
+... (sort '())
 
 ==> NIL
 
@@ -251,31 +251,31 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 ==> T
 
-; --- copy / deepCopy edge cases ---
+; --- copy-list / copy-tree edge cases ---
 
->>> ;;; copy empty list
-... (copy '())
-
-==> NIL
-
->>> ;;; deepCopy empty list
-... (deepCopy '())
+>>> ;;; copy-list empty list
+... (copy-list '())
 
 ==> NIL
 
->>> ;;; deepCopy atom passthrough
-... (deepCopy 42)
+>>> ;;; copy-tree empty list
+... (copy-tree '())
+
+==> NIL
+
+>>> ;;; copy-tree atom passthrough
+... (copy-tree 42)
 
 ==> 42
 
->>> ;;; deepCopy string passthrough
-... (deepCopy "hello")
+>>> ;;; copy-tree string passthrough
+... (copy-tree "hello")
 
 ==> "hello"
 
->>> ;;; deepCopy independence: mutating original does not affect copy
+>>> ;;; copy-tree independence: mutating original does not affect copy
 ... (let ((orig23 (list 1 (list 2 3) 4))
-...       (cp23 (deepCopy (list 1 (list 2 3) 4))))
+...       (cp23 (copy-tree (list 1 (list 2 3) 4))))
 ...    (setf (at 0 (at 1 orig23)) 99)
 ...    (at 1 cp23))
 
@@ -349,10 +349,10 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 ==> T
 
-; --- doTimes with negative count ---
+; --- dotimes with negative count ---
 
->>> ;;; doTimes with negative count does zero iterations
-... (doTimes (i -1) (write! i))
+>>> ;;; dotimes with negative count does zero iterations
+... (dotimes (i -1) (write! i))
 
 ==> NIL
 

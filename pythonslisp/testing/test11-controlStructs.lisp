@@ -67,7 +67,7 @@
 
 ==> 0
 
->>> (foreach item '(0 1 2 3 4 5)
+>>> (dolist (item '(0 1 2 3 4 5))
 ...    (writeLn! item))
 ...
 0
@@ -79,7 +79,17 @@
 
 ==> 5
 
->>> (doTimes (i 3) (writeLn! i))
+; --- foreach (legacy alias) ---
+
+>>> (foreach item '(a b c) (writeLn! item))
+...
+A
+B
+C
+
+==> C
+
+>>> (dotimes (i 3) (writeLn! i))
 ...
 0
 1
@@ -87,7 +97,7 @@
 
 ==> 2
 
->>> (let ((sum 0)) (doTimes (i 5) (setf sum (+ sum i))) sum)
+>>> (let ((sum 0)) (dotimes (i 5) (setf sum (+ sum i))) sum)
 ...
 
 ==> 10

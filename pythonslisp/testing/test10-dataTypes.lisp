@@ -93,15 +93,20 @@
 
 ==> T
 
->>> (list-length nil)
+>>> (length nil)
 ...
 
 ==> 0
 
->>> (list-length '(a b c d))
+>>> (length '(a b c d))
 ...
 
 ==> 4
+
+>>> (length "hello")
+...
+
+==> 5
 
 >>> (reverse '(1 2 3 4 5))
 ...

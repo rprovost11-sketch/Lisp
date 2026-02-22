@@ -34,6 +34,9 @@ Completed
 - implement structs.
 - updated the test suite to full coverage.  Now includes test cases and error
   testing.  New tests for closures and short-circuiting and and or primitives.
+- Common Lisp compliance movement.  rewrote several things to be more in
+  alignment with CL.  Added some simple items to predicates and lisp library
+  all for CL alignment.
 
 2026.02.16
 - OPTIMIZATION: Move macro expansion completely out of expression evaluation.

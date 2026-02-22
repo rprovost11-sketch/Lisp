@@ -55,14 +55,14 @@
 
 ==> NIL
 
->>> ;;; foreach on empty list returns NIL
-... (foreach x '() (write! x))
+>>> ;;; dolist on empty list returns NIL
+... (dolist (x '()) (write! x))
 ...
 
 ==> NIL
 
->>> ;;; doTimes with 0 iterations returns NIL
-... (doTimes (i 0) (write! i))
+>>> ;;; dotimes with 0 iterations returns NIL
+... (dotimes (i 0) (write! i))
 ...
 
 ==> NIL
@@ -129,8 +129,8 @@
 
 ==> 1
 
->>> ;;; sorted on empty list
-... (sorted '())
+>>> ;;; sort on empty list
+... (sort '())
 ...
 
 ==> NIL
@@ -257,33 +257,33 @@
 
 ==> NIL
 
-; --- copy vs original ---
+; --- copy-list vs original ---
 
 >>> (setf orig (list 1 2 3))
 ...
 
 ==> (1 2 3)
 
->>> (setf cop (copy orig))
+>>> (setf cop (copy-list orig))
 ...
 
 ==> (1 2 3)
 
->>> ;;; copy is not identity-equal
+>>> ;;; copy-list is not identity-equal
 ... (is? orig cop)
 ...
 
 ==> NIL
 
->>> ;;; copy is value-equal
+>>> ;;; copy-list is value-equal
 ... (= orig cop)
 ...
 
 ==> T
 
-; --- deepCopy ---
+; --- copy-tree ---
 
->>> (deepCopy '(1 (2 3) 4))
+>>> (copy-tree '(1 (2 3) 4))
 ...
 
 ==> (1 (2 3) 4)
@@ -357,14 +357,14 @@
 
 ==> "123"
 
-; --- foreach accumulation ---
+; --- dolist accumulation ---
 
 >>> (setf fsum 0)
 ...
 
 ==> 0
 
->>> (foreach x '(1 2 3 4 5) (setf fsum (+ fsum x)))
+>>> (dolist (x '(1 2 3 4 5)) (setf fsum (+ fsum x)))
 ...
 
 ==> 15
@@ -374,14 +374,14 @@
 
 ==> 15
 
-; --- doTimes accumulation ---
+; --- dotimes accumulation ---
 
 >>> (setf dsum 0)
 ...
 
 ==> 0
 
->>> (doTimes (i 5) (setf dsum (+ dsum i)))
+>>> (dotimes (i 5) (setf dsum (+ dsum i)))
 ...
 
 ==> 10
@@ -481,8 +481,8 @@
 
 ==> (1 2 3)
 
->>> ;;; sorted on single-element list
-... (sorted (list 3))
+>>> ;;; sort on single-element list
+... (sort (list 3))
 ...
 
 ==> (3)
