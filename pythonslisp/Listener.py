@@ -515,9 +515,16 @@ class Listener( object ):
          #print( value, file=self._logFile, flush=True )
 
    def _writeErrorMsg( self, errMsg: str, file=None ):
+      RED   = '\033[91m'
+      RESET = '\033[0m'
+      useColor = sys.stdout.isatty()
       errMsgLinesOfText = errMsg.splitlines()
       for errMsgLine in errMsgLinesOfText:
-         self._writeLn( f'%%% {errMsgLine}', file=file )
+         plainLine = f'%%% {errMsgLine}'
+         colorLine = f'{RED}{plainLine}{RESET}' if useColor else plainLine
+         print( colorLine, end='\n', flush=True, file=file )
+         if self._logFile:
+            print( plainLine, end='\n', flush=True, file=self._logFile )
 
    def _prompt( self, prompt: str='' ) -> str:
       inputStr: str = input( prompt ).strip()

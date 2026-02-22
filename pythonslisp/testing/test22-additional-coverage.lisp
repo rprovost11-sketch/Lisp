@@ -176,7 +176,7 @@
 ... (defun square22 (x) "Returns x squared" (* x x))
 ...
 
-==> (Function SQUARE22 (X) ... )
+==> (FUNCTION SQUARE22 (X) ... )
 
 >>> (square22 7)
 ...

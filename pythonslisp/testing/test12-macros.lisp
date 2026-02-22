@@ -31,7 +31,7 @@
 >>> (defmacro zero (var) `(setf ,var 0))
 ...
 
-==> (Macro ZERO (VAR) ... )
+==> (MACRO ZERO (VAR) ... )
 
 >>> x
 ...
@@ -52,7 +52,7 @@
 >>> (defmacro foo (a &rest b) `(a ,a ,@b))
 ...
 
-==> (Macro FOO (A &REST B) ... )
+==> (MACRO FOO (A &REST B) ... )
 
 >>> (macroexpand '(foo 1 (a b c) (x y z)))
 ...

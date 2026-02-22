@@ -8,12 +8,12 @@
 ...    (lambda (y) (+ x y)))
 ... 
 
-==> (Function ADDER (X) ... )
+==> (FUNCTION ADDER (X) ... )
 
 >>> (setf add5 (adder 5))
 ... 
 
-==> (Function ADD5 (Y) ... )
+==> (FUNCTION ADD5 (Y) ... )
 
 >>> (add5 8)
 ... 
@@ -26,7 +26,7 @@
 ...          (incf i))))
 ... 
 
-==> (Function INT-SEQ NIL ... )
+==> (FUNCTION INT-SEQ () ... )
 
 >>> (defun main ()
 ...    (let ((next-int (int-seq)))
@@ -35,7 +35,7 @@
 ...       (writeln! (next-int))))
 ... 
 
-==> (Function MAIN NIL ... )
+==> (FUNCTION MAIN () ... )
 
 >>> (main)
 ... 
@@ -50,17 +50,17 @@
 ...       (lambda () (incf n))))
 ... 
 
-==> (Function MAKE-COUNTER NIL ... )
+==> (FUNCTION MAKE-COUNTER () ... )
 
 >>> (setf c1 (make-counter))
 ... 
 
-==> (Function C1 NIL ... )
+==> (FUNCTION C1 () ... )
 
 >>> (setf c2 (make-counter))
 ... 
 
-==> (Function C2 NIL ... )
+==> (FUNCTION C2 () ... )
 
 >>> (c1)
 ... 
@@ -93,22 +93,22 @@
 ...             (lambda () bal))))
 ... 
 
-==> (Function MAKE-ACCOUNT (BALANCE) ... )
+==> (FUNCTION MAKE-ACCOUNT (BALANCE) ... )
 
 >>> (setf acct (make-account 100))
 ... 
 
-==> ((Function  (AMT) ... ) (Function  NIL ... ))
+==> ((FUNCTION  (AMT) ... ) (FUNCTION  () ... ))
 
 >>> (setf withdraw (at 0 acct))
 ... 
 
-==> (Function WITHDRAW (AMT) ... )
+==> (FUNCTION WITHDRAW (AMT) ... )
 
 >>> (setf get-bal (at 1 acct))
 ... 
 
-==> (Function GET-BAL NIL ... )
+==> (FUNCTION GET-BAL () ... )
 
 >>> (get-bal)
 ... 
@@ -138,7 +138,7 @@
 >>> (setf multiplier (let ((factor 3)) (lambda (x) (* factor x))))
 ... 
 
-==> (Function MULTIPLIER (X) ... )
+==> (FUNCTION MULTIPLIER (X) ... )
 
 >>> (multiplier 5)
 ... 
@@ -153,12 +153,12 @@
 >>> (defun make-adder (x) (lambda (y) (lambda (z) (+ x y z))))
 ... 
 
-==> (Function MAKE-ADDER (X) ... )
+==> (FUNCTION MAKE-ADDER (X) ... )
 
 >>> (setf add1-2 ((make-adder 1) 2))
 ... 
 
-==> (Function ADD1-2 (Z) ... )
+==> (FUNCTION ADD1-2 (Z) ... )
 
 >>> (add1-2 10)
 ... 

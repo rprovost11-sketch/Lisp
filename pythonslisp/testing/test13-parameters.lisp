@@ -158,7 +158,7 @@
 >>> ;;; Named function: error message shows function name
 ... (defun param-test-posit (a b) (+ a b))
 
-==> (Function PARAM-TEST-POSIT (A B) ... )
+==> (FUNCTION PARAM-TEST-POSIT (A B) ... )
 
 >>> (param-test-posit 3 4)
 

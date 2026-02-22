@@ -346,7 +346,7 @@
 >>> (defun fn14 (x) (* x x))
 ...
 
-==> (Function FN14 (X) ... )
+==> (FUNCTION FN14 (X) ... )
 
 >>> (type-of fn14)
 ...

@@ -81,7 +81,10 @@ class LFunction( LCallable ):
       super().__init__( name, docString, specialForm=False )
    
    def usageString( self ):
-      return f'(Function {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+      if len(self.lambdaListAST) == 0:
+         return f'(FUNCTION {self.name} () ... )'
+      else:
+         return f'(FUNCTION {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
 
 
 class LMacro( LCallable ):
@@ -93,7 +96,10 @@ class LMacro( LCallable ):
       super().__init__( name.strval, docString, specialForm=True )
    
    def usageString( self ):
-      return f'(Macro {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+      if len(self.lambdaListAST) == 0:
+         return f'(MACRO {self.name} () ... )'
+      else:
+         return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:

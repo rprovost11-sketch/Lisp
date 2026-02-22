@@ -36,7 +36,7 @@
 ...    )
 ...
 
-==> (Function COUNTDOWN1 (NUM) ... )
+==> (FUNCTION COUNTDOWN1 (NUM) ... )
 
 >>> (countdown1 5)
 ...
@@ -58,7 +58,7 @@
 ... )
 ...
 
-==> (Function COUNTDOWN2 (NUM) ... )
+==> (FUNCTION COUNTDOWN2 (NUM) ... )
 
 >>> (countdown2 3)
 3

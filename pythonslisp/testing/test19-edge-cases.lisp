@@ -499,7 +499,7 @@
 ... (defmacro test-docmacro19 (x) "a docstring" `(+ ,x 1))
 ...
 
-==> (Macro TEST-DOCMACRO19 (X) ... )
+==> (MACRO TEST-DOCMACRO19 (X) ... )
 
 >>> (test-docmacro19 5)
 ...
