@@ -1949,7 +1949,7 @@ random number will be a float."""
             return LSymbol('SYMBOL')
          elif isinstance( arg, dict ):
             struct_type = arg.get('STRUCT-TYPE')   # map stores symbol keys as strings
-            return struct_type if struct_type is not None else LSymbol('HASH-TABLE')
+            return struct_type if struct_type is not None else LSymbol('MAP')
          elif isinstance( arg, LFunction ):
             return LSymbol('FUNCTION')
          elif isinstance( arg, LMacro ):
@@ -2395,13 +2395,20 @@ Type '(help "topic")' for available documentation on the named topic."""
          callableObj = arg
          
          # Show help on the callableObj
-         print( "   USAGE: ", callableObj.usageString(), file=LispInterpreter.outStrm )
-         print( file=LispInterpreter.outStrm )
+         outStrm  = LispInterpreter.outStrm
+         outFile  = outStrm or sys.stdout
+         useColor = hasattr(outFile, 'isatty') and outFile.isatty()
+         BOLD_WHITE = '\033[1;97m' if useColor else ''
+         CYAN       = '\033[96m'   if useColor else ''
+         RESET      = '\033[0m'    if useColor else ''
+
+         print( f'   {BOLD_WHITE}USAGE:{RESET} {CYAN}{callableObj.usageString()}{RESET}', file=outStrm )
+         print( file=outStrm )
          if callableObj.docString != '':
             valueStr = prettyPrint( callableObj.docString )
             valueStr = _decode_escapes( valueStr )
-            print( valueStr, LispInterpreter.outStrm )
-         
+            print( valueStr, file=outStrm )
+
          return L_T
       
       def printHelpListings( env: Environment ) -> None:
@@ -2409,10 +2416,27 @@ Type '(help "topic")' for available documentation on the named topic."""
          functionsList = []
          macrosList = []
          topicsList = [ f'"{topic}"' for topic in sorted(topics.keys()) ]
-         outStrm = LispInterpreter.outStrm
-         
-         # Bin the global symbols each into one of the lists defined above
+         outStrm  = LispInterpreter.outStrm
+         outFile  = outStrm or sys.stdout
+         useColor = hasattr(outFile, 'isatty') and outFile.isatty()
+
+         BOLD_WHITE = '\033[1;97m' if useColor else ''
+         CYAN       = '\033[96m'   if useColor else ''
+         GREEN      = '\033[92m'   if useColor else ''
+         MAGENTA    = '\033[95m'   if useColor else ''
+         YELLOW     = '\033[93m'   if useColor else ''
+         RESET      = '\033[0m'    if useColor else ''
+
+         def hdr( text ):
+            ul = '=' * len(text)
+            print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
+            print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
+
+         # Bin the global symbols each into one of the lists defined above.
+         # Skip internal implementation details (% prefix or -INTERNAL suffix).
          for symbolStr in env.getGlobalEnv().localSymbols():
+            if symbolStr.startswith('%') or symbolStr.endswith('-INTERNAL'):
+               continue
             obj = env.lookupGlobal(symbolStr)
             if isinstance(obj, LPrimitive):
                primitivesList.append(symbolStr)
@@ -2420,27 +2444,22 @@ Type '(help "topic")' for available documentation on the named topic."""
                functionsList.append(symbolStr)
             elif isinstance(obj, LMacro):
                macrosList.append(symbolStr)
-         
+
          # Print tables for each of the categories of symbols
-         print( "Predefined Symbols", file=outStrm )
-         print( "==================", file=outStrm )
+         hdr( "Predefined Symbols" )
          print( "E  NIL  PI  T", file=outStrm )
          print( file=outStrm )
-         print( "Primitives", file=outStrm )
-         print( "==========", file=outStrm )
-         columnize( primitivesList, 78, file=outStrm )
+         hdr( "Primitives" )
+         columnize( primitivesList, 78, file=outStrm, itemColor=CYAN or None )
          print( file=outStrm )
-         print( "Functions", file=outStrm )
-         print( "=========", file=outStrm )
-         columnize( functionsList, 78, file=outStrm )
+         hdr( "Functions" )
+         columnize( functionsList, 78, file=outStrm, itemColor=GREEN or None )
          print( file=outStrm )
-         print( "Macros", file=outStrm )
-         print( "======", file=outStrm )
-         columnize( macrosList, 78, file=outStrm )
+         hdr( "Macros" )
+         columnize( macrosList, 78, file=outStrm, itemColor=MAGENTA or None )
          print( file=outStrm )
-         print( "TOPICS", file=outStrm )
-         print( "======", file=outStrm )
-         columnize( topicsList, 78, file=outStrm )
+         hdr( "TOPICS" )
+         columnize( topicsList, 78, file=outStrm, itemColor=YELLOW or None )
          print( file=outStrm )
          print( "Type '(help <callable>)' for available documentation on a callable.", file=outStrm )
          print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )

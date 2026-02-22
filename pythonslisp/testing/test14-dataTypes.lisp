@@ -336,11 +336,11 @@
 
 ==> CONS
 
-; plain map — no STRUCT-TYPE key → HASH-TABLE
+; plain map — no STRUCT-TYPE key → MAP
 >>> (type-of (map (x 1) (y 2)))
 ...
 
-==> HASH-TABLE
+==> MAP
 
 ; named function — define it first, then query
 >>> (defun fn14 (x) (* x x))

@@ -7,12 +7,16 @@
 
 >>> ;;; help with primitive shows usage and returns T
 ... (help +)
-USAGE:  (+ <number1> <number2> ...)
+USAGE: (+ <number1> <number2> ...)
+
+Returns the sum of numbers.
 ==> T
 
 >>> ;;; help with another primitive
 ... (help car)
-USAGE:  (CAR <list>)
+USAGE: (CAR <list>)
+
+Returns the first item in a list.
 ==> T
 
 >>> ;;; help with unknown topic string

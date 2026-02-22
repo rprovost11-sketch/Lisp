@@ -18,15 +18,18 @@ def retrieveFileList( dirname ) -> list[str]:
                     if os.path.isfile( f'{dirname}/{testFileName}' ) ]
    return testFileList
 
-def columnize( lst: list[str], displaywidth: int=80, outstrm=None ) -> None:
+def columnize( lst: list[str], displaywidth: int=80, file=None, itemColor=None ) -> None:
    """Display a list of strings as a compact set of columns.
 
    Each column is only as wide as necessary.
    Columns are separated by two spaces.
+   If itemColor is an ANSI escape string, each item is wrapped in that color.
    """
+   RESET = '\033[0m'
    size = len(lst)
    if size == 1:
-      print(str(lst[0]), file=outstrm )
+      item = lst[0]
+      print( f'{itemColor}{item}{RESET}' if itemColor else item, file=file )
       return
    # Try every row count from 1 upwards
    for nrows in range(1, len(lst)):
@@ -63,8 +66,14 @@ def columnize( lst: list[str], displaywidth: int=80, outstrm=None ) -> None:
       while texts and not texts[-1]:
          del texts[-1]
       for col in range(len(texts)):
-         texts[col] = texts[col].ljust(colwidths[col])
-      print(str("  ".join(texts)), file=outstrm )
+         content = texts[col]
+         padded  = content.ljust(colwidths[col])
+         if itemColor and content:
+            padding     = padded[len(content):]
+            texts[col]  = f'{itemColor}{content}{RESET}{padding}'
+         else:
+            texts[col]  = padded
+      print(str("  ".join(texts)), file=file )
 
 def write_multiFile( outputString: str, *fileList ):
    """Write output to multiple output streams using print.
@@ -102,10 +111,14 @@ class Listener( object ):
    as testing and rebooting the intepreter.  Partly ripped off from Python's
    cmd module.'''
    def __init__( self, anInterpreter: Interpreter, testdir: str='', **kwargs ) -> None:
-      print( '{language} {version} by {author}'.format(**kwargs) )
-      print( 'Project home {project}'.format(**kwargs) )
+      useColor   = sys.stdout.isatty()
+      BOLD_WHITE = '\033[1;97m' if useColor else ''
+      DIM        = '\033[2m'    if useColor else ''
+      RESET      = '\033[0m'    if useColor else ''
+      print( f'{BOLD_WHITE}{{language}} {{version}} by {{author}}{RESET}'.format(**kwargs) )
+      print( f'{DIM}Project home {{project}}{RESET}'.format(**kwargs) )
       print( )
-      print( '- Initializing Listener', flush=True )
+      print( f'{DIM}- Initializing Listener{RESET}', flush=True )
       self._interp          = anInterpreter
       self._testdir         = testdir
       self._logFile: Any    = None
@@ -135,7 +148,7 @@ class Listener( object ):
                   start = time.perf_counter( )
                   resultStr,parseTime,evalTime = self._interp.eval_instrumented( inputExprStr )
                   totalTime  = time.perf_counter( ) - start
-                  self._writeLn( f'\n==> {resultStr}' )
+                  self._writeResult( resultStr )
                   if self._instrumenting:
                      print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
                      print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
@@ -332,20 +345,24 @@ class Listener( object ):
       if len(args) > 0:
          arg = args[0]
          try:
-            doc=getattr(self, f'_cmd_{arg}').__doc__
+            doc = getattr(self, f'_cmd_{arg}').__doc__
             if doc:
-               self._writeErrorMsg(doc)
+               print(doc)
          except AttributeError:
             raise ListenerCommandError( f"*** No help on {arg}." )
       else:
+         useColor   = sys.stdout.isatty()
+         BOLD_WHITE = '\033[1;97m' if useColor else ''
+         CYAN       = '\033[96m'   if useColor else ''
+         RESET      = '\033[0m'    if useColor else ''
          header = "Listener Commands"
          names = dir(self.__class__)
          names.sort()
          cmds = [ name[5:] for name in names if name.startswith('_cmd_') ]
          print( )
-         print(header)
-         print('=' * len(header))
-         columnize(cmds, 69)
+         print( f'{BOLD_WHITE}{header}{RESET}' )
+         print( f'{BOLD_WHITE}{"=" * len(header)}{RESET}' )
+         columnize(cmds, 69, itemColor=CYAN or None)
          print()
          print( "Type ']help <command>' for help on a command." )
          print( "Type ']<command> [ <arg> ]' to execute a command." )
@@ -360,8 +377,13 @@ class Listener( object ):
          raise ListenerCommandError( self._cmd_instrument.__doc__ )
       
       self._instrumenting = not self._instrumenting       # toggle the state
-      stateStr = 'ON' if self._instrumenting else 'OFF'
-      print( f'Instrumenting is now {stateStr}.' )
+      stateStr   = 'ON' if self._instrumenting else 'OFF'
+      useColor   = sys.stdout.isatty()
+      GREEN      = '\033[92m' if useColor else ''
+      YELLOW     = '\033[93m' if useColor else ''
+      RESET      = '\033[0m'  if useColor else ''
+      stateColor = GREEN if self._instrumenting else YELLOW
+      print( f'Instrumenting is now {stateColor}{stateStr}{RESET}.' )
 
    def _cmd_log( self, args: list[str] ) -> None:
       '''Usage:  log <filename>
@@ -399,7 +421,10 @@ class Listener( object ):
 
       filename: str = args[0]
       self.sessionLog_restore( filename, verbosity=verbosity )
-      print( f'Log file read successfully: {filename}' )
+      useColor = sys.stdout.isatty()
+      GREEN    = '\033[92m' if useColor else ''
+      RESET    = '\033[0m'  if useColor else ''
+      print( f'{GREEN}Log file read successfully:{RESET} {filename}' )
 
    def _cmd_readsrc( self, args: list[str] ) -> None:
       '''Usage:  readsrc <filename>
@@ -415,7 +440,10 @@ class Listener( object ):
          print( f'File not found: "{filename}".' )
          return
       
-      print( f'Source file read successfully: {filename}' )
+      useColor = sys.stdout.isatty()
+      GREEN    = '\033[92m' if useColor else ''
+      RESET    = '\033[0m'  if useColor else ''
+      print( f'{GREEN}Source file read successfully:{RESET} {filename}' )
 
    def _cmd_reboot( self, args: list[str] ) -> None:
       '''Usage: reboot
@@ -427,13 +455,18 @@ class Listener( object ):
       if self._logFile:
          raise ListenerCommandError( 'Please close the log before rebooting.' )
 
-      print( '- Initializing interpreter' )
-      print( '- Loading Runtime library' )
+      useColor   = sys.stdout.isatty()
+      BOLD_GREEN = '\033[1;92m' if useColor else ''
+      CYAN       = '\033[96m'   if useColor else ''
+      DIM        = '\033[2m'    if useColor else ''
+      RESET      = '\033[0m'    if useColor else ''
+      print( f'{DIM}- Initializing interpreter{RESET}' )
+      print( f'{DIM}- Loading Runtime library{RESET}' )
       self._interp.reboot( )                     # boot/Reboot the interpreter
       print( )
-      print( 'Enter \']help\' for listener commands.' )
+      print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.')
-      print( 'Welcome!' )
+      print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
 
    def _cmd_test( self, args: list[str] ) -> None:
@@ -487,6 +520,12 @@ class Listener( object ):
       self._interp.reboot( outStrm=outStrm )
 
       # Summarize Test Results — print to both screen and file
+      useColor   = sys.stdout.isatty()
+      BOLD_WHITE = '\033[1;97m' if useColor else ''
+      GREEN      = '\033[92m'   if useColor else ''
+      RED        = '\033[91m'   if useColor else ''
+      RESET      = '\033[0m'    if useColor else ''
+
       reportLines = [
          '\n\nTest Report',
          '===========',
@@ -498,8 +537,15 @@ class Listener( object ):
       reportLines.append( f'Total test cases: {totalTestsRun}.' )
 
       for line in reportLines:
-         print( line )
-         print( line, file=runFile )
+         print( line, file=runFile )   # always plain in the run file
+         if line in ('\n\nTest Report', '==========='):
+            print( f'{BOLD_WHITE}{line}{RESET}' )
+         elif 'TESTS PASSED!' in line:
+            print( f'{GREEN}{line}{RESET}' )
+         elif 'Failed.' in line and not line.startswith('Total'):
+            print( f'{RED}{line}{RESET}' )
+         else:
+            print( line )
 
       runFile.close()
       print( f'\nTest output: {runFilename}' )
@@ -509,10 +555,21 @@ class Listener( object ):
          write_multiFile( value, file, self._logFile )
       else:
          write_multiFile( value, file )
-      
+
       #print( value, flush=True )
       #if self._logFile:
          #print( value, file=self._logFile, flush=True )
+
+   def _writeResult( self, resultStr: str ) -> None:
+      useColor     = sys.stdout.isatty()
+      BRIGHT_GREEN = '\033[92m'  if useColor else ''
+      BOLD_WHITE   = '\033[1;97m' if useColor else ''
+      RESET        = '\033[0m'    if useColor else ''
+      plainLine    = f'\n==> {resultStr}'
+      colorLine    = f'\n{BRIGHT_GREEN}==>{RESET} {BOLD_WHITE}{resultStr}{RESET}'
+      print( colorLine if useColor else plainLine, flush=True )
+      if self._logFile:
+         print( plainLine, file=self._logFile, flush=True )
 
    def _writeErrorMsg( self, errMsg: str, file=None ):
       RED   = '\033[91m'

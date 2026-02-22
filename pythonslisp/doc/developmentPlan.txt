@@ -37,6 +37,7 @@ Completed
 - Common Lisp compliance movement.  rewrote several things to be more in
   alignment with CL.  Added some simple items to predicates and lisp library
   all for CL alignment.
+- Colorized help output.
 
 2026.02.16
 - OPTIMIZATION: Move macro expansion completely out of expression evaluation.
