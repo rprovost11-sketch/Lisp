@@ -1,9 +1,9 @@
-lambdaList -> ( {var}*
-                [ &optional {var | (var [initForm [svar]])}* ]
-                [ &rest var ]
-                [ &key {var | ({var | (keyword var)} [initForm [svar]]) }*
-                       [&allow-other-keys] ]
-                [ &aux {var | (var [initForm])}* ] )
+lambda-list -> ( {var}*
+                 [ &optional {var | (var [initForm [svar]])}* ]
+                 [ &rest var ]
+                 [ &key {var | ({var | (keyword var)} [initForm [svar]]) }*
+                        [&allow-other-keys] ]
+                 [ &aux {var | (var [initForm])}* ] )
 
 Notes:
 - parentheses are taken literally as actual parentheses in lisp

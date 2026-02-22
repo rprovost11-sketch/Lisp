@@ -11,7 +11,7 @@ EMAIL        = 'ronLongo9@outlook.com'
 PROJECT = 'https://github.com/rprovost11-sketch/Lisp'
 _PACKAGE_DIR = os.path.dirname( os.path.abspath( __file__ ) )
 TEST_DIR     = os.path.join( _PACKAGE_DIR, 'testing' )
-LIBRARY_DIR  = os.path.join( _PACKAGE_DIR, 'lib' )
+
 USAGE = '''   USAGE:  python3.14 -m pythonslisp [options] [lispSourceFile]
 
 Options:
@@ -50,7 +50,7 @@ def main( ) -> None:
             sys.exit(1)
          source_file = arg
 
-   interp = LispInterpreter( runtimeLibraryDir=LIBRARY_DIR )
+   interp = LispInterpreter()
 
    if source_file is None:
       # Enter the repl
@@ -63,7 +63,7 @@ def main( ) -> None:
                                          testdir=TEST_DIR
                                          )
       except FileNotFoundError as ex:
-         print( f'Runtime library directory not found: "{LIBRARY_DIR}"' )
+         print( f'Runtime library directory not found: "{LispInterpreter.DEFAULT_LIB_DIR}"' )
          sys.exit(1)
 
       theListener.readEvalPrintLoop( )
