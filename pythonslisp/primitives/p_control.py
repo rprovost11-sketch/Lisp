@@ -1,8 +1,8 @@
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LCallable
-from pythonslisp.LispExceptions import LispRuntimeFuncError, Thrown
+from pythonslisp.LispAST import LSymbol, LCallable, LFunction, L_NIL
+from pythonslisp.LispExceptions import LispRuntimeFuncError, Thrown, ReturnFrom
 from pythonslisp.LispInterpreter import LispInterpreter
 
 
@@ -15,7 +15,12 @@ def register(primitive) -> None:
 function the body (the exprs) are evaluated within a nested scope.  This
 primitive captures the environment it is defined in to allow for closures.
 The first body expression can be a documentation string."""
-      raise LispRuntimeFuncError( LP_lambda, 'Handled by main eval loop.' )
+      funcParams, *funcBody = args
+      if funcBody and isinstance(funcBody[0], str):
+         docString, *funcBody = funcBody
+      else:
+         docString = ''
+      return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
 
    @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
    def LP_let( env: Environment, *args ) -> Any:
@@ -64,17 +69,18 @@ evaluates each expr in body and returns the result of the last expr evaluated.
 All remaining cases are skipped."""
       raise LispRuntimeFuncError( LP_case, 'Handled by main eval loop.' )
 
-   @primitive( 'quote', '<sexpr>', specialForm=True )
+   @primitive( 'quote', '<sexpr>', specialForm=True,
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_quote( env: Environment, *args ) -> Any:
       """Returns expr without evaluating it."""
-      raise LispRuntimeFuncError( LP_quote, 'quote evaluated inside eval loop.' )
+      return args[0]
 
    @primitive( 'backquote', '<sexpr>', specialForm=True,
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_backquote( env: Environment, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-      raise LispRuntimeFuncError( LP_backquote, 'Handled by main eval loop.' )
+      return LispInterpreter._lbackquoteExpand( env, args[0] )
 
    @primitive( 'comma', '<sexpr>', specialForm=True )
    def LP_comma( env: Environment, *args ) -> Any:
@@ -119,13 +125,26 @@ Returns the result of the last body expression, or NIL if the list is empty."""
       """Establishes a named lexical block.  Evaluates body forms in sequence and
 returns the value of the last one.  A (return-from name value) anywhere in the
 dynamic extent of the block performs an immediate non-local exit, returning value."""
-      raise LispRuntimeFuncError( LP_block, 'Handled by main eval loop.' )
+      blockName = args[0]   # analyzer guarantees: LSymbol
+      body = args[1:]
+      if len(body) == 0:
+         return L_NIL
+      try:
+         for sexpr in body[:-1]:
+            LispInterpreter._lEval( env, sexpr )
+         return LispInterpreter._lEval( env, body[-1] )
+      except ReturnFrom as e:
+         if e.name == blockName.strval:
+            return e.value
+         raise
 
    @primitive( 'return-from', '<name> &optional <value>', specialForm=True )
    def LP_return_from( env: Environment, *args ) -> Any:
       """Performs a non-local exit from the nearest enclosing (block name ...).
 Returns value (default NIL) from that block.  name is not evaluated."""
-      raise LispRuntimeFuncError( LP_return_from, 'Handled by main eval loop.' )
+      blockName = args[0]   # analyzer guarantees: LSymbol
+      value = LispInterpreter._lEval( env, args[1] ) if len(args) == 2 else L_NIL
+      raise ReturnFrom( blockName.strval, value )
 
    @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...',
                min_args=1, arity_msg='1 or more arguments expected' )
@@ -200,4 +219,14 @@ invoked.  If no matching catch exists, an error is signaled."""
 body forms in sequence.  If (throw tag value) is executed within the dynamic
 extent, catch immediately returns value.  Otherwise returns the value of the
 last body form, or NIL if body is empty."""
-      raise LispRuntimeFuncError( LP_catch, 'Handled by main eval loop.' )
+      tag  = LispInterpreter._lEval( env, args[0] )
+      body = args[1:]
+      try:
+         result = L_NIL
+         for sexpr in body:
+            result = LispInterpreter._lEval( env, sexpr )
+         return result
+      except Thrown as e:
+         if LispInterpreter._lEql( e.tag, tag ):
+            return e.value
+         raise

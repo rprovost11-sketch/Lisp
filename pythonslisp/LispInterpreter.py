@@ -165,10 +165,7 @@ class LispInterpreter( Interpreter ):
    
          # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
          primary, *args = sExprAST
-         if primary == 'QUOTE':
-            return args[0]
-         
-         elif primary == 'IF':
+         if primary == 'IF':
             condValue = LispInterpreter._lEval( env, args[0] )
             sExprAST = args[1] if LispInterpreter._lTrue(condValue) else args[2]
          
@@ -255,38 +252,6 @@ class LispInterpreter( Interpreter ):
                   env.bindGlobal( sym, rval )
             return rval
 
-         elif primary == 'BLOCK':
-            blockName = args[0]   # guaranteed LSymbol by analyzer
-            body = args[1:]
-            if len(body) == 0:
-               return L_NIL
-            try:
-               for sexpr in body[:-1]:
-                  LispInterpreter._lEval( env, sexpr )
-               return LispInterpreter._lEval( env, body[-1] )
-            except ReturnFrom as e:
-               if e.name == blockName.strval:
-                  return e.value
-               raise
-
-         elif primary == 'RETURN-FROM':
-            blockName = args[0]   # guaranteed LSymbol by analyzer
-            value = LispInterpreter._lEval( env, args[1] ) if len(args) == 2 else L_NIL
-            raise ReturnFrom( blockName.strval, value )
-
-         elif primary == 'CATCH':
-            tag  = LispInterpreter._lEval( env, args[0] )
-            body = args[1:]
-            try:
-               result = L_NIL
-               for sexpr in body:
-                  result = LispInterpreter._lEval( env, sexpr )
-               return result
-            except Thrown as e:
-               if LispInterpreter._lEql( e.tag, tag ):
-                  return e.value
-               raise
-
          elif primary == 'COND':
             sExprAST = L_NIL
             for clause in args:
@@ -309,27 +274,6 @@ class LispInterpreter( Interpreter ):
                      LispInterpreter._lEval( env, sexpr )
                   sExprAST = body[-1]
                   break
-
-         elif primary == 'LAMBDA':
-            funcParams, *funcBody = args   # analyzer guarantees: args >= 1, args[0] is list
-            if funcBody and isinstance(funcBody[0], str):
-               docString, *funcBody = funcBody
-            else:
-               docString = ''
-            return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
-
-         elif primary == 'BACKQUOTE':
-            return LispInterpreter._lbackquoteExpand( env, args[0] )
-
-         elif primary == 'DEFMACRO':
-            fnName, funcParams, *funcBody = args   # analyzer guarantees structure
-            if isinstance(funcBody[0], str):
-               docString = funcBody[0]
-               funcBody  = funcBody[1:]
-            else:
-               docString = ''
-            theFunc = LMacro( fnName, funcParams, docString, funcBody )
-            return env.bindGlobal( fnName.strval, theFunc )
 
          else:
             function = LispInterpreter._lEval( env, primary )

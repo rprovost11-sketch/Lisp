@@ -14,7 +14,14 @@ def register(primitive) -> None:
    def LP_defmacro( env: Environment, *args ) -> Any:
       """Defines and returns a new globally named macro.  The first expr of the body
 can be an optional documentation string."""
-      raise LispRuntimeFuncError( LP_defmacro, 'Handled by main eval loop.' )
+      fnName, funcParams, *funcBody = args   # analyzer guarantees structure
+      if funcBody and isinstance(funcBody[0], str):
+         docString = funcBody[0]
+         funcBody  = funcBody[1:]
+      else:
+         docString = ''
+      theFunc = LMacro( fnName, funcParams, docString, funcBody )
+      return env.bindGlobal( fnName.strval, theFunc )
 
    @primitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
