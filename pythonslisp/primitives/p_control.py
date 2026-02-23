@@ -157,6 +157,19 @@ Returns the result of the very last evaluation."""
 Returns the result of the last body expression, or NIL if the list is empty."""
       raise LispRuntimeFuncError( LP_dolist, 'Evaluation handled by macro.' )
 
+   @primitive( 'block', '<name> <sexpr1> <sexpr2> ...', specialForm=True )
+   def LP_block( env: Environment, *args ) -> Any:
+      """Establishes a named lexical block.  Evaluates body forms in sequence and
+returns the value of the last one.  A (return-from name value) anywhere in the
+dynamic extent of the block performs an immediate non-local exit, returning value."""
+      raise LispRuntimeFuncError( LP_block, 'Handled by main eval loop.' )
+
+   @primitive( 'return-from', '<name> &optional <value>', specialForm=True )
+   def LP_return_from( env: Environment, *args ) -> Any:
+      """Performs a non-local exit from the nearest enclosing (block name ...).
+Returns value (default NIL) from that block.  name is not evaluated."""
+      raise LispRuntimeFuncError( LP_return_from, 'Handled by main eval loop.' )
+
    @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
    def LP_funcall( env: Environment, *args ) -> Any:
       """Calls a function with the args listed."""
@@ -206,28 +219,16 @@ function is any callable that is not a special form."""
 
       return LispInterpreter._lApply( env, fnObj, fnArgs )
 
-   @primitive( 'and', '<boolean1> <boolean2> ...', specialForm=True )
+   @primitive( 'and', '&rest <forms>', specialForm=True )
    def LP_and( env: Environment, *args ) -> Any:
-      """Returns t if all arguments are truthy (non-nil).
-Short-circuits: stops evaluating arguments upon encountering the first nil."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_and, '2 or more arguments expected.' )
+      """Evaluates forms left to right.  Returns nil at the first nil form.
+Returns the value of the last form if all are truthy.  (and) returns t.
+Short-circuits: stops evaluating upon encountering the first nil."""
+      raise LispRuntimeFuncError( LP_and, 'Evaluation handled by macro.' )
 
-      for arg in args:
-         if not LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
-            return L_NIL
-
-      return L_T
-
-   @primitive( 'or', '<boolean1> <boolean2> ...', specialForm=True )
+   @primitive( 'or', '&rest <forms>', specialForm=True )
    def LP_or( env: Environment, *args ) -> Any:
-      """Returns t if at least one argument is truthy (non-nil).
-Short-circuits:  stops evaluating upon encountering the first truthy value."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_or, '2 or more arguments expected.' )
-
-      for arg in args:
-         if LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
-            return L_T
-
-      return L_NIL
+      """Evaluates forms left to right.  Returns the first truthy value found.
+Returns nil if all forms are nil.  (or) returns nil.
+Short-circuits: stops evaluating upon encountering the first truthy value."""
+      raise LispRuntimeFuncError( LP_or, 'Evaluation handled by macro.' )

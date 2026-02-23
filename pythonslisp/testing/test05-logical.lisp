@@ -61,7 +61,7 @@
 >>> (and 1 2 3)
 ...
 
-==> T
+==> 3
 
 >>> (and 1 nil 3)
 ...
@@ -71,7 +71,7 @@
 >>> (or nil 2)
 ...
 
-==> T
+==> 2
 
 >>> (or nil nil)
 ...
@@ -81,7 +81,7 @@
 >>> (or nil nil 3)
 ...
 
-==> T
+==> 3
 
 >>> (if nil 42)
 ...
@@ -107,7 +107,7 @@
 >>> (and t (writeLn! "should print"))
 "should print"
 
-==> T
+==> "should print"
 
 >>> (or t (writeLn! "should not print"))
 ...
@@ -117,7 +117,7 @@
 >>> (or nil (writeLn! "should print"))
 "should print"
 
-==> T
+==> "should print"
 
 >>> (and (writeLn! "first") nil (writeLn! "third"))
 "first"
@@ -127,7 +127,7 @@
 >>> (or (writeLn! "first") t (writeLn! "third"))
 "first"
 
-==> T
+==> "first"
 
 
 >>> ;;; Error: not requires exactly one argument
@@ -143,16 +143,25 @@
 %%% USAGE: (NOT <boolean>)
 ==>
 
->>> ;;; Error: and/or require at least two arguments
-... (and 1)
+; Single-arg: returns the value of the form
+>>> (and 42)
+==> 42
 
-%%% ERROR 'AND': 2 or more arguments expected.
-%%% USAGE: (AND <boolean1> <boolean2> ...)
-==>
+>>> (or 42)
+==> 42
 
->>> (or 1)
+; Zero-arg: (and) = T, (or) = NIL
+>>> (and)
+==> T
 
-%%% ERROR 'OR': 2 or more arguments expected.
-%%% USAGE: (OR <boolean1> <boolean2> ...)
-==>
+>>> (or)
+==> NIL
+
+; and returns value of last form (not just T)
+>>> (and 1 2)
+==> 2
+
+; or returns value of first truthy form (not just T)
+>>> (or nil 99)
+==> 99
 

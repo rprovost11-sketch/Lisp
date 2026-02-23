@@ -9,7 +9,8 @@ from pythonslisp.LispAST import ( LSymbol, L_T, L_NIL,
                                   LCallable, LFunction, LPrimitive, LMacro, LContinuation,
                                   prettyPrintSExpr )
 from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
-                                         LispArgBindingError, ContinuationInvoked )
+                                         LispArgBindingError, ContinuationInvoked,
+                                         ReturnFrom )
 from pythonslisp.LispArgBinder import bindArguments
 from pythonslisp.LispExpander import LispExpander
 
@@ -69,6 +70,8 @@ class LispInterpreter( Interpreter ):
             returnVal = LispInterpreter._lEval( self._env, form )
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
+      except ReturnFrom as e:
+         raise LispRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       finally:
          LispInterpreter.outStrm = None
       return returnVal
@@ -89,6 +92,8 @@ class LispInterpreter( Interpreter ):
          evalTime = time.perf_counter() - startTime
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
+      except ReturnFrom as e:
+         raise LispRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       finally:
          LispInterpreter.outStrm = None
       return returnVal, parseTime, evalTime
@@ -104,6 +109,8 @@ class LispInterpreter( Interpreter ):
             returnVal = LispInterpreter._lEval( self._env, form )
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
+      except ReturnFrom as e:
+         raise LispRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       finally:
          LispInterpreter.outStrm = None
       return returnVal
@@ -303,7 +310,34 @@ class LispInterpreter( Interpreter ):
                   raise LispRuntimeFuncError( env.lookup('SETQ'), 'First of setf pair must be a symbol.' )
       
             return rval
-         
+
+         elif primary == 'BLOCK':
+            if len(args) < 1:
+               raise LispRuntimeError( 'block: at least 1 argument (name) expected.' )
+            blockName = args[0]
+            if not isinstance( blockName, LSymbol ):
+               raise LispRuntimeError( 'block: name must be a symbol.' )
+            body = args[1:]
+            if len(body) == 0:
+               return L_NIL
+            try:
+               for sexpr in body[:-1]:
+                  LispInterpreter._lEval( env, sexpr )
+               return LispInterpreter._lEval( env, body[-1] )
+            except ReturnFrom as e:
+               if e.name == blockName.strval:
+                  return e.value
+               raise
+
+         elif primary == 'RETURN-FROM':
+            if len(args) < 1 or len(args) > 2:
+               raise LispRuntimeError( 'return-from: 1 or 2 arguments expected.' )
+            blockName = args[0]
+            if not isinstance( blockName, LSymbol ):
+               raise LispRuntimeError( 'return-from: name must be a symbol.' )
+            value = LispInterpreter._lEval( env, args[1] ) if len(args) == 2 else L_NIL
+            raise ReturnFrom( blockName.strval, value )
+
          else:
             function = LispInterpreter._lEval( env, primary )
             if not isinstance( function, LCallable ):
