@@ -287,6 +287,29 @@ class LispInterpreter( Interpreter ):
                   return e.value
                raise
 
+         elif primary == 'COND':
+            sExprAST = L_NIL
+            for clause in args:
+               testExpr = clause[0]      # analyzer guarantees: list, len >= 2
+               body     = clause[1:]
+               if LispInterpreter._lTrue( LispInterpreter._lEval(env, testExpr) ):
+                  for sexpr in body[:-1]:
+                     LispInterpreter._lEval( env, sexpr )
+                  sExprAST = body[-1]
+                  break
+
+         elif primary == 'CASE':
+            keyVal   = LispInterpreter._lEval( env, args[0] )
+            sExprAST = L_NIL
+            for clause in args[1:]:
+               caseVal = clause[0]       # analyzer guarantees: list, len >= 2
+               body    = clause[1:]
+               if LispInterpreter._lEval(env, caseVal) == keyVal:
+                  for sexpr in body[:-1]:
+                     LispInterpreter._lEval( env, sexpr )
+                  sExprAST = body[-1]
+                  break
+
          else:
             function = LispInterpreter._lEval( env, primary )
             if not isinstance( function, LCallable ):

@@ -98,6 +98,16 @@ class LispAnalyzer:
             LispAnalyzer.analyze(env, elt)
          return
 
+      # ---------- COND -----------------------------------------------------
+      if name == 'COND':
+         LispAnalyzer._analyzeCond(env, args)
+         return
+
+      # ---------- CASE -----------------------------------------------------
+      if name == 'CASE':
+         LispAnalyzer._analyzeCase(env, args)
+         return
+
       # ---------- LAMBDA --------------------------------------------------
       if name == 'LAMBDA':
          if len(args) < 1:
@@ -216,3 +226,30 @@ class LispAnalyzer:
          raise LispRuntimeError('return-from: name must be a symbol.')
       if len(args) == 2:
          LispAnalyzer.analyze(env, args[1])
+
+   @staticmethod
+   def _analyzeCond( env: Environment, args: list ) -> None:
+      """Structural checks for (cond ...) forms."""
+      if len(args) < 1:
+         raise LispRuntimeFuncError(env.lookup('COND'), '1 or more arguments expected.')
+      for i, clause in enumerate(args):
+         if not isinstance(clause, list) or len(clause) < 2:
+            raise LispRuntimeFuncError(env.lookup('COND'),
+                  f'Entry {i+1} must be a list with a condition and at least one body expression.')
+         LispAnalyzer.analyze(env, clause[0])
+         for bodyForm in clause[1:]:
+            LispAnalyzer.analyze(env, bodyForm)
+
+   @staticmethod
+   def _analyzeCase( env: Environment, args: list ) -> None:
+      """Structural checks for (case ...) forms."""
+      if len(args) < 2:
+         raise LispRuntimeFuncError(env.lookup('CASE'), '2 or more arguments expected.')
+      LispAnalyzer.analyze(env, args[0])
+      for i, clause in enumerate(args[1:]):
+         if not isinstance(clause, list) or len(clause) < 2:
+            raise LispRuntimeFuncError(env.lookup('CASE'),
+                  f'Entry {i+1} must be a list with a value and at least one body expression.')
+         LispAnalyzer.analyze(env, clause[0])
+         for bodyForm in clause[1:]:
+            LispAnalyzer.analyze(env, bodyForm)

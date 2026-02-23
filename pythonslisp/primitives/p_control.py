@@ -62,53 +62,15 @@ Then evaluates each expr in the paired body and returns the result of the
 last expr evaluated.  All remaining conds and bodys are skipped.  End the
 sequence with '(t <bodyn>)' to have code evaluated if no other condition
 is satisfied."""
-      caseList = args
-
-      for caseNum,case in enumerate(caseList):
-         try:
-            testExpr, *body = case
-         except (ValueError, TypeError):
-            raise LispRuntimeFuncError( LP_cond, f"Entry {caseNum+1} does not contain a (<cond:expr> <body:expr>) pair." )
-
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_cond, f'Entry {caseNum+1} expects at least one body expression.' )
-
-         if LispInterpreter._lTrue(LispInterpreter._lEval(env,testExpr)):
-            latestResult = L_NIL
-            for sexpr in body:
-               latestResult = LispInterpreter._lEval( env, sexpr )
-            return latestResult
-
-      return L_NIL
+      raise LispRuntimeFuncError( LP_cond, 'Handled by main eval loop.' )
 
    @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True,
-               min_args=1, arity_msg='2 or more arguments expected.' )
+               min_args=2, arity_msg='2 or more arguments expected.' )
    def LP_case( env: Environment, *args ) -> Any:
       """Evaluates expr.  Finds the first val that equals expr's val.  Then
 evaluates each expr in body and returns the result of the last expr evaluated.
 All remaining cases are skipped."""
-      expr, *caseList = args
-      exprVal = LispInterpreter._lEval( env, expr )
-
-      if len(caseList) < 1:
-         raise LispRuntimeFuncError( LP_case, 'At least one case expected.' )
-
-      for caseNum,case in enumerate(caseList):
-         try:
-            caseVal, *body = case
-         except (ValueError, TypeError):
-            raise LispRuntimeFuncError( LP_case, f'Entry {caseNum+1} does not contain a (<val> <body>) pair.' )
-
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_case, "Case body expected." )
-
-         if LispInterpreter._lEval(env,caseVal) == exprVal:
-            latestResult = None
-            for sexpr in body:
-               latestResult = LispInterpreter._lEval( env, sexpr )
-            return latestResult
-
-      return L_NIL
+      raise LispRuntimeFuncError( LP_case, 'Handled by main eval loop.' )
 
    @primitive( 'quote', '<sexpr>', specialForm=True )
    def LP_quote( env: Environment, *args ) -> Any:
