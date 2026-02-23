@@ -9,6 +9,41 @@ from pythonslisp.LispExceptions import LispRuntimeFuncError
 from pythonslisp.LispParser import ParseError
 
 
+def _eql( a: Any, b: Any ) -> bool:
+   """CL eql: symbols by name, numbers by type+value, everything else by identity."""
+   if isinstance(a, LSymbol) and isinstance(b, LSymbol):
+      return a.strval == b.strval
+   if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
+      return a == b
+   return a is b
+
+
+def _equal( a: Any, b: Any ) -> bool:
+   """CL equal: recursive structural equality; falls back to eql at leaves."""
+   if isinstance(a, list) and isinstance(b, list):
+      return len(a) == len(b) and all(_equal(x, y) for x, y in zip(a, b))
+   if isinstance(a, str) and isinstance(b, str):
+      return a == b
+   if isinstance(a, dict) and isinstance(b, dict):
+      return ( set(a.keys()) == set(b.keys()) and
+               all(_equal(a[k], b[k]) for k in a) )
+   return _eql(a, b)
+
+
+def _equalp( a: Any, b: Any ) -> bool:
+   """CL equalp: equal + case-insensitive strings + cross-type numbers."""
+   if isinstance(a, list) and isinstance(b, list):
+      return len(a) == len(b) and all(_equalp(x, y) for x, y in zip(a, b))
+   if isinstance(a, str) and isinstance(b, str):
+      return a.lower() == b.lower()
+   if isinstance(a, (int, float, Fraction)) and isinstance(b, (int, float, Fraction)):
+      return a == b
+   if isinstance(a, dict) and isinstance(b, dict):
+      return ( set(a.keys()) == set(b.keys()) and
+               all(_equalp(a[k], b[k]) for k in a) )
+   return _eql(a, b)
+
+
 def register(primitive, parseLispString: Callable) -> None:
 
    @primitive( 'numberp', '<sexpr>' )
@@ -140,6 +175,20 @@ def register(primitive, parseLispString: Callable) -> None:
       arg1 = args[0]
       return L_T if (isinstance(arg1,list) and (len(arg1)==0)) else L_NIL
 
+   @primitive( 'eq', '<a> <b>' )
+   def LP_eq( env: Environment, *args ) -> Any:
+      """Returns t if the two values are the same object otherwise nil.
+For numbers and strings uses value equality as a pragmatic choice since
+Python does not guarantee object identity for equal primitive values."""
+      if len(args) != 2:
+         raise LispRuntimeFuncError( LP_eq, '2 arguments expected.' )
+      arg1, arg2 = args
+      if isinstance(arg1, LSymbol) and isinstance(arg2, LSymbol):
+         return L_T if (arg1.strval == arg2.strval) else L_NIL
+      if isinstance(arg1, (int, float, str)):
+         return L_T if (arg1 == arg2) else L_NIL
+      return L_T if (arg1 is arg2) else L_NIL
+
    @primitive( 'eql', '<a> <b>' )
    def LP_eql( env: Environment, *args ) -> Any:
       """Returns t if a and b are eql: symbols with the same name; numbers of the
@@ -147,25 +196,25 @@ same type with the same value (so 1 and 1.0 are not eql); or any other objects
 that are the same (identical) object."""
       if len(args) != 2:
          raise LispRuntimeFuncError( LP_eql, '2 arguments expected.' )
-      a, b = args
-      if isinstance(a, LSymbol) and isinstance(b, LSymbol):
-         return L_T if a.strval == b.strval else L_NIL
-      if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
-         return L_T if a == b else L_NIL
-      return L_T if a is b else L_NIL
+      return L_T if _eql(args[0], args[1]) else L_NIL
 
-   @primitive( 'is?', '<expr1> <expr2>' )
-   def LP_is( env: Environment, *args ) -> Any:
-      """Returns t if the two values are the same object otherwise nil."""
-      try:
-         arg1,arg2 = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_is, '2 arguments expected.' )
+   @primitive( 'equal', '<a> <b>' )
+   def LP_equalCL( env: Environment, *args ) -> Any:
+      """Returns t if a and b are structurally equal.  Recursively compares lists
+element by element and strings by content.  Uses eql at the leaves so numbers
+must be the same type: (equal 1 1.0) is nil."""
+      if len(args) != 2:
+         raise LispRuntimeFuncError( LP_equalCL, '2 arguments expected.' )
+      return L_T if _equal(args[0], args[1]) else L_NIL
 
-      if isinstance(arg1, (int,float,str)):
-         return L_T if (arg1 == arg2) else L_NIL
-      else:
-         return L_T if (arg1 is arg2) else L_NIL
+   @primitive( 'equalp', '<a> <b>' )
+   def LP_equalp( env: Environment, *args ) -> Any:
+      """Returns t if a and b are equalp.  Like equal but case-insensitive for
+strings and type-insensitive for numbers: (equalp 1 1.0) is t,
+(equalp \"ABC\" \"abc\") is t."""
+      if len(args) != 2:
+         raise LispRuntimeFuncError( LP_equalp, '2 arguments expected.' )
+      return L_T if _equalp(args[0], args[1]) else L_NIL
 
    @primitive( '=', '<expr1> <expr2> ...' )
    def LP_equal( env: Environment, *args ) -> Any:

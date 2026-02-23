@@ -334,27 +334,27 @@
 %%% USAGE: (MAPP <sexpr>)
 ==>
 
-; --- IS? argument count errors ---
+; --- eq / is? argument count errors (is? is an alias for eq) ---
 
 >>> ;;; is? with no arguments
 ... (is?)
 
-%%% ERROR 'IS?': 2 arguments expected.
-%%% USAGE: (IS? <expr1> <expr2>)
+%%% ERROR 'EQ': 2 arguments expected.
+%%% USAGE: (EQ <a> <b>)
 ==>
 
 >>> ;;; is? with one argument
 ... (is? 1)
 
-%%% ERROR 'IS?': 2 arguments expected.
-%%% USAGE: (IS? <expr1> <expr2>)
+%%% ERROR 'EQ': 2 arguments expected.
+%%% USAGE: (EQ <a> <b>)
 ==>
 
 >>> ;;; is? with too many arguments
 ... (is? 1 2 3)
 
-%%% ERROR 'IS?': 2 arguments expected.
-%%% USAGE: (IS? <expr1> <expr2>)
+%%% ERROR 'EQ': 2 arguments expected.
+%%% USAGE: (EQ <a> <b>)
 ==>
 
 ; --- Conversion argument count errors ---
