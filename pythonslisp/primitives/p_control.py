@@ -3,7 +3,7 @@ from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LFunction, LMacro, LCallable
 from pythonslisp.LispAST import L_T, L_NIL
-from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.LispExceptions import LispRuntimeFuncError, Thrown
 from pythonslisp.LispInterpreter import LispInterpreter
 
 
@@ -232,3 +232,21 @@ Short-circuits: stops evaluating upon encountering the first nil."""
 Returns nil if all forms are nil.  (or) returns nil.
 Short-circuits: stops evaluating upon encountering the first truthy value."""
       raise LispRuntimeFuncError( LP_or, 'Evaluation handled by macro.' )
+
+   @primitive( 'throw', '<tag> <result>' )
+   def LP_throw( env: Environment, *args ) -> Any:
+      """Performs a non-local exit to the nearest enclosing (catch tag ...) whose
+tag is eql to this tag.  Both tag and result are evaluated before throw is
+invoked.  If no matching catch exists, an error is signaled."""
+      if len(args) != 2:
+         raise LispRuntimeFuncError( LP_throw, '2 arguments expected.' )
+      tag, value = args
+      raise Thrown( tag, value )
+
+   @primitive( 'catch', '<tag> <sexpr1> <sexpr2> ...', specialForm=True )
+   def LP_catch( env: Environment, *args ) -> Any:
+      """Establishes a dynamic catch point tagged with tag (evaluated).  Evaluates
+body forms in sequence.  If (throw tag value) is executed within the dynamic
+extent, catch immediately returns value.  Otherwise returns the value of the
+last body form, or NIL if body is empty."""
+      raise LispRuntimeFuncError( LP_catch, 'Handled by main eval loop.' )

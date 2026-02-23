@@ -140,6 +140,20 @@ def register(primitive, parseLispString: Callable) -> None:
       arg1 = args[0]
       return L_T if (isinstance(arg1,list) and (len(arg1)==0)) else L_NIL
 
+   @primitive( 'eql', '<a> <b>' )
+   def LP_eql( env: Environment, *args ) -> Any:
+      """Returns t if a and b are eql: symbols with the same name; numbers of the
+same type with the same value (so 1 and 1.0 are not eql); or any other objects
+that are the same (identical) object."""
+      if len(args) != 2:
+         raise LispRuntimeFuncError( LP_eql, '2 arguments expected.' )
+      a, b = args
+      if isinstance(a, LSymbol) and isinstance(b, LSymbol):
+         return L_T if a.strval == b.strval else L_NIL
+      if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
+         return L_T if a == b else L_NIL
+      return L_T if a is b else L_NIL
+
    @primitive( 'is?', '<expr1> <expr2>' )
    def LP_is( env: Environment, *args ) -> Any:
       """Returns t if the two values are the same object otherwise nil."""

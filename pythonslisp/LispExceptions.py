@@ -35,3 +35,13 @@ class ContinuationInvoked( Exception ):
       self.token = token
       self.value = value
       super().__init__()
+
+
+class Thrown( Exception ):
+   """Raised by throw.  Propagates up to the nearest enclosing catch with a matching tag."""
+   __slots__ = ('tag', 'value')
+
+   def __init__( self, tag, value ) -> None:
+      self.tag   = tag
+      self.value = value
+      super().__init__()
