@@ -504,16 +504,14 @@
 
 >>> (lambda)
 
-%%% ERROR 'LAMBDA': 2 arguments expected.
+%%% ERROR 'LAMBDA': 1 or more arguments expected.
 %%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
 ==>
 
->>> ;;; lambda with no body
+>>> ;;; lambda with no body — valid in CL, returns NIL when called
 ... (lambda ())
 
-%%% ERROR 'LAMBDA': At least one body expression expected.
-%%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
-==>
+==> (FUNCTION  () ... )
 
 ; --- Quote / backquote errors ---
 

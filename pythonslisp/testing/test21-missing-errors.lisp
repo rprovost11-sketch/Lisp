@@ -106,12 +106,10 @@
 
 ; --- LAMBDA docstring-only error ---
 
->>> ;;; lambda with docstring but no body
+>>> ;;; lambda with docstring but no body — valid in CL, returns NIL when called
 ... (lambda () "docstring")
 
-%%% ERROR 'LAMBDA': At least one body expression expected after docstring.
-%%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
-==>
+==> (FUNCTION  () ... )
 
 ; --- LET additional error path ---
 

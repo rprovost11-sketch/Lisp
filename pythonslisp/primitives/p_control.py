@@ -15,7 +15,17 @@ def register(primitive) -> None:
 function the body (the exprs) are evaluated within a nested scope.  This
 primitive captures the environment it is defined in to allow for closures.
 The first body expression can be a documentation string."""
-      raise LispRuntimeFuncError( LP_lambda, 'lambda evaluated in main eval loop.' )
+      try:
+         funcParams, *funcBody = args
+      except ValueError:
+         raise LispRuntimeFuncError( LP_lambda, '1 or more arguments expected.' )
+
+      if funcBody and isinstance(funcBody[0], str):
+         docString, *funcBody = funcBody
+      else:
+         docString = ''
+
+      return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
 
    @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
    def LP_let( env: Environment, *args ) -> Any:

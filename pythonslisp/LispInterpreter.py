@@ -179,22 +179,6 @@ class LispInterpreter( Interpreter ):
             else:
                sExprAST = L_NIL
          
-         elif primary == 'LAMBDA':
-            try:
-               funcParams, *funcBody = args
-            except ValueError:
-               raise LispRuntimeFuncError( env.lookup('LAMBDA'), '1 or more arguments expected.' )
-
-            bodyLen = len(funcBody)
-            if bodyLen == 0:
-               docString = ''
-            elif isinstance(funcBody[0], str):
-               docString, *funcBody = funcBody
-            else:
-               docString = ''
-
-            return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
-         
          elif primary == 'LET':
             try:
                vardefs, *body = args
