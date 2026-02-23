@@ -12,7 +12,7 @@ Phase 3: arity / type checks migrated out of primitives.
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol
+from pythonslisp.LispAST import LSymbol, LPrimitive
 from pythonslisp.LispExceptions import ( LispAnalysisError,      # noqa: F401 (re-exported)
                                          LispRuntimeError,
                                          LispRuntimeFuncError )
@@ -51,6 +51,8 @@ class LispAnalyzer:
 
       # ---------- BACKQUOTE -----------------------------------------------
       if name == 'BACKQUOTE':
+         if len(args) != 1:
+            raise LispRuntimeFuncError(env.lookup('BACKQUOTE'), '1 argument expected.')
          return  # Don't recurse into backquote templates
 
       # ---------- IF -------------------------------------------------------
@@ -96,7 +98,46 @@ class LispAnalyzer:
             LispAnalyzer.analyze(env, elt)
          return
 
+      # ---------- LAMBDA --------------------------------------------------
+      if name == 'LAMBDA':
+         if len(args) < 1:
+            raise LispRuntimeFuncError(env.lookup('LAMBDA'), '1 or more arguments expected.')
+         if not isinstance(args[0], list):
+            raise LispRuntimeFuncError(env.lookup('LAMBDA'), 'First argument expected to be a list of params.')
+         for bodyForm in args[1:]:
+            LispAnalyzer.analyze(env, bodyForm)
+         return
+
+      # ---------- DEFMACRO ------------------------------------------------
+      if name == 'DEFMACRO':
+         if len(args) < 2:
+            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), '3 or more arguments expected.')
+         if not isinstance(args[0], LSymbol):
+            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'Argument 1 expected to be a symbol.')
+         if not isinstance(args[1], list):
+            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'Argument 2 expected to be a list of params.')
+         funcBody = list(args[2:])
+         if len(funcBody) < 1:
+            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
+         if isinstance(funcBody[0], str):
+            funcBody = funcBody[1:]
+         if len(funcBody) < 1:
+            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'At least one body expression expected after docstring.')
+         return
+
       # ---------- Everything else (regular calls, unknown special forms) ---
+      # Generic arity check for primitives that carry arity metadata.
+      if isinstance(head, LSymbol):
+         try:
+            callableObj = env.lookup(head.strval)
+            if isinstance(callableObj, LPrimitive) and callableObj.arity_msg:
+               numArgs = len(args)
+               tooFew  = numArgs < callableObj.min_args
+               tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
+               if tooFew or tooMany:
+                  raise LispRuntimeFuncError(callableObj, callableObj.arity_msg)
+         except KeyError:
+            pass
       for elt in sexpr:
          LispAnalyzer.analyze(env, elt)
 

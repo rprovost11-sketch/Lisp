@@ -36,11 +36,10 @@ def register(primitive) -> None:
             raise LispRuntimeFuncError( LP_map, f'Entry {entryNum+1} has an invalid <key> type.' )
       return theMapping
 
-   @primitive( 'car', '<list>' )
+   @primitive( 'car', '<list>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_car( env: Environment, *args ) -> Any:
       """Returns the first item in a list."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_car, '1 argument expected.' )
       theList = args[0]
 
       if not isinstance(theList, list):
@@ -51,11 +50,10 @@ def register(primitive) -> None:
       except IndexError:
          return L_NIL
 
-   @primitive( 'cdr', '<list>' )
+   @primitive( 'cdr', '<list>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_cdr( env: Environment, *args ) -> Any:
       """Returns a copy of the list minus the first element."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_cdr, '1 argument expected.' )
       theList = args[0]
 
       if not isinstance(theList, list):
@@ -63,37 +61,32 @@ def register(primitive) -> None:
 
       return theList[1:]
 
-   @primitive( 'cons', '<obj> <list>' )
+   @primitive( 'cons', '<obj> <list>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_cons( env: Environment, *args ) -> Any:
       """Returns a copy of list with obj inserted into the front of the copy."""
-      try:
-         obj,consList = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_cons, '2 arguments expected.' )
+      obj, consList = args
 
       if not isinstance(consList, list):
          raise LispRuntimeFuncError( LP_cons, '2nd argument expected to be a list.' )
 
       return [ obj, *consList ]
 
-   @primitive( 'push!', '<list> <value>' )
+   @primitive( 'push!', '<list> <value>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_push( env: Environment, *args ) -> Any:
       """Pushes a value onto the back of a list."""
-      try:
-         alist, value = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_push, '2 arguments expected.' )
+      alist, value = args
 
       if not isinstance(alist, list):
          raise LispRuntimeFuncError( LP_push, '1st argument expected to be a list.' )
       alist.append( value )
       return alist
 
-   @primitive( 'pop!', '<list>' )
+   @primitive( 'pop!', '<list>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_pop( env: Environment, *args ) -> Any:
       """Pops and returns the last value of a list."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_pop, '1 argument expected.' )
       alist = args[0]
 
       if not isinstance(alist, list):
@@ -105,14 +98,12 @@ def register(primitive) -> None:
          raise LispRuntimeFuncError( LP_pop, 'Invalid argument.' )
       return value
 
-   @primitive( 'at', '<keyOrIndex> <mapListOrStr>' )
+   @primitive( 'at', '<keyOrIndex> <mapListOrStr>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_at( env: Environment, *args ) -> Any:
       """Returns the value at a specified index of a list or string,
       or specified key of a map."""
-      try:
-         key,keyed = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_at, '2 arguments expected.' )
+      key, keyed = args
 
       if not isinstance(keyed, (list, dict, str) ):
          raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List, Map, or String expected.' )
@@ -125,14 +116,12 @@ def register(primitive) -> None:
       except ( KeyError, IndexError, TypeError ):
          raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
 
-   @primitive( 'at-set', '<keyOrIndex> <mapListOrStr> <newValue>' )
+   @primitive( 'at-set', '<keyOrIndex> <mapListOrStr> <newValue>',
+               min_args=3, max_args=3, arity_msg='Exactly 3 arguments expected.' )
    def LP_atSet( env: Environment, *args ) -> Any:
       """Sets the value at a specified index of a list,
       or specified key of a map.  Returns newValue."""
-      try:
-         key,keyed,newValue = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_atSet, 'Exactly 3 arguments expected.' )
+      key, keyed, newValue = args
 
       if not isinstance(keyed, (list, dict)):
          raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or Map expected.' )
@@ -147,13 +136,11 @@ def register(primitive) -> None:
       
       return newValue
 
-   @primitive( 'at-delete', '<keyOrIndex> <mapOrList>' )
+   @primitive( 'at-delete', '<keyOrIndex> <mapOrList>',
+               min_args=2, max_args=2, arity_msg='Exactly 2 arguments expected.' )
    def LP_atDelete( env: Environment, *args ) -> bool:
       """Deletes the key-value pair from a map or list specified by keyOrIndex."""
-      try:
-         key, keyed = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_atDelete, "Exactly 2 arguments expected." )
+      key, keyed = args
 
       if not isinstance( keyed, (list, dict) ):
          raise LispRuntimeFuncError( LP_atDelete, "Argument 2 expected to be a list or map." )
@@ -165,13 +152,11 @@ def register(primitive) -> None:
 
       return L_T
 
-   @primitive( 'at-insert', '<index> <list> <newItem>' )
+   @primitive( 'at-insert', '<index> <list> <newItem>',
+               min_args=3, max_args=3, arity_msg='Exactly 3 arguments expected.' )
    def LP_atInsert( env: Environment, *args ) -> bool:
       """Inserts newItem into list at the position specified by index.  Returns newItem."""
-      try:
-         index, lst, newItem = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_atInsert, "Exactly 3 arguments expected." )
+      index, lst, newItem = args
 
       if not isinstance(index, int):
          raise LispRuntimeFuncError( LP_atInsert, "Argument 1 expected to be an integer index." )
@@ -182,11 +167,10 @@ def register(primitive) -> None:
       lst.insert( index, newItem )
       return newItem
 
-   @primitive( 'append', '<list1> <list2> ...' )
+   @primitive( 'append', '<list1> <list2> ...',
+               min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_append( env: Environment, *args ) -> Any:
       """Returns a new list with the contents of the argument lists merged.  Order is retained."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_append, 'At least 2 arguments expected.' )
 
       resultList = list( )
       for lst in args:
@@ -196,13 +180,11 @@ def register(primitive) -> None:
             resultList.append( item )
       return resultList
 
-   @primitive( 'hasValue?', '<listOrMap> <value>' )
+   @primitive( 'hasValue?', '<listOrMap> <value>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_hasValue( env: Environment, *args ) -> Any:
       """Returns t if the list/map contains value otherwise nil."""
-      try:
-         keyed,aVal = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_hasValue, '2 arguments expected.' )
+      keyed, aVal = args
 
       if isinstance(keyed, list):
          pass
@@ -213,13 +195,11 @@ def register(primitive) -> None:
 
       return L_T if aVal in keyed else L_NIL
 
-   @primitive( 'update!', '<map1> <map2>' )
+   @primitive( 'update!', '<map1> <map2>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_update( env: Environment, *args ) -> Any:
       """Updates map1's data with map2's."""
-      try:
-         map1,map2 = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_update, '2 arguments expected.' )
+      map1, map2 = args
 
       if not isinstance( map1, dict ):
          raise LispRuntimeFuncError( LP_update, 'Argument 1 expected to be a map.' )
@@ -230,13 +210,11 @@ def register(primitive) -> None:
       map1.update( map2 )
       return map1
 
-   @primitive( 'hasKey?', '<map> <key>' )
+   @primitive( 'hasKey?', '<map> <key>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_hasKey( env: Environment, *args ) -> Any:
       """Returns t if the key is in the map otherwise nil."""
-      try:
-         aMap,aKey = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_hasKey, '2 arguments expected.' )
+      aMap, aKey = args
 
       if not isinstance(aMap, dict):
          raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 1.  Map expected.')
@@ -246,12 +224,10 @@ def register(primitive) -> None:
 
       return L_T if aKey in aMap else L_NIL
 
-   @primitive( 'sort', '<list>' )
+   @primitive( 'sort', '<list>',
+               min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
    def LP_sorted( env: Environment, *args ) -> Any:
       """Returns a copy of the list sorted."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_sorted, "Exactly 1 argument expected." )
-
       theList = args[0]
       if not isinstance(theList, list):
          raise LispRuntimeFuncError( LP_sorted, "Argument 1 expected to be a list." )
@@ -261,11 +237,10 @@ def register(primitive) -> None:
       except TypeError:
          raise LispRuntimeFuncError( LP_sorted, 'Cannot sort a list with incomparable types.' )
 
-   @primitive( 'length', '<sequence>' )
+   @primitive( 'length', '<sequence>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_length( env: Environment, *args ) -> Any:
       """Returns the number of elements in a list, string, or map."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_length, '1 argument expected.' )
       arg = args[0]
       if isinstance(arg, (list, str, dict)):
          return len(arg)

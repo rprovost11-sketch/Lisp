@@ -9,16 +9,14 @@ from pythonslisp.LispInterpreter import LispInterpreter
 
 def register(primitive) -> None:
 
-   @primitive( 'lambda', '<lambda-list> <sexpr1> <sexpr2> ...', specialForm=True )
+   @primitive( 'lambda', '<lambda-list> <sexpr1> <sexpr2> ...', specialForm=True,
+               min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_lambda( env: Environment, *args ) -> Any:
       """Creates and returns an unnamed lambda function.  When evaluating such a
 function the body (the exprs) are evaluated within a nested scope.  This
 primitive captures the environment it is defined in to allow for closures.
 The first body expression can be a documentation string."""
-      try:
-         funcParams, *funcBody = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_lambda, '1 or more arguments expected.' )
+      funcParams, *funcBody = args   # arity + list check done by analyzer
 
       if funcBody and isinstance(funcBody[0], str):
          docString, *funcBody = funcBody
@@ -56,15 +54,14 @@ evaluated and its result returned, otherwise alt is evaluated and its result
 is returned."""
       raise LispRuntimeFuncError( LP_if, 'Expression evaluated in main eval loop.' )
 
-   @primitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True )
+   @primitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True,
+               min_args=1, arity_msg='1 or more argument expected.' )
    def LP_cond( env: Environment, *args ) -> Any:
       """Evaluates each cond in order until one evaluates to truthy (non-nil).
 Then evaluates each expr in the paired body and returns the result of the
 last expr evaluated.  All remaining conds and bodys are skipped.  End the
 sequence with '(t <bodyn>)' to have code evaluated if no other condition
 is satisfied."""
-      if len(args) < 1:
-         raise LispRuntimeFuncError( LP_cond, '1 or more argument expected.' )
       caseList = args
 
       for caseNum,case in enumerate(caseList):
@@ -84,15 +81,13 @@ is satisfied."""
 
       return L_NIL
 
-   @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True )
+   @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True,
+               min_args=1, arity_msg='2 or more arguments expected.' )
    def LP_case( env: Environment, *args ) -> Any:
       """Evaluates expr.  Finds the first val that equals expr's val.  Then
 evaluates each expr in body and returns the result of the last expr evaluated.
 All remaining cases are skipped."""
-      try:
-         expr, *caseList = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_case, '2 or more arguments expected.' )
+      expr, *caseList = args
       exprVal = LispInterpreter._lEval( env, expr )
 
       if len(caseList) < 1:
@@ -120,14 +115,12 @@ All remaining cases are skipped."""
       """Returns expr without evaluating it."""
       raise LispRuntimeFuncError( LP_quote, 'quote evaluated inside eval loop.' )
 
-   @primitive( 'backquote', '<sexpr>', specialForm=True )
+   @primitive( 'backquote', '<sexpr>', specialForm=True,
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_backquote( env: Environment, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-      if (len(args) != 1):
-         raise LispRuntimeFuncError( LP_backquote, '1 argument expected.' )
-      sExpr = args[0]
-      return LispInterpreter._lbackquoteExpand( env, sExpr )
+      return LispInterpreter._lbackquoteExpand( env, args[0] )
 
    @primitive( 'comma', '<sexpr>', specialForm=True )
    def LP_comma( env: Environment, *args ) -> Any:
@@ -180,31 +173,26 @@ dynamic extent of the block performs an immediate non-local exit, returning valu
 Returns value (default NIL) from that block.  name is not evaluated."""
       raise LispRuntimeFuncError( LP_return_from, 'Handled by main eval loop.' )
 
-   @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
+   @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...',
+               min_args=1, arity_msg='1 or more arguments expected' )
    def LP_funcall( env: Environment, *args ) -> Any:
       """Calls a function with the args listed."""
-      if len(args) == 0:
-         raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
-
       return LispInterpreter._lApply( env, args[0], args[1:] )
 
-   @primitive( 'eval', '<sexpr>' )
+   @primitive( 'eval', '<sexpr>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_eval( env: Environment, *args ) -> Any:
       """Evaluates expr in the current scope."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_eval, '1 argument expected.' )
-      expr = args[0]
-      return LispInterpreter._lEval( env, expr )
+      return LispInterpreter._lEval( env, args[0] )
 
-   @primitive( 'apply', '<function> &rest <args> <argsList>' )
+   @primitive( 'apply', '<function> &rest <args> <argsList>',
+               min_args=2, arity_msg='At least 2 arguments expected to apply.' )
    def LP_apply( env: Environment, *args ) -> Any:
       """Inserts arg1,arg2,... into the front of listOfMoreArgs, then applies the
 function the the whole list of args.  Returns the result of that function
 application.
 
 function is any callable that is not a special form."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_apply, "At least 2 arguments expected to apply." )
 
       listArg = args[-1]
       if not isinstance(listArg, list):
@@ -243,13 +231,12 @@ Returns nil if all forms are nil.  (or) returns nil.
 Short-circuits: stops evaluating upon encountering the first truthy value."""
       raise LispRuntimeFuncError( LP_or, 'Evaluation handled by macro.' )
 
-   @primitive( 'throw', '<tag> <result>' )
+   @primitive( 'throw', '<tag> <result>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_throw( env: Environment, *args ) -> Any:
       """Performs a non-local exit to the nearest enclosing (catch tag ...) whose
 tag is eql to this tag.  Both tag and result are evaluated before throw is
 invoked.  If no matching catch exists, an error is signaled."""
-      if len(args) != 2:
-         raise LispRuntimeFuncError( LP_throw, '2 arguments expected.' )
       tag, value = args
       raise Thrown( tag, value )
 

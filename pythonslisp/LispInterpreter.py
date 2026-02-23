@@ -24,8 +24,8 @@ class LispInterpreter( Interpreter ):
    _setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
 
    # --- Tracing state ---
-   _traced:       set   = set()    # function names registered via (trace fn)
-   _trace_global: bool  = False    # global toggle set by ]trace listener command
+   _traced:       set   = set()   # function names registered via (trace fn)
+   _trace_global: bool  = False   # global toggle set by ]trace listener command
    _trace_depth:  int   = 0       # current call nesting depth (managed in _lApply)
    _apply_hook:   Any   = None    # set to _trace_fn when any tracing is active
 
@@ -487,14 +487,20 @@ class LispInterpreter( Interpreter ):
       primitiveDict[ 'NIL' ] = L_NIL
 
       class primitive:
-         def __init__( self, primitiveSymbolString: str, paramsString: str = '', specialForm: bool = False ) -> None:
-            self._name:         str  = primitiveSymbolString.upper()
-            self._paramsString: str  = paramsString
-            self._specialForm:  bool = specialForm
+         def __init__( self, primitiveSymbolString: str, paramsString: str = '', specialForm: bool = False,
+                       min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '' ) -> None:
+            self._name:         str       = primitiveSymbolString.upper()
+            self._paramsString: str       = paramsString
+            self._specialForm:  bool      = specialForm
+            self._min_args:     int       = min_args
+            self._max_args:     (int|None)= max_args
+            self._arity_msg:    str       = arity_msg
          def __call__( self, pythonFn ):
             docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
             lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
-                                       specialForm=self._specialForm )
+                                       specialForm=self._specialForm,
+                                       min_args=self._min_args, max_args=self._max_args,
+                                       arity_msg=self._arity_msg )
             primitiveDict[ self._name ] = lPrimitivObj
             return lPrimitivObj
 
