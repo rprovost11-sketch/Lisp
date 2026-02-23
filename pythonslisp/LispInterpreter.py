@@ -310,6 +310,27 @@ class LispInterpreter( Interpreter ):
                   sExprAST = body[-1]
                   break
 
+         elif primary == 'LAMBDA':
+            funcParams, *funcBody = args   # analyzer guarantees: args >= 1, args[0] is list
+            if funcBody and isinstance(funcBody[0], str):
+               docString, *funcBody = funcBody
+            else:
+               docString = ''
+            return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
+
+         elif primary == 'BACKQUOTE':
+            return LispInterpreter._lbackquoteExpand( env, args[0] )
+
+         elif primary == 'DEFMACRO':
+            fnName, funcParams, *funcBody = args   # analyzer guarantees structure
+            if isinstance(funcBody[0], str):
+               docString = funcBody[0]
+               funcBody  = funcBody[1:]
+            else:
+               docString = ''
+            theFunc = LMacro( fnName, funcParams, docString, funcBody )
+            return env.bindGlobal( fnName.strval, theFunc )
+
          else:
             function = LispInterpreter._lEval( env, primary )
             if not isinstance( function, LCallable ):

@@ -146,7 +146,7 @@ C
 >>> ;;; Error: cond requires at least one clause
 ... (cond)
 
-%%% ERROR 'COND': 1 or more argument expected.
+%%% ERROR 'COND': 1 or more arguments expected.
 %%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
 ==>
 

@@ -1,7 +1,7 @@
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LFunction, LMacro, LContinuation, LCallable
+from pythonslisp.LispAST import LSymbol, LMacro, LContinuation, LCallable
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispExceptions import LispRuntimeFuncError, ContinuationInvoked
 from pythonslisp.LispExpander import LispExpander
@@ -14,17 +14,7 @@ def register(primitive) -> None:
    def LP_defmacro( env: Environment, *args ) -> Any:
       """Defines and returns a new globally named macro.  The first expr of the body
 can be an optional documentation string."""
-      # Structural checks (arity, symbol, list, body presence) done by analyzer.
-      fnName, funcParams, *funcBody = args
-
-      if isinstance(funcBody[0], str):
-         docString = funcBody[0]
-         funcBody = funcBody[1:]
-      else:
-         docString = ''
-
-      theFunc = LMacro( fnName, funcParams, docString, funcBody )
-      return env.bindGlobal( fnName.strval, theFunc )
+      raise LispRuntimeFuncError( LP_defmacro, 'Handled by main eval loop.' )
 
    @primitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
@@ -103,76 +93,6 @@ value.
 
 Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
       raise LispRuntimeFuncError( LP_setq, 'Handled by main eval loop.' )
-
-   @primitive( 'setf', '<symbol> <sexpr>', specialForm=True )
-   def LP_setf( env: Environment, *args ) -> Any:
-      """Updates a variable's value, returns value.  The search for the variable begins
-locally and proceeds to search ever less local scopes until the global scope
-is searched.  If the variable is located in this search its value is updated.
-If it's not located a new global is defined and set the value.
-
-Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
-      numArgs = len(args)
-
-      if numArgs == 0:
-         raise LispRuntimeFuncError( LP_setf, 'At least 2 arguments expected.' )
-
-      if (numArgs % 2) != 0:
-         raise LispRuntimeFuncError( LP_setf, f'An even number of arguments is expected.  Received {numArgs}.' )
-
-      rval = L_NIL
-      while len(args) > 0:
-         lval,rval,*args = args
-
-         rval = LispInterpreter._lEval(env, rval)
-
-         # Case where the lvalue is a symbol form:  (setf variable newValue)
-         if isinstance(lval, LSymbol ):
-            sym = lval.strval
-            if isinstance(rval, (LFunction, LMacro)) and (rval.name == ''):
-               rval.name = sym
-            theSymTab = env.findDef( sym )
-            if theSymTab:
-               theSymTab.bindLocal( sym, rval )
-            else:
-               env.bindGlobal( sym, rval )
-
-         # Case where the lvalue is an 'at' form:  (setf (at key collection) newValue)
-         elif isinstance(lval, list):
-            if len(lval) == 0:
-               raise LispRuntimeFuncError( LP_setf, 'lvalue cannot be NIL or ().' )
-
-            prim = lval[0]
-            if prim == 'AT':
-               try:
-                  prim, keyOrIndex, mapOrLst = lval
-               except ValueError:
-                  raise LispRuntimeFuncError( LP_setf, 'lvalue \'at\' form expected 3 elements.' )
-
-               theSelector  = LispInterpreter._lEval(env, keyOrIndex)
-               theContainer = LispInterpreter._lEval(env, mapOrLst)
-
-               if not isinstance(theContainer, (list, dict)):
-                  raise LispRuntimeFuncError( LP_setf, 'Invalid container type following \'AT\' primitive.  Expected list or map.' )
-
-               try:
-                  theContainer[theSelector] = rval
-               except (KeyError, IndexError, TypeError):
-                  raise LispRuntimeFuncError( LP_setf, f'Invalid key or index supplied to \'AT\' form.  Received {theSelector}.' )
-            elif isinstance(prim, LSymbol) and prim.strval in LispInterpreter._setf_registry:
-               field_key = LispInterpreter._setf_registry[prim.strval]
-               if len(lval) != 2:
-                  raise LispRuntimeFuncError( LP_setf,
-                     f'Struct accessor setf expects exactly 1 instance argument, got {len(lval)-1}.' )
-               instance = LispInterpreter._lEval(env, lval[1])
-               if not isinstance(instance, dict):
-                  raise LispRuntimeFuncError( LP_setf,
-                     f'Expected a struct instance as argument to ({prim.strval} ...).' )
-               instance[field_key] = rval
-            else:
-               raise LispRuntimeFuncError( LP_setf, 'Unrecognized setf place.' )
-
-      return rval
 
    @primitive( 'undef!', '<symbol>', specialForm=True,
                min_args=1, max_args=1, arity_msg='1 argument expected.' )

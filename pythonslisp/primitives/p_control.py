@@ -1,8 +1,7 @@
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LFunction, LMacro, LCallable
-from pythonslisp.LispAST import L_T, L_NIL
+from pythonslisp.LispAST import LSymbol, LCallable
 from pythonslisp.LispExceptions import LispRuntimeFuncError, Thrown
 from pythonslisp.LispInterpreter import LispInterpreter
 
@@ -16,14 +15,7 @@ def register(primitive) -> None:
 function the body (the exprs) are evaluated within a nested scope.  This
 primitive captures the environment it is defined in to allow for closures.
 The first body expression can be a documentation string."""
-      funcParams, *funcBody = args   # arity + list check done by analyzer
-
-      if funcBody and isinstance(funcBody[0], str):
-         docString, *funcBody = funcBody
-      else:
-         docString = ''
-
-      return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
+      raise LispRuntimeFuncError( LP_lambda, 'Handled by main eval loop.' )
 
    @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
    def LP_let( env: Environment, *args ) -> Any:
@@ -82,7 +74,7 @@ All remaining cases are skipped."""
    def LP_backquote( env: Environment, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-      return LispInterpreter._lbackquoteExpand( env, args[0] )
+      raise LispRuntimeFuncError( LP_backquote, 'Handled by main eval loop.' )
 
    @primitive( 'comma', '<sexpr>', specialForm=True )
    def LP_comma( env: Environment, *args ) -> Any:
