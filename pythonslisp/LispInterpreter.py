@@ -287,17 +287,14 @@ class LispInterpreter( Interpreter ):
                value = LispInterpreter._lEval( env, args[0] )
                raise ContinuationInvoked( function.token, value )
 
-            # Tracing: determine whether this call should be traced.
+            # Tracing
             hook    = LispInterpreter._apply_hook
             printed = False
             depth   = LispInterpreter._trace_depth
             if hook:
-               isNamed  = function.name in LispInterpreter._traced
-               isUserFn = isinstance( function, LFunction )
-               if isNamed or (LispInterpreter._trace_global and isUserFn):
-                  printed = hook( 'enter', function, args, depth )
-                  if printed:
-                     LispInterpreter._trace_depth = depth + 1
+               printed = hook( 'enter', function, args, depth )
+               if printed:
+                  LispInterpreter._trace_depth = depth + 1
 
             # Call the function with its arguments
             if not function.specialForm:
