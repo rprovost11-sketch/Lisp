@@ -1,9 +1,9 @@
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LFunction, LMacro
+from pythonslisp.LispAST import LSymbol, LFunction, LMacro, LContinuation, LCallable
 from pythonslisp.LispAST import L_T, L_NIL
-from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.LispExceptions import LispRuntimeFuncError, ContinuationInvoked
 from pythonslisp.LispExpander import LispExpander
 from pythonslisp.LispInterpreter import LispInterpreter
 
@@ -247,6 +247,31 @@ trace list.  With no arguments, clears all named function tracing."""
             LispInterpreter._traced.discard( sym.strval )
       LispInterpreter._set_trace_hook()
       return [ LSymbol(name) for name in sorted(LispInterpreter._traced) ]
+
+   @primitive( 'call/cc', '<procedure>' )
+   def LP_callcc( env: Environment, *args ) -> Any:
+      """Calls procedure with one argument: an escape continuation object.
+Invoking the continuation with a value causes call/cc to immediately return
+that value, unwinding any intermediate computation.  Only upward (escape)
+continuations are supported; invoking a stale continuation is an error."""
+      if len(args) != 1:
+         raise LispRuntimeFuncError( LP_callcc, '1 argument expected.' )
+
+      proc = args[0]
+      if not isinstance( proc, LCallable ):
+         raise LispRuntimeFuncError( LP_callcc, 'Argument must be a callable.' )
+      if proc.specialForm:
+         raise LispRuntimeFuncError( LP_callcc, 'Argument may not be a special form.' )
+
+      token = object()          # unique identity token for this continuation
+      cont  = LContinuation( token )
+
+      try:
+         return LispInterpreter._lApply( env, proc, [cont] )
+      except ContinuationInvoked as ci:
+         if ci.token is token:
+            return ci.value
+         raise   # re-raise so an outer call/cc can catch it
 
    @primitive( 'boundp', '<symbol>' )
    def LP_boundp( env: Environment, *args ) -> Any:

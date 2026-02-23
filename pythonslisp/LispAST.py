@@ -89,17 +89,29 @@ class LFunction( LCallable ):
 
 class LMacro( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST')
-   
+
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
       super().__init__( name.strval, docString, specialForm=True )
-   
+
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
          return f'(MACRO {self.name} () ... )'
       else:
          return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+
+
+class LContinuation( LCallable ):
+   """An escape continuation captured by call/cc.  Invoking it raises ContinuationInvoked."""
+   __slots__ = ('token',)
+
+   def __init__( self, token: object ) -> None:
+      self.token = token
+      super().__init__( 'continuation', '', specialForm=False )
+
+   def usageString( self ) -> str:
+      return '#<CONTINUATION>'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:
@@ -132,6 +144,8 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
       return sExpr.usageString()
+   elif isinstance(sExpr, LContinuation):
+      return '#<CONTINUATION>'
    else:
       return repr(sExpr)
 
@@ -163,6 +177,8 @@ def prettyPrint( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
       return sExpr.usageString()
+   elif isinstance(sExpr, LContinuation):
+      return '#<CONTINUATION>'
    else:
       return str(sExpr)
 

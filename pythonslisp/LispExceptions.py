@@ -15,3 +15,13 @@ class LispRuntimeFuncError( LispRuntimeError ):
 
 class LispArgBindingError( LispRuntimeError ):
    pass
+
+
+class ContinuationInvoked( Exception ):
+   """Raised when an escape continuation is invoked.  Propagates up to the matching call/cc handler."""
+   __slots__ = ('token', 'value')
+
+   def __init__( self, token: object, value ) -> None:
+      self.token = token
+      self.value = value
+      super().__init__()

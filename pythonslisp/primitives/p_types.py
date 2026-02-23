@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LPrimitive,
-                                   prettyPrint, prettyPrintSExpr )
+                                   LContinuation, prettyPrint, prettyPrintSExpr )
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispExceptions import LispRuntimeFuncError
 from pythonslisp.LispParser import ParseError
@@ -127,6 +127,8 @@ def register(primitive, parseLispString: Callable) -> None:
          return LSymbol('MACRO')
       elif isinstance( arg, LPrimitive ):
          return LSymbol('PRIMITIVE')
+      elif isinstance( arg, LContinuation ):
+         return LSymbol('CONTINUATION')
       else:
          return LSymbol('T')
 

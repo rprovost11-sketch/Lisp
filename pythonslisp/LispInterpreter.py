@@ -6,10 +6,10 @@ from pythonslisp.LispParser import LispParser
 from pythonslisp.Listener import Interpreter, retrieveFileList
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, L_T, L_NIL,
-                                  LCallable, LFunction, LPrimitive, LMacro,
+                                  LCallable, LFunction, LPrimitive, LMacro, LContinuation,
                                   prettyPrintSExpr )
 from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
-                                         LispArgBindingError )
+                                         LispArgBindingError, ContinuationInvoked )
 from pythonslisp.LispArgBinder import bindArguments
 from pythonslisp.LispExpander import LispExpander
 
@@ -67,6 +67,8 @@ class LispInterpreter( Interpreter ):
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
+      except ContinuationInvoked:
+         raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       finally:
          LispInterpreter.outStrm = None
       return returnVal
@@ -85,6 +87,8 @@ class LispInterpreter( Interpreter ):
             form = LispExpander.expand( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
          evalTime = time.perf_counter() - startTime
+      except ContinuationInvoked:
+         raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       finally:
          LispInterpreter.outStrm = None
       return returnVal, parseTime, evalTime
@@ -98,6 +102,8 @@ class LispInterpreter( Interpreter ):
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
+      except ContinuationInvoked:
+         raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       finally:
          LispInterpreter.outStrm = None
       return returnVal
@@ -302,10 +308,16 @@ class LispInterpreter( Interpreter ):
             function = LispInterpreter._lEval( env, primary )
             if not isinstance( function, LCallable ):
                raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
-      
+
             # Call the function with its arguments
             if not function.specialForm:
                args = [ LispInterpreter._lEval(env, arg) for arg in args ]
+
+            # Continuation invocation: bypass tracing, raise immediately
+            if isinstance( function, LContinuation ):
+               if len(args) != 1:
+                  raise LispRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
+               raise ContinuationInvoked( function.token, args[0] )
 
             # Tracing: determine whether this call should be traced.
             hook    = LispInterpreter._apply_hook
@@ -363,6 +375,12 @@ class LispInterpreter( Interpreter ):
 
    @staticmethod
    def _lApply( env: Environment, function: LCallable, args: Sequence ) -> Any:
+      # Continuation invocation: raise immediately, no tracing
+      if isinstance( function, LContinuation ):
+         if len(args) != 1:
+            raise LispRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
+         raise ContinuationInvoked( function.token, args[0] )
+
       hook    = LispInterpreter._apply_hook
       depth   = LispInterpreter._trace_depth
       printed = False

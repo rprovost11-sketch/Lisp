@@ -431,3 +431,5 @@ Returns the last body value from the last iteration, or NIL if the list is empty
       (fn item))
    lst)
 
+(alias call-with-current-continuation call/cc)
+
