@@ -69,7 +69,6 @@ class LispInterpreter( Interpreter ):
          returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
-            form = LispExpander.normalize( form )
             LispAnalyzer.analyze( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
       except ContinuationInvoked:
@@ -94,7 +93,6 @@ class LispInterpreter( Interpreter ):
          returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
-            form = LispExpander.normalize( form )
             LispAnalyzer.analyze( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
          evalTime = time.perf_counter() - startTime
@@ -116,7 +114,6 @@ class LispInterpreter( Interpreter ):
          returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
-            form = LispExpander.normalize( form )
             LispAnalyzer.analyze( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
       except ContinuationInvoked:
