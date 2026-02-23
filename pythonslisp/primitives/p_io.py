@@ -98,28 +98,32 @@ def register(primitive, parseLispString: Callable) -> None:
 
    # -----------------------------------------------------------------------
 
-   @primitive( 'writef', '<formatString> <MapOrList>' )
+   @primitive( 'writef', '<formatString> &optional <MapOrList>' )
    def LP_writef( env: Environment, *args ) -> str:
       """Writes formatted text.  Returns the string that is written.
-Takes a python f-string and a map or list of values for the f-string.
-Returns the formatted output string."""
-      try:
-         formatString, mapOrList = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_writef, "2 arguments expected." )
+Takes a Python format string and an optional map or list of values.
+If no second argument is given, the format string is output unchanged.
+Returns the output string."""
+      if len(args) < 1 or len(args) > 2:
+         raise LispRuntimeFuncError( LP_writef, "1 or 2 arguments expected." )
 
+      formatString = args[0]
       if not isinstance( formatString, str ):
          raise LispRuntimeFuncError( LP_writef, "1st argument expected to be a format string." )
 
-      try:
-         if isinstance( mapOrList, list ):
-            formattedStr = formatString.format( *mapOrList )
-         elif isinstance( mapOrList, dict ):
-            formattedStr = formatString.format( **mapOrList )
-         else:
-            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
-      except (IndexError, KeyError, ValueError) as e:
-         raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
+      if len(args) == 1:
+         formattedStr = formatString
+      else:
+         mapOrList = args[1]
+         try:
+            if isinstance( mapOrList, list ):
+               formattedStr = formatString.format( *mapOrList )
+            elif isinstance( mapOrList, dict ):
+               formattedStr = formatString.format( **mapOrList )
+            else:
+               raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
+         except (IndexError, KeyError, ValueError) as e:
+            raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
 
       outputStr = _decode_escapes( formattedStr )
       print( outputStr, end='', file=LispInterpreter.outStrm )
@@ -172,14 +176,30 @@ while it waits for the input return key to be pressed at the end of text entry."
          raise LispRuntimeFuncError( LP_readln, '0 arguments expected.' )
       return input()
 
-   @primitive( 'error', '<message-string>' )
+   @primitive( 'error', '<formatString> &optional <MapOrList>' )
    def LP_error( env: Environment, *args ) -> Any:
-      """Signals a runtime error with the given message string."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_error, '1 argument expected.' )
-      if not isinstance( args[0], str ):
+      """Signals a runtime error with the given message string.
+The format string may optionally be followed by a list or map of values,
+in which case the message is formatted using Python str.format() before
+being raised.  With no second argument the format string is used as-is."""
+      if len(args) < 1 or len(args) > 2:
+         raise LispRuntimeFuncError( LP_error, '1 or 2 arguments expected.' )
+      formatString = args[0]
+      if not isinstance( formatString, str ):
          raise LispRuntimeFuncError( LP_error, 'Argument 1 must be a String.' )
-      raise LispRuntimeError( args[0] )
+      if len(args) == 1:
+         raise LispRuntimeError( formatString )
+      mapOrList = args[1]
+      try:
+         if isinstance( mapOrList, list ):
+            message = formatString.format( *mapOrList )
+         elif isinstance( mapOrList, dict ):
+            message = formatString.format( **mapOrList )
+         else:
+            raise LispRuntimeFuncError( LP_error, '2nd argument expected to be a list or map.' )
+      except (IndexError, KeyError, ValueError) as e:
+         raise LispRuntimeFuncError( LP_error, f'Format error: {e}' )
+      raise LispRuntimeError( message )
 
    @primitive( 'parse', '<string>' )
    def LP_parse( env: Environment, *args ) -> Any:

@@ -46,6 +46,10 @@ x=99
 1 + 2 = 3
 ==> "1 + 2 = 3"
 
+>>> ;;; writef with no second arg outputs the format string unchanged
+... (writef "no substitution needed")
+no substitution needed
+==> "no substitution needed"
 
 >>> ;;; Error: write!/writeLn! require at least one argument
 ... (write!)
@@ -72,25 +76,25 @@ x=99
 %%% USAGE: (UWRITELN! <obj1> <obj2> ...)
 ==>
 
->>> ;;; Error: writef requires exactly two arguments
+>>> ;;; Error: writef requires at least one argument
 ... (writef)
 
-%%% ERROR 'WRITEF': 2 arguments expected.
-%%% USAGE: (WRITEF <formatString> <MapOrList>)
+%%% ERROR 'WRITEF': 1 or 2 arguments expected.
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
 ==>
 
 >>> ;;; Error: writef first argument must be a format string
 ... (writef 1 '(a b))
 
 %%% ERROR 'WRITEF': 1st argument expected to be a format string.
-%%% USAGE: (WRITEF <formatString> <MapOrList>)
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
 ==>
 
 >>> ;;; Error: writef second argument must be a list or map
 ... (writef "hello" 1)
 
 %%% ERROR 'WRITEF': 2nd argument expected to be a list or map.
-%%% USAGE: (WRITEF <formatString> <MapOrList>)
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
 ==>
 
 ; ============================================================

@@ -365,83 +365,71 @@
 
 >>> (while)
 
-%%% ERROR 'WHILE': 2 arguments expected.
-%%% USAGE: (WHILE <cond> <sexpr1> <sexpr2> ...)
+%%% Too few positional arguments.
 ==>
 
 >>> ;;; while with no body
 ... (while t)
 
-%%% ERROR 'WHILE': At least one sexpr expected for the body.
-%%% USAGE: (WHILE <cond> <sexpr1> <sexpr2> ...)
+%%% while: at least one body expression is required
 ==>
 
 >>> (dotimes)
 
-%%% ERROR 'DOTIMES': 2 or more arguments expected.
-%%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
+%%% Too few positional arguments.
 ==>
 
 >>> ;;; dotimes with no body
 ... (dotimes (i 3))
 
-%%% ERROR 'DOTIMES': At least one sexpr expected for the loop body.
-%%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
+%%% dotimes: at least one body expression is required
 ==>
 
 >>> ;;; dotimes control list must be a list
 ... (dotimes i 1)
 
-%%% ERROR 'DOTIMES': Argument 1 expected to be a list.
-%%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
+%%% dotimes: first argument must be a (var count) list
 ==>
 
 >>> ;;; dotimes control list must have 2 elements
 ... (dotimes (i 3 4) 1)
 
-%%% ERROR 'DOTIMES': Argument 1 expected to contain two elements.
-%%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
+%%% dotimes: first argument must have exactly 2 elements
 ==>
 
 >>> ;;; dotimes variable must be a symbol
 ... (dotimes (1 3) 1)
 
-%%% ERROR 'DOTIMES': Argument 1 of the control list expected to be a symbol.
-%%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
+%%% dotimes: loop variable must be a symbol
 ==>
 
 >>> ;;; dotimes count must be integer
 ... (dotimes (i "a") 1)
 
-%%% ERROR 'DOTIMES': Argument 2 of the control list expected to be an integer
-%%% USAGE: (DOTIMES (<var> <countExpr>) <sexpr1> <sexpr2> ...)
+%%% dotimes: count must be an integer
 ==>
 
 >>> (dolist)
 
-%%% ERROR 'DOLIST': 2 or more arguments expected.
-%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
+%%% Too few positional arguments.
 ==>
 
 >>> ;;; dolist with bad control spec
 ... (dolist x (write! x))
 
-%%% ERROR 'DOLIST': Argument 1 must be a (variable list) control spec.
-%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
+%%% dolist: first argument must be a (variable list) control spec
 ==>
 
 >>> ;;; dolist variable must be a symbol
 ... (dolist (1 '(a b)) (write! 1))
 
-%%% ERROR 'DOLIST': Control spec variable must be a Symbol.
-%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
+%%% dolist: control spec variable must be a symbol
 ==>
 
 >>> ;;; dolist list must evaluate to a list
 ... (dolist (x 42) (write! x))
 
-%%% ERROR 'DOLIST': Control spec list must evaluate to a List.
-%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
+%%% dolist: list must evaluate to a list
 ==>
 
 >>> (case)
@@ -584,22 +572,19 @@
 
 >>> (setf)
 
-%%% ERROR 'SETF': At least 2 arguments expected.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% Too few positional arguments.
 ==>
 
 >>> ;;; setf with odd number of args
 ... (setf x)
 
-%%% ERROR 'SETF': An even number of arguments is expected.  Received 1.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% Too few positional arguments.
 ==>
 
 >>> ;;; setf with 3 args (odd)
 ... (setf x 1 y)
 
-%%% ERROR 'SETF': An even number of arguments is expected.  Received 3.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% Too few positional arguments.
 ==>
 
 >>> (undef!)

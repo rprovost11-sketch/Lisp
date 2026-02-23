@@ -94,6 +94,34 @@ not a macro call."""
       LispInterpreter._setf_registry[accessor_sym.strval] = field_sym.strval
       return accessor_sym
 
+   @primitive( 'set-accessor!', '<accessor-symbol> <instance> <newValue>' )
+   def LP_set_accessor( env: Environment, *args ) -> Any:
+      """Internal: write a struct field value via the defsetf registry."""
+      if len(args) != 3:
+         raise LispRuntimeFuncError( LP_set_accessor, '3 arguments expected.' )
+      accessor, instance, newval = args
+      if not isinstance( accessor, LSymbol ):
+         raise LispRuntimeFuncError( LP_set_accessor, 'Argument 1 must be a symbol.' )
+      field_key = LispInterpreter._setf_registry.get( accessor.strval )
+      if field_key is None:
+         raise LispRuntimeFuncError( LP_set_accessor,
+                                     f'No setf expander registered for {accessor.strval}.' )
+      if not isinstance( instance, dict ):
+         raise LispRuntimeFuncError( LP_set_accessor, 'Argument 2 must be a struct instance.' )
+      instance[ field_key ] = newval
+      return newval
+
+   @primitive( 'setq', '<symbol1> <sexpr1> <symbol2> <sexpr2> ...', specialForm=True )
+   def LP_setq( env: Environment, *args ) -> Any:
+      """Updates one or more variables' values', returns value.  The search for
+the variable begins locally and proceeds to search ever less local scopes until
+the global scope is searched.  If the variable is located in this search its
+value is updated.  If it's not located a new global is defined and set the
+value.
+
+Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
+      raise LispRuntimeFuncError( LP_setq, 'Handled by main eval loop.' )
+
    @primitive( 'setf', '<symbol> <sexpr>', specialForm=True )
    def LP_setf( env: Environment, *args ) -> Any:
       """Updates a variable's value, returns value.  The search for the variable begins
@@ -110,7 +138,7 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
       if (numArgs % 2) != 0:
          raise LispRuntimeFuncError( LP_setf, f'An even number of arguments is expected.  Received {numArgs}.' )
 
-      rval = list()
+      rval = L_NIL
       while len(args) > 0:
          lval,rval,*args = args
 
@@ -118,11 +146,9 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
 
          # Case where the lvalue is a symbol form:  (setf variable newValue)
          if isinstance(lval, LSymbol ):
-            sym = lval
-            if isinstance(rval,(LFunction,LMacro)) and (rval.name == ''):
-               rval.name = sym.strval
-            sym = sym.strval
-
+            sym = lval.strval
+            if isinstance(rval, (LFunction, LMacro)) and (rval.name == ''):
+               rval.name = sym
             theSymTab = env.findDef( sym )
             if theSymTab:
                theSymTab.bindLocal( sym, rval )

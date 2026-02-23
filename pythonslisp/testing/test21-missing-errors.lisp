@@ -8,22 +8,20 @@
 >>> ;;; setf with NIL lvalue
 ... (setf () 5)
 
-%%% ERROR 'SETF': lvalue cannot be NIL or ().
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% setf: lvalue cannot be NIL or ()
 ==>
 
 >>> ;;; setf (at ...) form with wrong element count
 ... (setf (at 1) 5)
 
-%%% ERROR 'SETF': lvalue 'at' form expected 3 elements.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% setf: (at ...) place form expected 3 elements
 ==>
 
->>> ;;; setf with unrecognized place form
-... (setf (blah x) 5)
+>>> ;;; setf with unrecognized accessor (not in defsetf registry)
+... (setf (blah 42) 5)
 
-%%% ERROR 'SETF': Unrecognized setf place.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% ERROR 'SET-ACCESSOR!': No setf expander registered for BLAH.
+%%% USAGE: (SET-ACCESSOR! <accessor-symbol> <instance> <newValue>)
 ==>
 
 ; --- IF error paths ---
@@ -468,7 +466,7 @@
 ... (writef "{2}" (list 1))
 
 %%% ERROR 'WRITEF': Format error: Replacement index 2 out of range for positional args tuple
-%%% USAGE: (WRITEF <formatString> <MapOrList>)
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
 ==>
 
 ; --- SETF AT: container type and key/index errors ---
@@ -476,15 +474,15 @@
 >>> ;;; setf at with non-list non-map container
 ... (setf (at 0 42) 5)
 
-%%% ERROR 'SETF': Invalid container type following 'AT' primitive.  Expected list or map.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% ERROR 'AT-SET': Invalid argument.  List or Map expected.
+%%% USAGE: (AT-SET <keyOrIndex> <mapListOrStr> <newValue>)
 ==>
 
 >>> ;;; setf at with out-of-range index
 ... (setf (at 99 (list 1 2)) 5)
 
-%%% ERROR 'SETF': Invalid key or index supplied to 'AT' form.  Received 99.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% USAGE: (AT-SET <keyOrIndex> <mapListOrStr> <newValue>)
 ==>
 
 ; --- DEFMACRO: empty body without docstring ---
@@ -617,8 +615,7 @@
 >>> ;;; dolist with non-list as collection
 ... (dolist (x 42) (write! x))
 
-%%% ERROR 'DOLIST': Control spec list must evaluate to a List.
-%%% USAGE: (DOLIST (<variable> <list>) <sexpr1> <sexpr2> ...)
+%%% dolist: list must evaluate to a list
 ==>
 
 ; --- COND: bad entry in non-first position ---

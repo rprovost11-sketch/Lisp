@@ -266,15 +266,14 @@
 >>> (setf (point-x 42) 5)
 ...
 
-%%% ERROR 'SETF': Expected a struct instance as argument to (POINT-X ...).
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% ERROR 'SET-ACCESSOR!': Argument 2 must be a struct instance.
+%%% USAGE: (SET-ACCESSOR! <accessor-symbol> <instance> <newValue>)
 ==>
 
 >>> (setf (point-x p1 p1) 5)
 ...
 
-%%% ERROR 'SETF': Struct accessor setf expects exactly 1 instance argument, got 2.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% setf: struct accessor place must have exactly 1 instance argument
 ==>
 
 >>> (make-point :z 99)

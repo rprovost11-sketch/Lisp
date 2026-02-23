@@ -125,6 +125,28 @@ def register(primitive) -> None:
       except ( KeyError, IndexError, TypeError ):
          raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
 
+   @primitive( 'at-set', '<keyOrIndex> <mapListOrStr> <newValue>' )
+   def LP_atSet( env: Environment, *args ) -> Any:
+      """Sets the value at a specified index of a list,
+      or specified key of a map.  Returns newValue."""
+      try:
+         key,keyed,newValue = args
+      except ValueError:
+         raise LispRuntimeFuncError( LP_atSet, 'Exactly 3 arguments expected.' )
+
+      if not isinstance(keyed, (list, dict)):
+         raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or Map expected.' )
+
+      if isinstance( key, LSymbol ):
+         key = key.strval
+
+      try:
+         keyed[ key ] = newValue
+      except ( KeyError, IndexError, TypeError ):
+         raise LispRuntimeFuncError( LP_atSet, 'Invalid argument key/index.' )
+      
+      return newValue
+
    @primitive( 'at-delete', '<keyOrIndex> <mapOrList>' )
    def LP_atDelete( env: Environment, *args ) -> bool:
       """Deletes the key-value pair from a map or list specified by keyOrIndex."""

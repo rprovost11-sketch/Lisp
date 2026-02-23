@@ -398,3 +398,15 @@
 
 %%% something went wrong
 ==>
+
+>>> ;;; error with positional format args
+... (error "bad value: {0}" (list 42))
+
+%%% bad value: 42
+==>
+
+>>> ;;; error with map format args
+... (error "expected {TYPE} but got {GOT}" (map (type "integer") (got "string")))
+
+%%% expected integer but got string
+==>

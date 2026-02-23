@@ -113,34 +113,253 @@ class LispInterpreter( Interpreter ):
       '''This is a recursive tree-walk evaluator.  It's the interpreter's main
       evaluation function.  Pass it any s-expression in the form of a LispAST;
       eval will return the result.'''
-      if isinstance(sExprAST, LSymbol):
-         try:
-            return env.lookup( sExprAST.strval )
-         except KeyError:
-            if sExprAST.isKeyArg():
-               return sExprAST
-            raise LispRuntimeError( f'Unbound Variable: {sExprAST.strval}.' )
-      elif not isinstance(sExprAST, list):  # atom or map
-         return sExprAST
+      while True:
+         if isinstance(sExprAST, LSymbol):
+            try:
+               return env.lookup( sExprAST.strval )
+            except KeyError:
+               if sExprAST.isKeyArg():
+                  return sExprAST
+               raise LispRuntimeError( f'Unbound Variable: {sExprAST.strval}.' )
+         elif not isinstance(sExprAST, list):  # atom or map
+            return sExprAST
+   
+         # sExpr is a list expression - function call
+   
+         if len(sExprAST) == 0:
+            return L_NIL  # An empty list always evaluates to an empty list
+   
+         # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
+         primary, *args = sExprAST
+         if primary == 'QUOTE':
+            if (len(args) != 1):
+               raise LispRuntimeFuncError( env.lookup('QUOTE'), '1 argument expected.' )
+            return args[0]
+         
+         elif primary == 'IF':
+            numArgs = len(args)
+            if not(2 <= numArgs <= 3):
+               raise LispRuntimeFuncError( env.lookup('IF'), '2 or 3 arguments expected.' )
+      
+            condValue = LispInterpreter._lEval( env, args[0] )
+            if LispInterpreter._lTrue(condValue):
+               sExprAST = args[1]
+            elif numArgs == 3:
+               sExprAST = args[2]
+            else:
+               sExprAST = L_NIL
+         
+         elif primary == 'LAMBDA':
+            try:
+               funcParams, *funcBody = args
+            except ValueError:
+               raise LispRuntimeFuncError( env.lookup('LAMBDA'), '2 arguments expected.' )
 
-      # sExpr is a list expression - function call
+            if len(funcBody) < 1:
+               raise LispRuntimeFuncError( env.lookup('LAMBDA'), 'At least one body expression expected.' )
 
-      if len(sExprAST) == 0:
-         return L_NIL  # An empty list always evaluates to an empty list
+            if isinstance(funcBody[0], str):
+               docString = funcBody[0]
+               funcBody = funcBody[1:]
+            else:
+               docString = ''
 
-      # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
-      primary = sExprAST[0]
-      function = LispInterpreter._lEval( env, primary )
-      if not isinstance( function, LCallable ):
-         raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
+            if len(funcBody) < 1:
+               raise LispRuntimeFuncError( env.lookup('LAMBDA'), 'At least one body expression expected after docstring.' )
+      
+            return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
+         
+         elif primary == 'LET':
+            try:
+               vardefs, *body = args
+            except ValueError:
+               raise LispRuntimeFuncError( env.lookup('LET'), '2 or more arguments expected.' )
+      
+            if not isinstance(vardefs,  list):
+               raise LispRuntimeFuncError( env.lookup('LET'), 'The first argument to let expected to be a list of variable initializations.' )
+      
+            # Evaluate the var def initial value exprs in the outer scope.
+            initDict = { }
+            for varSpec in vardefs:
+               if isinstance(varSpec, LSymbol):
+                  varName  = varSpec
+                  initForm = list()
+               elif isinstance(varSpec, list):
+                  varSpecLen = len(varSpec)
+                  if varSpecLen == 1:
+                     varName  = varSpec[0]
+                     initForm = list()
+                  elif varSpecLen == 2:
+                     varName, initForm = varSpec
+                  else:
+                     raise LispRuntimeFuncError( env.lookup('LET'), 'Variable initializer spec expected to be 1 or 2 elements long.' )
+      
+                  if not isinstance(varName, LSymbol):
+                     raise LispRuntimeFuncError( env.lookup('LET'), 'First element of a variable initializer pair expected to be a symbol.' )
+               else:
+                  raise LispRuntimeFuncError( env.lookup('LET'), 'Variable initializer spec expected to be a symbol or a list.' )
+      
+               initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
+      
+            # Open the new scope
+            env = Environment( env, initialBindings=initDict )
+      
+            # Evaluate each body sexpr in the new env/scope
+            if len(body) == 0:
+               sExprAST = L_NIL
+            elif len(body) == 1:
+               sExprAST = body[0]
+            else:
+               for sexpr in body[:-1]:
+                  LispInterpreter._lEval( env, sexpr )
+               sExprAST = body[-1]
+         
+         elif primary == 'LET*':
+            try:
+               vardefs, *body = args
+            except ValueError:
+               raise LispRuntimeFuncError( env.lookup('LET*'), '2 or more arguments expected.' )
 
-      # Call the function with its arguments
-      if function.specialForm:
-         return LispInterpreter._lApply( env, function, sExprAST[1:] )
-      else:
-         nArgs = len(sExprAST)
-         evalArgs = [ LispInterpreter._lEval(env, sExprAST[i]) for i in range(1, nArgs) ]
-         return LispInterpreter._lApply( env, function, evalArgs )
+            if not isinstance(vardefs,  list):
+               raise LispRuntimeFuncError( env.lookup('LET*'), 'The first argument to let expected to be a list of variable initializations.' )
+
+            # Open the new scope
+            env = Environment( env )
+
+            for varSpec in vardefs:
+               if isinstance(varSpec, LSymbol):
+                  varName  = varSpec
+                  initForm = list()
+               elif isinstance(varSpec, list):
+                  varSpecLen = len(varSpec)
+                  if varSpecLen == 1:
+                     varName  = varSpec[0]
+                     initForm = list()
+                  elif varSpecLen == 2:
+                     varName, initForm = varSpec
+                  else:
+                     raise LispRuntimeFuncError( env.lookup('LET*'), 'Variable initializer spec expected to be 1 or 2 elements long.' )
+
+                  if not isinstance(varName, LSymbol):
+                     raise LispRuntimeFuncError( env.lookup('LET*'), 'First element of a variable initializer pair expected to be a symbol.' )
+               else:
+                  raise LispRuntimeFuncError( env.lookup('LET*'), 'Variable initializer spec expected to be a symbol or a list.' )
+      
+               env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
+      
+            # Evaluate each body sexpr in the new env/scope.
+            if len(body) == 0:
+               sExprAST = L_NIL
+            elif len(body) == 1:
+               sExprAST = body[0]
+            else:
+               for sexpr in body[:-1]:
+                  LispInterpreter._lEval( env, sexpr )
+               sExprAST = body[-1]
+         
+         elif primary == 'PROGN':
+            if len(args) == 0:
+               sExprAST = L_NIL
+            elif len(args) == 1:
+               sExprAST = args[0]
+            else:
+               for expr in args[:-1]:
+                  LispInterpreter._lEval( env, expr )
+               sExprAST = args[-1]
+         
+         elif primary == 'SETQ':
+            numArgs = len(args)
+      
+            if numArgs == 0:
+               raise LispRuntimeFuncError( env.lookup('SETQ'), 'At least 2 arguments expected.' )
+
+            if (numArgs % 2) != 0:
+               raise LispRuntimeFuncError( env.lookup('SETQ'), f'An even number of arguments is expected.  Received {numArgs}.' )
+
+            rval = L_NIL
+            while len(args) > 0:
+               lval,rval,*args = args
+
+               rval = LispInterpreter._lEval(env, rval)
+
+               if isinstance(rval, (LMacro, LFunction)) and (rval.name == ''):
+                  rval.name = lval.strval
+               
+               # Case where the lvalue is a symbol form:  (setq variable newValue)
+               if isinstance(lval, LSymbol ):
+                  sym = lval.strval
+                  theSymTab = env.findDef( sym )
+                  if theSymTab:
+                     theSymTab.bindLocal( sym, rval )
+                  else:
+                     env.bindGlobal( sym, rval )
+               else:
+                  raise LispRuntimeFuncError( env.lookup('SETQ'), 'First of setf pair must be a symbol.' )
+      
+            return rval
+         
+         else:
+            function = LispInterpreter._lEval( env, primary )
+            if not isinstance( function, LCallable ):
+               raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
+      
+            # Call the function with its arguments
+            if not function.specialForm:
+               args = [ LispInterpreter._lEval(env, arg) for arg in args ]
+
+            # Tracing: determine whether this call should be traced.
+            hook    = LispInterpreter._apply_hook
+            printed = False
+            depth   = LispInterpreter._trace_depth
+            if hook:
+               isNamed  = function.name in LispInterpreter._traced
+               isUserFn = isinstance( function, LFunction )
+               if isNamed or (LispInterpreter._trace_global and isUserFn):
+                  printed = hook( 'enter', function, args, depth )
+                  if printed:
+                     LispInterpreter._trace_depth = depth + 1
+
+            try:
+               if isinstance( function, LPrimitive ):
+                  result = function.pythonFn( env, *args )
+               elif isinstance( function, LFunction ):
+                  new_env = Environment( function.capturedEnvironment )
+                  bindArguments( new_env, function.lambdaListAST, args, LispInterpreter._lEval )
+                  if printed:
+                     # Traced: evaluate recursively so the exit hook fires after the body.
+                     result = L_NIL
+                     for sexpr in function.bodyAST:
+                        result = LispInterpreter._lEval( new_env, sexpr )
+                  else:
+                     # Untraced: TCO — update env/sExprAST and continue the loop.
+                     env = new_env
+                     bodyLen = len( function.bodyAST )
+                     if bodyLen == 0:
+                        sExprAST = L_NIL
+                     elif bodyLen == 1:
+                        sExprAST = function.bodyAST[0]
+                     else:
+                        for sexpr in function.bodyAST[:-1]:
+                           LispInterpreter._lEval( env, sexpr )
+                        sExprAST = function.bodyAST[-1]
+                     continue   # TCO: next iteration of the while loop
+               else:   # LMacro — should have been expanded before reaching here
+                  raise LispRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
+            except LispArgBindingError as ex:
+               if printed:
+                  LispInterpreter._trace_depth = depth
+               errorMsg = ex.args[-1]
+               fnName = function.name
+               if fnName == '':
+                  raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
+               else:
+                  raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
+
+            # Reached for LPrimitive and traced LFunction (not the TCO path).
+            if printed:
+               LispInterpreter._trace_depth = depth
+               hook( 'exit', function, result, depth )
+            return result
 
    @staticmethod
    def _lApply( env: Environment, function: LCallable, args: Sequence ) -> Any:
@@ -152,28 +371,27 @@ class LispInterpreter( Interpreter ):
          if printed:
             LispInterpreter._trace_depth = depth + 1   # only advance visible depth when tracing this call
       try:
-         try:
-            if isinstance( function, LPrimitive ):
-               result = function.pythonFn( env, *args )
-            elif isinstance( function, LFunction ):
-               env = Environment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
+         if isinstance( function, LPrimitive ):
+            result = function.pythonFn( env, *args )
+         elif isinstance( function, LFunction ):
+            env = Environment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
 
-               # store the arguments as locals
-               bindArguments( env, function.lambdaListAST, args, LispInterpreter._lEval )
+            # store the arguments as locals
+            bindArguments( env, function.lambdaListAST, args, LispInterpreter._lEval )
 
-               # evaluate the body expressions.
-               result = L_NIL
-               for sexpr in function.bodyAST:
-                  result = LispInterpreter._lEval( env, sexpr )
-            else:   # LMacro — should have been expanded before reaching here
-               raise LispRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
-         except LispArgBindingError as ex:
-            errorMsg = ex.args[-1]
-            fnName = function.name
-            if fnName == '':
-               raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
-            else:
-               raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
+            # evaluate the body expressions.
+            result = L_NIL
+            for sexpr in function.bodyAST:
+               result = LispInterpreter._lEval( env, sexpr )
+         else:   # LMacro — should have been expanded before reaching here
+            raise LispRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
+      except LispArgBindingError as ex:
+         errorMsg = ex.args[-1]
+         fnName = function.name
+         if fnName == '':
+            raise LispRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
+         else:
+            raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
       finally:
          if printed:
             LispInterpreter._trace_depth = depth   # restore depth on both normal exit and exception

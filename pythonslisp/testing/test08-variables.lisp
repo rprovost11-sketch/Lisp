@@ -215,7 +215,6 @@ T
 >>> ;;; Error: setf requires an even number of arguments
 ... (setf myvar1 10 myvar2)
 
-%%% ERROR 'SETF': An even number of arguments is expected.  Received 3.
-%%% USAGE: (SETF <symbol> <sexpr>)
+%%% Too few positional arguments.
 ==>
 
