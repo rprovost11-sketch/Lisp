@@ -11,6 +11,7 @@ from pythonslisp.LispAST import ( LSymbol, L_T, L_NIL,
 from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
                                          LispArgBindingError )
 from pythonslisp.LispArgBinder import bindArguments
+from pythonslisp.LispExpander import LispExpander
 
 
 class LispInterpreter( Interpreter ):
@@ -60,7 +61,6 @@ class LispInterpreter( Interpreter ):
    def rawEval( self, source: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
-         from pythonslisp.LispExpander import LispExpander
          ast = self._parser.parse( source )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]            # strip progn wrapper
          returnVal = L_NIL
@@ -78,7 +78,6 @@ class LispInterpreter( Interpreter ):
          ast = self._parser.parse( source )
          parseTime = time.perf_counter() - parseStartTime
 
-         from pythonslisp.LispExpander import LispExpander
          startTime = time.perf_counter()
          top_level_forms = ast[1:]
          returnVal = L_NIL
@@ -93,7 +92,6 @@ class LispInterpreter( Interpreter ):
    def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
       LispInterpreter.outStrm = outStrm
       try:
-         from pythonslisp.LispExpander import LispExpander
          ast = self._parser.parseFile( filename )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]                  # strip progn wrapper
          returnVal = L_NIL
@@ -197,11 +195,11 @@ class LispInterpreter( Interpreter ):
       then prints enter/exit lines to outStrm.  Returns True if a line was printed.'''
       traced    = LispInterpreter._traced
       global_   = LispInterpreter._trace_global
-      is_named  = function.name in traced
-      is_userfn = isinstance( function, LFunction )
+      isNamed  = function.name in traced
+      isUserFn = isinstance( function, LFunction )
 
       # Global tracing shows all LFunctions; named tracing shows whatever was named.
-      if not is_named and not (global_ and is_userfn):
+      if not isNamed and not (global_ and isUserFn):
          return False
 
       name   = function.name if function.name else 'LAMBDA'
@@ -269,28 +267,22 @@ class LispInterpreter( Interpreter ):
       return resultList
 
    @staticmethod
-   def _make_primitive_decorator( primitiveDict: dict ):
-      '''Factory that returns a primitive decorator class bound to primitiveDict.'''
-      class primitive:
-         def __init__( self, primitiveSymbolString: str, paramsString: str = '', specialForm: bool = False ) -> None:
-            self._name:         str  = primitiveSymbolString.upper()
-            self._paramsString: str  = paramsString
-            self._specialForm:  bool = specialForm
-         def __call__( self, primitiveDef ):
-            docString    = primitiveDef.__doc__ if primitiveDef.__doc__ is not None else ''
-            lPrimitivObj = LPrimitive( primitiveDef, self._name, self._paramsString, docString,
-                                       specialForm=self._specialForm )
-            primitiveDict[ self._name ] = lPrimitivObj
-            return lPrimitivObj
-      return primitive
-
-   @staticmethod
    def _lconstructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
       primitiveDict: dict[str, Any] = {}
       primitiveDict[ 'T'   ] = L_T
       primitiveDict[ 'NIL' ] = L_NIL
 
-      primitive = LispInterpreter._make_primitive_decorator( primitiveDict )
+      class primitive:
+         def __init__( self, primitiveSymbolString: str, paramsString: str = '', specialForm: bool = False ) -> None:
+            self._name:         str  = primitiveSymbolString.upper()
+            self._paramsString: str  = paramsString
+            self._specialForm:  bool = specialForm
+         def __call__( self, pythonFn ):
+            docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
+            lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
+                                       specialForm=self._specialForm )
+            primitiveDict[ self._name ] = lPrimitivObj
+            return lPrimitivObj
 
       from pythonslisp.primitives import p_meta, p_control, p_sequences, p_math, p_types, p_strings, p_io
       p_meta.register( primitive )

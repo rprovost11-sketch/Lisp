@@ -14,7 +14,7 @@ Benefits:
 
 from typing import Any
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LMacro, L_NIL
+from pythonslisp.LispAST import LSymbol, LMacro, L_NIL, prettyPrintSExpr
 from pythonslisp.LispArgBinder import bindArguments
 
 
@@ -193,7 +193,6 @@ class LispExpander:
     @staticmethod
     def _formatSExpr(sexpr: Any) -> str:
         """Format s-expression for debug output (keep it short)."""
-        from pythonslisp.LispAST import prettyPrintSExpr
         s = prettyPrintSExpr(sexpr)
         if len(s) > 60:
             return s[:60] + "..."

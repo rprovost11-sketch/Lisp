@@ -4,6 +4,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LFunction, LMacro
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.LispExpander import LispExpander
 from pythonslisp.LispInterpreter import LispInterpreter
 
 
@@ -46,7 +47,6 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
       if len(args) != 1:
          raise LispRuntimeFuncError( LP_macroexpand, 'Exactly 1 argument expected.' )
 
-      from pythonslisp.LispExpander import LispExpander
       form = args[0]
       while isinstance(form, list) and len(form) >= 1:
          primary = form[0]
@@ -81,7 +81,6 @@ not a macro call."""
       if not isinstance( macroDef, LMacro ):
          return form
 
-      from pythonslisp.LispExpander import LispExpander
       return LispExpander._expandMacroCall( env, macroDef, form[1:] )
 
    @primitive( 'defsetf-internal', '<accessor-symbol> <field-symbol>' )

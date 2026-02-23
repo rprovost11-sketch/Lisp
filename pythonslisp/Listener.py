@@ -469,28 +469,6 @@ class Listener( object ):
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
 
-   def _cmd_trace( self, args: list[str] ) -> None:
-      '''Usage:  trace
-      Toggle global function tracing on or off.  When on, every call to a
-      user-defined function is reported with its arguments and return value.
-      Use (trace fn) and (untrace fn) in Lisp to trace specific functions only.
-      '''
-      if len(args) != 0:
-         raise ListenerCommandError( self._cmd_trace.__doc__ )
-
-      from pythonslisp.LispInterpreter import LispInterpreter
-      LispInterpreter._trace_global = not LispInterpreter._trace_global
-      LispInterpreter._set_trace_hook()
-
-      useColor   = sys.stdout.isatty()
-      GREEN      = '\033[92m' if useColor else ''
-      YELLOW     = '\033[93m' if useColor else ''
-      RESET      = '\033[0m'  if useColor else ''
-      state      = LispInterpreter._trace_global
-      stateColor = GREEN if state else YELLOW
-      stateStr   = 'ON' if state else 'OFF'
-      print( f'Tracing is now {stateColor}{stateStr}{RESET}.' )
-
    def _cmd_test( self, args: list[str] ) -> None:
       '''Usage:  test [<filename>]
       
@@ -571,6 +549,28 @@ class Listener( object ):
 
       runFile.close()
       print( f'\nTest output: {runFilename}' )
+
+   def _cmd_trace( self, args: list[str] ) -> None:
+      '''Usage:  trace
+      Toggle global function tracing on or off.  When on, every call to a
+      user-defined function is reported with its arguments and return value.
+      Use (trace fn) and (untrace fn) in Lisp to trace specific functions only.
+      '''
+      if len(args) != 0:
+         raise ListenerCommandError( self._cmd_trace.__doc__ )
+
+      from pythonslisp.LispInterpreter import LispInterpreter
+      LispInterpreter._trace_global = not LispInterpreter._trace_global
+      LispInterpreter._set_trace_hook()
+
+      useColor   = sys.stdout.isatty()
+      GREEN      = '\033[92m' if useColor else ''
+      YELLOW     = '\033[93m' if useColor else ''
+      RESET      = '\033[0m'  if useColor else ''
+      state      = LispInterpreter._trace_global
+      stateColor = GREEN if state else YELLOW
+      stateStr   = 'ON' if state else 'OFF'
+      print( f'Tracing is now {stateColor}{stateStr}{RESET}.' )
 
    def _writeLn( self, value: str='', file=None ) -> None:
       if self._logFile:
