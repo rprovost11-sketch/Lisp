@@ -708,16 +708,14 @@
 >>> ;;; cond entry that is not a list
 ... (cond 1)
 
-%%% ERROR 'COND': Entry 1 must be a list with a condition and at least one body expression.
+%%% ERROR 'COND': Entry 1 must be a non-empty list.
 %%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
 ==>
 
 >>> ;;; cond entry with condition but no body
 ... (cond (t))
 
-%%% ERROR 'COND': Entry 1 must be a list with a condition and at least one body expression.
-%%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
-==>
+==> NIL
 
 ; --- CASE additional error paths ---
 
@@ -731,16 +729,14 @@
 >>> ;;; case entry that is not a list
 ... (case 1 2)
 
-%%% ERROR 'CASE': Entry 1 must be a list with a value and at least one body expression.
+%%% ERROR 'CASE': Entry 1 must be a non-empty list.
 %%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
 ==>
 
 >>> ;;; case entry with value but no body
 ... (case 1 (1))
 
-%%% ERROR 'CASE': Entry 1 must be a list with a value and at least one body expression.
-%%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
-==>
+==> NIL
 
 ; --- MAP additional error path ---
 
@@ -1284,7 +1280,7 @@
 >>> ;;; cond with non-list entry in second position
 ... (cond (nil 1) 2)
 
-%%% ERROR 'COND': Entry 2 must be a list with a condition and at least one body expression.
+%%% ERROR 'COND': Entry 2 must be a non-empty list.
 %%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
 ==>
 
@@ -1293,7 +1289,7 @@
 >>> ;;; case with non-list entry in second position (non-matching first)
 ... (case 99 (1 "one") 2)
 
-%%% ERROR 'CASE': Entry 2 must be a list with a value and at least one body expression.
+%%% ERROR 'CASE': Entry 2 must be a non-empty list.
 %%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
 
 ; ============================================================

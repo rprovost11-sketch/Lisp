@@ -190,9 +190,10 @@ class LispInterpreter( Interpreter ):
             env = LispEnvironment( env, initialBindings=initDict )
       
             # Evaluate each body sexpr in the new env/scope
-            if len(body) == 0:
+            bodyLen = len(body)
+            if bodyLen == 0:
                sExprAST = L_NIL
-            elif len(body) == 1:
+            elif bodyLen == 1:
                sExprAST = body[0]
             else:
                for sexpr in body[:-1]:
@@ -218,9 +219,10 @@ class LispInterpreter( Interpreter ):
                env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
       
             # Evaluate each body sexpr in the new env/scope.
-            if len(body) == 0:
+            bodyLen = len(body)
+            if bodyLen == 0:
                sExprAST = L_NIL
-            elif len(body) == 1:
+            elif bodyLen == 1:
                sExprAST = body[0]
             else:
                for sexpr in body[:-1]:
@@ -228,9 +230,10 @@ class LispInterpreter( Interpreter ):
                sExprAST = body[-1]
          
          elif primary == 'PROGN':
-            if len(args) == 0:
+            argsLen = len(args)
+            if argsLen == 0:
                sExprAST = L_NIL
-            elif len(args) == 1:
+            elif argsLen == 1:
                sExprAST = args[0]
             else:
                for expr in args[:-1]:
@@ -256,11 +259,17 @@ class LispInterpreter( Interpreter ):
             sExprAST = L_NIL
             for clause in args:
                testExpr = clause[0]      # analyzer guarantees: list, len >= 2
-               body     = clause[1:]
                if LispInterpreter._lTrue( LispInterpreter._lEval(env, testExpr) ):
-                  for sexpr in body[:-1]:
-                     LispInterpreter._lEval( env, sexpr )
-                  sExprAST = body[-1]
+                  body     = clause[1:]
+                  bodyLen = len(body)
+                  if bodyLen == 0:
+                     sExprAST = L_NIL
+                  elif bodyLen == 1:
+                     sExprAST = body[0]
+                  else:
+                     for sexpr in body[:-1]:
+                        LispInterpreter._lEval( env, sexpr )
+                     sExprAST = body[-1]
                   break
 
          elif primary == 'CASE':
@@ -268,11 +277,17 @@ class LispInterpreter( Interpreter ):
             sExprAST = L_NIL
             for clause in args[1:]:
                caseVal = clause[0]       # analyzer guarantees: list, len >= 2
-               body    = clause[1:]
                if LispInterpreter._lEval(env, caseVal) == keyVal:
-                  for sexpr in body[:-1]:
-                     LispInterpreter._lEval( env, sexpr )
-                  sExprAST = body[-1]
+                  body    = clause[1:]
+                  bodyLen = len(body)
+                  if bodyLen == 0:
+                     sExprAST = L_NIL
+                  elif bodyLen == 1:
+                     sExprAST = body[0]
+                  else:
+                     for sexpr in body[:-1]:
+                        LispInterpreter._lEval( env, sexpr )
+                     sExprAST = body[-1]
                   break
 
          else:

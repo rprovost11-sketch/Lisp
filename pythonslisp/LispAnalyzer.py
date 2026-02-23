@@ -233,9 +233,9 @@ class LispAnalyzer:
       if len(args) < 1:
          raise LispRuntimeFuncError(env.lookup('COND'), '1 or more arguments expected.')
       for i, clause in enumerate(args):
-         if not isinstance(clause, list) or len(clause) < 2:
+         if not isinstance(clause, list) or len(clause) == 0:
             raise LispRuntimeFuncError(env.lookup('COND'),
-                  f'Entry {i+1} must be a list with a condition and at least one body expression.')
+                  f'Entry {i+1} must be a non-empty list.')
          LispAnalyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
             LispAnalyzer.analyze(env, bodyForm)
@@ -247,9 +247,9 @@ class LispAnalyzer:
          raise LispRuntimeFuncError(env.lookup('CASE'), '2 or more arguments expected.')
       LispAnalyzer.analyze(env, args[0])
       for i, clause in enumerate(args[1:]):
-         if not isinstance(clause, list) or len(clause) < 2:
+         if not isinstance(clause, list) or len(clause) == 0:
             raise LispRuntimeFuncError(env.lookup('CASE'),
-                  f'Entry {i+1} must be a list with a value and at least one body expression.')
+                  f'Entry {i+1} must be a non-empty list.')
          LispAnalyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
             LispAnalyzer.analyze(env, bodyForm)
