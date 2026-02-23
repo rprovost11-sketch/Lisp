@@ -169,53 +169,27 @@ class LispInterpreter( Interpreter ):
          # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
          primary, *args = sExprAST
          if primary == 'QUOTE':
-            if (len(args) != 1):
-               raise LispRuntimeFuncError( env.lookup('QUOTE'), '1 argument expected.' )
             return args[0]
          
          elif primary == 'IF':
-            numArgs = len(args)
-            if not(2 <= numArgs <= 3):
-               raise LispRuntimeFuncError( env.lookup('IF'), '2 or 3 arguments expected.' )
-      
             condValue = LispInterpreter._lEval( env, args[0] )
-            if LispInterpreter._lTrue(condValue):
-               sExprAST = args[1]
-            elif numArgs == 3:
-               sExprAST = args[2]
-            else:
-               sExprAST = L_NIL
+            sExprAST = args[1] if LispInterpreter._lTrue(condValue) else args[2]
          
          elif primary == 'LET':
-            try:
-               vardefs, *body = args
-            except ValueError:
-               raise LispRuntimeFuncError( env.lookup('LET'), '2 or more arguments expected.' )
-      
-            if not isinstance(vardefs,  list):
-               raise LispRuntimeFuncError( env.lookup('LET'), 'The first argument to let expected to be a list of variable initializations.' )
-      
+            vardefs, *body = args
+
             # Evaluate the var def initial value exprs in the outer scope.
             initDict = { }
             for varSpec in vardefs:
                if isinstance(varSpec, LSymbol):
                   varName  = varSpec
                   initForm = list()
-               elif isinstance(varSpec, list):
-                  varSpecLen = len(varSpec)
-                  if varSpecLen == 1:
+               else:  # list — structure guaranteed valid by analyzer
+                  if len(varSpec) == 1:
                      varName  = varSpec[0]
                      initForm = list()
-                  elif varSpecLen == 2:
-                     varName, initForm = varSpec
                   else:
-                     raise LispRuntimeFuncError( env.lookup('LET'), 'Variable initializer spec expected to be 1 or 2 elements long.' )
-      
-                  if not isinstance(varName, LSymbol):
-                     raise LispRuntimeFuncError( env.lookup('LET'), 'First element of a variable initializer pair expected to be a symbol.' )
-               else:
-                  raise LispRuntimeFuncError( env.lookup('LET'), 'Variable initializer spec expected to be a symbol or a list.' )
-      
+                     varName, initForm = varSpec
                initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
       
             # Open the new scope
@@ -232,13 +206,7 @@ class LispInterpreter( Interpreter ):
                sExprAST = body[-1]
          
          elif primary == 'LET*':
-            try:
-               vardefs, *body = args
-            except ValueError:
-               raise LispRuntimeFuncError( env.lookup('LET*'), '2 or more arguments expected.' )
-
-            if not isinstance(vardefs,  list):
-               raise LispRuntimeFuncError( env.lookup('LET*'), 'The first argument to let expected to be a list of variable initializations.' )
+            vardefs, *body = args
 
             # Open the new scope
             env = Environment( env )
@@ -247,21 +215,12 @@ class LispInterpreter( Interpreter ):
                if isinstance(varSpec, LSymbol):
                   varName  = varSpec
                   initForm = list()
-               elif isinstance(varSpec, list):
-                  varSpecLen = len(varSpec)
-                  if varSpecLen == 1:
+               else:  # list — structure guaranteed valid by analyzer
+                  if len(varSpec) == 1:
                      varName  = varSpec[0]
                      initForm = list()
-                  elif varSpecLen == 2:
-                     varName, initForm = varSpec
                   else:
-                     raise LispRuntimeFuncError( env.lookup('LET*'), 'Variable initializer spec expected to be 1 or 2 elements long.' )
-
-                  if not isinstance(varName, LSymbol):
-                     raise LispRuntimeFuncError( env.lookup('LET*'), 'First element of a variable initializer pair expected to be a symbol.' )
-               else:
-                  raise LispRuntimeFuncError( env.lookup('LET*'), 'Variable initializer spec expected to be a symbol or a list.' )
-      
+                     varName, initForm = varSpec
                env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
       
             # Evaluate each body sexpr in the new env/scope.
@@ -285,42 +244,22 @@ class LispInterpreter( Interpreter ):
                sExprAST = args[-1]
          
          elif primary == 'SETQ':
-            numArgs = len(args)
-      
-            if numArgs == 0:
-               raise LispRuntimeFuncError( env.lookup('SETQ'), 'At least 2 arguments expected.' )
-
-            if (numArgs % 2) != 0:
-               raise LispRuntimeFuncError( env.lookup('SETQ'), f'An even number of arguments is expected.  Received {numArgs}.' )
-
             rval = L_NIL
             while len(args) > 0:
                lval,rval,*args = args
-
                rval = LispInterpreter._lEval(env, rval)
-
                if isinstance(rval, (LMacro, LFunction)) and (rval.name == ''):
                   rval.name = lval.strval
-               
-               # Case where the lvalue is a symbol form:  (setq variable newValue)
-               if isinstance(lval, LSymbol ):
-                  sym = lval.strval
-                  theSymTab = env.findDef( sym )
-                  if theSymTab:
-                     theSymTab.bindLocal( sym, rval )
-                  else:
-                     env.bindGlobal( sym, rval )
+               sym = lval.strval   # lval is a LSymbol — guaranteed by analyzer
+               theSymTab = env.findDef( sym )
+               if theSymTab:
+                  theSymTab.bindLocal( sym, rval )
                else:
-                  raise LispRuntimeFuncError( env.lookup('SETQ'), 'First of setf pair must be a symbol.' )
-      
+                  env.bindGlobal( sym, rval )
             return rval
 
          elif primary == 'BLOCK':
-            if len(args) < 1:
-               raise LispRuntimeError( 'block: at least 1 argument (name) expected.' )
-            blockName = args[0]
-            if not isinstance( blockName, LSymbol ):
-               raise LispRuntimeError( 'block: name must be a symbol.' )
+            blockName = args[0]   # guaranteed LSymbol by analyzer
             body = args[1:]
             if len(body) == 0:
                return L_NIL
@@ -334,17 +273,11 @@ class LispInterpreter( Interpreter ):
                raise
 
          elif primary == 'RETURN-FROM':
-            if len(args) < 1 or len(args) > 2:
-               raise LispRuntimeError( 'return-from: 1 or 2 arguments expected.' )
-            blockName = args[0]
-            if not isinstance( blockName, LSymbol ):
-               raise LispRuntimeError( 'return-from: name must be a symbol.' )
+            blockName = args[0]   # guaranteed LSymbol by analyzer
             value = LispInterpreter._lEval( env, args[1] ) if len(args) == 2 else L_NIL
             raise ReturnFrom( blockName.strval, value )
 
          elif primary == 'CATCH':
-            if len(args) < 1:
-               raise LispRuntimeError( 'catch: at least 1 argument (tag) expected.' )
             tag  = LispInterpreter._lEval( env, args[0] )
             body = args[1:]
             try:
