@@ -17,6 +17,10 @@ class LispArgBindingError( LispRuntimeError ):
    pass
 
 
+class LispAnalysisError( LispRuntimeError ):
+   pass
+
+
 class ReturnFrom( Exception ):
    """Raised by return-from.  Propagates up to the matching block handler."""
    __slots__ = ('name', 'value')

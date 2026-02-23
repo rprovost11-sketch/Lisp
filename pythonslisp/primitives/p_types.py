@@ -17,7 +17,6 @@ def _eql( a: Any, b: Any ) -> bool:
       return a == b
    return a is b
 
-
 def _equal( a: Any, b: Any ) -> bool:
    """CL equal: recursive structural equality; falls back to eql at leaves."""
    if isinstance(a, list) and isinstance(b, list):
@@ -28,7 +27,6 @@ def _equal( a: Any, b: Any ) -> bool:
       return ( set(a.keys()) == set(b.keys()) and
                all(_equal(a[k], b[k]) for k in a) )
    return _eql(a, b)
-
 
 def _equalp( a: Any, b: Any ) -> bool:
    """CL equalp: equal + case-insensitive strings + cross-type numbers."""

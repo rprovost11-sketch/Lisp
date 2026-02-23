@@ -30,7 +30,7 @@
 
 ; --- nested backquotes ---
 
->>> ;;; inner backquote preserved as data — no commas
+>>> ;;; inner backquote preserved as data no commas
 ... `(a `b)
 ...
 

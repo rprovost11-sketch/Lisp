@@ -184,7 +184,7 @@ C
 ...         (+ 10 (return-from escape 5))))
 ==> 6
 
-; nested blocks with same name — innermost is exited
+; nested blocks with same name innermost is exited
 >>> (block foo
 ...    (block foo
 ...       (return-from foo 1))

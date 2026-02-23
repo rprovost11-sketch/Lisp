@@ -14,6 +14,7 @@ from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
                                          ReturnFrom, Thrown )
 from pythonslisp.LispArgBinder import bindArguments
 from pythonslisp.LispExpander import LispExpander
+from pythonslisp.LispAnalyzer import LispAnalyzer
 
 
 class LispInterpreter( Interpreter ):
@@ -68,6 +69,8 @@ class LispInterpreter( Interpreter ):
          returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
+            form = LispExpander.normalize( form )
+            LispAnalyzer.analyze( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
@@ -91,6 +94,8 @@ class LispInterpreter( Interpreter ):
          returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
+            form = LispExpander.normalize( form )
+            LispAnalyzer.analyze( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
          evalTime = time.perf_counter() - startTime
       except ContinuationInvoked:
@@ -111,6 +116,8 @@ class LispInterpreter( Interpreter ):
          returnVal = L_NIL
          for form in top_level_forms:
             form = LispExpander.expand( self._env, form )
+            form = LispExpander.normalize( form )
+            LispAnalyzer.analyze( self._env, form )
             returnVal = LispInterpreter._lEval( self._env, form )
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )

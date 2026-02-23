@@ -4,6 +4,7 @@ Development Tasks
 
 To Do
 -----
+- Implement call/cc.
 - See if macros are also supposed to support closures.
 - OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
   can scan the AST for errors such as the wrong number or types of arguments to

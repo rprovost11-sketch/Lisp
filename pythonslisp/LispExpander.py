@@ -148,6 +148,63 @@ class LispExpander:
         return result
 
     @staticmethod
+    def normalize( sexpr: Any ) -> Any:
+        """
+        Apply structural normalizations to a fully-expanded AST.
+        Call this once, after expand(), before evaluation.
+        """
+        return LispExpander._normalize( sexpr )
+
+    @staticmethod
+    def _normalize( sexpr: Any ) -> Any:
+        """
+        Recursive structural normalization (bottom-up).
+
+        Normalizations applied (all zero-behavior-change):
+          (if cond then)       → (if cond then nil)
+          (progn)              → nil
+          (progn e)            → e
+          (let  () body ...)   → (progn body ...)
+          (let* () body ...)   → (progn body ...)
+        """
+        # Atoms and symbols pass through unchanged
+        if not isinstance(sexpr, list) or len(sexpr) == 0:
+            return sexpr
+
+        # Don't normalize inside QUOTE or BACKQUOTE — they are data / templates
+        if isinstance(sexpr[0], LSymbol) and sexpr[0].strval in ('QUOTE', 'BACKQUOTE'):
+            return sexpr
+
+        # Normalize all subforms first (bottom-up)
+        normalized = [LispExpander._normalize(elt) for elt in sexpr]
+
+        if not isinstance(normalized[0], LSymbol):
+            return normalized
+
+        head = normalized[0].strval
+
+        # (if cond then) → (if cond then nil)
+        if head == 'IF' and len(normalized) == 3:
+            return normalized + [L_NIL]
+
+        # (progn) → nil
+        if head == 'PROGN' and len(normalized) == 1:
+            return L_NIL
+
+        # (progn e) → e
+        if head == 'PROGN' and len(normalized) == 2:
+            return normalized[1]
+
+        # (let () body ...) / (let* () body ...) → (progn body ...)
+        if head in ('LET', 'LET*') and len(normalized) >= 2:
+            bindings = normalized[1]
+            if isinstance(bindings, list) and len(bindings) == 0:
+                body = normalized[2:]
+                return [LSymbol('PROGN')] + body
+
+        return normalized
+
+    @staticmethod
     def expandWithDebug(env: Environment, sexpr: Any, maxIterations: int = 1000) -> tuple[Any, list[str]]:
         """
         Expand macros and return both result and expansion trace.
