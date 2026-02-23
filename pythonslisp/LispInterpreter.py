@@ -12,7 +12,7 @@ from pythonslisp.LispAST import ( LSymbol, L_T, L_NIL,
 from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
                                          LispArgBindingError, ContinuationInvoked,
                                          ReturnFrom, Thrown )
-from pythonslisp.LispArgBinder import bindArguments
+from pythonslisp.LispEnvironment import LispEnvironment
 from pythonslisp.LispExpander import LispExpander
 from pythonslisp.LispAnalyzer import LispAnalyzer
 
@@ -42,7 +42,7 @@ class LispInterpreter( Interpreter ):
 
       # Load in the primitives
       primitiveDict: dict[str, Any] = LispInterpreter._lconstructPrimitives( self._parser.parse )
-      self._env:Environment = Environment( parent=None, initialBindings=primitiveDict )  # Create the GLOBAL environment
+      self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict )  # Create the GLOBAL environment
 
       # Load in the runtime library
       if self._libDir:
@@ -193,7 +193,7 @@ class LispInterpreter( Interpreter ):
                initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
       
             # Open the new scope
-            env = Environment( env, initialBindings=initDict )
+            env = LispEnvironment( env, initialBindings=initDict )
       
             # Evaluate each body sexpr in the new env/scope
             if len(body) == 0:
@@ -209,7 +209,7 @@ class LispInterpreter( Interpreter ):
             vardefs, *body = args
 
             # Open the new scope
-            env = Environment( env )
+            env = LispEnvironment( env )
 
             for varSpec in vardefs:
                if isinstance(varSpec, LSymbol):
@@ -322,8 +322,8 @@ class LispInterpreter( Interpreter ):
                if isinstance( function, LPrimitive ):
                   result = function.pythonFn( env, *args )
                else:
-                  env = Environment( function.capturedEnvironment )
-                  bindArguments( env, function.lambdaListAST, args, LispInterpreter._lEval )
+                  env = LispEnvironment( function.capturedEnvironment )
+                  env.bindArguments( function.lambdaListAST, args, LispInterpreter._lEval )
                   # Untraced: TCO — update env/sExprAST and continue the loop.
                   bodyLen = len( function.bodyAST )
                   if bodyLen == 0:
@@ -370,10 +370,10 @@ class LispInterpreter( Interpreter ):
          if isinstance( function, LPrimitive ):
             result = function.pythonFn( env, *args )
          elif isinstance( function, LFunction ):
-            env = Environment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
+            env = LispEnvironment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
 
             # store the arguments as locals
-            bindArguments( env, function.lambdaListAST, args, LispInterpreter._lEval )
+            env.bindArguments( function.lambdaListAST, args, LispInterpreter._lEval )
 
             # evaluate the body expressions.
             result = L_NIL

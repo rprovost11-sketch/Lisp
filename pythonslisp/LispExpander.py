@@ -15,7 +15,7 @@ Benefits:
 from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LMacro, L_NIL, prettyPrintSExpr
-from pythonslisp.LispArgBinder import bindArguments
+from pythonslisp.LispEnvironment import LispEnvironment
 
 
 class LispExpander:
@@ -131,11 +131,11 @@ class LispExpander:
 
         # Create new environment for macro expansion
         # This is where macro parameters get bound
-        expansionEnv = Environment(env)
+        expansionEnv = LispEnvironment(env)
 
         # Bind macro parameters to (unevaluated) arguments
         # Example: (when cond body...) binds cond=(> x 0), body=[(print x)]
-        bindArguments(expansionEnv, macro.lambdaListAST, argsList, LispInterpreter._lEval)
+        expansionEnv.bindArguments(macro.lambdaListAST, argsList, LispInterpreter._lEval)
 
         # Evaluate macro body to generate the expansion
         # This typically evaluates a backquote expression
