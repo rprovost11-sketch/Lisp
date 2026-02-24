@@ -21,6 +21,9 @@ class LispAnalysisError( LispRuntimeError ):
    pass
 
 
+# Non-Error exceptions.  These are used not for error handling but to
+# implement Common Lisp features.
+
 class ReturnFrom( Exception ):
    """Raised by return-from.  Propagates up to the matching block handler."""
    __slots__ = ('name', 'value')

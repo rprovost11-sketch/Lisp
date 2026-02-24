@@ -4,12 +4,7 @@ Development Tasks
 
 To Do
 -----
-- Implement call/cc.
 - See if macros are also supposed to support closures.
-- OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
-  can scan the AST for errors such as the wrong number or types of arguments to
-  a primitive.  This would eliminate a lot of the runtime error checking
-  currently in the primitive definitions and hence speed up the interpreter.
 - implement stream IO primitives.
 - implement packages.  A package x is a symbol in the global namespace which
   refers to another Environment instance which contains all the symbols of
@@ -34,6 +29,10 @@ Completed
 - Make setf a macro
 - Make error work sort of like writef.
 - Make the three looping primitives into macros.
+- OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
+  can scan the AST for errors such as the wrong number or types of arguments to
+  a primitive.  This would eliminate a lot of the runtime error checking
+  currently in the primitive definitions and hence speed up the interpreter.
   
 2026.02.22
 - Colorized help output and error messages for ASCII displays.

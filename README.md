@@ -21,15 +21,16 @@ Features
 - Function definition with stack and recursion support.
 - Common Lisp macro definition and the macroexpand primitive.
 - &optional, &rest, &key and &aux parameter support for both functions and macros.
-- Support for lisp closures.
+- Support for function closures.
+- Tail Call Optimization
 - Robust error handling and reporting.
-- Support for special forms.
-- Includes runtime libraries written in lisp.
+- Support for special operators
+- Includes a portion of the runtime library written in lisp.
 - Easily integrates lisp into python code.
 - Call into python code from lisp.
 
 Design Features (the code not lisp)
-- Very simple tree-walk interpreter.
+- Very simple looping tree-walk interpreter.
 - Fully object oriented.
 - Designed to be easily modified and extended.
 - Prioritize code readability over code performance.
