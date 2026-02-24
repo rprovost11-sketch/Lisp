@@ -354,3 +354,47 @@
 %%% USAGE: (ATAN <number1> &optional <number2>)
 ==>
 
+
+; --- Arithmetic edge cases ---
+
+>>> ;;; (+) with no arguments returns 0
+... (+)
+...
+
+==> 0
+
+>>> ;;; expt with power 0 returns 1
+... (expt 2 0)
+...
+
+==> 1
+
+>>> ;;; expt 0^0 returns 1
+... (expt 0 0)
+...
+
+==> 1
+
+>>> ;;; abs of zero
+... (abs 0)
+...
+
+==> 0
+
+>>> ;;; abs of negative rational
+... (abs -3/4)
+...
+
+==> 3/4
+
+>>> ;;; gcd with no args returns 0
+... (gcd)
+...
+
+==> 0
+
+>>> ;;; lcm with no args returns 1
+... (lcm)
+...
+
+==> 1

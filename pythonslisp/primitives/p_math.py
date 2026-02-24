@@ -53,11 +53,10 @@ def register(primitive, primitiveDict: dict) -> None:
       except ZeroDivisionError:
          raise LispRuntimeFuncError( LP_div, 'division by zero' )
 
-   @primitive( '//', '<number1> <number2>' )
+   @primitive( '//', '<number1> <number2>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_intdiv( env: Environment, *args ) -> Any:
       """Return the integer division of two numbers."""
-      if len(args) != 2:
-         raise LispRuntimeFuncError( LP_intdiv, '2 arguments expected.' )
       try:
          return args[0] // args[1]
       except TypeError:
@@ -65,11 +64,10 @@ def register(primitive, primitiveDict: dict) -> None:
       except ZeroDivisionError:
          raise LispRuntimeFuncError( LP_intdiv, 'division by zero' )
 
-   @primitive( 'mod', '<number1> <number2>' )
+   @primitive( 'mod', '<number1> <number2>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_moddiv( env: Environment, *args ) -> Any:
       """Returns the integer remainder of division of two numbers."""
-      if len(args) != 2:
-         raise LispRuntimeFuncError( LP_moddiv, '2 arguments expected.' )
       try:
          return args[0] % args[1]
       except TypeError:
@@ -93,14 +91,11 @@ def register(primitive, primitiveDict: dict) -> None:
       except TypeError:
          raise LispRuntimeFuncError( LP_lcm, 'Invalid argument.' )
 
-   @primitive( 'log', '<number> &optional <base>' )
+   @primitive( 'log', '<number> &optional <base>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_log( env: Environment, *args ) -> Any:
       """Returns the logarithm of a number.  With one argument, returns the natural
 logarithm (base e).  An optional second argument specifies the base."""
-      numArgs = len(args)
-      if not( 1 <= numArgs <= 2 ):
-         raise LispRuntimeFuncError( LP_log, '1 or 2 arguments expected.' )
-
       try:
          num,*rest = args
          base = math.e if len(rest) == 0 else rest[0]
@@ -108,82 +103,71 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (ValueError, TypeError):
          raise LispRuntimeFuncError( LP_log, 'Invalid argument.' )
 
-   @primitive( 'expt', '<base> <power>' )
+   @primitive( 'expt', '<base> <power>',
+               min_args=2, max_args=2, arity_msg='Exactly two arguments expected.' )
    def LP_expt( env: Environment, *args ) -> Any:
       """Returns base raised to a power."""
+      base, power = args
       try:
-         base,power = args
          result = base ** power
-      except ValueError:
-         raise LispRuntimeFuncError( LP_expt, 'Exactly two arguments expected.' )
       except TypeError:
          raise LispRuntimeFuncError( LP_expt, 'Invalid argument type.  Arguments expected to be numbers.' )
 
       return result.real if isinstance(result, complex) else result
 
-   @primitive( 'sin', '<radians>' )
+   @primitive( 'sin', '<radians>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_sin( env: Environment, *args ) -> Any:
       """Returns the sine of radians."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_sin, '1 argument expected.' )
       try:
          return math.sin(args[0])
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_sin, 'Invalid argument.' )
 
-   @primitive( 'cos', '<radians>' )
+   @primitive( 'cos', '<radians>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_cos( env: Environment, *args ) -> Any:
       """Returns the cosine of radians."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_cos, '1 argument expected.' )
       try:
          return math.cos(args[0])
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_cos, 'Invalid argument.' )
 
-   @primitive( 'asin', '<number>' )
+   @primitive( 'asin', '<number>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_asin( env: Environment, *args ) -> Any:
       """Returns the arcsine of a number in radians."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_asin, '1 argument expected.' )
       try:
          return math.asin(args[0])
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_asin, 'Invalid argument.' )
 
-   @primitive( 'acos', '<number>' )
+   @primitive( 'acos', '<number>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_acos( env: Environment, *args ) -> Any:
       """Returns the arccosine of a number in radians."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_acos, '1 argument expected.' )
       try:
          return math.acos(args[0])
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_acos, 'Invalid argument.' )
 
-   @primitive( 'atan', '<number1> &optional <number2>' )
+   @primitive( 'atan', '<number1> &optional <number2>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_atan( env: Environment, *args ) -> Any:
       """Returns the arctangent of one or two numbers in radians."""
-      numArgs = len(args)
-      if numArgs == 1:
-         try:
+      try:
+         if len(args) == 1:
             return math.atan( args[0] )
-         except (TypeError, ValueError):
-            raise LispRuntimeFuncError( LP_atan, 'Invalid argument.' )
-      elif numArgs == 2:
-         try:
+         else:
             return math.atan2( args[0], args[1] )
-         except (TypeError, ValueError):
-            raise LispRuntimeFuncError( LP_atan, 'Invalid argument.' )
-      else:
-         raise LispRuntimeFuncError( LP_atan, '1 or 2 arguments expected.' )
+      except (TypeError, ValueError):
+         raise LispRuntimeFuncError( LP_atan, 'Invalid argument.' )
 
-   @primitive( 'floor', '<number> &optional <divisor>' )
+   @primitive( 'floor', '<number> &optional <divisor>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_floor( env: Environment, *args ) -> Any:
       """Returns the largest integer <= number (or <= number/divisor).
 Returns only the primary value; remainder is discarded."""
-      if len(args) not in (1, 2):
-         raise LispRuntimeFuncError( LP_floor, '1 or 2 arguments expected.' )
       try:
          if len(args) == 1:
             return math.floor( args[0] )
@@ -192,12 +176,11 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LispRuntimeFuncError( LP_floor, f'Invalid argument: {e}' )
 
-   @primitive( 'ceiling', '<number> &optional <divisor>' )
+   @primitive( 'ceiling', '<number> &optional <divisor>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_ceiling( env: Environment, *args ) -> Any:
       """Returns the smallest integer >= number (or >= number/divisor).
 Returns only the primary value; remainder is discarded."""
-      if len(args) not in (1, 2):
-         raise LispRuntimeFuncError( LP_ceiling, '1 or 2 arguments expected.' )
       try:
          if len(args) == 1:
             return math.ceil( args[0] )
@@ -206,12 +189,11 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LispRuntimeFuncError( LP_ceiling, f'Invalid argument: {e}' )
 
-   @primitive( 'round', '<number> &optional <divisor>' )
+   @primitive( 'round', '<number> &optional <divisor>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_round( env: Environment, *args ) -> Any:
       """Rounds number to the nearest integer (ties go to even, per CL).
 Returns only the primary value; remainder is discarded."""
-      if len(args) not in (1, 2):
-         raise LispRuntimeFuncError( LP_round, '1 or 2 arguments expected.' )
       try:
          if len(args) == 1:
             return round( args[0] )
@@ -236,13 +218,12 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_max, 'Invalid argument.' )
 
-   @primitive( 'random', '<integerOrFloat>' )
+   @primitive( 'random', '<integerOrFloat>',
+               min_args=1, max_args=1, arity_msg='Exactly 1 number argument expected.' )
    def LP_random( env: Environment, *args ) -> Any:
       """Returns a random int or float in the range 0 <= n <= arg.  If the argument
 is an int the random number will be an int, if the argument is a float the
 random number will be a float."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_random, 'Exactly 1 number argument expected.' )
       num = args[0]
 
       if isinstance( num, int ):

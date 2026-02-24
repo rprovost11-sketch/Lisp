@@ -1,3 +1,9 @@
+>>> ;;; empty map
+... (mapp (map))
+...
+
+==> T
+
 >>> (caar (list (list 1 2) 3))
 ...
 

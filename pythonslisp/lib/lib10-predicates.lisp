@@ -28,6 +28,8 @@
 
 (alias isFunction? functionp)
 
+(alias is? eq)
+
 ; CL-compatible I/O aliases
 (alias write-line uwriteLn!)
 (alias read-line  readLn!)

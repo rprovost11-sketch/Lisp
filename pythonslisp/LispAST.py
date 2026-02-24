@@ -61,11 +61,15 @@ class LCallable:
       self.specialForm:bool = specialForm
 
 class LPrimitive( LCallable ):
-   __slots__ = ('pythonFn', 'paramsString')
-   
-   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', specialForm: bool=False ) -> None:
+   __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg')
+
+   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', specialForm: bool=False,
+                 min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '' ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
       self.paramsString:str = paramsString
+      self.min_args:int       = min_args
+      self.max_args:(int|None) = max_args
+      self.arity_msg:str      = arity_msg
       super().__init__( name, docString, specialForm )
    
    def usageString( self ):
@@ -89,17 +93,29 @@ class LFunction( LCallable ):
 
 class LMacro( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST')
-   
+
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
       super().__init__( name.strval, docString, specialForm=True )
-   
+
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
          return f'(MACRO {self.name} () ... )'
       else:
          return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+
+
+class LContinuation( LCallable ):
+   """An escape continuation captured by call/cc.  Invoking it raises ContinuationInvoked."""
+   __slots__ = ('token',)
+
+   def __init__( self, token: object ) -> None:
+      self.token = token
+      super().__init__( 'continuation', '', specialForm=False )
+
+   def usageString( self ) -> str:
+      return '#<CONTINUATION>'
 
 
 def prettyPrintSExpr( sExpr: Any ) -> str:
@@ -132,6 +148,8 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
       return sExpr.usageString()
+   elif isinstance(sExpr, LContinuation):
+      return '#<CONTINUATION>'
    else:
       return repr(sExpr)
 
@@ -163,6 +181,8 @@ def prettyPrint( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LMacro):
       return sExpr.usageString()
+   elif isinstance(sExpr, LContinuation):
+      return '#<CONTINUATION>'
    else:
       return str(sExpr)
 

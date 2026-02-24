@@ -146,7 +146,7 @@ C
 >>> ;;; Error: cond requires at least one clause
 ... (cond)
 
-%%% ERROR 'COND': 1 or more argument expected.
+%%% ERROR 'COND': 1 or more arguments expected.
 %%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
 ==>
 
@@ -157,3 +157,69 @@ C
 %%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
 ==>
 
+; --- block and return-from ---
+
+; block returns value of last body form
+>>> (block myblock 1 2 3)
+==> 3
+
+; block with no body returns NIL
+>>> (block myblock)
+==> NIL
+
+; return-from exits the block immediately, skipping remaining forms
+>>> (block myblock
+...    (return-from myblock 42)
+...    99)
+==> 42
+
+; return-from with no value returns NIL
+>>> (block myblock
+...    (return-from myblock)
+...    99)
+==> NIL
+
+; return-from from inside a nested expression
+>>> (+ 1 (block escape
+...         (+ 10 (return-from escape 5))))
+==> 6
+
+; nested blocks with same name innermost is exited
+>>> (block foo
+...    (block foo
+...       (return-from foo 1))
+...    2)
+==> 2
+
+; return-from to outer block bypasses the inner block entirely
+>>> (block outer
+...    (block inner
+...       (return-from outer 99))
+...    42)
+==> 99
+
+; block used as early-exit in a search loop
+>>> (defun find-even (lst)
+...    (block found
+...       (dolist (x lst)
+...          (if (evenp x) (return-from found x)))
+...       nil))
+==> (FUNCTION FIND-EVEN (LST) ... )
+
+>>> (find-even '(1 3 5 4 7))
+==> 4
+
+>>> (find-even '(1 3 5 7))
+==> NIL
+
+; Error: stale return-from (no matching block active)
+>>> (return-from nowhere 42)
+%%% return-from: no block named NOWHERE is currently active.
+
+; Error: block name must be a symbol
+>>> (block 42 1 2 3)
+%%% block: name must be a symbol.
+
+; Error: return-from name must be a symbol
+>>> (return-from 42 99)
+%%% return-from: name must be a symbol.

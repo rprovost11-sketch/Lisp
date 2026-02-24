@@ -6,6 +6,34 @@
    "Define an alias for an existing named object."
    `(setf ,new ,old))
 
+(defmacro setf (place value &rest more)
+   "Generalized assignment.
+(setf sym val)               -> setq  (handles lambda auto-naming)
+(setf (at key coll) val)     -> at-set  (mutates list or map in place)
+(setf (accessor inst) val)   -> set-accessor!  (struct field via registry)
+Multiple (place value) pairs expand to a progn of individual setfs."
+   (let ((single
+          (cond
+             ((symbolp place)
+              `(setq ,place ,value))
+             ((not place)
+              (error "setf: lvalue cannot be NIL or ()"))
+             ((listp place)
+              (cond
+                 ((= (car place) 'at)
+                  (if (/= (length place) 3)
+                      (error "setf: (at ...) place form expected 3 elements")
+                      `(at-set ,(car (cdr place)) ,(car (cdr (cdr place))) ,value)))
+                 ((/= (length place) 2)
+                  (error "setf: struct accessor place must have exactly 1 instance argument"))
+                 (t
+                  `(set-accessor! ',(car place) ,(car (cdr place)) ,value))))
+             (t
+              (error "setf: unrecognized place form")))))
+      (if more
+          `(progn ,single (setf ,@more))
+          single)))
+
 ; Prompt the user for input on the command line.
 (defun read-prompt (promptStr)
    "Prompt the user for input and return the user input as a string."
@@ -227,7 +255,7 @@
       "Generate a unique symbol with a prefix of 'G' or other value specified by\nthe user and affixing a counting-number."
       (let
          ((theSymbol (symbol prefix symbolCounter)))
-         (incf symbolCounter)
+         (setq symbolCounter (+ symbolCounter 1))
          theSymbol)))
 
 (defmacro when (condition &rest body)
@@ -237,6 +265,123 @@
 (defmacro unless (condition &rest body)
    "Executes body if c is falsy (nil)."
    `(when (not ,condition) ,@body))
+
+(defmacro and (&rest forms)
+   "Evaluates forms left to right.  Returns nil at the first nil form.
+Returns the value of the last form if all are truthy.  (and) returns t."
+   (cond ((not forms) 't)
+         ((not (cdr forms)) (car forms))
+         (t `(if ,(car forms) (and ,@(cdr forms)) nil))))
+
+(defmacro or (&rest forms)
+   "Evaluates forms left to right.  Returns the first truthy value found.
+Returns nil if all forms are nil.  (or) returns nil."
+   (cond ((not forms) 'nil)
+         ((not (cdr forms)) (car forms))
+         (t (let ((var (gensym "OR")))
+               `(let ((,var ,(car forms)))
+                   (if ,var ,var (or ,@(cdr forms))))))))
+
+(defmacro while (cond &rest body)
+   "Loops while cond is truthy, executing body each iteration.
+Returns the last body value from the last iteration, or NIL if the loop never runs."
+   (if (not body)
+       (error "while: at least one body expression is required")
+       (let ((fn  (gensym "WHILE"))
+             (res (gensym "RESULT")))
+          `(let ((,fn nil) (,res nil))
+               (setq ,fn (lambda ()
+                            (if ,cond
+                                (progn (setq ,res (progn ,@body)) (,fn))
+                                ,res)))
+               (,fn)))))
+
+(defmacro dotimes (control &rest body)
+   "Executes body count times with the loop variable bound to 0, 1, ..., count-1.
+Returns the last body value from the last iteration, or NIL if count <= 0."
+   (cond
+      ((not (listp control))
+       (error "dotimes: first argument must be a (var count) list"))
+      ((/= (length control) 2)
+       (error "dotimes: first argument must have exactly 2 elements"))
+      ((not (symbolp (car control)))
+       (error "dotimes: loop variable must be a symbol"))
+      ((not body)
+       (error "dotimes: at least one body expression is required"))
+      (t
+       (let ((fn  (gensym "DOTIMES"))
+             (cnt (gensym "COUNT"))
+             (res (gensym "RESULT"))
+             (var (car control))
+             (count-expr (car (cdr control))))
+          `(let ((,cnt ,count-expr) (,fn nil) (,res nil))
+               (if (not (integerp ,cnt))
+                   (error "dotimes: count must be an integer")
+                   (progn
+                      (setq ,fn (lambda (,var)
+                                   (if (< ,var ,cnt)
+                                       (progn (setq ,res (progn ,@body))
+                                              (,fn (+ ,var 1)))
+                                       ,res)))
+                      (,fn 0))))))))
+
+(defmacro foreach (var list-expr &rest body)
+   "Iterates over each element of list-expr, binding var to the current element.
+Returns the last body value from the last iteration, or NIL if the list is empty."
+   (cond
+      ((not (symbolp var))
+       (error "foreach: first argument must be a symbol"))
+      ((not body)
+       (error "foreach: at least one body expression is required"))
+      (t
+       (let ((fn  (gensym "FOREACH"))
+             (lst (gensym "LST"))
+             (rem (gensym "REM"))
+             (res (gensym "RESULT")))
+          `(let ((,lst ,list-expr) (,fn nil) (,res nil))
+               (if (not (listp ,lst))
+                   (error "foreach: second argument must evaluate to a list")
+                   (progn
+                      (setq ,fn (lambda (,rem)
+                                   (if ,rem
+                                       (let ((,var (car ,rem)))
+                                          (setq ,res (progn ,@body))
+                                          (,fn (cdr ,rem)))
+                                       ,res)))
+                      (,fn ,lst))))))))
+
+(defmacro dolist (control &rest body)
+   "Iterates over each element of a list, binding the control variable to the current element.
+Returns the last body value from the last iteration, or NIL if the list is empty or body is absent."
+   (cond
+      ((not (listp control))
+       (error "dolist: first argument must be a (variable list) control spec"))
+      ((/= (length control) 2)
+       (error "dolist: control spec must have exactly 2 elements"))
+      ((not (symbolp (car control)))
+       (error "dolist: control spec variable must be a symbol"))
+      (t
+       (let ((fn   (gensym "DOLIST"))
+             (lst  (gensym "LST"))
+             (rem  (gensym "REM"))
+             (res  (gensym "RESULT"))
+             (var  (car control))
+             (list-expr (car (cdr control))))
+          (if body
+              `(let ((,lst ,list-expr) (,fn nil) (,res nil))
+                   (if (not (listp ,lst))
+                       (error "dolist: list must evaluate to a list")
+                       (progn
+                          (setq ,fn (lambda (,rem)
+                                       (if ,rem
+                                           (let ((,var (car ,rem)))
+                                              (setq ,res (progn ,@body))
+                                              (,fn (cdr ,rem)))
+                                           ,res)))
+                          (,fn ,lst))))
+              `(if (not (listp ,list-expr))
+                   (error "dolist: list must evaluate to a list")
+                   nil))))))
 
 (defun mapcar (fn lst)
    "Apply fn to each element of lst and return the list of results."
@@ -301,4 +446,6 @@
    (dolist (item lst)
       (fn item))
    lst)
+
+(alias call-with-current-continuation call/cc)
 

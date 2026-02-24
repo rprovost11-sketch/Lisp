@@ -98,127 +98,133 @@ def register(primitive, parseLispString: Callable) -> None:
 
    # -----------------------------------------------------------------------
 
-   @primitive( 'writef', '<formatString> <MapOrList>' )
+   @primitive( 'writef', '<formatString> &optional <MapOrList>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_writef( env: Environment, *args ) -> str:
       """Writes formatted text.  Returns the string that is written.
-Takes a python f-string and a map or list of values for the f-string.
-Returns the formatted output string."""
-      try:
-         formatString, mapOrList = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_writef, "2 arguments expected." )
-
+Takes a Python format string and an optional map or list of values.
+If no second argument is given, the format string is output unchanged.
+Returns the output string."""
+      formatString = args[0]
       if not isinstance( formatString, str ):
          raise LispRuntimeFuncError( LP_writef, "1st argument expected to be a format string." )
 
-      try:
-         if isinstance( mapOrList, list ):
-            formattedStr = formatString.format( *mapOrList )
-         elif isinstance( mapOrList, dict ):
-            formattedStr = formatString.format( **mapOrList )
-         else:
-            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
-      except (IndexError, KeyError, ValueError) as e:
-         raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
+      if len(args) == 1:
+         formattedStr = formatString
+      else:
+         mapOrList = args[1]
+         try:
+            if isinstance( mapOrList, list ):
+               formattedStr = formatString.format( *mapOrList )
+            elif isinstance( mapOrList, dict ):
+               formattedStr = formatString.format( **mapOrList )
+            else:
+               raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
+         except (IndexError, KeyError, ValueError) as e:
+            raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
 
       outputStr = _decode_escapes( formattedStr )
       print( outputStr, end='', file=LispInterpreter.outStrm )
       return outputStr
 
-   @primitive( 'write!', '<obj1> <obj2> ...' )
+   @primitive( 'write!', '<obj1> <obj2> ...',
+               min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_write( env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed."""
-      if len(args) == 0:
-         raise LispRuntimeFuncError( LP_write, '1 or more arguments expected.' )
       return lwrite( *args, end='' )
 
-   @primitive( 'writeLn!', '<obj1> <obj2> ...' )
+   @primitive( 'writeLn!', '<obj1> <obj2> ...',
+               min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_writeln( env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  Returns the last value printed."""
-      if len(args) == 0:
-         raise LispRuntimeFuncError( LP_writeln, '1 or more arguments expected.' )
       return lwrite( *args, end='\n' )
 
-   @primitive( 'uwrite!', '<obj1> <obj2> ...' )
+   @primitive( 'uwrite!', '<obj1> <obj2> ...',
+               min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_uwrite( env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.  Returns the last value printed."""
-      if len(args) == 0:
-         raise LispRuntimeFuncError( LP_uwrite, '1 or more arguments expected.' )
       return luwrite( *args, end='' )
 
-   @primitive( 'uwriteLn!', '<obj1> <obj2> ...' )
+   @primitive( 'uwriteLn!', '<obj1> <obj2> ...',
+               min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_uwriteln( env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  Returns the last value printed."""
-      if len(args) == 0:
-         raise LispRuntimeFuncError( LP_uwriteln, '1 or more arguments expected.' )
       return luwrite( *args, end='\n' )
 
-   @primitive( 'terpri', '' )
+   @primitive( 'terpri', '',
+               min_args=0, max_args=0, arity_msg='0 arguments expected.' )
    def LP_terpri( env: Environment, *args ) -> Any:
       """Outputs a newline character.  Returns NIL."""
-      if len(args) > 0:
-         raise LispRuntimeFuncError( LP_terpri, '0 arguments expected.' )
       print( end='\n', file=LispInterpreter.outStrm )
       return L_NIL
 
-   @primitive( 'readLn!', '' )
+   @primitive( 'readLn!', '',
+               min_args=0, max_args=0, arity_msg='0 arguments expected.' )
    def LP_readln( env: Environment, *args ) -> Any:
       """Reads and returns text input from standard input.  This function blocks
 while it waits for the input return key to be pressed at the end of text entry."""
-      if len(args) > 0:
-         raise LispRuntimeFuncError( LP_readln, '0 arguments expected.' )
       return input()
 
-   @primitive( 'error', '<message-string>' )
+   @primitive( 'error', '<formatString> &optional <MapOrList>',
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_error( env: Environment, *args ) -> Any:
-      """Signals a runtime error with the given message string."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_error, '1 argument expected.' )
-      if not isinstance( args[0], str ):
+      """Signals a runtime error with the given message string.
+The format string may optionally be followed by a list or map of values,
+in which case the message is formatted using Python str.format() before
+being raised.  With no second argument the format string is used as-is."""
+      formatString = args[0]
+      if not isinstance( formatString, str ):
          raise LispRuntimeFuncError( LP_error, 'Argument 1 must be a String.' )
-      raise LispRuntimeError( args[0] )
+      if len(args) == 1:
+         raise LispRuntimeError( formatString )
+      mapOrList = args[1]
+      try:
+         if isinstance( mapOrList, list ):
+            message = formatString.format( *mapOrList )
+         elif isinstance( mapOrList, dict ):
+            message = formatString.format( **mapOrList )
+         else:
+            raise LispRuntimeFuncError( LP_error, '2nd argument expected to be a list or map.' )
+      except (IndexError, KeyError, ValueError) as e:
+         raise LispRuntimeFuncError( LP_error, f'Format error: {e}' )
+      raise LispRuntimeError( message )
 
-   @primitive( 'parse', '<string>' )
+   @primitive( 'parse', '<string>',
+               min_args=1, max_args=1, arity_msg='1 string argument expected.' )
    def LP_parse( env: Environment, *args ) -> Any:
       """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_parse, '1 string argument expected.' )
       theExprStr = args[0]
       if not isinstance(theExprStr, str):
          raise LispRuntimeFuncError( LP_parse, 'Argument expected to be a string.' )
       return parseLispString( theExprStr )
 
-   @primitive( 'python', '<string>' )
+   @primitive( 'python', '<string>',
+               min_args=1, max_args=1, arity_msg='1 string argument expected by python.' )
    def LP_python( env: Environment, *args ) -> Any:
       """Executes some python code from Lisp."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_python, '1 string argument expected by python.' )
       thePythonCode = args[0]
       if not isinstance(thePythonCode, str):
          raise LispRuntimeFuncError( LP_python, 'Argument expected to be a string.' )
       theReturnVal = eval( thePythonCode, globals(), locals() )
       return theReturnVal
 
-   @primitive( 'recursion-limit', '&optional <newLimit>' )
+   @primitive( 'recursion-limit', '&optional <newLimit>',
+               min_args=0, max_args=1, arity_msg='Only one optional arg is allowed.' )
    def LP_recursionlimit( env: Environment, *args ) -> Any:
       """Returns or sets the system recursion limit.  The higher the integer
 argument the deeper the recursion will be allowed to go.  If setting,
 returns newLimit upon success."""
-      numArgs = len(args)
-      if numArgs == 0:
+      if len(args) == 0:
          return sys.getrecursionlimit()
-      elif numArgs == 1:
-         try:
-            newLimit = int(args[0])
-            sys.setrecursionlimit(newLimit)
-            return newLimit
-         except (TypeError, ValueError):
-            raise LispRuntimeFuncError( LP_recursionlimit, 'Argument must be an integer.' )
-      else:
-         raise LispRuntimeFuncError( LP_recursionlimit, 'Only one optional arg is allowed.' )
+      try:
+         newLimit = int(args[0])
+         sys.setrecursionlimit(newLimit)
+         return newLimit
+      except (TypeError, ValueError):
+         raise LispRuntimeFuncError( LP_recursionlimit, 'Argument must be an integer.' )
 
    @primitive( 'help', '&optional callableSymbol' )
    def LP_help( env: Environment, *args ) -> Any:
@@ -267,13 +273,12 @@ Type '(help "topic")' for available documentation on the named topic."""
 
       return L_T
 
-   @primitive( 'define-help-topic', '<name-string> <text-string>' )
+   @primitive( 'define-help-topic', '<name-string> <text-string>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_define_help_topic( env: Environment, *args ) -> Any:
       """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
 as a symbol.  An existing topic with the same name is overwritten."""
-      if len(args) != 2:
-         raise LispRuntimeFuncError( LP_define_help_topic, '2 arguments expected.' )
       name, text = args
       if not isinstance( name, str ):
          raise LispRuntimeFuncError( LP_define_help_topic, 'Argument 1 must be a string (topic name).' )
@@ -284,12 +289,11 @@ as a symbol.  An existing topic with the same name is overwritten."""
       topicFile.write_text( text, encoding='utf-8' )
       return LSymbol( name )
 
-   @primitive( 'undefine-help-topic', '<name-string>' )
+   @primitive( 'undefine-help-topic', '<name-string>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_undefine_help_topic( env: Environment, *args ) -> Any:
       """Removes a help topic by deleting its file from the help directory.
 Returns T if the topic existed and was removed, NIL if the topic was not found."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_undefine_help_topic, '1 argument expected.' )
       name = args[0]
       if not isinstance( name, str ):
          raise LispRuntimeFuncError( LP_undefine_help_topic, 'Argument 1 must be a string (topic name).' )

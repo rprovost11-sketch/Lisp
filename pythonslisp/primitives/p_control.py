@@ -1,37 +1,25 @@
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LFunction, LMacro, LCallable
-from pythonslisp.LispAST import L_T, L_NIL
-from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.LispAST import LSymbol, LCallable, LFunction, L_NIL
+from pythonslisp.LispExceptions import LispRuntimeFuncError, Thrown, ReturnFrom
 from pythonslisp.LispInterpreter import LispInterpreter
 
 
 def register(primitive) -> None:
 
-   @primitive( 'lambda', '<lambda-list> <sexpr1> <sexpr2> ...', specialForm=True )
+   @primitive( 'lambda', '<lambda-list> <sexpr1> <sexpr2> ...', specialForm=True,
+               min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_lambda( env: Environment, *args ) -> Any:
       """Creates and returns an unnamed lambda function.  When evaluating such a
 function the body (the exprs) are evaluated within a nested scope.  This
 primitive captures the environment it is defined in to allow for closures.
 The first body expression can be a documentation string."""
-      try:
-         funcParams, *funcBody = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_lambda, '2 arguments expected.' )
-
-      if len(funcBody) < 1:
-         raise LispRuntimeFuncError( LP_lambda, 'At least one body expression expected.' )
-
-      if isinstance(funcBody[0], str):
-         docString = funcBody[0]
-         funcBody = funcBody[1:]
+      funcParams, *funcBody = args
+      if funcBody and isinstance(funcBody[0], str):
+         docString, *funcBody = funcBody
       else:
          docString = ''
-
-      if len(funcBody) < 1:
-         raise LispRuntimeFuncError( LP_lambda, 'At least one body expression expected after docstring.' )
-
       return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
 
    @primitive( 'let', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
@@ -40,45 +28,7 @@ The first body expression can be a documentation string."""
 the result of the last one.  var1,var2,... are local variables bound to
 results of expressions.  Variable initializations are not evaluated in
 sequence and are not evaluated in let's nested scope."""
-      try:
-         vardefs, *body = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_let, '2 or more arguments expected.' )
-
-      if not isinstance(vardefs,  list):
-         raise LispRuntimeFuncError( LP_let, 'The first argument to let expected to be a list of variable initializations.' )
-
-      # Evaluate the var def initial value exprs in the outer scope.
-      initDict = { }
-      for varSpec in vardefs:
-         if isinstance(varSpec, LSymbol):
-            varName  = varSpec
-            initForm = list()
-         elif isinstance(varSpec, list):
-            varSpecLen = len(varSpec)
-            if varSpecLen == 1:
-               varName  = varSpec[0]
-               initForm = list()
-            elif varSpecLen == 2:
-               varName, initForm = varSpec
-            else:
-               raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be 1 or 2 elements long.' )
-
-            if not isinstance(varName, LSymbol):
-               raise LispRuntimeFuncError( LP_let, 'First element of a variable initializer pair expected to be a symbol.' )
-         else:
-            raise LispRuntimeFuncError( LP_let, 'Variable initializer spec expected to be a symbol or a list.' )
-
-         initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
-
-      # Open the new scope
-      env = Environment( env, initialBindings=initDict )
-
-      # Evaluate each body sexpr in the new env/scope
-      lastResult = L_NIL
-      for sexpr in body:
-         lastResult = LispInterpreter._lEval( env, sexpr )
-      return lastResult
+      raise LispRuntimeFuncError( LP_let, 'Evaluation handled by main eval loop.' )
 
    @primitive( 'let*', '( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...)', specialForm=True )
    def LP_letstar( env: Environment, *args ) -> Any:
@@ -87,143 +37,50 @@ the result of the last one.  var1,var2,... are local variables bound to
 results of expressions.  Variable initializations are evaluated in sequence
 and are evaluated in let's nested scope.  So later initializer expressions may
 refer to variables already initialized."""
-      try:
-         vardefs, *body = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_letstar, '2 or more arguments expected.' )
-
-      if not isinstance(vardefs,  list):
-         raise LispRuntimeFuncError( LP_letstar, 'The first argument to let expected to be a list of variable initializations.' )
-
-      # Open the new scope
-      env = Environment( env )
-
-      for varSpec in vardefs:
-         if isinstance(varSpec, LSymbol):
-            varName  = varSpec
-            initForm = list()
-         elif isinstance(varSpec, list):
-            varSpecLen = len(varSpec)
-            if varSpecLen == 1:
-               varName  = varSpec[0]
-               initForm = list()
-            elif varSpecLen == 2:
-               varName, initForm = varSpec
-            else:
-               raise LispRuntimeFuncError( LP_letstar, 'Variable initializer spec expected to be 1 or 2 elements long.' )
-
-            if not isinstance(varName, LSymbol):
-               raise LispRuntimeFuncError( LP_letstar, 'First element of a variable initializer pair expected to be a symbol.' )
-         else:
-            raise LispRuntimeFuncError( LP_letstar, 'Variable initializer spec expected to be a symbol or a list.' )
-
-         env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
-
-      # Evaluate each body sexpr in the new env/scope.
-      lastResult = L_NIL
-      for sexpr in body:
-         lastResult = LispInterpreter._lEval( env, sexpr )
-      return lastResult
+      raise LispRuntimeFuncError( LP_letstar, 'Evaluation handled by main eval loop.' )
 
    @primitive( 'progn', '<sexpr1> <sexpr2> ...', specialForm=True )
    def LP_progn( env: Environment, *args ) -> Any:
       """Evaluates each sexpression in sequence.  Returns the result of the last evaluation."""
-      lastResult = L_NIL
-      for expr in args:
-         lastResult = LispInterpreter._lEval( env, expr )
-      return lastResult
+      raise LispRuntimeFuncError( LP_progn, 'Evaluation handled by main eval loop.')
 
    @primitive( 'if', '<cond> <conseq> &optional <alt>', specialForm=True )
    def LP_if( env: Environment, *args ) -> Any:
       """Evaluates the condition.  If truthy (non-nil) then consequence is
 evaluated and its result returned, otherwise alt is evaluated and its result
 is returned."""
-      numArgs = len(args)
-      if not(2 <= numArgs <= 3):
-         raise LispRuntimeFuncError( LP_if, '2 or 3 arguments expected.' )
+      raise LispRuntimeFuncError( LP_if, 'Expression evaluated in main eval loop.' )
 
-      condValue = LispInterpreter._lEval( env, args[0] )
-      if LispInterpreter._lTrue(condValue):
-         return LispInterpreter._lEval( env, args[1])
-      elif numArgs == 3:
-         return LispInterpreter._lEval( env, args[2])
-      else:
-         return L_NIL
-
-   @primitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True )
+   @primitive( 'cond', '(<cond1> <body1>) (<cond2> <body2>) ...', specialForm=True,
+               min_args=1, arity_msg='1 or more argument expected.' )
    def LP_cond( env: Environment, *args ) -> Any:
       """Evaluates each cond in order until one evaluates to truthy (non-nil).
 Then evaluates each expr in the paired body and returns the result of the
 last expr evaluated.  All remaining conds and bodys are skipped.  End the
 sequence with '(t <bodyn>)' to have code evaluated if no other condition
 is satisfied."""
-      if len(args) < 1:
-         raise LispRuntimeFuncError( LP_cond, '1 or more argument expected.' )
-      caseList = args
+      raise LispRuntimeFuncError( LP_cond, 'Handled by main eval loop.' )
 
-      for caseNum,case in enumerate(caseList):
-         try:
-            testExpr, *body = case
-         except (ValueError, TypeError):
-            raise LispRuntimeFuncError( LP_cond, f"Entry {caseNum+1} does not contain a (<cond:expr> <body:expr>) pair." )
-
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_cond, f'Entry {caseNum+1} expects at least one body expression.' )
-
-         if LispInterpreter._lTrue(LispInterpreter._lEval(env,testExpr)):
-            latestResult = L_NIL
-            for sexpr in body:
-               latestResult = LispInterpreter._lEval( env, sexpr )
-            return latestResult
-
-      return L_NIL
-
-   @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True )
+   @primitive( 'case', '<sexpr> (<val1> <body1>) (<val2> <body2>) ...', specialForm=True,
+               min_args=2, arity_msg='2 or more arguments expected.' )
    def LP_case( env: Environment, *args ) -> Any:
       """Evaluates expr.  Finds the first val that equals expr's val.  Then
 evaluates each expr in body and returns the result of the last expr evaluated.
 All remaining cases are skipped."""
-      try:
-         expr, *caseList = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_case, '2 or more arguments expected.' )
-      exprVal = LispInterpreter._lEval( env, expr )
+      raise LispRuntimeFuncError( LP_case, 'Handled by main eval loop.' )
 
-      if len(caseList) < 1:
-         raise LispRuntimeFuncError( LP_case, 'At least one case expected.' )
-
-      for caseNum,case in enumerate(caseList):
-         try:
-            caseVal, *body = case
-         except (ValueError, TypeError):
-            raise LispRuntimeFuncError( LP_case, f'Entry {caseNum+1} does not contain a (<val> <body>) pair.' )
-
-         if len(body) < 1:
-            raise LispRuntimeFuncError( LP_case, "Case body expected." )
-
-         if LispInterpreter._lEval(env,caseVal) == exprVal:
-            latestResult = None
-            for sexpr in body:
-               latestResult = LispInterpreter._lEval( env, sexpr )
-            return latestResult
-
-      return L_NIL
-
-   @primitive( 'quote', '<sexpr>', specialForm=True )
+   @primitive( 'quote', '<sexpr>', specialForm=True,
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_quote( env: Environment, *args ) -> Any:
       """Returns expr without evaluating it."""
-      if (len(args) != 1):
-         raise LispRuntimeFuncError( LP_quote, '1 argument expected.' )
       return args[0]
 
-   @primitive( 'backquote', '<sexpr>', specialForm=True )
+   @primitive( 'backquote', '<sexpr>', specialForm=True,
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_backquote( env: Environment, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-      if (len(args) != 1):
-         raise LispRuntimeFuncError( LP_backquote, '1 argument expected.' )
-      sExpr = args[0]
-      return LispInterpreter._lbackquoteExpand( env, sExpr )
+      return LispInterpreter._lbackquoteExpand( env, args[0] )
 
    @primitive( 'comma', '<sexpr>', specialForm=True )
    def LP_comma( env: Environment, *args ) -> Any:
@@ -241,141 +98,74 @@ Backquotes may be nested; each level of comma belongs to the nearest enclosing b
 is evaluated.  If it evaluates as truthy (non-nil) the exprs are evaluated
 in sequence.  However if conditionExpr evaluates to nil, the loop terminates
 and returns the result of the last expr evaluated."""
-      try:
-         conditionExpr, *body = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_while, '2 arguments expected.' )
-
-      if len(body) < 1:
-         raise LispRuntimeFuncError( LP_while, 'At least one sexpr expected for the body.' )
-
-      latestResult = L_NIL
-      condResult = LispInterpreter._lEval(env, conditionExpr)
-      while LispInterpreter._lTrue( condResult ):
-         for expr in body:
-            latestResult = LispInterpreter._lEval( env, expr )
-         condResult = LispInterpreter._lEval(env, conditionExpr )
-      return latestResult
+      raise LispRuntimeFuncError( LP_while, 'Evaluation handled by macro.' )
 
    @primitive( 'dotimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
    def LP_dotimes( env: Environment, *args ) -> Any:
       """Performs a loop over a body of exprs countExpr times.  Before each iteration
 the loop variable is set to the next loop count number (starting with 0 for
 the first loop).  The value of the last sexpr evaluated is returned."""
-      try:
-         loopControl, *body = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_dotimes, '2 or more arguments expected.' )
-
-      if not isinstance(loopControl, list):
-         raise LispRuntimeFuncError( LP_dotimes, 'Argument 1 expected to be a list.' )
-
-      try:
-         variable, countExpr = loopControl
-      except ValueError:
-         raise LispRuntimeFuncError( LP_dotimes, 'Argument 1 expected to contain two elements.' )
-
-      if not isinstance( variable, LSymbol ):
-         raise LispRuntimeFuncError( LP_dotimes, 'Argument 1 of the control list expected to be a symbol.' )
-
-      count = LispInterpreter._lEval( env, countExpr )
-
-      if not isinstance( count, int ):
-         raise LispRuntimeFuncError( LP_dotimes, 'Argument 2 of the control list expected to be an integer' )
-
-      if len(body) < 1:
-         raise LispRuntimeFuncError( LP_dotimes, 'At least one sexpr expected for the loop body.' )
-
-      latestResult = L_NIL
-      loopEnv = Environment( env )
-      for iterCount in range(count):
-         loopEnv.bindLocal( variable.strval, iterCount )
-         for sexpr in body:
-            latestResult = LispInterpreter._lEval( loopEnv, sexpr )
-      return latestResult
+      raise LispRuntimeFuncError( LP_dotimes, 'Evaluation handled by macro.' )
 
    @primitive( 'foreach', '<variable> <list> <sexpr1> <sexpr2> ...', specialForm=True )
    def LP_foreach( env: Environment, *args ) -> Any:
       """Perform a loop over the elements of list.  On each iteration var is set
 to the next element in the list, then the expr's are evaluated in order.
 Returns the result of the very last evaluation."""
-      try:
-         varSymbol, anExpr, *body = args
-      except ValueError:
-         raise LispRuntimeFuncError( LP_foreach, "3 or more arguments expected." )
-
-      if not isinstance( varSymbol, LSymbol ):
-         raise LispRuntimeFuncError( LP_foreach, "Argument 1 expected to be a symbol." )
-
-      if len(body) < 1:
-         raise LispRuntimeFuncError( LP_foreach, 'At least one sexpr expected for the loop body.' )
-
-      alist = LispInterpreter._lEval( env, anExpr )
-      if not isinstance(alist, list):
-         raise LispRuntimeFuncError( LP_foreach, "Argument 2 expected to evaluate to a list." )
-
-      latestResult = L_NIL
-      loopEnv = Environment( env )
-      for element in alist:
-         loopEnv.bindLocal( varSymbol.strval, element )
-         for sexpr in body:
-            latestResult = LispInterpreter._lEval( loopEnv, sexpr )
-      return latestResult
+      raise LispRuntimeFuncError( LP_foreach, 'Evaluation handled by macro.' )
 
    @primitive( 'dolist', '(<variable> <list>) <sexpr1> <sexpr2> ...', specialForm=True )
    def LP_dolist( env: Environment, *args ) -> Any:
       """Iterate over the elements of list, binding variable to each in turn.
 Returns the result of the last body expression, or NIL if the list is empty."""
-      if len(args) < 1:
-         raise LispRuntimeFuncError( LP_dolist, '2 or more arguments expected.' )
+      raise LispRuntimeFuncError( LP_dolist, 'Evaluation handled by macro.' )
 
-      controlSpec = args[0]
-      body        = args[1:]
+   @primitive( 'block', '<name> <sexpr1> <sexpr2> ...', specialForm=True )
+   def LP_block( env: Environment, *args ) -> Any:
+      """Establishes a named lexical block.  Evaluates body forms in sequence and
+returns the value of the last one.  A (return-from name value) anywhere in the
+dynamic extent of the block performs an immediate non-local exit, returning value."""
+      blockName = args[0]   # analyzer guarantees: LSymbol
+      body = args[1:]
+      if len(body) == 0:
+         return L_NIL
+      try:
+         for sexpr in body[:-1]:
+            LispInterpreter._lEval( env, sexpr )
+         return LispInterpreter._lEval( env, body[-1] )
+      except ReturnFrom as e:
+         if e.name == blockName.strval:
+            return e.value
+         raise
 
-      if not isinstance( controlSpec, list ) or len(controlSpec) != 2:
-         raise LispRuntimeFuncError( LP_dolist, 'Argument 1 must be a (variable list) control spec.' )
+   @primitive( 'return-from', '<name> &optional <value>', specialForm=True )
+   def LP_return_from( env: Environment, *args ) -> Any:
+      """Performs a non-local exit from the nearest enclosing (block name ...).
+Returns value (default NIL) from that block.  name is not evaluated."""
+      blockName = args[0]   # analyzer guarantees: LSymbol
+      value = LispInterpreter._lEval( env, args[1] ) if len(args) == 2 else L_NIL
+      raise ReturnFrom( blockName.strval, value )
 
-      varSymbol, listExpr = controlSpec
-      if not isinstance( varSymbol, LSymbol ):
-         raise LispRuntimeFuncError( LP_dolist, 'Control spec variable must be a Symbol.' )
-
-      alist = LispInterpreter._lEval( env, listExpr )
-      if not isinstance( alist, list ):
-         raise LispRuntimeFuncError( LP_dolist, 'Control spec list must evaluate to a List.' )
-
-      latestResult = L_NIL
-      loopEnv = Environment( env )
-      for element in alist:
-         loopEnv.bindLocal( varSymbol.strval, element )
-         for sexpr in body:
-            latestResult = LispInterpreter._lEval( loopEnv, sexpr )
-      return latestResult
-
-   @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...' )
+   @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...',
+               min_args=1, arity_msg='1 or more arguments expected' )
    def LP_funcall( env: Environment, *args ) -> Any:
       """Calls a function with the args listed."""
-      if len(args) == 0:
-         raise LispRuntimeFuncError( LP_funcall, "1 or more arguments expected" )
-
       return LispInterpreter._lApply( env, args[0], args[1:] )
 
-   @primitive( 'eval', '<sexpr>' )
+   @primitive( 'eval', '<sexpr>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_eval( env: Environment, *args ) -> Any:
       """Evaluates expr in the current scope."""
-      if len(args) != 1:
-         raise LispRuntimeFuncError( LP_eval, '1 argument expected.' )
-      expr = args[0]
-      return LispInterpreter._lEval( env, expr )
+      return LispInterpreter._lEval( env, args[0] )
 
-   @primitive( 'apply', '<function> &rest <args> <argsList>' )
+   @primitive( 'apply', '<function> &rest <args> <argsList>',
+               min_args=2, arity_msg='At least 2 arguments expected to apply.' )
    def LP_apply( env: Environment, *args ) -> Any:
       """Inserts arg1,arg2,... into the front of listOfMoreArgs, then applies the
 function the the whole list of args.  Returns the result of that function
 application.
 
 function is any callable that is not a special form."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_apply, "At least 2 arguments expected to apply." )
 
       listArg = args[-1]
       if not isinstance(listArg, list):
@@ -400,28 +190,43 @@ function is any callable that is not a special form."""
 
       return LispInterpreter._lApply( env, fnObj, fnArgs )
 
-   @primitive( 'and', '<boolean1> <boolean2> ...', specialForm=True )
+   @primitive( 'and', '&rest <forms>', specialForm=True )
    def LP_and( env: Environment, *args ) -> Any:
-      """Returns t if all arguments are truthy (non-nil).
-Short-circuits: stops evaluating arguments upon encountering the first nil."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_and, '2 or more arguments expected.' )
+      """Evaluates forms left to right.  Returns nil at the first nil form.
+Returns the value of the last form if all are truthy.  (and) returns t.
+Short-circuits: stops evaluating upon encountering the first nil."""
+      raise LispRuntimeFuncError( LP_and, 'Evaluation handled by macro.' )
 
-      for arg in args:
-         if not LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
-            return L_NIL
-
-      return L_T
-
-   @primitive( 'or', '<boolean1> <boolean2> ...', specialForm=True )
+   @primitive( 'or', '&rest <forms>', specialForm=True )
    def LP_or( env: Environment, *args ) -> Any:
-      """Returns t if at least one argument is truthy (non-nil).
-Short-circuits:  stops evaluating upon encountering the first truthy value."""
-      if len(args) < 2:
-         raise LispRuntimeFuncError( LP_or, '2 or more arguments expected.' )
+      """Evaluates forms left to right.  Returns the first truthy value found.
+Returns nil if all forms are nil.  (or) returns nil.
+Short-circuits: stops evaluating upon encountering the first truthy value."""
+      raise LispRuntimeFuncError( LP_or, 'Evaluation handled by macro.' )
 
-      for arg in args:
-         if LispInterpreter._lTrue(LispInterpreter._lEval(env, arg)):
-            return L_T
+   @primitive( 'throw', '<tag> <result>',
+               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
+   def LP_throw( env: Environment, *args ) -> Any:
+      """Performs a non-local exit to the nearest enclosing (catch tag ...) whose
+tag is eql to this tag.  Both tag and result are evaluated before throw is
+invoked.  If no matching catch exists, an error is signaled."""
+      tag, value = args
+      raise Thrown( tag, value )
 
-      return L_NIL
+   @primitive( 'catch', '<tag> <sexpr1> <sexpr2> ...', specialForm=True )
+   def LP_catch( env: Environment, *args ) -> Any:
+      """Establishes a dynamic catch point tagged with tag (evaluated).  Evaluates
+body forms in sequence.  If (throw tag value) is executed within the dynamic
+extent, catch immediately returns value.  Otherwise returns the value of the
+last body form, or NIL if body is empty."""
+      tag  = LispInterpreter._lEval( env, args[0] )
+      body = args[1:]
+      try:
+         result = L_NIL
+         for sexpr in body:
+            result = LispInterpreter._lEval( env, sexpr )
+         return result
+      except Thrown as e:
+         if LispInterpreter._lEql( e.tag, tag ):
+            return e.value
+         raise

@@ -5,10 +5,6 @@ Development Tasks
 To Do
 -----
 - See if macros are also supposed to support closures.
-- OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
-  can scan the AST for errors such as the wrong number or types of arguments to
-  a primitive.  This would eliminate a lot of the runtime error checking
-  currently in the primitive definitions and hence speed up the interpreter.
 - implement stream IO primitives.
 - implement packages.  A package x is a symbol in the global namespace which
   refers to another Environment instance which contains all the symbols of
@@ -17,14 +13,27 @@ To Do
 - Figure out how to make an environment scope that is parent to the GLOBAL
   Environment in which the built-ins are defined.  They cannot be redefined,
   only temporarily covered up by a descendent environment.
-- Research how it might be possible to implement Scheme's tail recursion
-  optimization in the evaluator.
-- Investigate rewriting the evaluator as a loop that manages its own stack
-  object and function calls.  Would it speed things up?  Would it simplify
-  implementation of the tail recursion optimization?
 
 Completed
 ---------
+2026.02.23
+- Coverted the recursive tree-walk evaluator to a looping tree-walk evaluator
+  with TCO.
+- Investigate rewriting the evaluator as a loop that manages its own stack
+  object and function calls.  Would it speed things up?  Would it simplify
+  implementation of the tail recursion optimization?
+- Research how it might be possible to implement Scheme's tail recursion
+  optimization in the evaluator.
+- Add tests for TCO
+- Add tests for setq and at-set.
+- Make setf a macro
+- Make error work sort of like writef.
+- Make the three looping primitives into macros.
+- OPTIMIZATION: Add a semantic analyzer after the macro expansion phase which
+  can scan the AST for errors such as the wrong number or types of arguments to
+  a primitive.  This would eliminate a lot of the runtime error checking
+  currently in the primitive definitions and hence speed up the interpreter.
+  
 2026.02.22
 - Colorized help output and error messages for ASCII displays.
 - Implemented nested backquotes.

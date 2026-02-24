@@ -211,17 +211,17 @@
 
 ==> 1
 
->>> ;;; &allow-other-keys: with svar — key supplied
+>>> ;;; &allow-other-keys: with svar key supplied
 ... ((lambda (&key (a 0 ap) &allow-other-keys) (list a ap)) :a 7 :x 99)
 
 ==> (7 T)
 
->>> ;;; &allow-other-keys: with svar — key NOT supplied, only unknown keys
+>>> ;;; &allow-other-keys: with svar key NOT supplied, only unknown keys
 ... ((lambda (&key (a 0 ap) &allow-other-keys) (list a ap)) :x 99)
 
 ==> (0 NIL)
 
->>> ;;; &allow-other-keys: with &rest — rest captures all key/val pairs
+>>> ;;; &allow-other-keys: with &rest rest captures all key/val pairs
 ... ((lambda (&rest r &key a &allow-other-keys) (list a r)) :a 1 :b 2)
 
 ==> (1 (:A 1 :B 2))
@@ -231,7 +231,7 @@
 
 ==> 42
 
->>> ;;; &allow-other-keys: duplicate known key — first wins
+>>> ;;; &allow-other-keys: duplicate known key first wins
 ... ((lambda (&key a &allow-other-keys) a) :a 1 :a 2 :b 3)
 
 ==> 1
@@ -253,7 +253,7 @@
 %%% Unexpected keyword found B.
 ==>
 
->>> ;;; :allow-other-keys t with no declared keys — unknown keys silently ignored
+>>> ;;; :allow-other-keys t with no declared keys unknown keys silently ignored
 ... ((lambda (&key) nil) :x 1 :y 2 :allow-other-keys t)
 
 ==> NIL
@@ -263,7 +263,7 @@
 
 ==> (1 2)
 
->>> ;;; :allow-other-keys t with svar — supplied key gets T, unsupplied gets NIL
+>>> ;;; :allow-other-keys t with svar supplied key gets T, unsupplied gets NIL
 ... ((lambda (&key (a 0 ap) (b 0 bp)) (list a ap b bp)) :a 5 :z 99 :allow-other-keys t)
 
 ==> (5 T 0 NIL)
@@ -273,7 +273,7 @@
 
 ==> (99 5)
 
->>> ;;; Fix 1: &optional with no &key — heuristic fires, :foo not consumed, extra-arg error
+>>> ;;; Fix 1: &optional with no &key heuristic fires, :foo not consumed, extra-arg error
 ... ((lambda (&optional x) x) :foo)
 
 %%% Error binding arguments in call to "(lambda ...)".
@@ -285,7 +285,7 @@
 
 ==> (42 7)
 
->>> ;;; Fix 4: simple duplicate key — first wins
+>>> ;;; Fix 4: simple duplicate key first wins
 ... ((lambda (&key a) a) :a 1 :a 2)
 
 ==> 1
@@ -300,7 +300,7 @@
 
 ==> NIL
 
->>> ;;; Fix 7: (&aux (x) (y 7)) — single and two-element forms together
+>>> ;;; Fix 7: (&aux (x) (y 7)) single and two-element forms together
 ... ((lambda (&aux (x) (y 7)) (list x y)))
 
 ==> (NIL 7)
@@ -320,7 +320,7 @@
 
 ==> 3
 
->>> ;;; NC6: (&key) with empty section — any keyword passed is an error
+>>> ;;; NC6: (&key) with empty section any keyword passed is an error
 ... ((lambda (&key) nil) :x 1)
 
 %%% Error binding arguments in call to "(lambda ...)".
@@ -378,7 +378,7 @@
 
 ==> (0 NIL)
 
->>> ;;; Bug 5: multiple key params, some supplied, some not — svars correct
+>>> ;;; Bug 5: multiple key params, some supplied, some not svars correct
 ... ((lambda (&key (a 0 ap) (b 1 bp)) (list a ap b bp)) :b 99)
 
 ==> (0 NIL 99 T)
@@ -388,12 +388,12 @@
 
 ==> (10 10)
 
->>> ;;; NC1: key default references preceding key — with supplied value
+>>> ;;; NC1: key default references preceding key with supplied value
 ... ((lambda (&key (a 10) (b a)) (list a b)) :a 42)
 
 ==> (42 42)
 
->>> ;;; NC1: key default references preceding key — second key supplied overrides
+>>> ;;; NC1: key default references preceding key second key supplied overrides
 ... ((lambda (&key (a 10) (b a)) (list a b)) :a 42 :b 7)
 
 ==> (42 7)
