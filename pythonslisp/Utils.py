@@ -1,4 +1,5 @@
 import os
+import sys
 
 
 def retrieveFileList( dirname ) -> list[str]:
@@ -115,18 +116,25 @@ class MultiWriter:
       for fileStream in self._fileList:
          if ansi and fileStream is None:
             colored = [ f'{ansi}{m}{MultiWriter.RESET}' for m in msgs ]
-            print( *colored, sep=sep, end='', flush=True, file=fileStream )
+            print( *colored, sep=sep, end='', file=fileStream )
          else:
-            print( *msgs, sep=sep, end='', flush=True, file=fileStream )
+            print( *msgs, sep=sep, end='', file=fileStream )
 
    def writeln( self, *msgs: list[str], sep=' ', color=None ):
       ansi = MultiWriter._ansi( color )
       for fileStream in self._fileList:
          if ansi and fileStream is None:
             colored = [ f'{ansi}{m}{MultiWriter.RESET}' for m in msgs ]
-            print( *colored, sep=sep, end='\n', flush=True, file=fileStream )
+            print( *colored, sep=sep, end='\n', file=fileStream )
          else:
-            print( *msgs, sep=sep, end='\n', flush=True, file=fileStream )
+            print( *msgs, sep=sep, end='\n', file=fileStream )
+
+   def flushAll( self ):
+      for fileStream in self._fileList:
+         if fileStream is None:
+            sys.stdout.flush()
+         else:
+            fileStream.flush()
 
    def columnize( self, lst: list[str], displaywidth: int = 80, color=None ):
       for fileStream in self._fileList:
