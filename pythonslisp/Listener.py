@@ -3,10 +3,38 @@ import os
 import sys
 import datetime
 import time
+import atexit
 from abc import ABC, abstractmethod
 from typing import Any
 
 import pythonslisp.Parser as Parser
+
+_HIST_FILE = os.path.expanduser('~/.lisp_history')
+_READLINE  = False
+_rl        = None
+
+if sys.platform == 'win32':
+   try:
+      import pythonslisp.readline_win as _rl
+      _rl.read_history_file(_HIST_FILE)
+      _rl.set_history_length(500)
+      atexit.register(_rl.write_history_file, _HIST_FILE)
+      _READLINE = True
+   except ImportError:
+      pass
+else:
+   try:
+      import readline as _rl
+      try:
+         _rl.read_history_file(_HIST_FILE)
+      except FileNotFoundError:
+         pass
+      _rl.set_history_length(500)
+      _rl.set_auto_history(False)
+      atexit.register(_rl.write_history_file, _HIST_FILE)
+      _READLINE = True
+   except ImportError:
+      pass
 
 ### Utility Functions
 ### =================
@@ -141,6 +169,8 @@ class Listener( object ):
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
             inputExprStr = '\n'.join( inputExprLineList ).strip()
+            if _READLINE and inputExprStr:
+               _rl.add_history(inputExprStr)
             try:
                if (inputExprStr != '') and (inputExprStr[0] == ']'):
                   self._runListenerCommand( inputExprStr )
@@ -606,7 +636,10 @@ class Listener( object ):
             print( plainLine, end='\n', flush=True, file=self._logFile )
 
    def _prompt( self, prompt: str='' ) -> str:
-      inputStr: str = input( prompt ).strip()
+      if sys.platform == 'win32' and _READLINE and sys.stdin.isatty():
+         inputStr = _rl.input_line( prompt, continuation_prompt='... ' ).rstrip()
+      else:
+         inputStr = input( prompt ).rstrip()
       if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
          self._logFile.write( f'{prompt}{inputStr}' )
       return inputStr

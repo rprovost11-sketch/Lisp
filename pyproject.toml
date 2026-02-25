@@ -1,6 +1,6 @@
 [project]
 name = "pythonslisp"
-version = "0.30.8"
+version = "0.30.9"
 authors = [
   { name="Ronald H Provost/Longo", email="ronlongo9@outlook.com" },
 ]
