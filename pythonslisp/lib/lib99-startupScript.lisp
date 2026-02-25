@@ -11,17 +11,29 @@
 
 ;;; Some function definitions for testing purposes
 (defun fact (n)
-         "Recursively compute the factorial of an arbitrary integer n.  For general testing of the interpreter."
-         (if (= n 0)
-             1
-             (* n (fact (- n 1)))))
+   "Recursively compute the factorial of an arbitrary integer n.  For general testing of the interpreter."
+   (if (= n 0)
+      1
+      (* n (fact (- n 1)))))
+
+(defun fact-tco (n &optional (accum 1))
+   "TCO-safe recursive factorial."
+   (if (= n 0)
+      accum
+      (factorial (- n 1) (* n acc))))
 
 (defun fib (n)
-         "Recursively compute and return the nth fibonacci number."
-         (if (<= n 2)
-             1
-             (+ (fib (- n 1))
-                (fib (- n 2)))))
+   "Recursively compute and return the nth fibonacci number."
+   (if (<= n 2)
+      1
+      (+ (fib (- n 1))
+         (fib (- n 2)))))
+
+(defun fib-tco (n &optional (a 0) (b 1))
+   "TCO-safe recursive fibonacci."
+   (if (= n 0)
+      a
+      (fib (- n 1) b (+ a b))))
 
 (defun d (expr)
          "Compute the first derivative of an expression."
