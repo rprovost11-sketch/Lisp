@@ -9,33 +9,6 @@ from typing import Any
 
 import pythonslisp.Parser as Parser
 
-_HIST_FILE   = os.path.expanduser('~/.lisp_history')
-_READLINE    = False
-_rl          = None
-_historyMax  = 500
-
-if sys.platform == 'win32':
-   try:
-      import pythonslisp.readline_win as _rl
-      _rl.read_history_file(_HIST_FILE)
-      _rl.set_history_length(_historyMax)
-      atexit.register(_rl.write_history_file, _HIST_FILE)
-      _READLINE = True
-   except ImportError:
-      pass
-else:
-   try:
-      import readline as _rl
-      try:
-         _rl.read_history_file(_HIST_FILE)
-      except FileNotFoundError:
-         pass
-      _rl.set_history_length(_historyMax)
-      _rl.set_auto_history(False)
-      atexit.register(_rl.write_history_file, _HIST_FILE)
-      _READLINE = True
-   except ImportError:
-      pass
 
 ### Utility Functions
 ### =================
@@ -139,6 +112,13 @@ class Listener( object ):
    a read-eval-print-loop and listener commands for session logging, as well
    as testing and rebooting the intepreter.  Partly ripped off from Python's
    cmd module.'''
+
+   # readline state — mirrors Python's former module-level globals
+   _HIST_FILE  = os.path.expanduser('~/.lisp_history')
+   _READLINE   = False
+   _rl         = None
+   _historyMax = 500
+
    def __init__( self, anInterpreter: Interpreter, testdir: str='', **kwargs ) -> None:
       useColor   = sys.stdout.isatty()
       BOLD_WHITE = '\033[1;97m' if useColor else ''
@@ -148,10 +128,35 @@ class Listener( object ):
       print( f'{DIM}Project home {{project}}{RESET}'.format(**kwargs) )
       print( )
       print( f'{DIM}- Initializing Listener{RESET}', flush=True )
-      self._interp          = anInterpreter
-      self._testdir         = testdir
-      self._logFile: Any    = None
+      self._interp        = anInterpreter
+      self._testdir       = testdir
+      self._logFile: Any  = None
       self._instrumenting = False
+      if not Listener._READLINE:
+         if sys.platform == 'win32':
+            try:
+               import pythonslisp.readline_win as _rl_mod
+               Listener._rl = _rl_mod
+               Listener._rl.read_history_file(Listener._HIST_FILE)
+               Listener._rl.set_history_length(Listener._historyMax)
+               atexit.register(Listener._rl.write_history_file, Listener._HIST_FILE)
+               Listener._READLINE = True
+            except ImportError:
+               pass
+         else:
+            try:
+               import readline as _rl_mod
+               Listener._rl = _rl_mod
+               try:
+                  Listener._rl.read_history_file(Listener._HIST_FILE)
+               except FileNotFoundError:
+                  pass
+               Listener._rl.set_history_length(Listener._historyMax)
+               Listener._rl.set_auto_history(False)
+               atexit.register(Listener._rl.write_history_file, Listener._HIST_FILE)
+               Listener._READLINE = True
+            except ImportError:
+               pass
       self._cmd_reboot( [ ] )
 
    def readEvalPrintLoop( self ) -> None:
@@ -170,8 +175,8 @@ class Listener( object ):
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
             inputExprStr = '\n'.join( inputExprLineList ).strip()
-            if _READLINE and inputExprStr:
-               _rl.add_history(inputExprStr)
+            if self._READLINE and inputExprStr:
+               self._rl.add_history(inputExprStr)
             try:
                if (inputExprStr != '') and (inputExprStr[0] == ']'):
                   self._runListenerCommand( inputExprStr )
@@ -420,11 +425,10 @@ class Listener( object ):
       '''Usage:  lhistory [<n>]
       Get or set the maximum readline history size.
       '''
-      global _historyMax
       if len(args) > 1:
          raise ListenerCommandError( self._cmd_lhistory.__doc__ )
       if len(args) == 0:
-         print( f'Current history size: {_historyMax}' )
+         print( f'Current history size: {Listener._historyMax}' )
       else:
          try:
             n = int(args[0])
@@ -432,9 +436,9 @@ class Listener( object ):
             raise ListenerCommandError( self._cmd_lhistory.__doc__ )
          if n < 1:
             raise ListenerCommandError( 'History size must be a positive integer.' )
-         _historyMax = n
-         if _READLINE:
-            _rl.set_history_length(n)
+         Listener._historyMax = n
+         if self._READLINE:
+            self._rl.set_history_length(n)
          print( f'New history size: {n}' )
 
    def _cmd_log( self, args: list[str] ) -> None:
@@ -658,8 +662,8 @@ class Listener( object ):
             print( plainLine, end='\n', flush=True, file=self._logFile )
 
    def _prompt( self, prompt: str='' ) -> str:
-      if sys.platform == 'win32' and _READLINE and sys.stdin.isatty():
-         inputStr = _rl.input_line( prompt, continuation_prompt='... ' ).rstrip()
+      if sys.platform == 'win32' and self._READLINE and sys.stdin.isatty():
+         inputStr = self._rl.input_line( prompt, continuation_prompt='... ' ).rstrip()
       else:
          inputStr = input( prompt ).rstrip()
       if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
