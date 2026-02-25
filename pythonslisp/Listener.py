@@ -616,14 +616,12 @@ class Listener( object ):
          raise ListenerCommandError( self._cmd_trace.__doc__ )
 
       from pythonslisp.LispInterpreter import LispInterpreter
-      LispInterpreter._trace_global = not LispInterpreter._trace_global
-      LispInterpreter._set_trace_hook()
+      state = LispInterpreter.tracer.toggle_global()
 
       useColor   = sys.stdout.isatty()
       GREEN      = '\033[92m' if useColor else ''
       YELLOW     = '\033[93m' if useColor else ''
       RESET      = '\033[0m'  if useColor else ''
-      state      = LispInterpreter._trace_global
       stateColor = GREEN if state else YELLOW
       stateStr   = 'ON' if state else 'OFF'
       print( f'Tracing is now {stateColor}{stateStr}{RESET}.' )

@@ -1,7 +1,7 @@
 import time
 from fractions import Fraction
 from pathlib import Path
-from typing import Callable, Any, Sequence
+from typing import Any, Sequence
 
 from pythonslisp.LispParser import LispParser
 from pythonslisp.Listener import Interpreter, retrieveFileList
@@ -15,6 +15,8 @@ from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
 from pythonslisp.LispEnvironment import LispEnvironment
 from pythonslisp.LispExpander import LispExpander
 from pythonslisp.LispAnalyzer import LispAnalyzer
+from pythonslisp.Tracer import Tracer
+from pythonslisp.primitives import constructPrimitives
 
 
 class LispInterpreter( Interpreter ):
@@ -23,25 +25,18 @@ class LispInterpreter( Interpreter ):
    outStrm = None
    _setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
 
-   # --- Tracing state ---
-   _traced:       set   = set()   # function names registered via (trace fn)
-   _trace_global: bool  = False   # global toggle set by ]trace listener command
-   _trace_depth:  int   = 0       # current call nesting depth (managed in _lApply)
-   _apply_hook:   Any   = None    # set to _trace_fn when any tracing is active
-
    def __init__( self, runtimeLibraryDir: (Path|str) = DEFAULT_LIB_DIR ) -> None:
       self._libDir = runtimeLibraryDir
       self._parser: LispParser = LispParser( )
+      self.tracer  = Tracer()
+      LispInterpreter.tracer = self.tracer   # expose to static methods
 
    def reboot( self, outStrm=None ) -> None:
       # Reset tracing state so stale traced-function names don't linger
-      LispInterpreter._traced       = set()
-      LispInterpreter._trace_global = False
-      LispInterpreter._trace_depth  = 0
-      LispInterpreter._apply_hook   = None
+      self.tracer.reset()
 
       # Load in the primitives
-      primitiveDict: dict[str, Any] = LispInterpreter._lconstructPrimitives( self._parser.parse )
+      primitiveDict: dict[str, Any] = constructPrimitives( self._parser.parse )
       self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict )  # Create the GLOBAL environment
 
       # Load in the runtime library
@@ -303,13 +298,13 @@ class LispInterpreter( Interpreter ):
                raise ContinuationInvoked( function.token, value )
 
             # Tracing
-            hook    = LispInterpreter._apply_hook
+            tracer  = LispInterpreter.tracer
             printed = False
-            depth   = LispInterpreter._trace_depth
-            if hook:
-               printed = hook( 'enter', function, args, depth )
+            depth   = tracer.getMaxTraceDepth()
+            if tracer.isActive():
+               printed = tracer.trace( 'enter', function, args, depth, LispInterpreter.outStrm )
                if printed:
-                  LispInterpreter._trace_depth = depth + 1
+                  tracer.setMaxTraceDepth( depth + 1 )
 
             # Call the function with its arguments
             if not function.specialForm:
@@ -321,20 +316,27 @@ class LispInterpreter( Interpreter ):
                else:
                   env = LispEnvironment( function.capturedEnvironment )
                   env.bindArguments( function.lambdaListAST, args, LispInterpreter._lEval )
-                  # Untraced: TCO — update env/sExprAST and continue the loop.
-                  bodyLen = len( function.bodyAST )
-                  if bodyLen == 0:
-                     sExprAST = L_NIL
-                  elif bodyLen == 1:
-                     sExprAST = function.bodyAST[0]
+                  if printed:
+                     # Traced: evaluate recursively so the exit trace fires at the right time.
+                     result = L_NIL
+                     for sexpr in function.bodyAST:
+                        result = LispInterpreter._lEval( env, sexpr )
+                     # Fall through to the traced-exit block below.
                   else:
-                     for sexpr in function.bodyAST[:-1]:
-                        LispInterpreter._lEval( env, sexpr )
-                     sExprAST = function.bodyAST[-1]
-                  continue   # TCO: next iteration of the while loop
+                     # Untraced: TCO — update env/sExprAST and continue the loop.
+                     bodyLen = len( function.bodyAST )
+                     if bodyLen == 0:
+                        sExprAST = L_NIL
+                     elif bodyLen == 1:
+                        sExprAST = function.bodyAST[0]
+                     else:
+                        for sexpr in function.bodyAST[:-1]:
+                           LispInterpreter._lEval( env, sexpr )
+                        sExprAST = function.bodyAST[-1]
+                     continue   # TCO: next iteration of the while loop
             except LispArgBindingError as ex:
                if printed:
-                  LispInterpreter._trace_depth = depth
+                  tracer.setMaxTraceDepth( depth )
                errorMsg = ex.args[-1]
                fnName = function.name
                if fnName == '':
@@ -344,8 +346,8 @@ class LispInterpreter( Interpreter ):
 
             # Reached for LPrimitive and traced LFunction (not the TCO path).
             if printed:
-               LispInterpreter._trace_depth = depth
-               hook( 'exit', function, result, depth )
+               tracer.setMaxTraceDepth( depth )
+               tracer.trace( 'exit', function, result, depth, LispInterpreter.outStrm )
             return result
 
    @staticmethod
@@ -356,13 +358,13 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
          raise ContinuationInvoked( function.token, args[0] )
 
-      hook    = LispInterpreter._apply_hook
-      depth   = LispInterpreter._trace_depth
+      tracer  = LispInterpreter.tracer
+      depth   = tracer.getMaxTraceDepth()
       printed = False
-      if hook:
-         printed = hook( 'enter', function, args, depth )
+      if tracer.isActive():
+         printed = tracer.trace( 'enter', function, args, depth, LispInterpreter.outStrm )
          if printed:
-            LispInterpreter._trace_depth = depth + 1   # only advance visible depth when tracing this call
+            tracer.setMaxTraceDepth( depth + 1 )
       try:
          if isinstance( function, LPrimitive ):
             result = function.pythonFn( env, *args )
@@ -387,44 +389,10 @@ class LispInterpreter( Interpreter ):
             raise LispRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
       finally:
          if printed:
-            LispInterpreter._trace_depth = depth   # restore depth on both normal exit and exception
+            tracer.setMaxTraceDepth( depth )   # restore depth on both normal exit and exception
       if printed:
-         hook( 'exit', function, result, depth )
+         tracer.trace( 'exit', function, result, depth, LispInterpreter.outStrm )
       return result
-
-   @staticmethod
-   def _set_trace_hook() -> None:
-      '''Activate or deactivate _apply_hook based on current trace state.'''
-      if LispInterpreter._trace_global or LispInterpreter._traced:
-         LispInterpreter._apply_hook = LispInterpreter._trace_fn
-      else:
-         LispInterpreter._apply_hook = None
-
-   @staticmethod
-   def _trace_fn( phase: str, function: LCallable, data: Any, depth: int ) -> bool:
-      '''The apply hook used for tracing.  Filters by _traced set or _trace_global flag,
-      then prints enter/exit lines to outStrm.  Returns True if a line was printed.'''
-      traced    = LispInterpreter._traced
-      global_   = LispInterpreter._trace_global
-      isNamed  = function.name in traced
-      isUserFn = isinstance( function, LFunction )
-
-      # Global tracing shows all LFunctions; named tracing shows whatever was named.
-      if not isNamed and not (global_ and isUserFn):
-         return False
-
-      name   = function.name if function.name else 'LAMBDA'
-      indent = '  ' * depth
-      outStrm = LispInterpreter.outStrm
-
-      if phase == 'enter':
-         argStr = ' '.join( prettyPrintSExpr(a) for a in data )
-         line = f'{depth:2d}: {indent}({name}{" " + argStr if argStr else ""})'
-      else:
-         line = f'{depth:2d}: {indent}{name} returned {prettyPrintSExpr(data)}'
-
-      print( line, file=outStrm )
-      return True
 
    @staticmethod
    def _lbackquoteExpand( env: Environment, expr: Any, depth: int = 1 ) -> Any:
@@ -477,37 +445,4 @@ class LispInterpreter( Interpreter ):
             resultList.append( resultListElt )
       return resultList
 
-   @staticmethod
-   def _lconstructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
-      primitiveDict: dict[str, Any] = {}
-      primitiveDict[ 'T'   ] = L_T
-      primitiveDict[ 'NIL' ] = L_NIL
 
-      class primitive:
-         def __init__( self, primitiveSymbolString: str, paramsString: str = '', specialForm: bool = False,
-                       min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '' ) -> None:
-            self._name:         str       = primitiveSymbolString.upper()
-            self._paramsString: str       = paramsString
-            self._specialForm:  bool      = specialForm
-            self._min_args:     int       = min_args
-            self._max_args:     (int|None)= max_args
-            self._arity_msg:    str       = arity_msg
-         def __call__( self, pythonFn ):
-            docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
-            lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
-                                       specialForm=self._specialForm,
-                                       min_args=self._min_args, max_args=self._max_args,
-                                       arity_msg=self._arity_msg )
-            primitiveDict[ self._name ] = lPrimitivObj
-            return lPrimitivObj
-
-      from pythonslisp.primitives import p_meta, p_control, p_sequences, p_math, p_types, p_strings, p_io
-      p_meta.register( primitive )
-      p_control.register( primitive )
-      p_sequences.register( primitive )
-      p_math.register( primitive, primitiveDict )    # also adds PI and E
-      p_types.register( primitive, parseLispString )
-      p_strings.register( primitive )
-      p_io.register( primitive, parseLispString )
-
-      return primitiveDict

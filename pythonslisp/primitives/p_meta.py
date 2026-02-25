@@ -131,28 +131,28 @@ is last."""
    def LP_trace( env: Environment, *args ) -> Any:
       """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
+      tracer = LispInterpreter.tracer
       if len(args) == 0:
-         return [ LSymbol(name) for name in sorted(LispInterpreter._traced) ]
+         return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
       for sym in args:
          if not isinstance(sym, LSymbol):
             raise LispRuntimeFuncError( LP_trace, 'Arguments must be symbols.' )
-         LispInterpreter._traced.add( sym.strval )
-      LispInterpreter._set_trace_hook()
-      return [ LSymbol(name) for name in sorted(LispInterpreter._traced) ]
+         tracer.addFnTrace( sym.strval )
+      return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'untrace', '&rest <fn-names>', specialForm=True )
    def LP_untrace( env: Environment, *args ) -> Any:
       """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
+      tracer = LispInterpreter.tracer
       if len(args) == 0:
-         LispInterpreter._traced.clear()
+         tracer.removeAll()
       else:
          for sym in args:
             if not isinstance(sym, LSymbol):
                raise LispRuntimeFuncError( LP_untrace, 'Arguments must be symbols.' )
-            LispInterpreter._traced.discard( sym.strval )
-      LispInterpreter._set_trace_hook()
-      return [ LSymbol(name) for name in sorted(LispInterpreter._traced) ]
+            tracer.removeFnTrace( sym.strval )
+      return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'call/cc', '<procedure>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
