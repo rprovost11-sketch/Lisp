@@ -3,15 +3,15 @@ from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LMacro, LContinuation, LCallable
 from pythonslisp.LispAST import L_T, L_NIL
+from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError, ContinuationInvoked
 from pythonslisp.LispExpander import LispExpander
-from pythonslisp.LispInterpreter import LispInterpreter
 
 
 def register(primitive) -> None:
 
    @primitive( 'defmacro', '<symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...', specialForm=True )
-   def LP_defmacro( env: Environment, *args ) -> Any:
+   def LP_defmacro( ctx: LispContext, env: Environment, *args ) -> Any:
       """Defines and returns a new globally named macro.  The first expr of the body
 can be an optional documentation string."""
       fnName, funcParams, *funcBody = args   # analyzer guarantees structure
@@ -25,7 +25,7 @@ can be an optional documentation string."""
 
    @primitive( 'macroexpand', '\'(<macroName> <arg1> <arg2> ...)',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
-   def LP_macroexpand( env: Environment, *args ) -> Any:
+   def LP_macroexpand( ctx: LispContext, env: Environment, *args ) -> Any:
       """Fully expands a macro call at the top level, looping until the form is no
 longer headed by a macro.  Non-macro and non-list forms are returned unchanged."""
 
@@ -40,12 +40,12 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
             break
          if not isinstance( macroDef, LMacro ):
             break
-         form = LispExpander._expandMacroCall( env, macroDef, form[1:] )
+         form = LispExpander._expandMacroCall( ctx, env, macroDef, form[1:] )
       return form
 
    @primitive( 'macroexpand-1', '\'(<macroName> <arg1> <arg2> ...)',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
-   def LP_macroexpand_1( env: Environment, *args ) -> Any:
+   def LP_macroexpand_1( ctx: LispContext, env: Environment, *args ) -> Any:
       """Expands a macro call exactly once.  Returns the form unchanged if it is
 not a macro call."""
 
@@ -62,26 +62,26 @@ not a macro call."""
       if not isinstance( macroDef, LMacro ):
          return form
 
-      return LispExpander._expandMacroCall( env, macroDef, form[1:] )
+      return LispExpander._expandMacroCall( ctx, env, macroDef, form[1:] )
 
    @primitive( 'defsetf-internal', '<accessor-symbol> <field-symbol>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_defsetf_internal( env: Environment, *args ) -> Any:
+   def LP_defsetf_internal( ctx: LispContext, env: Environment, *args ) -> Any:
       """Register a struct field accessor as a valid setf target."""
       accessor_sym, field_sym = args
       if not isinstance(accessor_sym, LSymbol) or not isinstance(field_sym, LSymbol):
          raise LispRuntimeFuncError( LP_defsetf_internal, 'Both arguments must be symbols.' )
-      LispInterpreter._setf_registry[accessor_sym.strval] = field_sym.strval
+      ctx.setfRegistry[accessor_sym.strval] = field_sym.strval
       return accessor_sym
 
    @primitive( 'set-accessor!', '<accessor-symbol> <instance> <newValue>',
                min_args=3, max_args=3, arity_msg='3 arguments expected.' )
-   def LP_set_accessor( env: Environment, *args ) -> Any:
+   def LP_set_accessor( ctx: LispContext, env: Environment, *args ) -> Any:
       """Internal: write a struct field value via the defsetf registry."""
       accessor, instance, newval = args
       if not isinstance( accessor, LSymbol ):
          raise LispRuntimeFuncError( LP_set_accessor, 'Argument 1 must be a symbol.' )
-      field_key = LispInterpreter._setf_registry.get( accessor.strval )
+      field_key = ctx.setfRegistry.get( accessor.strval )
       if field_key is None:
          raise LispRuntimeFuncError( LP_set_accessor,
                                      f'No setf expander registered for {accessor.strval}.' )
@@ -91,7 +91,7 @@ not a macro call."""
       return newval
 
    @primitive( 'setq', '<symbol1> <sexpr1> <symbol2> <sexpr2> ...', specialForm=True )
-   def LP_setq( env: Environment, *args ) -> Any:
+   def LP_setq( ctx: LispContext, env: Environment, *args ) -> Any:
       """Updates one or more variables' values', returns value.  The search for
 the variable begins locally and proceeds to search ever less local scopes until
 the global scope is searched.  If the variable is located in this search its
@@ -103,7 +103,7 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
 
    @primitive( 'undef!', '<symbol>', specialForm=True,
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_undef( env: Environment, *args ) -> Any:
+   def LP_undef( ctx: LispContext, env: Environment, *args ) -> Any:
       """Undefines the global definition for a symbol and returns nil."""
       key = args[0]
       if not isinstance(key, LSymbol):
@@ -113,7 +113,7 @@ Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
 
    @primitive( 'symtab!', '',
                min_args=0, max_args=0, arity_msg='0 arguments expected.' )
-   def LP_symtab( env: Environment, *args ) -> Any:
+   def LP_symtab( ctx: LispContext, env: Environment, *args ) -> Any:
       """Prints the entire environment stack and returns nil.  Each scope is printed
 in a separate list and begins on a new line.  The local scope is first; global
 is last."""
@@ -128,10 +128,10 @@ is last."""
       return L_NIL
 
    @primitive( 'trace', '&rest <fn-names>', specialForm=True )
-   def LP_trace( env: Environment, *args ) -> Any:
+   def LP_trace( ctx: LispContext, env: Environment, *args ) -> Any:
       """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
-      tracer = LispInterpreter.tracer
+      tracer = ctx.tracer
       if len(args) == 0:
          return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
       for sym in args:
@@ -141,10 +141,10 @@ trace list.  With no arguments, returns the list of currently traced functions."
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'untrace', '&rest <fn-names>', specialForm=True )
-   def LP_untrace( env: Environment, *args ) -> Any:
+   def LP_untrace( ctx: LispContext, env: Environment, *args ) -> Any:
       """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
-      tracer = LispInterpreter.tracer
+      tracer = ctx.tracer
       if len(args) == 0:
          tracer.removeAll()
       else:
@@ -156,7 +156,7 @@ trace list.  With no arguments, clears all named function tracing."""
 
    @primitive( 'call/cc', '<procedure>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_callcc( env: Environment, *args ) -> Any:
+   def LP_callcc( ctx: LispContext, env: Environment, *args ) -> Any:
       """Calls procedure with one argument: an escape continuation object.
 Invoking the continuation with a value causes call/cc to immediately return
 that value, unwinding any intermediate computation.  Only upward (escape)
@@ -171,7 +171,7 @@ continuations are supported; invoking a stale continuation is an error."""
       cont  = LContinuation( token )
 
       try:
-         return LispInterpreter._lApply( env, proc, [cont] )
+         return ctx.lApply( env, proc, [cont] )
       except ContinuationInvoked as ci:
          if ci.token is token:
             return ci.value
@@ -179,7 +179,7 @@ continuations are supported; invoking a stale continuation is an error."""
 
    @primitive( 'boundp', '<symbol>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_boundp( env: Environment, *args ) -> Any:
+   def LP_boundp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
       sym = args[0]
       if not isinstance( sym, LSymbol ):

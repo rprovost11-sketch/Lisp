@@ -10,13 +10,14 @@ from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LMacro, L_NIL, prettyPrintSExpr
 from pythonslisp.LispEnvironment import LispEnvironment
+from pythonslisp.LispContext import LispContext
 
 
 class LispExpander:
     """Handles macro expansion and structural normalization as a single pass."""
 
     @staticmethod
-    def expand(env: Environment, sexpr: Any, maxIterations: int = 1000) -> Any:
+    def expand(ctx: LispContext, env: Environment, sexpr: Any, maxIterations: int = 1000) -> Any:
         """
         Walk sexpr once, expanding macros top-down and normalizing bottom-up.
 
@@ -27,10 +28,10 @@ class LispExpander:
           (let  () body ...)   → (progn body ...)
           (let* () body ...)   → (progn body ...)
         """
-        return LispExpander._expand(env, sexpr, maxIterations)
+        return LispExpander._expand(ctx, env, sexpr, maxIterations)
 
     @staticmethod
-    def _expand(env: Environment, sexpr: Any, maxIterations: int = 1000) -> Any:
+    def _expand(ctx: LispContext, env: Environment, sexpr: Any, maxIterations: int = 1000) -> Any:
         # Atoms and symbols pass through unchanged
         if isinstance(sexpr, LSymbol):
             return sexpr
@@ -42,15 +43,15 @@ class LispExpander:
             return sexpr
 
         # --- Step 1: macro expand at this level (top-down, fixed-point) ---
-        expandedOnce = LispExpander._expandOnce(env, sexpr)
+        expandedOnce = LispExpander._expandOnce(ctx, env, sexpr)
         if expandedOnce is not sexpr:
             # A macro fired — recurse on the result (handles nested macros)
             if maxIterations <= 1:
                 raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
-            return LispExpander._expand(env, expandedOnce, maxIterations - 1)
+            return LispExpander._expand(ctx, env, expandedOnce, maxIterations - 1)
 
         # --- Step 2: recurse into sub-elements (bottom-up) ---
-        expanded = [LispExpander._expand(env, elt, maxIterations) for elt in sexpr]
+        expanded = [LispExpander._expand(ctx, env, elt, maxIterations) for elt in sexpr]
 
         # --- Step 3: apply structural normalization rules ---
         if not isinstance(expanded[0], LSymbol):
@@ -80,7 +81,7 @@ class LispExpander:
         return expanded
 
     @staticmethod
-    def _expandOnce(env: Environment, sexpr: list) -> Any:
+    def _expandOnce(ctx: LispContext, env: Environment, sexpr: list) -> Any:
         """
         Attempt to expand sexpr if it's a macro call.
         Returns expanded form if it's a macro, otherwise returns sexpr unchanged.
@@ -95,29 +96,26 @@ class LispExpander:
                 callableObj = env.lookup(primary.strval)
                 if isinstance(callableObj, LMacro):
                     args = sexpr[1:]
-                    return LispExpander._expandMacroCall(env, callableObj, args)
+                    return LispExpander._expandMacroCall(ctx, env, callableObj, args)
             except KeyError:
                 pass
 
         return sexpr
 
     @staticmethod
-    def _expandMacroCall(env: Environment, macro: LMacro, argsList: list) -> Any:
+    def _expandMacroCall(ctx: LispContext, env: Environment, macro: LMacro, argsList: list) -> Any:
         """Expand a single macro call and return the unevaluated expansion."""
-        # Import here to avoid circular dependency
-        from pythonslisp.LispInterpreter import LispInterpreter
-
         expansionEnv = LispEnvironment(env)
-        expansionEnv.bindArguments(macro.lambdaListAST, argsList, LispInterpreter._lEval)
+        expansionEnv.bindArguments(macro.lambdaListAST, argsList, ctx.lEval)
 
         result = L_NIL
         for bodySExpr in macro.bodyAST:
-            result = LispInterpreter._lEval(expansionEnv, bodySExpr)
+            result = ctx.lEval(expansionEnv, bodySExpr)
 
         return result
 
     @staticmethod
-    def expandWithDebug(env: Environment, sexpr: Any, maxIterations: int = 1000) -> tuple[Any, list[str]]:
+    def expandWithDebug(ctx: LispContext, env: Environment, sexpr: Any, maxIterations: int = 1000) -> tuple[Any, list[str]]:
         """
         Expand macros and return both result and expansion trace.
         Useful for debugging and understanding macro expansion.
@@ -144,7 +142,7 @@ class LispExpander:
                                 raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
                             iterationsRemaining[0] -= 1
                             trace.append(f"{indent}Expanding: {LispExpander._formatSExpr(sexpr)}")
-                            expanded_once = LispExpander._expandOnce(env, sexpr)
+                            expanded_once = LispExpander._expandOnce(ctx, env, sexpr)
                             trace.append(f"{indent}       => {LispExpander._formatSExpr(expanded_once)}")
                             return expandTraced(expanded_once, depth + 1)
                     except KeyError:

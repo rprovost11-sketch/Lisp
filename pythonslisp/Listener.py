@@ -8,81 +8,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import pythonslisp.Parser as Parser
+from pythonslisp.Utils import columnize, retrieveFileList, write_multiFile
 
-
-### Utility Functions
-### =================
-def retrieveFileList( dirname ) -> list[str]:
-   "Returns a list of all the filenames in the specified directory."
-   testFileList = os.listdir( dirname )
-   testFileList.sort()
-   testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList
-                    if os.path.isfile( f'{dirname}/{testFileName}' ) ]
-   return testFileList
-
-def columnize( lst: list[str], displaywidth: int=80, file=None, itemColor=None ) -> None:
-   """Display a list of strings as a compact set of columns.
-
-   Each column is only as wide as necessary.
-   Columns are separated by two spaces.
-   If itemColor is an ANSI escape string, each item is wrapped in that color.
-   """
-   RESET = '\033[0m'
-   size = len(lst)
-   if size == 1:
-      item = lst[0]
-      print( f'{itemColor}{item}{RESET}' if itemColor else item, file=file )
-      return
-   # Try every row count from 1 upwards
-   for nrows in range(1, len(lst)):
-      ncols = (size+nrows-1) // nrows
-      colwidths = []
-      totwidth = -2
-      for col in range(ncols):
-         colwidth = 0
-         for row in range(nrows):
-            i = row + nrows*col
-            if i >= size:
-               break
-            x = lst[i]
-            colwidth = max(colwidth, len(x))
-         colwidths.append(colwidth)
-         totwidth += colwidth + 2
-         if totwidth > displaywidth:
-            break
-      if totwidth <= displaywidth:
-         break
-   else:
-      nrows = len(lst)
-      ncols = 1
-      colwidths = [0]
-   for row in range(nrows):
-      texts = []
-      for col in range(ncols):
-         i = row + nrows*col
-         if i >= size:
-            x = ""
-         else:
-            x = lst[i]
-         texts.append(x)
-      while texts and not texts[-1]:
-         del texts[-1]
-      for col in range(len(texts)):
-         content = texts[col]
-         padded  = content.ljust(colwidths[col])
-         if itemColor and content:
-            padding     = padded[len(content):]
-            texts[col]  = f'{itemColor}{content}{RESET}{padding}'
-         else:
-            texts[col]  = padded
-      print(str("  ".join(texts)), file=file )
-
-def write_multiFile( outputString: str, *fileList ):
-   """Write output to multiple output streams using print.
-   fileList is a python list containing output file objects.
-   An output file object of None prints directly to the screen."""
-   for fileStream in fileList:
-      print( outputString, end='\n', flush=True, file=fileStream )
 
 ### The Listener Implementation
 ### ===========================
@@ -115,7 +42,6 @@ class Listener( object ):
 
    # readline state — mirrors Python's former module-level globals
    _HIST_FILE  = os.path.expanduser('~/.lisp_history')
-   _READLINE   = False
    _rl         = None
    _historyMax = 500
 
@@ -132,7 +58,7 @@ class Listener( object ):
       self._testdir       = testdir
       self._logFile: Any  = None
       self._instrumenting = False
-      if not Listener._READLINE:
+      if not Listener._rl:
          if sys.platform == 'win32':
             try:
                import pythonslisp.readline_win as _rl_mod
@@ -140,7 +66,6 @@ class Listener( object ):
                Listener._rl.read_history_file(Listener._HIST_FILE)
                Listener._rl.set_history_length(Listener._historyMax)
                atexit.register(Listener._rl.write_history_file, Listener._HIST_FILE)
-               Listener._READLINE = True
             except ImportError:
                pass
          else:
@@ -154,7 +79,6 @@ class Listener( object ):
                Listener._rl.set_history_length(Listener._historyMax)
                Listener._rl.set_auto_history(False)
                atexit.register(Listener._rl.write_history_file, Listener._HIST_FILE)
-               Listener._READLINE = True
             except ImportError:
                pass
       self._cmd_reboot( [ ] )
@@ -175,7 +99,7 @@ class Listener( object ):
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
             inputExprStr = '\n'.join( inputExprLineList ).strip()
-            if self._READLINE and inputExprStr:
+            if self._rl and inputExprStr:
                self._rl.add_history(inputExprStr)
             try:
                if (inputExprStr != '') and (inputExprStr[0] == ']'):
@@ -437,7 +361,7 @@ class Listener( object ):
          if n < 1:
             raise ListenerCommandError( 'History size must be a positive integer.' )
          Listener._historyMax = n
-         if self._READLINE:
+         if self._rl:
             self._rl.set_history_length(n)
          print( f'New history size: {n}' )
 
@@ -615,8 +539,7 @@ class Listener( object ):
       if len(args) != 0:
          raise ListenerCommandError( self._cmd_trace.__doc__ )
 
-      from pythonslisp.LispInterpreter import LispInterpreter
-      state = LispInterpreter.tracer.toggle_global()
+      state = self._interp.tracer.toggle_global()
 
       useColor   = sys.stdout.isatty()
       GREEN      = '\033[92m' if useColor else ''
@@ -631,10 +554,6 @@ class Listener( object ):
          write_multiFile( value, file, self._logFile )
       else:
          write_multiFile( value, file )
-
-      #print( value, flush=True )
-      #if self._logFile:
-         #print( value, file=self._logFile, flush=True )
 
    def _writeResult( self, resultStr: str ) -> None:
       useColor     = sys.stdout.isatty()
@@ -660,7 +579,7 @@ class Listener( object ):
             print( plainLine, end='\n', flush=True, file=self._logFile )
 
    def _prompt( self, prompt: str='' ) -> str:
-      if sys.platform == 'win32' and self._READLINE and sys.stdin.isatty():
+      if sys.platform == 'win32' and self._rl and sys.stdin.isatty():
          inputStr = self._rl.input_line( prompt, continuation_prompt='... ' ).rstrip()
       else:
          inputStr = input( prompt ).rstrip()

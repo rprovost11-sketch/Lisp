@@ -4,7 +4,6 @@ Development Tasks
 
 To Do
 -----
-- Add listener command to get/update the listener command history size.
 - See if macros are also supposed to support closures.
 - implement stream IO primitives.
 - implement packages.  A package x is a symbol in the global namespace which
@@ -17,6 +16,9 @@ To Do
 
 Completed
 ---------
+2026.02.25
+- Add listener command to get/update the listener command history size.
+
 2026.02.23
 - Coverted the recursive tree-walk evaluator to a looping tree-walk evaluator
   with TCO.

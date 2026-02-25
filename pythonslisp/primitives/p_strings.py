@@ -1,6 +1,7 @@
 from typing import Any
 
 from pythonslisp.Environment import Environment
+from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
 
 
@@ -8,7 +9,7 @@ def register(primitive) -> None:
 
    @primitive( 'string-upcase', '<string>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_string_upcase( env: Environment, *args ) -> Any:
+   def LP_string_upcase( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of string with all characters converted to uppercase."""
       if not isinstance( args[0], str ):
          raise LispRuntimeFuncError( LP_string_upcase, 'Argument 1 must be a String.' )
@@ -16,7 +17,7 @@ def register(primitive) -> None:
 
    @primitive( 'string-downcase', '<string>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_string_downcase( env: Environment, *args ) -> Any:
+   def LP_string_downcase( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of string with all characters converted to lowercase."""
       if not isinstance( args[0], str ):
          raise LispRuntimeFuncError( LP_string_downcase, 'Argument 1 must be a String.' )
@@ -24,7 +25,7 @@ def register(primitive) -> None:
 
    @primitive( 'string-trim', '<char-bag> <string>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_string_trim( env: Environment, *args ) -> Any:
+   def LP_string_trim( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes leading and trailing characters in char-bag from string."""
       charBag, s = args[0], args[1]
       if not isinstance( charBag, str ):
@@ -35,7 +36,7 @@ def register(primitive) -> None:
 
    @primitive( 'string-left-trim', '<char-bag> <string>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_string_left_trim( env: Environment, *args ) -> Any:
+   def LP_string_left_trim( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes leading characters in char-bag from string."""
       charBag, s = args[0], args[1]
       if not isinstance( charBag, str ):
@@ -46,7 +47,7 @@ def register(primitive) -> None:
 
    @primitive( 'string-right-trim', '<char-bag> <string>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_string_right_trim( env: Environment, *args ) -> Any:
+   def LP_string_right_trim( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes trailing characters in char-bag from string."""
       charBag, s = args[0], args[1]
       if not isinstance( charBag, str ):
@@ -57,7 +58,7 @@ def register(primitive) -> None:
 
    @primitive( 'char-code', '<char>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_char_code( env: Environment, *args ) -> Any:
+   def LP_char_code( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the integer character code of a single-character string."""
       if not isinstance( args[0], str ) or len( args[0] ) != 1:
          raise LispRuntimeFuncError( LP_char_code, 'Argument 1 must be a single-character String.' )
@@ -65,7 +66,7 @@ def register(primitive) -> None:
 
    @primitive( 'code-char', '<integer>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_code_char( env: Environment, *args ) -> Any:
+   def LP_code_char( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the single-character string corresponding to an integer character code."""
       if not isinstance( args[0], int ):
          raise LispRuntimeFuncError( LP_code_char, 'Argument 1 must be an Integer.' )

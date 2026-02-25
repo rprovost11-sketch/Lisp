@@ -5,6 +5,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LPrimitive,
                                    LContinuation, prettyPrint, prettyPrintSExpr )
 from pythonslisp.LispAST import L_T, L_NIL
+from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
 from pythonslisp.LispParser import ParseError
 
@@ -46,37 +47,37 @@ def register(primitive, parseLispString: Callable) -> None:
 
    @primitive( 'numberp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_numberp( env: Environment, *args ) -> Any:
+   def LP_numberp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a number otherwise nil."""
       return L_T if isinstance( args[0], LNUMBER ) else L_NIL
 
    @primitive( 'integerp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_integerp( env: Environment, *args ) -> Any:
+   def LP_integerp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is an integer otherwise nil."""
       return L_T if isinstance( args[0], int ) else L_NIL
 
    @primitive( 'rationalp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_rationalp( env: Environment, *args ) -> Any:
+   def LP_rationalp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is an integer or fraction otherwise nil."""
       return L_T if isinstance( args[0], (int,Fraction) ) else L_NIL
 
    @primitive( 'floatp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_floatp( env: Environment, *args ) -> Any:
+   def LP_floatp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a float otherwise nil."""
       return L_T if isinstance( args[0], float ) else L_NIL
 
    @primitive( 'symbolp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_symbolp( env: Environment, *args ) -> Any:
+   def LP_symbolp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a symbol otherwise nil."""
       return L_T if isinstance( args[0], LSymbol ) else L_NIL
 
    @primitive( 'symbol-name', '<symbol>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_symbol_name( env: Environment, *args ) -> Any:
+   def LP_symbol_name( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the name of a symbol as a string."""
       if not isinstance( args[0], LSymbol ):
          raise LispRuntimeFuncError( LP_symbol_name, 'Argument 1 must be a Symbol.' )
@@ -84,7 +85,7 @@ def register(primitive, parseLispString: Callable) -> None:
 
    @primitive( 'atom', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_atom( env: Environment, *args ) -> Any:
+   def LP_atom( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is an atom (int,float,string,map or nil) otherwise nil."""
       arg = args[0]
       if isinstance(arg, list):
@@ -93,37 +94,37 @@ def register(primitive, parseLispString: Callable) -> None:
 
    @primitive( 'listp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_listp( env: Environment, *args ) -> Any:
+   def LP_listp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a list otherwise nil."""
       return L_T if isinstance(args[0], list) else L_NIL
 
    @primitive( 'mapp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_mapp( env: Environment, *args ) -> Any:
+   def LP_mapp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a map otherwise nil."""
       return L_T if isinstance(args[0], dict) else L_NIL
 
    @primitive( 'stringp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_stringp( env: Environment, *args ) -> Any:
+   def LP_stringp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a string otherwise nil."""
       return L_T if isinstance( args[0], str ) else L_NIL
 
    @primitive( 'functionp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_functionp( env: Environment, *args ) -> Any:
+   def LP_functionp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a function otherwise nil."""
       return L_T if isinstance( args[0], LFunction ) else L_NIL
 
    @primitive( 'macrop', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_macrop( env: Environment, *args ) -> Any:
+   def LP_macrop( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a macro otherwise nil."""
       return L_T if isinstance( args[0], LMacro ) else L_NIL
 
    @primitive( 'type-of', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_typeof( env: Environment, *args ) -> Any:
+   def LP_typeof( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the type of its argument as a symbol (CL type-of conventions)."""
       arg = args[0]
       if isinstance( arg, list ):
@@ -154,14 +155,14 @@ def register(primitive, parseLispString: Callable) -> None:
 
    @primitive( 'not', '<boolean>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_not( env: Environment, *args ) -> Any:
+   def LP_not( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the argument is nil otherwise returns nil."""
       arg1 = args[0]
       return L_T if (isinstance(arg1,list) and (len(arg1)==0)) else L_NIL
 
    @primitive( 'eq', '<a> <b>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_eq( env: Environment, *args ) -> Any:
+   def LP_eq( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the two values are the same object otherwise nil.
 For numbers and strings uses value equality as a pragmatic choice since
 Python does not guarantee object identity for equal primitive values."""
@@ -174,7 +175,7 @@ Python does not guarantee object identity for equal primitive values."""
 
    @primitive( 'eql', '<a> <b>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_eql( env: Environment, *args ) -> Any:
+   def LP_eql( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if a and b are eql: symbols with the same name; numbers of the
 same type with the same value (so 1 and 1.0 are not eql); or any other objects
 that are the same (identical) object."""
@@ -182,7 +183,7 @@ that are the same (identical) object."""
 
    @primitive( 'equal', '<a> <b>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_equalCL( env: Environment, *args ) -> Any:
+   def LP_equalCL( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if a and b are structurally equal.  Recursively compares lists
 element by element and strings by content.  Uses eql at the leaves so numbers
 must be the same type: (equal 1 1.0) is nil."""
@@ -190,7 +191,7 @@ must be the same type: (equal 1 1.0) is nil."""
 
    @primitive( 'equalp', '<a> <b>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
-   def LP_equalp( env: Environment, *args ) -> Any:
+   def LP_equalp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if a and b are equalp.  Like equal but case-insensitive for
 strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 (equalp \"ABC\" \"abc\") is t."""
@@ -198,7 +199,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( '=', '<expr1> <expr2> ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
-   def LP_equal( env: Environment, *args ) -> Any:
+   def LP_equal( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the two exprs are the same value otherwise nil."""
 
       prior = None
@@ -212,7 +213,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( '/=', '<expr1> <expr2> ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
-   def LP_notEqual( env: Environment, *args ) -> Any:
+   def LP_notEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the two exprs are different values otherwise nil."""
 
       prior = None
@@ -226,7 +227,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( '<', '<expr1> <expr2> ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
-   def LP_less( env: Environment, *args ) -> Any:
+   def LP_less( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in ascending order."""
 
       prior = None
@@ -243,7 +244,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( '<=', '<expr1> <expr2> ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
-   def LP_lessOrEqual( env: Environment, *args ) -> Any:
+   def LP_lessOrEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are less-than-or-equal otherwise nil."""
 
       prior = None
@@ -260,7 +261,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( '>', '<expr1> <expr2> ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
-   def LP_greater( env: Environment, *args ) -> Any:
+   def LP_greater( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in descending order otherwise nil."""
 
       prior = None
@@ -277,7 +278,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( '>=', '<expr1> <expr2> ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
-   def LP_greaterOrEqual( env: Environment, *args ) -> Any:
+   def LP_greaterOrEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are greater-than-or-equal otherwise nil."""
 
       prior = None
@@ -294,7 +295,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( 'float', '<number>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_float( env: Environment, *args ) -> Any:
+   def LP_float( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns val as a float.  Val can be any number type or a string containing a valid lisp float."""
       try:
          return float(args[0])
@@ -303,7 +304,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( 'integer', '<number> &optional (<base> 10)',
                min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
-   def LP_integer( env: Environment, *args ) -> Any:
+   def LP_integer( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns val as an integer.  Val can be any number type or a string containing a valid lisp integer."""
       try:
          return int(*args)
@@ -312,7 +313,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
    @primitive( 'rational', '<number>',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
-   def LP_rational( env: Environment, *args ) -> Any:
+   def LP_rational( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns its argument as a fraction.  Val can be any number or a string
 containing a valid lisp number that can be expressed as a fraction."""
       try:
@@ -322,7 +323,7 @@ containing a valid lisp number that can be expressed as a fraction."""
 
    @primitive( 'string', '<object1> <object2> ...',
                min_args=1, arity_msg='1 or more arguments expected.' )
-   def LP_string( env: Environment, *args ) -> Any:
+   def LP_string( ctx: LispContext, env: Environment, *args ) -> Any:
       """PrettyPrints as programmer readable strings each argument object and
 concatenates the results to form a new string."""
 
@@ -331,7 +332,7 @@ concatenates the results to form a new string."""
 
    @primitive( 'ustring', '<object1> <object2> ...',
                min_args=1, arity_msg='1 or more arguments expected.' )
-   def LP_ustring( env: Environment, *args ) -> Any:
+   def LP_ustring( ctx: LispContext, env: Environment, *args ) -> Any:
       """PrettyPrints as user readable strings each argument object and
 concatenates the results to form a new string."""
 
@@ -340,7 +341,7 @@ concatenates the results to form a new string."""
 
    @primitive( 'symbol', '<string1> <string2> ...',
                min_args=1, arity_msg='1 or more string argument expected.' )
-   def LP_symbol( env: Environment, *args ) -> Any:
+   def LP_symbol( ctx: LispContext, env: Environment, *args ) -> Any:
       """PrettyPrints as user readable strings each argument object and
 concatenates the results to form a new string which is used to define a new
 symbol object."""

@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from pythonslisp.LispParser import LispParser
-from pythonslisp.Listener import Interpreter, retrieveFileList
+from pythonslisp.Listener import Interpreter
+from pythonslisp.Utils import retrieveFileList
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, L_T, L_NIL,
                                   LCallable, LFunction, LPrimitive, LMacro, LContinuation,
@@ -16,24 +17,31 @@ from pythonslisp.LispEnvironment import LispEnvironment
 from pythonslisp.LispExpander import LispExpander
 from pythonslisp.LispAnalyzer import LispAnalyzer
 from pythonslisp.Tracer import Tracer
+from pythonslisp.LispContext import LispContext
 from pythonslisp.primitives import constructPrimitives
 
 
 class LispInterpreter( Interpreter ):
    DEFAULT_LIB_DIR = Path(__file__).parent / 'lib'
 
-   outStrm = None
-   _setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
-
    def __init__( self, runtimeLibraryDir: (Path|str) = DEFAULT_LIB_DIR ) -> None:
       self._libDir = runtimeLibraryDir
       self._parser: LispParser = LispParser( )
-      self.tracer  = Tracer()
-      LispInterpreter.tracer = self.tracer   # expose to static methods
+      self.tracer: Tracer = Tracer()
+      self._setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
+
+   def _makeContext( self, outStrm ) -> LispContext:
+      ctx = LispContext( outStrm, self.tracer, self._setf_registry )
+      ctx.lEval            = lambda env, sexpr: LispInterpreter._lEval( ctx, env, sexpr )
+      ctx.lApply           = lambda env, fn, a: LispInterpreter._lApply( ctx, env, fn, a )
+      ctx.lBackquoteExpand = lambda env, expr, depth=1: LispInterpreter._lbackquoteExpand( ctx, env, expr, depth )
+      ctx.lEql             = LispInterpreter._lEql
+      return ctx
 
    def reboot( self, outStrm=None ) -> None:
       # Reset tracing state so stale traced-function names don't linger
       self.tracer.reset()
+      self._setf_registry.clear()
 
       # Load in the primitives
       primitiveDict: dict[str, Any] = constructPrimitives( self._parser.parse )
@@ -57,27 +65,25 @@ class LispInterpreter( Interpreter ):
       self.rawEvalFile( filename, outStrm=outStrm )
 
    def rawEval( self, source: str, outStrm=None ) -> Any:
-      LispInterpreter.outStrm = outStrm
+      ctx = self._makeContext( outStrm )
       try:
          ast = self._parser.parse( source )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]            # strip progn wrapper
          returnVal = L_NIL
          for form in top_level_forms:
-            form = LispExpander.expand( self._env, form )
+            form = LispExpander.expand( ctx, self._env, form )
             LispAnalyzer.analyze( self._env, form )
-            returnVal = LispInterpreter._lEval( self._env, form )
+            returnVal = LispInterpreter._lEval( ctx, self._env, form )
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       except Thrown as e:
          raise LispRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' )
       except ReturnFrom as e:
          raise LispRuntimeError( f'return-from: no block named {e.name} is currently active.' )
-      finally:
-         LispInterpreter.outStrm = None
       return returnVal
 
    def rawEval_instrumented( self, source: str, outStrm=None ) -> Any:
-      LispInterpreter.outStrm = outStrm
+      ctx = self._makeContext( outStrm )
       try:
          parseStartTime = time.perf_counter()
          ast = self._parser.parse( source )
@@ -87,9 +93,9 @@ class LispInterpreter( Interpreter ):
          top_level_forms = ast[1:]
          returnVal = L_NIL
          for form in top_level_forms:
-            form = LispExpander.expand( self._env, form )
+            form = LispExpander.expand( ctx, self._env, form )
             LispAnalyzer.analyze( self._env, form )
-            returnVal = LispInterpreter._lEval( self._env, form )
+            returnVal = LispInterpreter._lEval( ctx, self._env, form )
          evalTime = time.perf_counter() - startTime
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
@@ -97,28 +103,24 @@ class LispInterpreter( Interpreter ):
          raise LispRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' )
       except ReturnFrom as e:
          raise LispRuntimeError( f'return-from: no block named {e.name} is currently active.' )
-      finally:
-         LispInterpreter.outStrm = None
       return returnVal, parseTime, evalTime
 
    def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
-      LispInterpreter.outStrm = outStrm
+      ctx = self._makeContext( outStrm )
       try:
          ast = self._parser.parseFile( filename )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]                  # strip progn wrapper
          returnVal = L_NIL
          for form in top_level_forms:
-            form = LispExpander.expand( self._env, form )
+            form = LispExpander.expand( ctx, self._env, form )
             LispAnalyzer.analyze( self._env, form )
-            returnVal = LispInterpreter._lEval( self._env, form )
+            returnVal = LispInterpreter._lEval( ctx, self._env, form )
       except ContinuationInvoked:
          raise LispRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       except Thrown as e:
          raise LispRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' )
       except ReturnFrom as e:
          raise LispRuntimeError( f'return-from: no block named {e.name} is currently active.' )
-      finally:
-         LispInterpreter.outStrm = None
       return returnVal
 
    @staticmethod
@@ -138,7 +140,7 @@ class LispInterpreter( Interpreter ):
       return a is b
 
    @staticmethod
-   def _lEval( env: Environment, sExprAST: Any ) -> Any:
+   def _lEval( ctx: LispContext, env: Environment, sExprAST: Any ) -> Any:
       '''This is a recursive tree-walk evaluator.  It's the interpreter's main
       evaluation function.  Pass it any s-expression in the form of a LispAST;
       eval will return the result.'''
@@ -152,18 +154,18 @@ class LispInterpreter( Interpreter ):
                raise LispRuntimeError( f'Unbound Variable: {sExprAST.strval}.' )
          elif not isinstance(sExprAST, list):  # atom or map
             return sExprAST
-   
+
          # sExpr is a list expression - function call
-   
+
          if len(sExprAST) == 0:
             return L_NIL  # An empty list always evaluates to an empty list
-   
+
          # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
          primary, *args = sExprAST
          if primary == 'IF':
-            condValue = LispInterpreter._lEval( env, args[0] )
+            condValue = LispInterpreter._lEval( ctx, env, args[0] )
             sExprAST = args[1] if LispInterpreter._lTrue(condValue) else args[2]
-         
+
          elif primary == 'LET':
             vardefs, *body = args
 
@@ -179,11 +181,11 @@ class LispInterpreter( Interpreter ):
                      initForm = list()
                   else:
                      varName, initForm = varSpec
-               initDict[varName.strval] = LispInterpreter._lEval(env, initForm)
-      
+               initDict[varName.strval] = LispInterpreter._lEval(ctx, env, initForm)
+
             # Open the new scope
             env = LispEnvironment( env, initialBindings=initDict )
-      
+
             # Evaluate each body sexpr in the new env/scope
             bodyLen = len(body)
             if bodyLen == 0:
@@ -192,9 +194,9 @@ class LispInterpreter( Interpreter ):
                sExprAST = body[0]
             else:
                for sexpr in body[:-1]:
-                  LispInterpreter._lEval( env, sexpr )
+                  LispInterpreter._lEval( ctx, env, sexpr )
                sExprAST = body[-1]
-         
+
          elif primary == 'LET*':
             vardefs, *body = args
 
@@ -211,8 +213,8 @@ class LispInterpreter( Interpreter ):
                      initForm = list()
                   else:
                      varName, initForm = varSpec
-               env.bindLocal( varName.strval, LispInterpreter._lEval(env, initForm) )
-      
+               env.bindLocal( varName.strval, LispInterpreter._lEval(ctx, env, initForm) )
+
             # Evaluate each body sexpr in the new env/scope.
             bodyLen = len(body)
             if bodyLen == 0:
@@ -221,9 +223,9 @@ class LispInterpreter( Interpreter ):
                sExprAST = body[0]
             else:
                for sexpr in body[:-1]:
-                  LispInterpreter._lEval( env, sexpr )
+                  LispInterpreter._lEval( ctx, env, sexpr )
                sExprAST = body[-1]
-         
+
          elif primary == 'PROGN':
             argsLen = len(args)
             if argsLen == 0:
@@ -232,14 +234,14 @@ class LispInterpreter( Interpreter ):
                sExprAST = args[0]
             else:
                for expr in args[:-1]:
-                  LispInterpreter._lEval( env, expr )
+                  LispInterpreter._lEval( ctx, env, expr )
                sExprAST = args[-1]
-         
+
          elif primary == 'SETQ':
             rval = L_NIL
             while len(args) > 0:
                lval,rval,*args = args
-               rval = LispInterpreter._lEval(env, rval)
+               rval = LispInterpreter._lEval(ctx, env, rval)
                if isinstance(rval, (LMacro, LFunction)) and (rval.name == ''):
                   rval.name = lval.strval
                sym = lval.strval   # lval is a LSymbol — guaranteed by analyzer
@@ -254,7 +256,7 @@ class LispInterpreter( Interpreter ):
             sExprAST = L_NIL
             for clause in args:
                testExpr = clause[0]      # analyzer guarantees: list, len >= 2
-               if LispInterpreter._lTrue( LispInterpreter._lEval(env, testExpr) ):
+               if LispInterpreter._lTrue( LispInterpreter._lEval(ctx, env, testExpr) ):
                   body     = clause[1:]
                   bodyLen = len(body)
                   if bodyLen == 0:
@@ -263,16 +265,16 @@ class LispInterpreter( Interpreter ):
                      sExprAST = body[0]
                   else:
                      for sexpr in body[:-1]:
-                        LispInterpreter._lEval( env, sexpr )
+                        LispInterpreter._lEval( ctx, env, sexpr )
                      sExprAST = body[-1]
                   break
 
          elif primary == 'CASE':
-            keyVal   = LispInterpreter._lEval( env, args[0] )
+            keyVal   = LispInterpreter._lEval( ctx, env, args[0] )
             sExprAST = L_NIL
             for clause in args[1:]:
                caseVal = clause[0]       # analyzer guarantees: list, len >= 2
-               if LispInterpreter._lEval(env, caseVal) == keyVal:
+               if LispInterpreter._lEval(ctx, env, caseVal) == keyVal:
                   body    = clause[1:]
                   bodyLen = len(body)
                   if bodyLen == 0:
@@ -281,12 +283,12 @@ class LispInterpreter( Interpreter ):
                      sExprAST = body[0]
                   else:
                      for sexpr in body[:-1]:
-                        LispInterpreter._lEval( env, sexpr )
+                        LispInterpreter._lEval( ctx, env, sexpr )
                      sExprAST = body[-1]
                   break
 
          else:
-            function = LispInterpreter._lEval( env, primary )
+            function = LispInterpreter._lEval( ctx, env, primary )
             if not isinstance( function, LCallable ):
                raise LispRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
 
@@ -294,33 +296,33 @@ class LispInterpreter( Interpreter ):
             if isinstance( function, LContinuation ):
                if len(args) != 1:
                   raise LispRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
-               value = LispInterpreter._lEval( env, args[0] )
+               value = LispInterpreter._lEval( ctx, env, args[0] )
                raise ContinuationInvoked( function.token, value )
 
             # Tracing
-            tracer  = LispInterpreter.tracer
+            tracer  = ctx.tracer
             printed = False
             depth   = tracer.getMaxTraceDepth()
             if tracer.isActive():
-               printed = tracer.trace( 'enter', function, args, depth, LispInterpreter.outStrm )
+               printed = tracer.trace( 'enter', function, args, depth, ctx.outStrm )
                if printed:
                   tracer.setMaxTraceDepth( depth + 1 )
 
             # Call the function with its arguments
             if not function.specialForm:
-               args = [ LispInterpreter._lEval(env, arg) for arg in args ]
+               args = [ LispInterpreter._lEval(ctx, env, arg) for arg in args ]
 
             try:
                if isinstance( function, LPrimitive ):
-                  result = function.pythonFn( env, *args )
+                  result = function.pythonFn( ctx, env, *args )
                else:
                   env = LispEnvironment( function.capturedEnvironment )
-                  env.bindArguments( function.lambdaListAST, args, LispInterpreter._lEval )
+                  env.bindArguments( function.lambdaListAST, args, ctx.lEval )
                   if printed:
                      # Traced: evaluate recursively so the exit trace fires at the right time.
                      result = L_NIL
                      for sexpr in function.bodyAST:
-                        result = LispInterpreter._lEval( env, sexpr )
+                        result = LispInterpreter._lEval( ctx, env, sexpr )
                      # Fall through to the traced-exit block below.
                   else:
                      # Untraced: TCO — update env/sExprAST and continue the loop.
@@ -331,7 +333,7 @@ class LispInterpreter( Interpreter ):
                         sExprAST = function.bodyAST[0]
                      else:
                         for sexpr in function.bodyAST[:-1]:
-                           LispInterpreter._lEval( env, sexpr )
+                           LispInterpreter._lEval( ctx, env, sexpr )
                         sExprAST = function.bodyAST[-1]
                      continue   # TCO: next iteration of the while loop
             except LispArgBindingError as ex:
@@ -347,37 +349,37 @@ class LispInterpreter( Interpreter ):
             # Reached for LPrimitive and traced LFunction (not the TCO path).
             if printed:
                tracer.setMaxTraceDepth( depth )
-               tracer.trace( 'exit', function, result, depth, LispInterpreter.outStrm )
+               tracer.trace( 'exit', function, result, depth, ctx.outStrm )
             return result
 
    @staticmethod
-   def _lApply( env: Environment, function: LCallable, args: Sequence ) -> Any:
+   def _lApply( ctx: LispContext, env: Environment, function: LCallable, args: Sequence ) -> Any:
       # Continuation invocation: raise immediately, no tracing
       if isinstance( function, LContinuation ):
          if len(args) != 1:
             raise LispRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
          raise ContinuationInvoked( function.token, args[0] )
 
-      tracer  = LispInterpreter.tracer
+      tracer  = ctx.tracer
       depth   = tracer.getMaxTraceDepth()
       printed = False
       if tracer.isActive():
-         printed = tracer.trace( 'enter', function, args, depth, LispInterpreter.outStrm )
+         printed = tracer.trace( 'enter', function, args, depth, ctx.outStrm )
          if printed:
             tracer.setMaxTraceDepth( depth + 1 )
       try:
          if isinstance( function, LPrimitive ):
-            result = function.pythonFn( env, *args )
+            result = function.pythonFn( ctx, env, *args )
          elif isinstance( function, LFunction ):
             env = LispEnvironment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
 
             # store the arguments as locals
-            env.bindArguments( function.lambdaListAST, args, LispInterpreter._lEval )
+            env.bindArguments( function.lambdaListAST, args, ctx.lEval )
 
             # evaluate the body expressions.
             result = L_NIL
             for sexpr in function.bodyAST:
-               result = LispInterpreter._lEval( env, sexpr )
+               result = LispInterpreter._lEval( ctx, env, sexpr )
          else:   # LMacro — should have been expanded before reaching here
             raise LispRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
       except LispArgBindingError as ex:
@@ -391,11 +393,11 @@ class LispInterpreter( Interpreter ):
          if printed:
             tracer.setMaxTraceDepth( depth )   # restore depth on both normal exit and exception
       if printed:
-         tracer.trace( 'exit', function, result, depth, LispInterpreter.outStrm )
+         tracer.trace( 'exit', function, result, depth, ctx.outStrm )
       return result
 
    @staticmethod
-   def _lbackquoteExpand( env: Environment, expr: Any, depth: int = 1 ) -> Any:
+   def _lbackquoteExpand( ctx: LispContext, env: Environment, expr: Any, depth: int = 1 ) -> Any:
       '''Expand a backquote expression, tracking nesting depth.
       depth=1 is the innermost (active) backquote level.  Commas and
       splices are only evaluated at depth 1; at deeper levels they are
@@ -410,31 +412,31 @@ class LispInterpreter( Interpreter ):
 
       if primary == 'BACKQUOTE':
          # Nested backquote — increase depth, process content, rewrap
-         inner = LispInterpreter._lbackquoteExpand( env, expr[1], depth + 1 )
+         inner = LispInterpreter._lbackquoteExpand( ctx, env, expr[1], depth + 1 )
          return [ LSymbol('BACKQUOTE'), inner ]
 
       if primary == 'COMMA':
          if depth == 1:
-            return LispInterpreter._lEval( env, expr[1] )
+            return LispInterpreter._lEval( ctx, env, expr[1] )
          else:
-            inner = LispInterpreter._lbackquoteExpand( env, expr[1], depth - 1 )
+            inner = LispInterpreter._lbackquoteExpand( ctx, env, expr[1], depth - 1 )
             return [ LSymbol('COMMA'), inner ]
 
       if primary == 'COMMA-AT':
          if depth == 1:
-            result = LispInterpreter._lEval( env, expr[1] )
+            result = LispInterpreter._lEval( ctx, env, expr[1] )
             if not isinstance( result, list ):
                raise LispRuntimeFuncError( env.lookup('COMMA-AT'), 'Argument 1 must evaluate to a List.' )
             return [ LSymbol('COMMA-AT'), result ]
          else:
-            inner = LispInterpreter._lbackquoteExpand( env, expr[1], depth - 1 )
+            inner = LispInterpreter._lbackquoteExpand( ctx, env, expr[1], depth - 1 )
             return [ LSymbol('COMMA-AT'), inner ]
 
       # Regular list — process each element at the same depth.
       # Splice COMMA-AT sentinels only at depth 1.
       resultList: list[Any] = [ ]
       for listElt in expr:
-         resultListElt = LispInterpreter._lbackquoteExpand( env, listElt, depth )
+         resultListElt = LispInterpreter._lbackquoteExpand( ctx, env, listElt, depth )
          if ( depth == 1 and
               isinstance(resultListElt, list) and
               len(resultListElt) > 0 and
