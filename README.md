@@ -18,6 +18,8 @@ Goals:  Implement a substantial subset of the features of common lisp.
 Features
 - A full featured listener with session logging and resumption, interpreter
   reboot, and interpreter testing.
+- Listener now has expression history with up/down arrow which is persistent
+  across sessions.
 - Function definition with stack and recursion support.
 - Common Lisp macro definition and the macroexpand primitive.
 - &optional, &rest, &key and &aux parameter support for both functions and macros.

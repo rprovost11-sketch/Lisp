@@ -4,6 +4,7 @@ Development Tasks
 
 To Do
 -----
+- Add listener command to get/update the listener command history size.
 - See if macros are also supposed to support closures.
 - implement stream IO primitives.
 - implement packages.  A package x is a symbol in the global namespace which

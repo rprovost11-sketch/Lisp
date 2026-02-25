@@ -9,15 +9,16 @@ from typing import Any
 
 import pythonslisp.Parser as Parser
 
-_HIST_FILE = os.path.expanduser('~/.lisp_history')
-_READLINE  = False
-_rl        = None
+_HIST_FILE   = os.path.expanduser('~/.lisp_history')
+_READLINE    = False
+_rl          = None
+_historyMax  = 500
 
 if sys.platform == 'win32':
    try:
       import pythonslisp.readline_win as _rl
       _rl.read_history_file(_HIST_FILE)
-      _rl.set_history_length(500)
+      _rl.set_history_length(_historyMax)
       atexit.register(_rl.write_history_file, _HIST_FILE)
       _READLINE = True
    except ImportError:
@@ -29,7 +30,7 @@ else:
          _rl.read_history_file(_HIST_FILE)
       except FileNotFoundError:
          pass
-      _rl.set_history_length(500)
+      _rl.set_history_length(_historyMax)
       _rl.set_auto_history(False)
       atexit.register(_rl.write_history_file, _HIST_FILE)
       _READLINE = True
@@ -395,7 +396,7 @@ class Listener( object ):
          columnize(cmds, 69, itemColor=CYAN or None)
          print()
          print( "Type ']help <command>' for help on a command." )
-         print( "Type ']<command> [ <arg> ]' to execute a command." )
+         print( "Type ']<command> <arg1> <arg2> ...' to execute a command." )
 
    def _cmd_instrument( self, args: list[str] ) -> None:
       '''Usage:  instrument
@@ -414,6 +415,27 @@ class Listener( object ):
       RESET      = '\033[0m'  if useColor else ''
       stateColor = GREEN if self._instrumenting else YELLOW
       print( f'Instrumenting is now {stateColor}{stateStr}{RESET}.' )
+
+   def _cmd_lhistory( self, args: list[str] ) -> None:
+      '''Usage:  lhistory [<n>]
+      Get or set the maximum readline history size.
+      '''
+      global _historyMax
+      if len(args) > 1:
+         raise ListenerCommandError( self._cmd_lhistory.__doc__ )
+      if len(args) == 0:
+         print( f'Current history size: {_historyMax}' )
+      else:
+         try:
+            n = int(args[0])
+         except ValueError:
+            raise ListenerCommandError( self._cmd_lhistory.__doc__ )
+         if n < 1:
+            raise ListenerCommandError( 'History size must be a positive integer.' )
+         _historyMax = n
+         if _READLINE:
+            _rl.set_history_length(n)
+         print( f'New history size: {n}' )
 
    def _cmd_log( self, args: list[str] ) -> None:
       '''Usage:  log <filename>
