@@ -20,7 +20,7 @@
    "TCO-safe recursive factorial."
    (if (= n 0)
       accum
-      (factorial (- n 1) (* n acc))))
+      (fact-tco (- n 1) (* n accum))))
 
 (defun fib (n)
    "Recursively compute and return the nth fibonacci number."
@@ -33,7 +33,7 @@
    "TCO-safe recursive fibonacci."
    (if (= n 0)
       a
-      (fib (- n 1) b (+ a b))))
+      (fib-tco (- n 1) b (+ a b))))
 
 (defun d (expr)
          "Compute the first derivative of an expression."
@@ -54,3 +54,11 @@
    (let ( (ct 0) )
       (dotimes (i 1000000)
          (incf ct))))
+
+(defun testrd (filename)
+   (let ( (st (open-read filename))
+          (line "") )
+      (setf line (readln! st))
+      (while (/= line "")
+         (write! line)
+         (setf line (readln! st)))))

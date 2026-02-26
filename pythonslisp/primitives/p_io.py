@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 from typing import Any, Callable
+from _io import TextIOWrapper
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr
@@ -97,8 +98,116 @@ def register(primitive, parseLispString: Callable) -> None:
 
    # -----------------------------------------------------------------------
 
-   @primitive( 'writef', '<formatString> &optional <MapOrList>',
+   @primitive( 'open-read', 'filename &optional encoding', 
                min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
+   def LP_openRead( ctx: LispContext, env: Environment, *args):
+      """Opens and returns a text stream for reading.  encoding may be \"utf-8\"."""
+      fileName, *encoding = args
+      if not isinstance( fileName, str):
+         raise LispRuntimeFuncError( LP_openRead, "1st argument expected to be a filename string." )
+      
+      try:
+         if len(encoding) == 1:
+            encoding = encoding[0]
+            return open( fileName, 'r', encoding=encoding )
+         else:
+            return open( fileName, 'r' )
+      except FileNotFoundError:
+         raise LispRuntimeFuncError( LP_openRead, f'File not found "{fileName}".' )
+   
+   @primitive( 'open-write', 'filename &optional encoding', 
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
+   def LP_openWrite( ctx: LispContext, env: Environment, *args):
+      """Opens and returns a text stream for writing.  encoding may be \"utf-8\"."""
+      fileName, *encoding = args
+      if not isinstance( fileName, str):
+         raise LispRuntimeFuncError( LP_openWrite, "1st argument expected to be a filename string." )
+      try:
+         if len(encoding) == 1:
+            encoding = encoding[0]
+            return open( fileName, 'w', encoding=encoding )
+         else:
+            return open( fileName, 'w' )
+      except FileNotFoundError:
+         raise LispRuntimeFuncError( LP_openWrite, f'File not found "{fileName}".' )
+   
+   @primitive( 'open-append', 'filename &optional encoding', 
+               min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
+   def LP_openAppend( ctx: LispContext, env: Environment, *args):
+      """Opens and returns a text stream for appending.  encoding may be \"utf-8\"."""
+      fileName, *encoding = args
+      if not isinstance( fileName, str):
+         raise LispRuntimeFuncError( LP_openAppend, "1st argument expected to be a filename string." )
+      try:
+         if len(encoding) == 1:
+            encoding = encoding[0]
+            return open( fileName, 'a', encoding=encoding )
+         else:
+            return open( fileName, 'a' )
+      except FileNotFoundError:
+         raise LispRuntimeFuncError( LP_openAppend, f'File not found "{fileName}".' )
+
+   @primitive( 'close', 'stream',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_close( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Closes a stream and returns t."""
+      stream = args[0]
+      if not isinstance(stream, TextIOWrapper ):
+         raise LispRuntimeFuncError( LP_close, 'Argument expected to be a stream.' )
+      stream.close( )
+      return L_T
+
+   @primitive( 'flush', '&optional stream',
+               min_args=0, max_args=1, arity_msg='1 optional argument expected.' )
+   def LP_flush( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Flushes a stream and returns t."""
+      if len(args) == 1:
+         stream = args[0]
+         if not isinstance(stream, TextIOWrapper ):
+            raise LispRuntimeFuncError( LP_flush, 'Argument expected to be a stream.' )
+         stream.flush( )
+      else:
+         sys.stdout.flush()
+      return L_T
+
+   @primitive( 'closed', 'stream',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_closed( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if the stream is closed, nil otherwise."""
+      stream = args[0]
+      if not isinstance(stream, TextIOWrapper ):
+         raise LispRuntimeFuncError( LP_closed, 'Argument expected to be a stream.' )
+      return L_T if stream.closed else L_NIL
+
+   @primitive( 'isatty', 'stream',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_isatty( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if the stream is a tty, nil otherwise."""
+      stream = args[0]
+      if not isinstance(stream, TextIOWrapper ):
+         raise LispRuntimeFuncError( LP_isatty, 'Argument expected to be a stream.' )
+      return L_T if stream.isatty() else L_NIL
+
+   @primitive( 'readable', 'stream',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_readable( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if the stream is readable, nil otherwise."""
+      stream = args[0]
+      if not isinstance(stream, TextIOWrapper ):
+         raise LispRuntimeFuncError( LP_readable, 'Argument expected to be a stream.' )
+      return L_T if stream.readable() else L_NIL
+
+   @primitive( 'writable', 'stream',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_writable( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if the stream is writable, nil otherwise."""
+      stream = args[0]
+      if not isinstance(stream, TextIOWrapper ):
+         raise LispRuntimeFuncError( LP_writable, 'Argument expected to be a stream.' )
+      return L_T if stream.writable() else L_NIL
+
+   @primitive( 'writef', '<formatString> &optional <MapOrList> <stream>',
+               min_args=1, max_args=3, arity_msg='1 to 3 arguments expected.' )
    def LP_writef( ctx: LispContext, env: Environment, *args ) -> str:
       """Writes formatted text.  Returns the string that is written.
 Takes a Python format string and an optional map or list of values.
@@ -108,64 +217,159 @@ Returns the output string."""
       if not isinstance( formatString, str ):
          raise LispRuntimeFuncError( LP_writef, "1st argument expected to be a format string." )
 
-      if len(args) == 1:
+      numArgs = len(args)
+      if numArgs == 1:
+         mapOrList = None
+         stream = ctx.outStrm
          formattedStr = formatString
-      else:
-         mapOrList = args[1]
-         try:
-            if isinstance( mapOrList, list ):
-               formattedStr = formatString.format( *mapOrList )
-            elif isinstance( mapOrList, dict ):
-               formattedStr = formatString.format( **mapOrList )
-            else:
-               raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
-         except (IndexError, KeyError, ValueError) as e:
-            raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
+      elif numArgs == 2:
+         otherArg = args[1]
+         if isinstance( otherArg, (list, dict)):
+            mapOrList = otherArg
+            stream = ctx.outStrm
+         elif isinstance(otherArg, TextIOWrapper):
+            mapOrList = None
+            stream = otherArg
+            if not stream.writable():
+               raise LispRuntimeFuncError( LP_writef, 'Stream is not writable.' )
+         else:
+            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list, map or stream." )
+      else: # numArgs == 3
+         mapOrList, stream = args[1:]
+         if not isinstance(mapOrList, (list, dict)):
+            raise LispRuntimeFuncError( LP_writef, '2nd argument expected to be a list or map.' )
+         if not isinstance(stream, TextIOWrapper):
+            raise LispRuntimeFuncError( LP_writef, '3rd argument expected to be a stream.' )
+         if not stream.writable():
+            raise LispRuntimeFuncError( LP_writef, 'Stream is not writable.' )
+      
+      try:
+         if mapOrList is None:
+            formattedStr = formatString
+         elif isinstance( mapOrList, list ):
+            formattedStr = formatString.format( *mapOrList )
+         elif isinstance( mapOrList, dict ):
+            formattedStr = formatString.format( **mapOrList )
+         else:
+            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
+      except (IndexError, KeyError, ValueError) as e:
+         raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
 
       outputStr = _decode_escapes( formattedStr )
-      print( outputStr, end='', file=ctx.outStrm )
+      print( outputStr, end='', file=stream )
       return outputStr
 
-   @primitive( 'write!', '<obj1> <obj2> ...',
+   @primitive( 'write!', '<obj1> <obj2> ... &optional <stream>',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_write( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed."""
-      return lwrite( ctx.outStrm, *args, end='' )
+      if isinstance( args[-1], TextIOWrapper):
+         stream = args[-1]
+         args = args[0:-1]
+         if not stream.writable():
+            raise LispRuntimeFuncError( LP_write, 'Stream is not writable.' )
+      else:
+         stream = ctx.outStrm
+      return lwrite( stream, *args, end='' )
 
-   @primitive( 'writeLn!', '<obj1> <obj2> ...',
+   @primitive( 'writeLn!', '<obj1> <obj2> ... &optional <stream>',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_writeln( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  Returns the last value printed."""
-      return lwrite( ctx.outStrm, *args, end='\n' )
+      if isinstance(args[-1], TextIOWrapper):
+         stream = args[-1]
+         args = args[0:-1]
+         if not stream.writable():
+            raise LispRuntimeFuncError( LP_writeln, 'Stream is not writable.' )
+      else:
+         stream = ctx.outStrm
+      return lwrite( stream, *args, end='\n' )
 
-   @primitive( 'uwrite!', '<obj1> <obj2> ...',
+   @primitive( 'uwrite!', '<obj1> <obj2> ... &optional <stream>',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_uwrite( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.  Returns the last value printed."""
-      return luwrite( ctx.outStrm, *args, end='' )
+      if isinstance(args[-1], TextIOWrapper):
+         stream = args[-1]
+         args = args[0:-1]
+         if not stream.writable():
+            raise LispRuntimeFuncError( LP_uwrite, 'Stream is not writable.' )
+      else:
+         stream = ctx.outStrm
+      return luwrite( stream, *args, end='' )
 
-   @primitive( 'uwriteLn!', '<obj1> <obj2> ...',
+   @primitive( 'uwriteLn!', '<obj1> <obj2> ... &optional <stream>',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_uwriteln( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  Returns the last value printed."""
-      return luwrite( ctx.outStrm, *args, end='\n' )
+      if isinstance(args[-1], TextIOWrapper):
+         stream = args[-1]
+         args = args[0:-1]
+         if not stream.writable():
+            raise LispRuntimeFuncError( LP_uwriteln, 'Stream is not writable.' )
+      else:
+         stream = ctx.outStrm
+      return luwrite( stream, *args, end='\n' )
 
-   @primitive( 'terpri', '',
-               min_args=0, max_args=0, arity_msg='0 arguments expected.' )
+   @primitive( 'terpri', '&optional <stream>',
+               min_args=0, max_args=1, arity_msg='0 or 1 argument expected.' )
    def LP_terpri( ctx: LispContext, env: Environment, *args ) -> Any:
       """Outputs a newline character.  Returns NIL."""
-      print( end='\n', file=ctx.outStrm )
+      if len(args) == 0:
+         stream = ctx.outStrm
+      else:
+         stream = args[0]
+         if not isinstance(stream, TextIOWrapper):
+            raise LispRuntimeFuncError( LP_terpri, "Optional argument expected to be a stream." )
+         if not stream.writable():
+            raise LispRuntimeFuncError( LP_terpri, 'Stream is not writable.' )
+      print( end='\n', file=stream )
       return L_NIL
 
-   @primitive( 'readLn!', '',
-               min_args=0, max_args=0, arity_msg='0 arguments expected.' )
+   @primitive( 'readLn!', '&optional <stream>',
+               min_args=0, max_args=1, arity_msg='1 optional argument expected.' )
    def LP_readln( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Reads and returns text input from standard input.  This function blocks
-while it waits for the input return key to be pressed at the end of text entry."""
-      return input()
+      """Reads and returns text input from standard input or stream.  For console input
+This function blocks while it waits for the input return key to be pressed at the end
+of text entry."""
+      if len(args) == 0:
+         return input()
+      else:
+         stream = args[0]
+         if not isinstance(stream, TextIOWrapper):
+            raise LispRuntimeFuncError( LP_readln, 'Optional argument expected to be a stream.' )
+         if not stream.readable():
+            raise LispRuntimeFuncError( LP_readln, 'Stream is not readable.' )
+         return stream.readline(-1)
+
+   @primitive( 'save', '<filename> <obj1> <obj2> ...',
+               min_args=1, arity_msg='1 or more arguments expected.' )
+   def LP_save( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Saves python object to a text file."""
+      filename, *objs = args
+      if not isinstance(filename, str):
+         raise LispRuntimeFuncError( LP_save, '1st argument expected to be a filename.' )
+      with open( filename, 'w', encoding='utf-8' ) as st:
+         lines = [ f'{prettyPrintSExpr(obj)}\n' for obj in objs ]
+         st.writelines( lines )
+      return L_NIL
+
+   @primitive( 'load', '<fileName>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_load( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
+      filename = args[0]
+      if not isinstance(filename, str):
+         raise LispRuntimeFuncError( LP_load, 'Argument expected to be a filename.' )
+      try:
+         with open( filename, 'r', encoding='utf-8' ) as f:
+            content = f.read()
+      except FileNotFoundError:
+         raise LispRuntimeFuncError( LP_load, f'File not found "{filename}".' )
+      return parseLispString( content )   # (progn form1 form2 ...)
 
    @primitive( 'error', '<formatString> &optional <MapOrList>',
                min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )

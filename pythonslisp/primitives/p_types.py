@@ -1,5 +1,7 @@
 from fractions import Fraction
 from typing import Any, Callable
+from _io import TextIOWrapper
+
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LPrimitive,
@@ -122,6 +124,12 @@ def register(primitive, parseLispString: Callable) -> None:
       """Returns t if expr is a macro otherwise nil."""
       return L_T if isinstance( args[0], LMacro ) else L_NIL
 
+   @primitive( 'streamp', '<sexpr>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_streamp( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if expr is a stream otherwise nil."""
+      return L_T if isinstance(args[0], TextIOWrapper) else L_NIL
+
    @primitive( 'type-of', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_typeof( ctx: LispContext, env: Environment, *args ) -> Any:
@@ -150,6 +158,8 @@ def register(primitive, parseLispString: Callable) -> None:
          return LSymbol('PRIMITIVE')
       elif isinstance( arg, LContinuation ):
          return LSymbol('CONTINUATION')
+      elif isinstance( arg, TextIOWrapper ):
+         return LSymbol('STREAM')
       else:
          return LSymbol('T')
 

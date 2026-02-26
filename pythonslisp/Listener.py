@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import pythonslisp.Parser as Parser
-from pythonslisp.Utils import columnize, retrieveFileList, write_multiFile
+from pythonslisp.Utils import columnize, retrieveFileList, writeln_multiFile
 
 
 ### The Listener Implementation
@@ -551,9 +551,9 @@ class Listener( object ):
 
    def _writeLn( self, value: str='', file=None ) -> None:
       if self._logFile:
-         write_multiFile( value, file, self._logFile )
+         writeln_multiFile( value, file, self._logFile )
       else:
-         write_multiFile( value, file )
+         writeln_multiFile( value, file )
 
    def _writeResult( self, resultStr: str ) -> None:
       useColor     = sys.stdout.isatty()

@@ -1123,7 +1123,7 @@
 ... (writef "{2}" (list 1))
 
 %%% ERROR 'WRITEF': Format error: Replacement index 2 out of range for positional args tuple
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
 ==>
 
 ; --- SETF AT: container type and key/index errors ---

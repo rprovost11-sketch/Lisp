@@ -55,46 +55,46 @@ no substitution needed
 ... (write!)
 
 %%% ERROR 'WRITE!': 1 or more arguments expected.
-%%% USAGE: (WRITE! <obj1> <obj2> ...)
+%%% USAGE: (WRITE! <obj1> <obj2> ... &optional <stream>)
 ==>
 
 >>> (writeLn!)
 
 %%% ERROR 'WRITELN!': 1 or more arguments expected.
-%%% USAGE: (WRITELN! <obj1> <obj2> ...)
+%%% USAGE: (WRITELN! <obj1> <obj2> ... &optional <stream>)
 ==>
 
 >>> (uwrite!)
 
 %%% ERROR 'UWRITE!': 1 or more arguments expected.
-%%% USAGE: (UWRITE! <obj1> <obj2> ...)
+%%% USAGE: (UWRITE! <obj1> <obj2> ... &optional <stream>)
 ==>
 
 >>> (uwriteLn!)
 
 %%% ERROR 'UWRITELN!': 1 or more arguments expected.
-%%% USAGE: (UWRITELN! <obj1> <obj2> ...)
+%%% USAGE: (UWRITELN! <obj1> <obj2> ... &optional <stream>)
 ==>
 
 >>> ;;; Error: writef requires at least one argument
 ... (writef)
 
-%%% ERROR 'WRITEF': 1 or 2 arguments expected.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
+%%% ERROR 'WRITEF': 1 to 3 arguments expected.
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
 ==>
 
 >>> ;;; Error: writef first argument must be a format string
 ... (writef 1 '(a b))
 
 %%% ERROR 'WRITEF': 1st argument expected to be a format string.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
 ==>
 
 >>> ;;; Error: writef second argument must be a list or map
 ... (writef "hello" 1)
 
-%%% ERROR 'WRITEF': 2nd argument expected to be a list or map.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList>)
+%%% ERROR 'WRITEF': 2nd argument expected to be a list, map or stream.
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
 ==>
 
 ; ============================================================
@@ -250,3 +250,443 @@ ab
 
 
 ==> NIL
+
+
+; ============================================================
+; flush with no argument (flushes stdout)
+; ============================================================
+
+>>> (flush)
+==> T
+
+; ============================================================
+; streamp: NIL for non-stream types
+; ============================================================
+
+>>> (streamp 42)
+==> NIL
+
+>>> (streamp "hello")
+==> NIL
+
+>>> (streamp nil)
+==> NIL
+
+>>> (streamp '(a b c))
+==> NIL
+
+; ============================================================
+; open-write, stream predicates, write to stream, close
+; ============================================================
+
+>>> (setf st14w (open-write "pythonslisp/testing/runs/test14-stream.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+
+>>> ;;; streamp: T for an open stream
+... (streamp st14w)
+==> T
+
+>>> ;;; type-of: STREAM
+... (type-of st14w)
+==> STREAM
+
+>>> (writable st14w)
+==> T
+
+>>> (readable st14w)
+==> NIL
+
+>>> (isatty st14w)
+==> NIL
+
+>>> (closed st14w)
+==> NIL
+
+>>> ;;; uwriteLn! to stream: no stdout output, returns last arg
+... (uwriteLn! "hi" st14w)
+==> "hi"
+
+>>> (uwriteLn! "bye" st14w)
+==> "bye"
+
+>>> (flush st14w)
+==> T
+
+>>> (close st14w)
+==> T
+
+>>> (closed st14w)
+==> T
+
+; ============================================================
+; open-read, read lines, EOF detection
+; ============================================================
+
+>>> (setf st14r (open-read "pythonslisp/testing/runs/test14-stream.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+
+>>> (readable st14r)
+==> T
+
+>>> (writable st14r)
+==> NIL
+
+>>> (closed st14r)
+==> NIL
+
+>>> ;;; "hi\n" has length 3
+... (= (length (readLn! st14r)) 3)
+==> T
+
+>>> ;;; "bye\n" has length 4
+... (= (length (readLn! st14r)) 4)
+==> T
+
+>>> ;;; past EOF returns empty string
+... (= (readLn! st14r) "")
+==> T
+
+>>> (close st14r)
+==> T
+
+; ============================================================
+; terpri, write!, writeLn!, writef to stream
+; ============================================================
+
+>>> (setf st14w (open-write "pythonslisp/testing/runs/test14-stream.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+
+>>> ;;; terpri to stream: writes newline, returns NIL, no stdout output
+... (terpri st14w)
+==> NIL
+
+>>> ;;; write! to stream: writes programmer-format, no newline
+... (write! 7 st14w)
+==> 7
+
+>>> ;;; writeLn! to stream: writes programmer-format with trailing newline
+... (writeLn! "ok" st14w)
+==> "ok"
+
+>>> ;;; writef 3-arg: format + list + stream
+... (writef "n={0}" (list 5) st14w)
+==> "n=5"
+
+>>> ;;; writef 2-arg: format + stream (no substitutions)
+... (writef "end" st14w)
+==> "end"
+
+>>> (close st14w)
+==> T
+
+>>> (setf st14r (open-read "pythonslisp/testing/runs/test14-stream.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+
+>>> ;;; line 1: "\n" from terpri, length 1
+... (= (length (readLn! st14r)) 1)
+==> T
+
+>>> ;;; line 2: "7" + '"ok"\n' = '7"ok"\n', length 6
+... (= (length (readLn! st14r)) 6)
+==> T
+
+>>> ;;; rest of file: "n=5end" (no newline), length 6
+... (= (length (readLn! st14r)) 6)
+==> T
+
+>>> (= (readLn! st14r) "")
+==> T
+
+>>> (close st14r)
+==> T
+
+; ============================================================
+; open-append: appends to existing file
+; ============================================================
+
+>>> ;;; use open-write to create a fresh file
+... (setf st14a (open-write "pythonslisp/testing/runs/test14-append.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-append.tmp")
+
+>>> (uwriteLn! "first" st14a)
+==> "first"
+
+>>> (close st14a)
+==> T
+
+>>> ;;; open-append adds to the existing content
+... (setf st14a (open-append "pythonslisp/testing/runs/test14-append.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-append.tmp")
+
+>>> (writable st14a)
+==> T
+
+>>> (uwriteLn! "second" st14a)
+==> "second"
+
+>>> (close st14a)
+==> T
+
+>>> (setf st14r (open-read "pythonslisp/testing/runs/test14-append.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-append.tmp")
+
+>>> ;;; "first\n" has length 6
+... (= (length (readLn! st14r)) 6)
+==> T
+
+>>> ;;; "second\n" has length 7
+... (= (length (readLn! st14r)) 7)
+==> T
+
+>>> (= (readLn! st14r) "")
+==> T
+
+>>> (close st14r)
+==> T
+
+; ============================================================
+; save and load
+; ============================================================
+
+>>> ;;; save returns NIL; writes prettyPrintSExpr of each object on its own line
+... (save "pythonslisp/testing/runs/test14-save.tmp" 99)
+==> NIL
+
+>>> ;;; load returns (PROGN expr1 expr2 ...)
+... (setf loaded14 (load "pythonslisp/testing/runs/test14-save.tmp"))
+==> (PROGN 99)
+
+>>> (first loaded14)
+==> PROGN
+
+>>> (length loaded14)
+==> 2
+
+>>> (at 1 loaded14)
+==> 99
+
+>>> ;;; save multiple objects
+... (save "pythonslisp/testing/runs/test14-save.tmp" 1 2 3)
+==> NIL
+
+>>> (setf loaded14 (load "pythonslisp/testing/runs/test14-save.tmp"))
+==> (PROGN 1 2 3)
+
+>>> (length loaded14)
+==> 4
+
+>>> ;;; save a quoted list
+... (save "pythonslisp/testing/runs/test14-save.tmp" '(a b c))
+==> NIL
+
+>>> (setf loaded14 (load "pythonslisp/testing/runs/test14-save.tmp"))
+==> (PROGN (A B C))
+
+>>> (at 1 loaded14)
+==> (A B C)
+
+; ============================================================
+; Error cases: arity errors
+; ============================================================
+
+>>> (streamp)
+
+%%% ERROR 'STREAMP': 1 argument expected.
+%%% USAGE: (STREAMP <sexpr>)
+==>
+
+>>> (open-read)
+
+%%% ERROR 'OPEN-READ': 1 or 2 arguments expected.
+%%% USAGE: (OPEN-READ filename &optional encoding)
+==>
+
+>>> (open-write)
+
+%%% ERROR 'OPEN-WRITE': 1 or 2 arguments expected.
+%%% USAGE: (OPEN-WRITE filename &optional encoding)
+==>
+
+>>> (open-append)
+
+%%% ERROR 'OPEN-APPEND': 1 or 2 arguments expected.
+%%% USAGE: (OPEN-APPEND filename &optional encoding)
+==>
+
+>>> (close)
+
+%%% ERROR 'CLOSE': 1 argument expected.
+%%% USAGE: (CLOSE stream)
+==>
+
+>>> (readable)
+
+%%% ERROR 'READABLE': 1 argument expected.
+%%% USAGE: (READABLE stream)
+==>
+
+>>> (writable)
+
+%%% ERROR 'WRITABLE': 1 argument expected.
+%%% USAGE: (WRITABLE stream)
+==>
+
+>>> (closed)
+
+%%% ERROR 'CLOSED': 1 argument expected.
+%%% USAGE: (CLOSED stream)
+==>
+
+>>> (isatty)
+
+%%% ERROR 'ISATTY': 1 argument expected.
+%%% USAGE: (ISATTY stream)
+==>
+
+>>> (save)
+
+%%% ERROR 'SAVE': 1 or more arguments expected.
+%%% USAGE: (SAVE <filename> <obj1> <obj2> ...)
+==>
+
+>>> (load)
+
+%%% ERROR 'LOAD': 1 argument expected.
+%%% USAGE: (LOAD <fileName>)
+==>
+
+; ============================================================
+; Error cases: type errors
+; ============================================================
+
+>>> ;;; non-string filename
+... (open-read 42)
+
+%%% ERROR 'OPEN-READ': 1st argument expected to be a filename string.
+%%% USAGE: (OPEN-READ filename &optional encoding)
+==>
+
+>>> (open-write 42)
+
+%%% ERROR 'OPEN-WRITE': 1st argument expected to be a filename string.
+%%% USAGE: (OPEN-WRITE filename &optional encoding)
+==>
+
+>>> ;;; file not found
+... (open-read "no-such-file-42.tmp")
+
+%%% ERROR 'OPEN-READ': File not found "no-such-file-42.tmp".
+%%% USAGE: (OPEN-READ filename &optional encoding)
+==>
+
+>>> (close 42)
+
+%%% ERROR 'CLOSE': Argument expected to be a stream.
+%%% USAGE: (CLOSE stream)
+==>
+
+>>> (readable 42)
+
+%%% ERROR 'READABLE': Argument expected to be a stream.
+%%% USAGE: (READABLE stream)
+==>
+
+>>> (writable 42)
+
+%%% ERROR 'WRITABLE': Argument expected to be a stream.
+%%% USAGE: (WRITABLE stream)
+==>
+
+>>> (closed 42)
+
+%%% ERROR 'CLOSED': Argument expected to be a stream.
+%%% USAGE: (CLOSED stream)
+==>
+
+>>> (isatty 42)
+
+%%% ERROR 'ISATTY': Argument expected to be a stream.
+%%% USAGE: (ISATTY stream)
+==>
+
+>>> (flush 42)
+
+%%% ERROR 'FLUSH': Argument expected to be a stream.
+%%% USAGE: (FLUSH &optional stream)
+==>
+
+>>> (save 42)
+
+%%% ERROR 'SAVE': 1st argument expected to be a filename.
+%%% USAGE: (SAVE <filename> <obj1> <obj2> ...)
+==>
+
+>>> (load 42)
+
+%%% ERROR 'LOAD': Argument expected to be a filename.
+%%% USAGE: (LOAD <fileName>)
+==>
+
+>>> (load "no-such-file-43.tmp")
+
+%%% ERROR 'LOAD': File not found "no-such-file-43.tmp".
+%%% USAGE: (LOAD <fileName>)
+==>
+
+; ============================================================
+; Error cases: write to read-only stream / read from write-only stream
+; ============================================================
+
+>>> (setf st14r (open-read "pythonslisp/testing/runs/test14-stream.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+
+>>> (write! "hello" st14r)
+
+%%% ERROR 'WRITE!': Stream is not writable.
+%%% USAGE: (WRITE! <obj1> <obj2> ... &optional <stream>)
+==>
+
+>>> (writeLn! "hello" st14r)
+
+%%% ERROR 'WRITELN!': Stream is not writable.
+%%% USAGE: (WRITELN! <obj1> <obj2> ... &optional <stream>)
+==>
+
+>>> (uwrite! "hello" st14r)
+
+%%% ERROR 'UWRITE!': Stream is not writable.
+%%% USAGE: (UWRITE! <obj1> <obj2> ... &optional <stream>)
+==>
+
+>>> (uwriteLn! "hello" st14r)
+
+%%% ERROR 'UWRITELN!': Stream is not writable.
+%%% USAGE: (UWRITELN! <obj1> <obj2> ... &optional <stream>)
+==>
+
+>>> (terpri st14r)
+
+%%% ERROR 'TERPRI': Stream is not writable.
+%%% USAGE: (TERPRI &optional <stream>)
+==>
+
+>>> (writef "hello" st14r)
+
+%%% ERROR 'WRITEF': Stream is not writable.
+%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
+==>
+
+>>> (close st14r)
+==> T
+
+>>> (setf st14w (open-write "pythonslisp/testing/runs/test14-stream.tmp"))
+==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+
+>>> (readLn! st14w)
+
+%%% ERROR 'READLN!': Stream is not readable.
+%%% USAGE: (READLN! &optional <stream>)
+==>
+
+>>> (close st14w)
+==> T
