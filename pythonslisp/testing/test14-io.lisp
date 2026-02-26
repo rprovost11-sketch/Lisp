@@ -260,6 +260,24 @@ ab
 ==> T
 
 ; ============================================================
+; tmpdir and path-join
+; ============================================================
+
+>>> ;;; tmpdir returns a non-empty string
+... (stringp (tmpdir))
+==> T
+
+>>> (> (length (tmpdir)) 0)
+==> T
+
+>>> ;;; path-join returns a string longer than either component
+... (stringp (path-join "a" "b"))
+==> T
+
+>>> (> (length (path-join "a" "b")) 2)
+==> T
+
+; ============================================================
 ; streamp: NIL for non-stream types
 ; ============================================================
 
@@ -279,8 +297,8 @@ ab
 ; open-write, stream predicates, write to stream, close
 ; ============================================================
 
->>> (setf st14w (open-write "pythonslisp/testing/runs/test14-stream.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+>>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
 
 >>> ;;; streamp: T for an open stream
 ... (streamp st14w)
@@ -322,8 +340,8 @@ ab
 ; open-read, read lines, EOF detection
 ; ============================================================
 
->>> (setf st14r (open-read "pythonslisp/testing/runs/test14-stream.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+>>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
 
 >>> (readable st14r)
 ==> T
@@ -353,8 +371,8 @@ ab
 ; terpri, write!, writeLn!, writef to stream
 ; ============================================================
 
->>> (setf st14w (open-write "pythonslisp/testing/runs/test14-stream.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+>>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
 
 >>> ;;; terpri to stream: writes newline, returns NIL, no stdout output
 ... (terpri st14w)
@@ -379,8 +397,8 @@ ab
 >>> (close st14w)
 ==> T
 
->>> (setf st14r (open-read "pythonslisp/testing/runs/test14-stream.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+>>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
 
 >>> ;;; line 1: "\n" from terpri, length 1
 ... (= (length (readLn! st14r)) 1)
@@ -405,8 +423,8 @@ ab
 ; ============================================================
 
 >>> ;;; use open-write to create a fresh file
-... (setf st14a (open-write "pythonslisp/testing/runs/test14-append.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-append.tmp")
+... (setf st14a (open-write (path-join (tmpdir) "test14-append.tmp")))
+==> #<STREAM>
 
 >>> (uwriteLn! "first" st14a)
 ==> "first"
@@ -415,8 +433,8 @@ ab
 ==> T
 
 >>> ;;; open-append adds to the existing content
-... (setf st14a (open-append "pythonslisp/testing/runs/test14-append.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-append.tmp")
+... (setf st14a (open-append (path-join (tmpdir) "test14-append.tmp")))
+==> #<STREAM>
 
 >>> (writable st14a)
 ==> T
@@ -427,8 +445,8 @@ ab
 >>> (close st14a)
 ==> T
 
->>> (setf st14r (open-read "pythonslisp/testing/runs/test14-append.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-append.tmp")
+>>> (setf st14r (open-read (path-join (tmpdir) "test14-append.tmp")))
+==> #<STREAM>
 
 >>> ;;; "first\n" has length 6
 ... (= (length (readLn! st14r)) 6)
@@ -449,11 +467,11 @@ ab
 ; ============================================================
 
 >>> ;;; save returns NIL; writes prettyPrintSExpr of each object on its own line
-... (save "pythonslisp/testing/runs/test14-save.tmp" 99)
+... (save (path-join (tmpdir) "test14-save.tmp") 99)
 ==> NIL
 
 >>> ;;; load returns (PROGN expr1 expr2 ...)
-... (setf loaded14 (load "pythonslisp/testing/runs/test14-save.tmp"))
+... (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
 ==> (PROGN 99)
 
 >>> (first loaded14)
@@ -466,20 +484,20 @@ ab
 ==> 99
 
 >>> ;;; save multiple objects
-... (save "pythonslisp/testing/runs/test14-save.tmp" 1 2 3)
+... (save (path-join (tmpdir) "test14-save.tmp") 1 2 3)
 ==> NIL
 
->>> (setf loaded14 (load "pythonslisp/testing/runs/test14-save.tmp"))
+>>> (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
 ==> (PROGN 1 2 3)
 
 >>> (length loaded14)
 ==> 4
 
 >>> ;;; save a quoted list
-... (save "pythonslisp/testing/runs/test14-save.tmp" '(a b c))
+... (save (path-join (tmpdir) "test14-save.tmp") '(a b c))
 ==> NIL
 
->>> (setf loaded14 (load "pythonslisp/testing/runs/test14-save.tmp"))
+>>> (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
 ==> (PROGN (A B C))
 
 >>> (at 1 loaded14)
@@ -637,8 +655,8 @@ ab
 ; Error cases: write to read-only stream / read from write-only stream
 ; ============================================================
 
->>> (setf st14r (open-read "pythonslisp/testing/runs/test14-stream.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+>>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
 
 >>> (write! "hello" st14r)
 
@@ -679,8 +697,8 @@ ab
 >>> (close st14r)
 ==> T
 
->>> (setf st14w (open-write "pythonslisp/testing/runs/test14-stream.tmp"))
-==> (STREAM "pythonslisp/testing/runs/test14-stream.tmp")
+>>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
 
 >>> (readLn! st14w)
 

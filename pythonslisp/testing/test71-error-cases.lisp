@@ -1470,3 +1470,29 @@
 %%% Error binding arguments in call to function "PLUSP".
 %%% Too few positional arguments.
 ==>
+
+; --- tmpdir and path-join errors ---
+
+>>> (tmpdir 1)
+
+%%% ERROR 'TMPDIR': 0 arguments expected.
+%%% USAGE: (TMPDIR )
+==>
+
+>>> (path-join)
+
+%%% ERROR 'PATH-JOIN': 1 or more arguments expected.
+%%% USAGE: (PATH-JOIN <path1> <path2> ...)
+==>
+
+>>> (path-join 42)
+
+%%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
+%%% USAGE: (PATH-JOIN <path1> <path2> ...)
+==>
+
+>>> (path-join "a" 42)
+
+%%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
+%%% USAGE: (PATH-JOIN <path1> <path2> ...)
+==>

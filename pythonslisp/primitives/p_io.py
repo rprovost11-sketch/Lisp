@@ -1,4 +1,6 @@
+import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Callable
 from _io import TextIOWrapper
@@ -205,6 +207,21 @@ def register(primitive, parseLispString: Callable) -> None:
       if not isinstance(stream, TextIOWrapper ):
          raise LispRuntimeFuncError( LP_writable, 'Argument expected to be a stream.' )
       return L_T if stream.writable() else L_NIL
+
+   @primitive( 'tmpdir', '',
+               min_args=0, max_args=0, arity_msg='0 arguments expected.' )
+   def LP_tmpdir( ctx: LispContext, env: Environment, *args ) -> str:
+      """Returns the system temporary directory as a string."""
+      return tempfile.gettempdir()
+
+   @primitive( 'path-join', '<path1> <path2> ...',
+               min_args=1, arity_msg='1 or more arguments expected.' )
+   def LP_path_join( ctx: LispContext, env: Environment, *args ) -> str:
+      """Joins path components using the OS path separator.  Returns the result as a string."""
+      for i, arg in enumerate(args):
+         if not isinstance(arg, str):
+            raise LispRuntimeFuncError( LP_path_join, f'Argument {i+1} expected to be a string.' )
+      return os.path.join(*args)
 
    @primitive( 'writef', '<formatString> &optional <MapOrList> <stream>',
                min_args=1, max_args=3, arity_msg='1 to 3 arguments expected.' )

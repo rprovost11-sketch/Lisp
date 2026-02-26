@@ -152,7 +152,7 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
    elif isinstance(sExpr, LContinuation):
       return '#<CONTINUATION>'
    elif isinstance(sExpr, TextIOWrapper):
-      return f'(STREAM "{sExpr.name}")'
+      return '#<STREAM>'
    else:
       return repr(sExpr)
 
@@ -187,7 +187,7 @@ def prettyPrint( sExpr: Any ) -> str:
    elif isinstance(sExpr, LContinuation):
       return '#<CONTINUATION>'
    elif isinstance(sExpr, TextIOWrapper):
-      return f'(STREAM "{sExpr.name}")'
+      return '#<STREAM>'
    else:
       return str(sExpr)
 
