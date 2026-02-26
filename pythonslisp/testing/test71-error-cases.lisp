@@ -1471,6 +1471,20 @@
 %%% Too few positional arguments.
 ==>
 
+; --- readall errors ---
+
+>>> (readall)
+
+%%% ERROR 'READALL': 1 argument expected.
+%%% USAGE: (READALL <stream>)
+==>
+
+>>> (readall 42)
+
+%%% ERROR 'READALL': Argument expected to be a stream.
+%%% USAGE: (READALL <stream>)
+==>
+
 ; --- tmpdir and path-join errors ---
 
 >>> (tmpdir 1)

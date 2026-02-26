@@ -346,6 +346,17 @@ Terminates the output with a newline character.  Returns the last value printed.
       print( end='\n', file=stream )
       return L_NIL
 
+   @primitive( 'readall', '<stream>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_readall( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Reads and returns the entire contents of a readable stream as a single string."""
+      stream = args[0]
+      if not isinstance(stream, TextIOWrapper):
+         raise LispRuntimeFuncError( LP_readall, 'Argument expected to be a stream.' )
+      if not stream.readable():
+         raise LispRuntimeFuncError( LP_readall, 'Stream is not readable.' )
+      return stream.read()
+
    @primitive( 'readLn!', '&optional <stream>',
                min_args=0, max_args=1, arity_msg='1 optional argument expected.' )
    def LP_readln( ctx: LispContext, env: Environment, *args ) -> Any:

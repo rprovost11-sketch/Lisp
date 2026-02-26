@@ -463,6 +463,36 @@ ab
 ==> T
 
 ; ============================================================
+; readall: reads entire file contents as one string
+; ============================================================
+
+>>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
+
+>>> (uwriteLn! "hello" st14w)
+==> "hello"
+
+>>> (uwriteLn! "world" st14w)
+==> "world"
+
+>>> (close st14w)
+==> T
+
+>>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
+
+>>> ;;; readall returns "hello\nworld\n", length 12
+... (= (length (readall st14r)) 12)
+==> T
+
+>>> ;;; after readall, subsequent readLn! returns empty string (EOF)
+... (= (readLn! st14r) "")
+==> T
+
+>>> (close st14r)
+==> T
+
+; ============================================================
 ; save and load
 ; ============================================================
 
