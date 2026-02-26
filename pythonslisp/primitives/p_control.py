@@ -3,7 +3,7 @@ from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LCallable, LFunction, L_NIL
 from pythonslisp.LispContext import LispContext
-from pythonslisp.LispExceptions import LispRuntimeFuncError, Thrown, ReturnFrom
+from pythonslisp.LispExceptions import LispRuntimeError, LispRuntimeFuncError, Thrown, ReturnFrom
 
 
 def register(primitive) -> None:
@@ -80,7 +80,12 @@ All remaining cases are skipped."""
    def LP_backquote( ctx: LispContext, env: Environment, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-      return ctx.lBackquoteExpand( env, args[0] )
+      result = ctx.lBackquoteExpand( env, args[0] )
+      if ( isinstance(result, list) and
+           len(result) > 0 and
+           result[0] == LSymbol('COMMA-AT') ):
+         raise LispRuntimeError( "Ill-placed ,@ (COMMA-AT): splice requires a list context." )
+      return result
 
    @primitive( 'comma', '<sexpr>', specialForm=True )
    def LP_comma( ctx: LispContext, env: Environment, *args ) -> Any:

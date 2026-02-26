@@ -548,6 +548,13 @@
 %%% USAGE: (COMMA-AT <sexpr>)
 ==>
 
+>>> ;;; comma-at at top level of backquote: splice requires a list context
+... `,@(list 1 2)
+
+%%% Ill-placed ,@ (COMMA-AT): splice requires a list context.
+==>
+
+
 ; --- Macroexpand errors ---
 
 >>> (macroexpand)

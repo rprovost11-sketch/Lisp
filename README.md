@@ -22,7 +22,7 @@ Features
   across sessions.
 - Function definition with stack and recursion support.
 - Common Lisp macro definition and the macroexpand primitive.
-- &optional, &rest, &key and &aux parameter support for both functions and macros.
+- &optional, &rest, &key and &aux parameter support for functions and macros.
 - Support for function closures.
 - Tail Call Optimization
 - Robust error handling and reporting.
@@ -35,13 +35,12 @@ Design Features (the code not lisp)
 - Very simple looping tree-walk interpreter.
 - Fully object oriented.
 - Designed to be easily modified and extended.
-- Prioritize code readability over code performance.
-- Prioritize implementing something in the runtime library over in python.
+- Prioritize code readability and organization over code performance.
+- Prioritize implementing something in the lisp runtime library over in python.
 - Full suite of tests.
 - Strings support the full range of python escape sequences.
 - Fully implemented in python 3.14.
-- Implemented from scratch (Didn't start from anyone else's code.  AI was not
-  used or consulted with).
+- Implemented from scratch (Didn't start from anyone else's code).
 - No external package dependencies.
 - Complete lexical analyzer and LL(1) recursive descent parser.
 
@@ -84,10 +83,11 @@ API: Using Lisp as a Package
 
 The easiest way to use the package is to import then instantiate a
 LispInterpreter.  Next, if you want access to the functions and macros defined
-in the lisp runtime library, you want to call reboot() which initializes/
-reinitializes the interpreter and loads the lisp library.  Next use its eval()
-functions to call into lisp.  Everything is persistent across calls to these
-eval functions so you can mix and match which one you use at any given time.
+in the lisp runtime library, you want to call reboot() which creates and loads
+up the global environemt with primitives, functions and macros.  Next use its
+eval() functions to call into lisp.  Everything is persistent across calls to
+these eval functions so you can mix and match which one you use at any given
+time.
 
 The example below simply defines a fibonacci function in lisp, then calls the
 function from python and prints the results.
@@ -110,7 +110,7 @@ function from python and prints the results.
           print( prettyPrintSExpr(fibo_wrapper(15)) )
 
 If the lisp code returns an int,float,fraction,string,list or dict then it just
-returns the python versions of those things.  However, most calls to rawEval will
+returns the python versions of those things.  Calls to rawEval will
 return the AST of an sexpression.  A subsequent call to prettyPrintSExpr(ast)
 will convert the complex structure to a python string representation.
 
