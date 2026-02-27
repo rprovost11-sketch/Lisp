@@ -258,3 +258,110 @@
 %%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
 ==>
 
+; --- remove-if / remove-if-not ---
+
+>>> (remove-if oddp '(1 2 3 4 5))
+==> (2 4)
+
+>>> (remove-if evenp '(1 2 3 4 5))
+==> (1 3 5)
+
+>>> (remove-if oddp '())
+==> NIL
+
+>>> (remove-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+==> (1 2 3)
+
+>>> (remove-if-not oddp '(1 2 3 4 5))
+==> (1 3 5)
+
+>>> (remove-if-not evenp '(1 2 3 4 5))
+==> (2 4)
+
+>>> (remove-if-not oddp '())
+==> NIL
+
+; --- find / find-if ---
+
+>>> (find 3 '(1 2 3 4 5))
+==> 3
+
+>>> (find 9 '(1 2 3 4 5))
+==> NIL
+
+>>> (find 3 '())
+==> NIL
+
+>>> (find-if evenp '(1 2 3 4 5))
+==> 2
+
+>>> (find-if oddp '(2 4 6))
+==> NIL
+
+>>> (find-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+==> 4
+
+; --- position / position-if ---
+
+>>> (position 3 '(1 2 3 4 5))
+==> 2
+
+>>> (position 9 '(1 2 3 4 5))
+==> NIL
+
+>>> (position 3 '())
+==> NIL
+
+>>> (position-if evenp '(1 2 3 4 5))
+==> 1
+
+>>> (position-if oddp '(2 4 6))
+==> NIL
+
+>>> (position-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+==> 3
+
+; --- count / count-if ---
+
+>>> (count 2 '(1 2 3 2 4 2))
+==> 3
+
+>>> (count 9 '(1 2 3))
+==> 0
+
+>>> (count 2 '())
+==> 0
+
+>>> (count-if evenp '(1 2 3 4 5))
+==> 2
+
+>>> (count-if oddp '(2 4 6))
+==> 0
+
+; --- substitute / substitute-if ---
+
+>>> (substitute 99 2 '(1 2 3 2 4))
+==> (1 99 3 99 4)
+
+>>> (substitute 99 9 '(1 2 3))
+==> (1 2 3)
+
+>>> (substitute 99 2 '())
+==> NIL
+
+>>> (substitute-if 99 evenp '(1 2 3 4 5))
+==> (1 99 3 99 5)
+
+>>> (substitute-if 99 oddp '(2 4 6))
+==> (2 4 6)
+
+; --- char ---
+
+>>> (char "hello" 0)
+==> "h"
+
+>>> (char "hello" 4)
+==> "o"
+
+>>> (char "hello" 2)
+==> "l"

@@ -75,4 +75,8 @@
          (incf accum value))
       (/ accum (length values))))
 
+(defmacro truncate (x)
+   "Truncates a number toward zero, returning an integer. Equivalent to (integer x)."
+   `(integer ,x))
+
 

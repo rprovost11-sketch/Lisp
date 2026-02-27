@@ -71,3 +71,13 @@ def register(primitive) -> None:
       if not isinstance( args[0], int ):
          raise LispRuntimeFuncError( LP_code_char, 'Argument 1 must be an Integer.' )
       return chr( args[0] )
+
+   @primitive( 'string-capitalize', '<string>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_string_capitalize( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns a copy of string with the first letter of each word capitalized
+and all other letters lowercased."""
+      s = args[0]
+      if not isinstance( s, str ):
+         raise LispRuntimeFuncError( LP_string_capitalize, '1st argument must be a string.' )
+      return s.title()

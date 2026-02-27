@@ -124,7 +124,7 @@
 ...
 
 %%% Unbound Variable: VAR3.
-==> 
+==>
 
 >>> (let ( (var3 "true") )
 ...    (writeLn! var3)
@@ -138,7 +138,7 @@
 ...
 
 %%% Unbound Variable: VAR3.
-==> 
+==>
 
 >>> (setf var1 15)
 ...
@@ -197,7 +197,7 @@ T
 ...
 
 %%% Unbound Variable: VAR3.
-==> 
+==>
 
 >>> ;;; Error: makunbound requires exactly one symbol argument
 ... (makunbound 1 2)
@@ -228,3 +228,39 @@ T
 %%% Too few positional arguments.
 ==>
 
+; --- defparameter ---
+
+>>> (defparameter dp-x 42)
+==> 42
+
+>>> dp-x
+==> 42
+
+>>> ;;; defparameter always rebinds
+... (defparameter dp-x 99)
+==> 99
+
+>>> dp-x
+==> 99
+
+; --- defvar ---
+
+>>> (defvar dv-x 10)
+==> NIL
+
+>>> dv-x
+==> 10
+
+>>> ;;; defvar does NOT rebind if already bound
+... (defvar dv-x 999)
+==> NIL
+
+>>> dv-x
+==> 10
+
+>>> ;;; defvar with no value initializes to nil
+... (defvar dv-y)
+==> NIL
+
+>>> dv-y
+==> NIL

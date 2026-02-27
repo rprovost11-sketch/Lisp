@@ -62,3 +62,20 @@
       (while (/= line "")
          (write! line)
          (setf line (readln! st)))))
+
+(defmacro with-open-file (spec &rest body)
+   "Opens a file, binds it to var, evaluates body forms, then closes the file.
+spec is (var filename) or (var filename direction).
+direction: input (default) = open-read, output = open-write, append = open-append.
+Returns the value of the last body form.
+Note: file is closed normally; on error the file may remain open (no unwind-protect)."
+   (let ((var      (car spec))
+         (filename (car (cdr spec)))
+         (dir-spec (car (cdr (cdr spec)))))
+      (let ((direction (if dir-spec dir-spec 'input)))
+         `(let ((,var (cond ((eq ',direction 'output) (open-write ,filename))
+                            ((eq ',direction 'append) (open-append ,filename))
+                            (1                        (open-read  ,filename)))))
+             (let ((_wof_result_ (progn ,@body)))
+                (close ,var)
+                _wof_result_)))))

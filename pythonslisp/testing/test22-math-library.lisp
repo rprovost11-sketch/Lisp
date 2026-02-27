@@ -312,3 +312,20 @@
 ...
 
 ==> 4
+
+; --- truncate ---
+
+>>> (truncate 3.7)
+==> 3
+
+>>> (truncate -3.7)
+==> -3
+
+>>> (truncate 3.0)
+==> 3
+
+>>> (truncate 5)
+==> 5
+
+>>> (truncate -0.9)
+==> 0

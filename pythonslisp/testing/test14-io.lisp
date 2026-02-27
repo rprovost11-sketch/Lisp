@@ -738,3 +738,33 @@ ab
 
 >>> (close st14w)
 ==> T
+
+; --- with-open-file ---
+
+>>> ;;; write to a file then read it back
+... (with-open-file (f "_wof_test_.txt" output)
+...    (uwrite! "hello from with-open-file" f)
+...    (terpri f))
+==> NIL
+
+>>> ;;; read it back: readLn includes trailing newline, length = 26
+... (with-open-file (f "_wof_test_.txt")
+...    (length (readLn! f)))
+==> 26
+
+>>> ;;; content starts with expected prefix
+... (with-open-file (f "_wof_test_.txt")
+...    (subseq (readLn! f) 0 5))
+==> "hello"
+
+>>> ;;; append mode
+... (with-open-file (f "_wof_test_.txt" append)
+...    (uwrite! "second line" f)
+...    (terpri f))
+==> NIL
+
+>>> ;;; with-open-file returns last body value
+... (with-open-file (f "_wof_test_.txt")
+...    (readLn! f)
+...    42)
+==> 42

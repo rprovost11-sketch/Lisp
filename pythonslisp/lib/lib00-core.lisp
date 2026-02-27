@@ -2,6 +2,14 @@
    "Define and return a new globally named function.  The first expr in the body can be an optional documentation string."
    `(setf ,fnName (lambda (,@lambda-list) ,@body)))
 
+(defmacro defparameter (name val)
+   "Defines a global variable and always sets its value."
+   `(setf ,name ,val))
+
+(defmacro defvar (name &optional val)
+   "Defines a global variable, setting it to val only if it is not already bound."
+   `(progn (unless (boundp ',name) (setf ,name ,val)) nil))
+
 (defmacro alias (new old)
    "Define an alias for an existing named object."
    `(setf ,new ,old))
@@ -387,7 +395,7 @@ Returns the last body value from the last iteration, or NIL if the list is empty
    "Apply fn to each element of lst and return the list of results."
    (let ((result nil))
       (dolist (item lst)
-         (setf result (append result (list (fn item)))))
+         (setf result (append result (list (funcall fn item)))))
       result))
 
 (defun last (lst &optional (n 1))
@@ -421,15 +429,15 @@ Returns the last body value from the last iteration, or NIL if the list is empty
 
 (defun every (fn lst)
    "Returns T if fn returns true for every element of lst, NIL otherwise."
-   (cond ((null lst)              t)
-         ((null (fn (first lst))) nil)
-         (1                       (every fn (rest lst)))))
+   (cond ((null lst)                        t)
+         ((null (funcall fn (first lst)))   nil)
+         (1                                 (every fn (rest lst)))))
 
 (defun some (fn lst)
    "Returns T if fn returns true for at least one element of lst, NIL otherwise."
-   (cond ((null lst)         nil)
-         ((fn (first lst))   t)
-         (1                  (some fn (rest lst)))))
+   (cond ((null lst)                   nil)
+         ((funcall fn (first lst))     t)
+         (1                            (some fn (rest lst)))))
 
 (defun reduce (fn lst)
    "Cumulatively apply fn to lst elements left to right, reducing to a single value."
@@ -437,14 +445,94 @@ Returns the last body value from the last iteration, or NIL if the list is empty
        (error "reduce: list must not be empty")
        (let ((acc (first lst)))
           (dolist (item (rest lst))
-             (setf acc (fn acc item)))
+             (setf acc (funcall fn acc item)))
           acc)))
 
 (defun mapc (fn lst)
    "Apply fn to each element of lst for side effects. Returns lst."
    (dolist (item lst)
-      (fn item))
+      (funcall fn item))
    lst)
+
+(defun remove-if (pred lst)
+   "Returns a copy of lst with all elements satisfying pred removed."
+   (cond ((null lst)                  nil)
+         ((funcall pred (first lst))  (remove-if pred (rest lst)))
+         (1                           (cons (first lst) (remove-if pred (rest lst))))))
+
+(defun remove-if-not (pred lst)
+   "Returns a copy of lst keeping only elements satisfying pred."
+   (cond ((null lst)                  nil)
+         ((funcall pred (first lst))  (cons (first lst) (remove-if-not pred (rest lst))))
+         (1                           (remove-if-not pred (rest lst)))))
+
+(defun find (item lst)
+   "Returns the first element of lst equal to item, or NIL if not found."
+   (cond ((null lst)               nil)
+         ((= item (first lst))     (first lst))
+         (1                        (find item (rest lst)))))
+
+(defun find-if (pred lst)
+   "Returns the first element of lst satisfying pred, or NIL if not found."
+   (cond ((null lst)                  nil)
+         ((funcall pred (first lst))  (first lst))
+         (1                           (find-if pred (rest lst)))))
+
+(defun position (item lst)
+   "Returns the 0-based index of the first element of lst equal to item, or NIL."
+   (block position
+      (let ((idx 0))
+         (dolist (x lst)
+            (if (= item x) (return-from position idx))
+            (setf idx (+ idx 1)))
+         nil)))
+
+(defun position-if (pred lst)
+   "Returns the 0-based index of the first element satisfying pred, or NIL."
+   (block position-if
+      (let ((idx 0))
+         (dolist (x lst)
+            (if (funcall pred x) (return-from position-if idx))
+            (setf idx (+ idx 1)))
+         nil)))
+
+(defun count (item lst)
+   "Returns the number of elements in lst equal to item."
+   (let ((n 0))
+      (dolist (x lst)
+         (if (= item x) (setf n (+ n 1))))
+      n))
+
+(defun count-if (pred lst)
+   "Returns the number of elements in lst satisfying pred."
+   (let ((n 0))
+      (dolist (x lst)
+         (if (funcall pred x) (setf n (+ n 1))))
+      n))
+
+(defun substitute (new old lst)
+   "Returns a copy of lst with all occurrences of old replaced by new."
+   (cond ((null lst)               nil)
+         ((= old (first lst))      (cons new (substitute new old (rest lst))))
+         (1                        (cons (first lst) (substitute new old (rest lst))))))
+
+(defun substitute-if (new pred lst)
+   "Returns a copy of lst with all elements satisfying pred replaced by new."
+   (cond ((null lst)                  nil)
+         ((funcall pred (first lst))  (cons new (substitute-if new pred (rest lst))))
+         (1                           (cons (first lst) (substitute-if new pred (rest lst))))))
+
+(defun notany (pred lst)
+   "Returns T if no element of lst satisfies pred, NIL otherwise."
+   (not (some pred lst)))
+
+(defun notevery (pred lst)
+   "Returns T if not every element of lst satisfies pred, NIL otherwise."
+   (not (every pred lst)))
+
+(defmacro char (str idx)
+   "Returns the character (as a single-character string) at position idx in str."
+   `(at ,idx ,str))
 
 (alias call-with-current-continuation call/cc)
 

@@ -1909,3 +1909,20 @@ Unknown topic: "UNKNOWN-TOPIC"
 ...    (point23-x p23))
 
 ==> 42
+
+; --- string-capitalize ---
+
+>>> (string-capitalize "hello world")
+==> "Hello World"
+
+>>> (string-capitalize "HELLO WORLD")
+==> "Hello World"
+
+>>> (string-capitalize "hello")
+==> "Hello"
+
+>>> (string-capitalize "")
+==> ""
+
+>>> (string-capitalize "already Capitalized words")
+==> "Already Capitalized Words"

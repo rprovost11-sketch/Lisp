@@ -551,3 +551,22 @@
 %%% USAGE: (CONSP <sexpr>)
 ==>
 
+; --- notany / notevery ---
+
+>>> (notany oddp '(2 4 6))
+==> T
+
+>>> (notany oddp '(1 2 3))
+==> NIL
+
+>>> (notany oddp '())
+==> T
+
+>>> (notevery oddp '(1 3 5))
+==> NIL
+
+>>> (notevery oddp '(1 2 3))
+==> T
+
+>>> (notevery oddp '())
+==> NIL
