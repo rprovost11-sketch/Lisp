@@ -101,13 +101,13 @@ value.
 Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
       raise LispRuntimeFuncError( LP_setq, 'Handled by main eval loop.' )
 
-   @primitive( 'undef!', '<symbol>', specialForm=True,
+   @primitive( 'makunbound', '<symbol>', specialForm=True,
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_undef( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_makunbound( ctx: LispContext, env: Environment, *args ) -> Any:
       """Undefines the global definition for a symbol and returns nil."""
       key = args[0]
       if not isinstance(key, LSymbol):
-         raise LispRuntimeFuncError( LP_undef, 'Argument expected to be a symbol.' )
+         raise LispRuntimeFuncError( LP_makunbound, 'Argument expected to be a symbol.' )
       env.getGlobalEnv().unbind( key.strval )
       return L_NIL
 

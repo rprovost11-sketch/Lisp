@@ -150,7 +150,7 @@
 
 ==> 2
 
->>> (undef! var3)
+>>> (makunbound var3)
 ...
 
 ==> NIL
@@ -199,18 +199,28 @@ T
 %%% Unbound Variable: VAR3.
 ==> 
 
->>> ;;; Error: undef! requires exactly one symbol argument
-... (undef! 1 2)
+>>> ;;; Error: makunbound requires exactly one symbol argument
+... (makunbound 1 2)
 
-%%% ERROR 'UNDEF!': 1 argument expected.
-%%% USAGE: (UNDEF! <symbol>)
+%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% USAGE: (MAKUNBOUND <symbol>)
 ==>
 
->>> (undef! 1)
+>>> (makunbound 1)
 
-%%% ERROR 'UNDEF!': Argument expected to be a symbol.
-%%% USAGE: (UNDEF! <symbol>)
+%%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
+%%% USAGE: (MAKUNBOUND <symbol>)
 ==>
+
+>>> ;;; undef! is an alias for makunbound
+... (setf _tmp_var_ 99)
+
+==> 99
+
+>>> (undef! _tmp_var_)
+...
+
+==> NIL
 
 >>> ;;; Error: setf requires an even number of arguments
 ... (setf myvar1 10 myvar2)

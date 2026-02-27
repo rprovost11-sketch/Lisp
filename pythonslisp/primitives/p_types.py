@@ -124,6 +124,13 @@ def register(primitive, parseLispString: Callable) -> None:
       """Returns t if expr is a macro otherwise nil."""
       return L_T if isinstance( args[0], LMacro ) else L_NIL
 
+   @primitive( 'consp', '<sexpr>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_consp( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if expr is a non-NIL list (cons cell), otherwise nil."""
+      a = args[0]
+      return L_T if (isinstance(a, list) and len(a) > 0) else L_NIL
+
    @primitive( 'streamp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_streamp( ctx: LispContext, env: Environment, *args ) -> Any:

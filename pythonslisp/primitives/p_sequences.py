@@ -245,3 +245,35 @@ def register(primitive) -> None:
       if isinstance(arg, (list, str, dict)):
          return len(arg)
       raise LispRuntimeFuncError( LP_length, 'Argument 1 must be a List, String, or Map.' )
+
+   @primitive( 'subseq', '<sequence> <start> &optional <end>',
+               min_args=2, max_args=3, arity_msg='2 or 3 arguments expected.' )
+   def LP_subseq( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns a subsequence of a list or string from start (inclusive) to end (exclusive).
+If end is not provided, returns from start to the end of the sequence."""
+      seq = args[0]
+      start = args[1]
+      end = args[2] if len(args) > 2 else None
+
+      if not isinstance(seq, (list, str)):
+         raise LispRuntimeFuncError( LP_subseq, '1st argument must be a list or string.' )
+      if not isinstance(start, int) or isinstance(start, bool):
+         raise LispRuntimeFuncError( LP_subseq, '2nd argument must be an integer.' )
+      if end is not None and (not isinstance(end, int) or isinstance(end, bool)):
+         raise LispRuntimeFuncError( LP_subseq, '3rd argument must be an integer.' )
+
+      seqLen = len(seq)
+      if start < 0:
+         raise LispRuntimeFuncError( LP_subseq, 'Start index must be non-negative.' )
+      if start > seqLen:
+         raise LispRuntimeFuncError( LP_subseq, 'Start index out of bounds.' )
+      if end is not None:
+         if end < 0:
+            raise LispRuntimeFuncError( LP_subseq, 'End index must be non-negative.' )
+         if end > seqLen:
+            raise LispRuntimeFuncError( LP_subseq, 'End index out of bounds.' )
+         if end < start:
+            raise LispRuntimeFuncError( LP_subseq, 'End index must be >= start index.' )
+         return seq[start:end]
+
+      return seq[start:]

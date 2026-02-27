@@ -511,3 +511,43 @@
 %%% USAGE: (MACROP <sexpr>)
 ==>
 
+; --- consp ---
+
+>>> (consp '(1 2 3))
+==> T
+
+>>> (consp '(1))
+==> T
+
+>>> (consp nil)
+==> NIL
+
+>>> (consp '())
+==> NIL
+
+>>> (consp 42)
+==> NIL
+
+>>> (consp "hello")
+==> NIL
+
+>>> (consp 'foo)
+==> NIL
+
+>>> (consp (cons 1 '(2)))
+==> T
+
+>>> ;;; consp error: no args
+... (consp)
+
+%%% ERROR 'CONSP': 1 argument expected.
+%%% USAGE: (CONSP <sexpr>)
+==>
+
+>>> ;;; consp error: too many args
+... (consp 1 2)
+
+%%% ERROR 'CONSP': 1 argument expected.
+%%% USAGE: (CONSP <sexpr>)
+==>
+

@@ -573,7 +573,7 @@
 
 ==> (1)
 
-; --- setf / undef! / symtab! errors ---
+; --- setf / makunbound / symtab! errors ---
 
 >>> (setf)
 
@@ -592,24 +592,24 @@
 %%% Too few positional arguments.
 ==>
 
->>> (undef!)
+>>> (makunbound)
 
-%%% ERROR 'UNDEF!': 1 argument expected.
-%%% USAGE: (UNDEF! <symbol>)
+%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% USAGE: (MAKUNBOUND <symbol>)
 ==>
 
->>> ;;; undef! with non-symbol
-... (undef! 1)
+>>> ;;; makunbound with non-symbol
+... (makunbound 1)
 
-%%% ERROR 'UNDEF!': Argument expected to be a symbol.
-%%% USAGE: (UNDEF! <symbol>)
+%%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
+%%% USAGE: (MAKUNBOUND <symbol>)
 ==>
 
->>> ;;; undef! with too many args
-... (undef! 'a 'b)
+>>> ;;; makunbound with too many args
+... (makunbound 'a 'b)
 
-%%% ERROR 'UNDEF!': 1 argument expected.
-%%% USAGE: (UNDEF! <symbol>)
+%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% USAGE: (MAKUNBOUND <symbol>)
 ==>
 
 >>> ;;; symtab! with args
@@ -618,6 +618,34 @@
 %%% ERROR 'SYMTAB!': 0 arguments expected.
 %%% USAGE: (SYMTAB! )
 ==>
+
+; --- makunbound ---
+
+>>> ;;; makunbound - happy path: undefine a variable
+... (setf _mk_test_ 42)
+
+==> 42
+
+>>> (makunbound _mk_test_)
+...
+
+==> NIL
+
+>>> ;;; the variable should now be unbound
+... _mk_test_
+
+%%% Unbound Variable: _MK_TEST_.
+==>
+
+>>> ;;; undef! alias also works
+... (setf _ud_test_ 77)
+
+==> 77
+
+>>> (undef! _ud_test_)
+...
+
+==> NIL
 
 ; --- Conversion errors ---
 

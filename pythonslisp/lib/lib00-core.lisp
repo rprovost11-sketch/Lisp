@@ -390,11 +390,10 @@ Returns the last body value from the last iteration, or NIL if the list is empty
          (setf result (append result (list (fn item)))))
       result))
 
-(defun last (lst)
-   "Returns a list containing only the last element of lst."
-   (cond ((null lst)       nil)
-         ((null (cdr lst)) lst)
-         (1                (last (cdr lst)))))
+(defun last (lst &optional (n 1))
+   "Returns the last n cons cells of lst."
+   (let ((skip (- (length lst) n)))
+      (nthcdr (if (> skip 0) skip 0) lst)))
 
 (defun nthcdr (n lst)
    "Returns the result of calling cdr n times on lst."

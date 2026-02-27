@@ -172,3 +172,89 @@
 %%% USAGE: (SORT <list>)
 ==>
 
+; --- subseq ---
+
+>>> (subseq '(a b c d e) 1 3)
+==> (B C)
+
+>>> (subseq '(a b c d e) 0 3)
+==> (A B C)
+
+>>> (subseq '(a b c d e) 2)
+==> (C D E)
+
+>>> (subseq '(a b c d e) 0)
+==> (A B C D E)
+
+>>> (subseq '(a b c d e) 5)
+==> NIL
+
+>>> (subseq '(a b c d e) 1 1)
+==> NIL
+
+>>> (subseq "hello" 1 3)
+==> "el"
+
+>>> (subseq "hello" 0)
+==> "hello"
+
+>>> (subseq "hello" 2)
+==> "llo"
+
+>>> (subseq "hello" 0 0)
+==> ""
+
+>>> (subseq '() 0)
+==> NIL
+
+; --- subseq errors ---
+
+>>> ;;; not a list or string
+... (subseq 42 0)
+
+%%% ERROR 'SUBSEQ': 1st argument must be a list or string.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+
+>>> ;;; start not integer
+... (subseq '(1 2 3) 1.0)
+
+%%% ERROR 'SUBSEQ': 2nd argument must be an integer.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+
+>>> ;;; negative start
+... (subseq '(1 2 3) -1)
+
+%%% ERROR 'SUBSEQ': Start index must be non-negative.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+
+>>> ;;; start out of bounds
+... (subseq '(1 2 3) 4)
+
+%%% ERROR 'SUBSEQ': Start index out of bounds.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+
+>>> ;;; end < start
+... (subseq '(1 2 3) 2 1)
+
+%%% ERROR 'SUBSEQ': End index must be >= start index.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+
+>>> ;;; too few args
+... (subseq '(1 2 3))
+
+%%% ERROR 'SUBSEQ': 2 or 3 arguments expected.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+
+>>> ;;; too many args
+... (subseq '(1 2 3) 0 2 99)
+
+%%% ERROR 'SUBSEQ': 2 or 3 arguments expected.
+%%% USAGE: (SUBSEQ <sequence> <start> &optional <end>)
+==>
+

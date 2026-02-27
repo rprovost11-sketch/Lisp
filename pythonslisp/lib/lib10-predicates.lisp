@@ -3,6 +3,9 @@
 ; Does sexpr evaluate to nil?
 (alias null not)
 
+; undef! is the legacy name for makunbound
+(alias undef! makunbound)
+
 ; Setup some aliases for the otherwise oddly named predicates.
 ;
 (alias isNil? null)
