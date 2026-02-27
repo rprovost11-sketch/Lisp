@@ -100,10 +100,10 @@ def register(primitive, parseLispString: Callable) -> None:
       """Returns t if expr is a list otherwise nil."""
       return L_T if isinstance(args[0], list) else L_NIL
 
-   @primitive( 'mapp', '<sexpr>',
+   @primitive( 'dictp', '<sexpr>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
-   def LP_mapp( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if expr is a map otherwise nil."""
+   def LP_dictp( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if expr is a dict otherwise nil."""
       return L_T if isinstance(args[0], dict) else L_NIL
 
    @primitive( 'stringp', '<sexpr>',
@@ -149,7 +149,7 @@ def register(primitive, parseLispString: Callable) -> None:
          return LSymbol('SYMBOL')
       elif isinstance( arg, dict ):
          struct_type = arg.get('STRUCT-TYPE')
-         return struct_type if struct_type is not None else LSymbol('MAP')
+         return struct_type if struct_type is not None else LSymbol('DICT')
       elif isinstance( arg, LFunction ):
          return LSymbol('FUNCTION')
       elif isinstance( arg, LMacro ):
@@ -349,20 +349,19 @@ concatenates the results to form a new string."""
       resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
       return ''.join(resultStrs)
 
-   @primitive( 'symbol', '<string1> <string2> ...',
-               min_args=1, arity_msg='1 or more string argument expected.' )
-   def LP_symbol( ctx: LispContext, env: Environment, *args ) -> Any:
-      """PrettyPrints as user readable strings each argument object and
-concatenates the results to form a new string which is used to define a new
-symbol object."""
+   @primitive( 'make-symbol', '<string>',
+               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   def LP_make_symbol( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Takes a string and returns a new symbol whose name is that string."""
 
-      strList = [ prettyPrint(arg) for arg in args ]
-      symstr = ''.join(strList)
+      arg = args[0]
+      if not isinstance(arg, str):
+         raise LispRuntimeFuncError( LP_make_symbol, '1st argument expected to be a string.' )
       try:
-         parsed = parseLispString(symstr)
+         parsed = parseLispString(arg)
       except ParseError:
-         raise LispRuntimeFuncError( LP_symbol, f'The resulting string "{symstr}" is not a valid Lisp symbol.' )
+         raise LispRuntimeFuncError( LP_make_symbol, f'"{arg}" is not a valid symbol name.' )
       sym = parsed[1] if isinstance(parsed, list) and len(parsed) == 2 else parsed
       if not isinstance(sym, LSymbol):
-         raise LispRuntimeFuncError( LP_symbol, f'The resulting string "{symstr}" is not a valid Lisp symbol.' )
+         raise LispRuntimeFuncError( LP_make_symbol, f'"{arg}" is not a valid symbol name.' )
       return sym

@@ -248,7 +248,7 @@
 ==> "o"
 
 >>> ;;; at with symbol key on map
-... (at 'a (map (a 1) (b 2)))
+... (at 'a (make-dict (a 1) (b 2)))
 ...
 
 ==> 1
@@ -278,25 +278,25 @@
 ==> NIL
 
 >>> ;;; hasValue? on map (true)
-... (hasValue? (map (a 1) (b 2)) 2)
+... (hasValue? (make-dict (a 1) (b 2)) 2)
 ...
 
 ==> T
 
 >>> ;;; hasValue? on map (false)
-... (hasValue? (map (a 1) (b 2)) 3)
+... (hasValue? (make-dict (a 1) (b 2)) 3)
 ...
 
 ==> NIL
 
 >>> ;;; hasKey? on empty map
-... (hasKey? (map) 'a)
+... (hasKey? (make-dict) 'a)
 ...
 
 ==> NIL
 
 >>> ;;; map with integer keys
-... (at 1 (map (1 "a") (2 "b")))
+... (at 1 (make-dict (1 "a") (2 "b")))
 ...
 
 ==> "a"
@@ -332,7 +332,7 @@
 
 ; --- at-delete on map with symbol key ---
 
->>> (setf tmap (map (a 10) (b 20) (c 30)))
+>>> (setf tmap (make-dict (a 10) (b 20) (c 30)))
 ...
 
 ==> (MAP
@@ -625,7 +625,7 @@
 ; --- writef with map ---
 
 >>> ;;; writef using map keys (uppercased)
-... (writef "{X} {Y}" (map (x 10) (y 20)))
+... (writef "{X} {Y}" (make-dict (x 10) (y 20)))
 10 20
 ==> "10 20"
 
@@ -855,7 +855,7 @@
 
 ; --- 8. at-set: map symbol keys ---
 
->>> (setf skmap (map (x 10) (y 20)))
+>>> (setf skmap (make-dict (x 10) (y 20)))
 ...
 
 ==> (MAP
@@ -894,7 +894,7 @@
 
 ; --- 9. at-set: map string keys ---
 
->>> (setf strmap (map ("p" 1) ("q" 2)))
+>>> (setf strmap (make-dict ("p" 1) ("q" 2)))
 ...
 
 ==> (MAP
@@ -1010,7 +1010,7 @@
 ==> (10 99 30)
 
 >>> ;;; setf (at ...) form mutates a map in place
-... (setf sf-map (map (x 1) (y 2)))
+... (setf sf-map (make-dict (x 1) (y 2)))
 ...
 
 ==> (MAP
@@ -1147,7 +1147,7 @@
 
 ; --- setf with at on map ---
 
->>> (setf smap22 (map (a 1) (b 2)))
+>>> (setf smap22 (make-dict (a 1) (b 2)))
 ...
 
 ==> (MAP
@@ -1190,7 +1190,7 @@
 ; --- copy-tree on map ---
 
 >>> ;;; copy-tree preserves map structure
-... (copy-tree (map (a 1) (b 2)))
+... (copy-tree (make-dict (a 1) (b 2)))
 ...
 
 ==> (MAP
@@ -1298,10 +1298,10 @@
 
 ==> "ABC"
 
-; --- symbol from concatenated strings ---
+; --- make-symbol from string ---
 
->>> ;;; symbol from multiple strings
-... (symbol "hello" "-" "world")
+>>> ;;; make-symbol from a single string
+... (make-symbol "hello-world")
 ...
 
 ==> HELLO-WORLD
@@ -1412,10 +1412,10 @@
 
 ==> 0.0
 
-; --- symbol from symbol edge case ---
+; --- make-symbol from string edge case ---
 
->>> ;;; symbol from symbol (converts via string)
-... (symbol 'abc)
+>>> ;;; make-symbol from ustring of symbol
+... (make-symbol (ustring 'abc))
 ...
 
 ==> ABC
@@ -1493,7 +1493,7 @@
 ==>
 
 >>> ;;; error with map format args
-... (error "expected {TYPE} but got {GOT}" (map (type "integer") (got "string")))
+... (error "expected {TYPE} but got {GOT}" (make-dict (type "integer") (got "string")))
 
 %%% expected integer but got string
 ==>
@@ -1607,48 +1607,48 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 ==> (A 1 2 B)
 
-; --- map edge cases ---
+; --- make-dict edge cases ---
 
->>> ;;; empty map
-... (map)
+>>> ;;; empty dict
+... (make-dict)
 
 ==> (MAP
 )
 
->>> ;;; empty map is a map
-... (mapp (map))
+>>> ;;; empty dict is a dict
+... (dictp (make-dict))
 
 ==> T
 
->>> ;;; map values are evaluated
-... (map (a (+ 1 2)))
+>>> ;;; dict values are evaluated
+... (make-dict (a (+ 1 2)))
 
 ==> (MAP
    ("A" 3)
 )
 
->>> ;;; at retrieves evaluated map value
-... (at 'a (map (a (+ 1 2))))
+>>> ;;; at retrieves evaluated dict value
+... (at 'a (make-dict (a (+ 1 2))))
 
 ==> 3
 
->>> ;;; map with duplicate keys (last wins)
-... (map (a 1) (a 2))
+>>> ;;; dict with duplicate keys (last wins)
+... (make-dict (a 1) (a 2))
 
 ==> (MAP
    ("A" 2)
 )
 
->>> ;;; map with integer keys
-... (map (1 "one") (2 "two"))
+>>> ;;; dict with integer keys
+... (make-dict (1 "one") (2 "two"))
 
 ==> (MAP
    (1 "one")
    (2 "two")
 )
 
->>> ;;; at with integer key on integer-keyed map
-... (at 1 (map (1 "one") (2 "two")))
+>>> ;;; at with integer key on integer-keyed dict
+... (at 1 (make-dict (1 "one") (2 "two")))
 
 ==> "one"
 

@@ -25,6 +25,7 @@ Features
 - &optional, &rest, &key and &aux parameter support for functions and macros.
 - Support for function closures.
 - Tail Call Optimization
+- call/cc
 - Robust error handling and reporting.
 - Support for special operators
 - Includes a portion of the runtime library written in lisp.

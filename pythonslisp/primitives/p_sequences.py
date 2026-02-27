@@ -9,16 +9,16 @@ from pythonslisp.LispExceptions import LispRuntimeFuncError
 
 def register(primitive) -> None:
 
-   @primitive( 'map', '(<key1> <val1>) (<key2> <val2>) ...', specialForm=True )
-   def LP_map( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Constructs and returns a map of key-value pairs."""
+   @primitive( 'make-dict', '(<key1> <val1>) (<key2> <val2>) ...', specialForm=True )
+   def LP_make_dict( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Constructs and returns a dict of key-value pairs."""
       theMapping = dict()
       requiredKeyType = None
       for entryNum,key_expr_pair in enumerate(args):
          try:
             key,expr = key_expr_pair
          except (ValueError, TypeError):
-            raise LispRuntimeFuncError( LP_map, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
+            raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
 
          if isinstance( key, LSymbol ):
             key = key.strval
@@ -27,13 +27,13 @@ def register(primitive) -> None:
             if requiredKeyType is None:
                requiredKeyType = type(key)
             elif type(key) != requiredKeyType:
-               raise LispRuntimeFuncError( LP_map,
+               raise LispRuntimeFuncError( LP_make_dict,
                   f'All keys in a map must be the same type. '
                   f'Entry {entryNum + 1} is {type(key).__name__}'
                   f', expected {requiredKeyType.__name__}.' )
             theMapping[ key ] = ctx.lEval( env, expr )
          else:
-            raise LispRuntimeFuncError( LP_map, f'Entry {entryNum+1} has an invalid <key> type.' )
+            raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum+1} has an invalid <key> type.' )
       return theMapping
 
    @primitive( 'car', '<list>',

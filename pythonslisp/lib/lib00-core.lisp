@@ -254,7 +254,7 @@ Multiple (place value) pairs expand to a progn of individual setfs."
    (defun gensym (&optional (prefix "G"))
       "Generate a unique symbol with a prefix of 'G' or other value specified by\nthe user and affixing a counting-number."
       (let
-         ((theSymbol (symbol prefix symbolCounter)))
+         ((theSymbol (make-symbol (ustring prefix symbolCounter))))
          (setq symbolCounter (+ symbolCounter 1))
          theSymbol)))
 

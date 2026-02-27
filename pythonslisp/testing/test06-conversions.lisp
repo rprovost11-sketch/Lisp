@@ -76,12 +76,12 @@
 
 ==> ""hello""
 
->>> (symbol "hello")
+>>> (make-symbol "hello")
 ...
 
 ==> HELLO
 
->>> (symbol "MAKE-" "POINT")
+>>> (make-symbol "MAKE-POINT")
 ...
 
 ==> MAKE-POINT
@@ -107,18 +107,61 @@
 %%% USAGE: (RATIONAL <number>)
 ==>
 
->>> ;;; Error: string/symbol require at least one argument
+>>> ;;; Error: string requires at least one argument
 ... (string)
 
 %%% ERROR 'STRING': 1 or more arguments expected.
 %%% USAGE: (STRING <object1> <object2> ...)
 ==>
 
->>> (symbol)
+>>> ;;; Error: make-symbol requires exactly one argument
+... (make-symbol)
 
-%%% ERROR 'SYMBOL': 1 or more string argument expected.
-%%% USAGE: (SYMBOL <string1> <string2> ...)
+%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% USAGE: (MAKE-SYMBOL <string>)
 ==>
+
+; --- make-symbol happy-path tests ---
+
+>>> (make-symbol "foo")
+...
+
+==> FOO
+
+>>> (make-symbol "hello-world")
+...
+
+==> HELLO-WORLD
+
+>>> (make-symbol "x")
+...
+
+==> X
+
+>>> (make-symbol "abc123")
+...
+
+==> ABC123
+
+>>> (make-symbol "+")
+...
+
+==> +
+
+>>> (make-symbol "nil")
+...
+
+==> NIL
+
+>>> (make-symbol "FOO")
+...
+
+==> FOO
+
+>>> (make-symbol "foo-bar-baz")
+...
+
+==> FOO-BAR-BAZ
 
 ; --- string-upcase / string-downcase ---
 

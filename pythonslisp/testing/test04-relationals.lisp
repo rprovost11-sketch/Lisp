@@ -63,7 +63,7 @@
 
 ==> NIL
 
->>> (= 1 symbol)
+>>> (= 1 make-symbol)
 ...
 
 ==> NIL

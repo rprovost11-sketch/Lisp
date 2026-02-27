@@ -43,9 +43,9 @@ class LispInterpreter( Interpreter ):
       self.tracer.reset()
       self._setf_registry.clear()
 
-      # Load in the primitives
+      # Create the GLOBAL environment and load in the primitives
       primitiveDict: dict[str, Any] = constructPrimitives( self._parser.parse )
-      self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict )  # Create the GLOBAL environment
+      self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict )
 
       # Load in the runtime library
       if self._libDir:

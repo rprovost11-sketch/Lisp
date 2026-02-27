@@ -1,5 +1,5 @@
->>> ;;; empty map
-... (mapp (map))
+>>> ;;; empty dict
+... (dictp (make-dict))
 ...
 
 ==> T

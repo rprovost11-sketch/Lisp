@@ -15,9 +15,9 @@
 Generates: make-<typename>, <typename>-p, <typename>-<field> accessors,
 setf support for accessors, and copy-<typename>."
    (let* ((field-names   (mapcar %struct-field-name field-specs))
-          (make-name     (symbol "MAKE-" typename))
-          (pred-name     (symbol typename "-P"))
-          (copy-name     (symbol "COPY-" typename))
+          (make-name     (make-symbol (ustring "MAKE-" typename)))
+          (pred-name     (make-symbol (ustring typename "-P")))
+          (copy-name     (make-symbol (ustring "COPY-" typename)))
           (key-params    (mapcar (lambda (spec)
                                     (list (%struct-field-name spec)
                                           (%struct-field-default spec)))
@@ -27,27 +27,27 @@ setf support for accessors, and copy-<typename>."
                                  field-names))
           (copy-entries  (mapcar (lambda (fname)
                                     (list fname
-                                          (list (symbol typename "-" fname) 'old)))
+                                          (list (make-symbol (ustring typename "-" fname)) 'old)))
                                  field-names))
           (acc-forms     (mapcar (lambda (fname)
                                     (list 'defun
-                                          (symbol typename "-" fname)
+                                          (make-symbol (ustring typename "-" fname))
                                           '(inst)
                                           (list 'at (list 'quote fname) 'inst)))
                                  field-names))
           (setf-forms    (mapcar (lambda (fname)
                                     (list 'defsetf-internal
-                                          (list 'quote (symbol typename "-" fname))
+                                          (list 'quote (make-symbol (ustring typename "-" fname)))
                                           (list 'quote fname)))
                                  field-names)))
       `(progn
          (defun ,make-name (&key ,@key-params)
-            (map (STRUCT-TYPE ',typename) ,@map-entries))
+            (make-dict (STRUCT-TYPE ',typename) ,@map-entries))
          (defun ,pred-name (obj)
-            (and (mapp obj) (= (at 'STRUCT-TYPE obj) ',typename)))
+            (and (dictp obj) (= (at 'STRUCT-TYPE obj) ',typename)))
          ,@acc-forms
          ,@setf-forms
          (defun ,copy-name (old)
-            (map (STRUCT-TYPE ',typename) ,@copy-entries))
+            (make-dict (STRUCT-TYPE ',typename) ,@copy-entries))
          ',typename)))
 

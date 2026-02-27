@@ -326,7 +326,7 @@
 ==>
 
 >>> ;;; hasKey? with non-map first arg
-... (hasKey? 1 (map))
+... (hasKey? 1 (make-dict))
 
 %%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
 %%% USAGE: (HASKEY? <map> <key>)
@@ -339,14 +339,14 @@
 ==>
 
 >>> ;;; update! with non-map first arg
-... (update! 1 (map))
+... (update! 1 (make-dict))
 
 %%% ERROR 'UPDATE!': Argument 1 expected to be a map.
 %%% USAGE: (UPDATE! <map1> <map2>)
 ==>
 
 >>> ;;; update! with non-map second arg
-... (update! (map) 1)
+... (update! (make-dict) 1)
 
 %%% ERROR 'UPDATE!': Argument 2 expected to be a map.
 %%% USAGE: (UPDATE! <map1> <map2>)
@@ -354,11 +354,11 @@
 
 ; --- Map errors ---
 
->>> ;;; map with mixed key types
-... (map (a 1) (2 2))
+>>> ;;; make-dict with mixed key types
+... (make-dict (a 1) (2 2))
 
-%%% ERROR 'MAP': All keys in a map must be the same type. Entry 2 is int, expected str.
-%%% USAGE: (MAP (<key1> <val1>) (<key2> <val2>) ...)
+%%% ERROR 'MAKE-DICT': All keys in a map must be the same type. Entry 2 is int, expected str.
+%%% USAGE: (MAKE-DICT (<key1> <val1>) (<key2> <val2>) ...)
 ==>
 
 ; --- Control structure errors ---
@@ -640,17 +640,36 @@
 %%% USAGE: (USTRING <object1> <object2> ...)
 ==>
 
->>> (symbol)
+>>> (make-symbol)
 
-%%% ERROR 'SYMBOL': 1 or more string argument expected.
-%%% USAGE: (SYMBOL <string1> <string2> ...)
+%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% USAGE: (MAKE-SYMBOL <string>)
 ==>
 
->>> ;;; symbol from numeric string is not valid
-... (symbol 1)
+>>> (make-symbol "a" "b")
 
-%%% ERROR 'SYMBOL': The resulting string "1" is not a valid Lisp symbol.
-%%% USAGE: (SYMBOL <string1> <string2> ...)
+%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% USAGE: (MAKE-SYMBOL <string>)
+==>
+
+>>> ;;; make-symbol with non-string argument
+... (make-symbol 42)
+
+%%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
+%%% USAGE: (MAKE-SYMBOL <string>)
+==>
+
+>>> (make-symbol '())
+
+%%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
+%%% USAGE: (MAKE-SYMBOL <string>)
+==>
+
+>>> ;;; make-symbol from numeric string is not a valid symbol name
+... (make-symbol "42")
+
+%%% ERROR 'MAKE-SYMBOL': "42" is not a valid symbol name.
+%%% USAGE: (MAKE-SYMBOL <string>)
 ==>
 
 ; --- Parse errors ---
@@ -745,13 +764,13 @@
 
 ==> NIL
 
-; --- MAP additional error path ---
+; --- MAKE-DICT additional error path ---
 
->>> ;;; map entry with single element (not a pair)
-... (map (1))
+>>> ;;; make-dict entry with single element (not a pair)
+... (make-dict (1))
 
-%%% ERROR 'MAP': Entry 1 does not contain a (key value) pair.
-%%% USAGE: (MAP (<key1> <val1>) (<key2> <val2>) ...)
+%%% ERROR 'MAKE-DICT': Entry 1 does not contain a (key value) pair.
+%%% USAGE: (MAKE-DICT (<key1> <val1>) (<key2> <val2>) ...)
 ==>
 
 ; --- MACROEXPAND additional error path ---
@@ -986,18 +1005,18 @@
 %%% USAGE: (ATOM <sexpr>)
 ==>
 
->>> ;;; mapp with no arguments
-... (mapp)
+>>> ;;; dictp with no arguments
+... (dictp)
 
-%%% ERROR 'MAPP': 1 argument expected.
-%%% USAGE: (MAPP <sexpr>)
+%%% ERROR 'DICTP': 1 argument expected.
+%%% USAGE: (DICTP <sexpr>)
 ==>
 
->>> ;;; mapp with too many arguments
-... (mapp 1 2)
+>>> ;;; dictp with too many arguments
+... (dictp 1 2)
 
-%%% ERROR 'MAPP': 1 argument expected.
-%%% USAGE: (MAPP <sexpr>)
+%%% ERROR 'DICTP': 1 argument expected.
+%%% USAGE: (DICTP <sexpr>)
 ==>
 
 ; --- eq / is? argument count errors (is? is an alias for eq) ---
@@ -1190,13 +1209,13 @@
 %%% USAGE: (ACOS <number>)
 ==>
 
-; --- MAP: invalid key type ---
+; --- MAKE-DICT: invalid key type ---
 
->>> ;;; map with list as key
-... (map ('(1) 2))
+>>> ;;; make-dict with list as key
+... (make-dict ('(1) 2))
 
-%%% ERROR 'MAP': Entry 1 has an invalid <key> type.
-%%% USAGE: (MAP (<key1> <val1>) (<key2> <val2>) ...)
+%%% ERROR 'MAKE-DICT': Entry 1 has an invalid <key> type.
+%%% USAGE: (MAKE-DICT (<key1> <val1>) (<key2> <val2>) ...)
 ==>
 
 ; --- Division: zero by zero ---
@@ -1371,7 +1390,7 @@
 ==>
 
 >>> ;;; at with missing key on map
-... (at 'missing (map (a 1)))
+... (at 'missing (make-dict (a 1)))
 
 %%% ERROR 'AT': Invalid argument key/index.
 %%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
@@ -1387,7 +1406,7 @@
 ==>
 
 >>> ;;; at-delete missing key on map
-... (at-delete 'missing (map (a 1)))
+... (at-delete 'missing (make-dict (a 1)))
 
 %%% ERROR 'AT-DELETE': Bad index or key into collection.
 %%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
@@ -1409,11 +1428,18 @@
 %%% USAGE: (RATIONAL <number>)
 ==>
 
->>> ;;; symbol with empty string
-... (symbol "")
+>>> ;;; make-symbol with empty string
+... (make-symbol "")
 
-%%% ERROR 'SYMBOL': The resulting string "" is not a valid Lisp symbol.
-%%% USAGE: (SYMBOL <string1> <string2> ...)
+%%% ERROR 'MAKE-SYMBOL': "" is not a valid symbol name.
+%%% USAGE: (MAKE-SYMBOL <string>)
+==>
+
+>>> ;;; make-symbol with string starting with a digit
+... (make-symbol "123foo")
+
+%%% ERROR 'MAKE-SYMBOL': "123foo" is not a valid symbol name.
+%%% USAGE: (MAKE-SYMBOL <string>)
 ==>
 
 ; --- python errors ---

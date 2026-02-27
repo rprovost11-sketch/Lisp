@@ -3,7 +3,7 @@
 
 ==> NIL
 
->>> (not symbol)
+>>> (not make-symbol)
 ...
 
 ==> NIL

@@ -113,7 +113,7 @@
 
 ==> (5 4 3 2 1)
 
->>> (setf mymap (map ("a" 1) ("b" 2) ("c" 3) ) )
+>>> (setf mymap (make-dict ("a" 1) ("b" 2) ("c" 3) ) )
 ...
 
 ==> (MAP
@@ -160,7 +160,7 @@
 
 ==> NIL
 
->>> (update! mymap (map ("b" 5) ("d" 10)))
+>>> (update! mymap (make-dict ("b" 5) ("d" 10)))
 ...
 
 ==> (MAP
@@ -191,7 +191,7 @@
 ==> NIL
 
 >>> ;;; Error: hasKey? requires a map as first argument
-... (hasKey? 1 (map))
+... (hasKey? 1 (make-dict))
 
 %%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
 %%% USAGE: (HASKEY? <map> <key>)
@@ -205,13 +205,13 @@
 ==>
 
 >>> ;;; Error: update! requires map arguments
-... (update! 1 (map))
+... (update! 1 (make-dict))
 
 %%% ERROR 'UPDATE!': Argument 1 expected to be a map.
 %%% USAGE: (UPDATE! <map1> <map2>)
 ==>
 
->>> (update! (map) 1)
+>>> (update! (make-dict) 1)
 
 %%% ERROR 'UPDATE!': Argument 2 expected to be a map.
 %%% USAGE: (UPDATE! <map1> <map2>)
@@ -275,11 +275,11 @@
 
 ==> CONS
 
-; plain map no STRUCT-TYPE key MAP
->>> (type-of (map (x 1) (y 2)))
+; plain dict no STRUCT-TYPE key DICT
+>>> (type-of (make-dict (x 1) (y 2)))
 ...
 
-==> MAP
+==> DICT
 
 ; named function define it first, then query
 >>> (defun fn14 (x) (* x x))

@@ -22,7 +22,7 @@
 
 (alias isList? listp)
 
-(alias isMap? mapp)
+(alias isDict? dictp)
 
 (alias isString? stringp)
 

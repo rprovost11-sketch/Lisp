@@ -188,42 +188,42 @@
 
 ==> T
 
->>> (isMap? nil)
+>>> (isDict? nil)
 ...
 
 ==> NIL
 
->>> (isMap? 0)
+>>> (isDict? 0)
 ...
 
 ==> NIL
 
->>> (isMap? 0)
+>>> (isDict? 0)
 ...
 
 ==> NIL
 
->>> (isMap? pi)
+>>> (isDict? pi)
 ...
 
 ==> NIL
 
->>> (isMap? 7)
+>>> (isDict? 7)
 ...
 
 ==> NIL
 
->>> (isMap? 52/3)
+>>> (isDict? 52/3)
 ...
 
 ==> NIL
 
->>> (isMap? '())
+>>> (isDict? '())
 ...
 
 ==> NIL
 
->>> (isMap? "something")
+>>> (isDict? "something")
 ...
 
 ==> NIL
