@@ -151,14 +151,14 @@ ABC
 ... (cond)
 
 %%% ERROR 'COND': 1 or more arguments expected.
-%%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
+%%% USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
 
 >>> ;;; Error: let requires at least 2 arguments
 ... (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 ; --- block and return-from ---

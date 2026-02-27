@@ -314,7 +314,12 @@ class LispInterpreter( Interpreter ):
 
             try:
                if isinstance( function, LPrimitive ):
-                  result = function.pythonFn( ctx, env, *args )
+                  if function.lambdaListAST is not None:
+                     kw_env = LispEnvironment( env )
+                     kw_env.bindArguments( function.lambdaListAST, args, ctx.lEval )
+                     result = function.pythonFn( ctx, kw_env, *args )
+                  else:
+                     result = function.pythonFn( ctx, env, *args )
                else:
                   env = LispEnvironment( function.capturedEnvironment )
                   env.bindArguments( function.lambdaListAST, args, ctx.lEval )
@@ -369,7 +374,12 @@ class LispInterpreter( Interpreter ):
             tracer.setMaxTraceDepth( depth + 1 )
       try:
          if isinstance( function, LPrimitive ):
-            result = function.pythonFn( ctx, env, *args )
+            if function.lambdaListAST is not None:
+               kw_env = LispEnvironment( env )
+               kw_env.bindArguments( function.lambdaListAST, args, ctx.lEval )
+               result = function.pythonFn( ctx, kw_env, *args )
+            else:
+               result = function.pythonFn( ctx, env, *args )
          elif isinstance( function, LFunction ):
             env = LispEnvironment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
 

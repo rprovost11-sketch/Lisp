@@ -91,34 +91,34 @@
 ... (float "hello")
 
 %%% ERROR 'FLOAT': Invalid argument.
-%%% USAGE: (FLOAT <number>)
+%%% USAGE: (FLOAT number)
 ==>
 
 >>> ;;; Error: rational requires exactly one argument
 ... (rational)
 
 %%% ERROR 'RATIONAL': Exactly 1 argument expected.
-%%% USAGE: (RATIONAL <number>)
+%%% USAGE: (RATIONAL number)
 ==>
 
 >>> (rational 1 2)
 
 %%% ERROR 'RATIONAL': Exactly 1 argument expected.
-%%% USAGE: (RATIONAL <number>)
+%%% USAGE: (RATIONAL number)
 ==>
 
 >>> ;;; Error: string requires at least one argument
 ... (string)
 
 %%% ERROR 'STRING': 1 or more arguments expected.
-%%% USAGE: (STRING <object1> <object2> ...)
+%%% USAGE: (STRING object1 object2 ...)
 ==>
 
 >>> ;;; Error: make-symbol requires exactly one argument
 ... (make-symbol)
 
 %%% ERROR 'MAKE-SYMBOL': 1 argument expected.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 ; --- make-symbol happy-path tests ---

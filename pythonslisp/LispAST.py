@@ -62,15 +62,17 @@ class LCallable:
       self.specialForm:bool = specialForm
 
 class LPrimitive( LCallable ):
-   __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg')
+   __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'lambdaListAST')
 
    def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', specialForm: bool=False,
-                 min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '' ) -> None:
+                 min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '',
+                 lambdaListAST: (list|None) = None ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
       self.paramsString:str = paramsString
       self.min_args:int       = min_args
       self.max_args:(int|None) = max_args
       self.arity_msg:str      = arity_msg
+      self.lambdaListAST:(list|None) = lambdaListAST
       super().__init__( name, docString, specialForm )
    
    def usageString( self ):

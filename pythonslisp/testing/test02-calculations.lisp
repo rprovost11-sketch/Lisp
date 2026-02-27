@@ -309,7 +309,7 @@
 ... (+ "a" 1)
 
 %%% ERROR '+': Invalid argument.
-%%% USAGE: (+ <number1> <number2> ...)
+%%% USAGE: (+ number1 number2 ...)
 ==>
 
 >>> ;;; reciprocal: (/ n) = 1/n
@@ -334,42 +334,42 @@
 ... (/ 1 0)
 
 %%% ERROR '/': division by zero
-%%% USAGE: (/ <number1> <number2> ...)
+%%% USAGE: (/ number1 number2 ...)
 ==>
 
 >>> ;;; Error: expt requires exactly two arguments
 ... (expt 2)
 
 %%% ERROR 'EXPT': Exactly two arguments expected.
-%%% USAGE: (EXPT <base> <power>)
+%%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; Error: log requires at least one argument
 ... (log)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 >>> ;;; Error: non-numeric argument to log
 ... (log "a")
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 >>> ;;; Error: non-numeric argument to sin
 ... (sin "a")
 
 %%% ERROR 'SIN': Invalid argument.
-%%% USAGE: (SIN <radians>)
+%%% USAGE: (SIN radians)
 ==>
 
 >>> ;;; Error: atan with no arguments
 ... (atan)
 
 %%% ERROR 'ATAN': 1 or 2 arguments expected.
-%%% USAGE: (ATAN <number1> &optional <number2>)
+%%% USAGE: (ATAN number1 &optional number2)
 ==>
 
 

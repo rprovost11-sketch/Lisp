@@ -181,6 +181,6 @@
 ... (eval)
 
 %%% ERROR 'EVAL': 1 argument expected.
-%%% USAGE: (EVAL <sexpr>)
+%%% USAGE: (EVAL sexpr)
 ==>
 

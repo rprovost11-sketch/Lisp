@@ -55,46 +55,46 @@ no substitution needed
 ... (write!)
 
 %%% ERROR 'WRITE!': 1 or more arguments expected.
-%%% USAGE: (WRITE! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (WRITE! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (writeLn!)
 
 %%% ERROR 'WRITELN!': 1 or more arguments expected.
-%%% USAGE: (WRITELN! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (WRITELN! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (uwrite!)
 
 %%% ERROR 'UWRITE!': 1 or more arguments expected.
-%%% USAGE: (UWRITE! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (UWRITE! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (uwriteLn!)
 
 %%% ERROR 'UWRITELN!': 1 or more arguments expected.
-%%% USAGE: (UWRITELN! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (UWRITELN! obj1 obj2 ... &optional stream)
 ==>
 
 >>> ;;; Error: writef requires at least one argument
 ... (writef)
 
 %%% ERROR 'WRITEF': 1 to 3 arguments expected.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
+%%% USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 >>> ;;; Error: writef first argument must be a format string
 ... (writef 1 '(a b))
 
 %%% ERROR 'WRITEF': 1st argument expected to be a format string.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
+%%% USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 >>> ;;; Error: writef second argument must be a list or map
 ... (writef "hello" 1)
 
 %%% ERROR 'WRITEF': 2nd argument expected to be a list, map or stream.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
+%%% USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 ; ============================================================
@@ -540,7 +540,7 @@ ab
 >>> (streamp)
 
 %%% ERROR 'STREAMP': 1 argument expected.
-%%% USAGE: (STREAMP <sexpr>)
+%%% USAGE: (STREAMP sexpr)
 ==>
 
 >>> (open-read)
@@ -594,13 +594,13 @@ ab
 >>> (save)
 
 %%% ERROR 'SAVE': 1 or more arguments expected.
-%%% USAGE: (SAVE <filename> <obj1> <obj2> ...)
+%%% USAGE: (SAVE filename obj1 obj2 ...)
 ==>
 
 >>> (load)
 
 %%% ERROR 'LOAD': 1 argument expected.
-%%% USAGE: (LOAD <fileName>)
+%%% USAGE: (LOAD fileName)
 ==>
 
 ; ============================================================
@@ -666,19 +666,19 @@ ab
 >>> (save 42)
 
 %%% ERROR 'SAVE': 1st argument expected to be a filename.
-%%% USAGE: (SAVE <filename> <obj1> <obj2> ...)
+%%% USAGE: (SAVE filename obj1 obj2 ...)
 ==>
 
 >>> (load 42)
 
 %%% ERROR 'LOAD': Argument expected to be a filename.
-%%% USAGE: (LOAD <fileName>)
+%%% USAGE: (LOAD fileName)
 ==>
 
 >>> (load "no-such-file-43.tmp")
 
 %%% ERROR 'LOAD': File not found "no-such-file-43.tmp".
-%%% USAGE: (LOAD <fileName>)
+%%% USAGE: (LOAD fileName)
 ==>
 
 ; ============================================================
@@ -691,37 +691,37 @@ ab
 >>> (write! "hello" st14r)
 
 %%% ERROR 'WRITE!': Stream is not writable.
-%%% USAGE: (WRITE! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (WRITE! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (writeLn! "hello" st14r)
 
 %%% ERROR 'WRITELN!': Stream is not writable.
-%%% USAGE: (WRITELN! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (WRITELN! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (uwrite! "hello" st14r)
 
 %%% ERROR 'UWRITE!': Stream is not writable.
-%%% USAGE: (UWRITE! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (UWRITE! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (uwriteLn! "hello" st14r)
 
 %%% ERROR 'UWRITELN!': Stream is not writable.
-%%% USAGE: (UWRITELN! <obj1> <obj2> ... &optional <stream>)
+%%% USAGE: (UWRITELN! obj1 obj2 ... &optional stream)
 ==>
 
 >>> (terpri st14r)
 
 %%% ERROR 'TERPRI': Stream is not writable.
-%%% USAGE: (TERPRI &optional <stream>)
+%%% USAGE: (TERPRI &optional stream)
 ==>
 
 >>> (writef "hello" st14r)
 
 %%% ERROR 'WRITEF': Stream is not writable.
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
+%%% USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 >>> (close st14r)
@@ -733,7 +733,7 @@ ab
 >>> (readLn! st14w)
 
 %%% ERROR 'READLN!': Stream is not readable.
-%%% USAGE: (READLN! &optional <stream>)
+%%% USAGE: (READLN! &optional stream)
 ==>
 
 >>> (close st14w)

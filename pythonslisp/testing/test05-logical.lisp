@@ -134,13 +134,13 @@
 ... (not)
 
 %%% ERROR 'NOT': 1 argument expected.
-%%% USAGE: (NOT <boolean>)
+%%% USAGE: (NOT boolean)
 ==>
 
 >>> (not 1 2)
 
 %%% ERROR 'NOT': 1 argument expected.
-%%% USAGE: (NOT <boolean>)
+%%% USAGE: (NOT boolean)
 ==>
 
 ; Single-arg: returns the value of the form

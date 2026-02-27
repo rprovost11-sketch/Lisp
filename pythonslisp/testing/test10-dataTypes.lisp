@@ -194,33 +194,33 @@
 ... (hasKey? 1 (make-dict))
 
 %%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
-%%% USAGE: (HASKEY? <map> <key>)
+%%% USAGE: (HASKEY? dict key)
 ==>
 
 >>> ;;; Error: hasValue? requires a list or map as first argument
 ... (hasValue? 1 '(1 2))
 
 %%% ERROR 'HASVALUE?': Invalid argument.  Argument 1 expected to be a list or map.
-%%% USAGE: (HASVALUE? <listOrMap> <value>)
+%%% USAGE: (HASVALUE? listOrDict value)
 ==>
 
 >>> ;;; Error: update! requires map arguments
 ... (update! 1 (make-dict))
 
 %%% ERROR 'UPDATE!': Argument 1 expected to be a map.
-%%% USAGE: (UPDATE! <map1> <map2>)
+%%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> (update! (make-dict) 1)
 
 %%% ERROR 'UPDATE!': Argument 2 expected to be a map.
-%%% USAGE: (UPDATE! <map1> <map2>)
+%%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> (update!)
 
 %%% ERROR 'UPDATE!': 2 arguments expected.
-%%% USAGE: (UPDATE! <map1> <map2>)
+%%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 ; ========================
@@ -377,7 +377,7 @@
 ...
 
 %%% ERROR 'TYPE-OF': 1 argument expected.
-%%% USAGE: (TYPE-OF <sexpr>)
+%%% USAGE: (TYPE-OF sexpr)
 ==>
 
 ; too many arguments
@@ -385,7 +385,7 @@
 ...
 
 %%% ERROR 'TYPE-OF': 1 argument expected.
-%%% USAGE: (TYPE-OF <sexpr>)
+%%% USAGE: (TYPE-OF sexpr)
 ==>
 
 >>> (defstruct point (x 0) (y 0))
@@ -676,14 +676,14 @@
 ...
 
 %%% ERROR 'AT': Invalid argument.  List, Map, or String expected.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> (setf (point-x 42) 5)
 ...
 
 %%% ERROR 'SET-ACCESSOR!': Argument 2 must be a struct instance.
-%%% USAGE: (SET-ACCESSOR! <accessor-symbol> <instance> <newValue>)
+%%% USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
 ==>
 
 >>> (setf (point-x p1 p1) 5)

@@ -148,13 +148,13 @@
 ... (macroexpand)
 
 %%% ERROR 'MACROEXPAND': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
+%%% USAGE: (MACROEXPAND '(macroName arg1 arg2 ...))
 ==>
 
 >>> ;;; Error: macroexpand-1 requires exactly one argument
 ... (macroexpand-1)
 
 %%% ERROR 'MACROEXPAND-1': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND-1 '(<macroName> <arg1> <arg2> ...))
+%%% USAGE: (MACROEXPAND-1 '(macroName arg1 arg2 ...))
 ==>
 

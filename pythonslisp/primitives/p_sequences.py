@@ -5,8 +5,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispContext import LispContext
-from pythonslisp.LispEnvironment import LispEnvironment
-from pythonslisp.LispExceptions import LispRuntimeFuncError, LispArgBindingError
+from pythonslisp.LispExceptions import LispRuntimeFuncError
 
 
 # ── Shared keyword-argument helpers ──────────────────────────────────────────
@@ -14,16 +13,6 @@ from pythonslisp.LispExceptions import LispRuntimeFuncError, LispArgBindingError
 def _is_nil_val( val ) -> bool:
    """True iff val is the Lisp NIL (empty list)."""
    return isinstance( val, list ) and not val
-
-
-def _bind_kw( ll: list, args: tuple, ctx: Any, env: Environment, fn: Any ) -> LispEnvironment:
-   """Create a child LispEnvironment, bind args against ll, wrap errors."""
-   kw_env = LispEnvironment( parent=env )
-   try:
-      kw_env.bindArguments( ll, args, ctx.lEval )
-   except LispArgBindingError as e:
-      raise LispRuntimeFuncError( fn, str(e) )
-   return kw_env
 
 
 def _extract_key( ctx: Any, env: Environment, key_fn: Any, item: Any ) -> Any:
@@ -68,32 +57,11 @@ def _validate_count( count: Any, fn: Any ):
 
 # ── Primitive registration ────────────────────────────────────────────────────
 
-def register( primitive, parseLispString: Callable ) -> None:
-
-   def _ll( s: str ) -> list:
-      """Parse a lambda-list string; strip the PROGN wrapper parseLispString adds."""
-      return parseLispString( s )[1]
-
-   # Pre-parsed lambda lists for the sort and CL sequence functions.
-   # Stored as closures so each primitive body can reference its own list.
-   _SORT_LL      = _ll( '(sequence predicate &key (key nil))' )
-   _MEMBER_LL    = _ll( '(item list &key (test eql) (key nil))' )
-   _ASSOC_LL     = _ll( '(item alist &key (test eql) (key nil))' )
-   _FIND_LL      = _ll( '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))' )
-   _FIND_IF_LL   = _ll( '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))' )
-   _POS_LL       = _ll( '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))' )
-   _POS_IF_LL    = _ll( '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))' )
-   _COUNT_LL     = _ll( '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))' )
-   _COUNT_IF_LL  = _ll( '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))' )
-   _REMOVE_LL    = _ll( '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))' )
-   _REM_IF_LL    = _ll( '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))' )
-   _REM_IFNOT_LL = _ll( '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))' )
-   _SUBST_LL     = _ll( '(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))' )
-   _SUBST_IF_LL  = _ll( '(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))' )
+def register( primitive ) -> None:
 
    # ── Existing non-keyword primitives ────────────────────────────────────────
 
-   @primitive( 'make-dict', '(<key1> <val1>) (<key2> <val2>) ...', specialForm=True )
+   @primitive( 'make-dict', '(key1 val1) (key2 val2) ...', specialForm=True )
    def LP_make_dict( ctx: LispContext, env: Environment, *args ) -> Any:
       """Constructs and returns a dict of key-value pairs."""
       theMapping = dict()
@@ -117,10 +85,10 @@ def register( primitive, parseLispString: Callable ) -> None:
                   f', expected {requiredKeyType.__name__}.' )
             theMapping[ key ] = ctx.lEval( env, expr )
          else:
-            raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum+1} has an invalid <key> type.' )
+            raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum+1} has an invalid key type.' )
       return theMapping
 
-   @primitive( 'car', '<list>',
+   @primitive( 'car', 'list',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_car( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first item in a list."""
@@ -134,7 +102,7 @@ def register( primitive, parseLispString: Callable ) -> None:
       except IndexError:
          return L_NIL
 
-   @primitive( 'cdr', '<list>',
+   @primitive( 'cdr', 'list',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_cdr( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of the list minus the first element."""
@@ -145,7 +113,7 @@ def register( primitive, parseLispString: Callable ) -> None:
 
       return theList[1:]
 
-   @primitive( 'cons', '<obj> <list>',
+   @primitive( 'cons', 'obj list',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_cons( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of list with obj inserted into the front of the copy."""
@@ -156,7 +124,7 @@ def register( primitive, parseLispString: Callable ) -> None:
 
       return [ obj, *consList ]
 
-   @primitive( 'push!', '<list> <value>',
+   @primitive( 'push!', 'list value',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_push( ctx: LispContext, env: Environment, *args ) -> Any:
       """Pushes a value onto the back of a list."""
@@ -167,7 +135,7 @@ def register( primitive, parseLispString: Callable ) -> None:
       alist.append( value )
       return alist
 
-   @primitive( 'pop!', '<list>',
+   @primitive( 'pop!', 'list',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_pop( ctx: LispContext, env: Environment, *args ) -> Any:
       """Pops and returns the last value of a list."""
@@ -182,7 +150,7 @@ def register( primitive, parseLispString: Callable ) -> None:
          raise LispRuntimeFuncError( LP_pop, 'Invalid argument.' )
       return value
 
-   @primitive( 'at', '<keyOrIndex> <mapListOrStr>',
+   @primitive( 'at', 'keyOrIndex dictListOrStr',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_at( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the value at a specified index of a list or string,
@@ -200,7 +168,7 @@ def register( primitive, parseLispString: Callable ) -> None:
       except ( KeyError, IndexError, TypeError ):
          raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
 
-   @primitive( 'at-set', '<keyOrIndex> <mapListOrStr> <newValue>',
+   @primitive( 'at-set', 'keyOrIndex dictListOrStr newValue',
                min_args=3, max_args=3, arity_msg='Exactly 3 arguments expected.' )
    def LP_atSet( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sets the value at a specified index of a list,
@@ -220,7 +188,7 @@ def register( primitive, parseLispString: Callable ) -> None:
 
       return newValue
 
-   @primitive( 'at-delete', '<keyOrIndex> <mapOrList>',
+   @primitive( 'at-delete', 'keyOrIndex dictOrList',
                min_args=2, max_args=2, arity_msg='Exactly 2 arguments expected.' )
    def LP_atDelete( ctx: LispContext, env: Environment, *args ) -> bool:
       """Deletes the key-value pair from a map or list specified by keyOrIndex."""
@@ -236,7 +204,7 @@ def register( primitive, parseLispString: Callable ) -> None:
 
       return L_T
 
-   @primitive( 'at-insert', '<index> <list> <newItem>',
+   @primitive( 'at-insert', 'index list newItem',
                min_args=3, max_args=3, arity_msg='Exactly 3 arguments expected.' )
    def LP_atInsert( ctx: LispContext, env: Environment, *args ) -> bool:
       """Inserts newItem into list at the position specified by index.  Returns newItem."""
@@ -251,7 +219,7 @@ def register( primitive, parseLispString: Callable ) -> None:
       lst.insert( index, newItem )
       return newItem
 
-   @primitive( 'append', '&rest <lists>' )
+   @primitive( 'append', '&rest lists' )
    def LP_append( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a new list with the contents of the argument lists merged.  Order is retained.
 (append) = NIL; (append lst) = lst; 2+ args: all must be proper lists."""
@@ -266,7 +234,7 @@ def register( primitive, parseLispString: Callable ) -> None:
          resultList.extend( lst )
       return resultList
 
-   @primitive( 'hasValue?', '<listOrMap> <value>',
+   @primitive( 'hasValue?', 'listOrDict value',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_hasValue( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the list/map contains value otherwise nil."""
@@ -281,22 +249,22 @@ def register( primitive, parseLispString: Callable ) -> None:
 
       return L_T if aVal in keyed else L_NIL
 
-   @primitive( 'update!', '<map1> <map2>',
+   @primitive( 'update!', 'dict1 dict2',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_update( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Updates map1's data with map2's."""
-      map1, map2 = args
+      """Updates dict1's data with dict2's."""
+      dict1, dict2 = args
 
-      if not isinstance( map1, dict ):
+      if not isinstance( dict1, dict ):
          raise LispRuntimeFuncError( LP_update, 'Argument 1 expected to be a map.' )
 
-      if not isinstance( map2, dict ):
+      if not isinstance( dict2, dict ):
          raise LispRuntimeFuncError( LP_update, 'Argument 2 expected to be a map.' )
 
-      map1.update( map2 )
-      return map1
+      dict1.update( dict2 )
+      return dict1
 
-   @primitive( 'hasKey?', '<map> <key>',
+   @primitive( 'hasKey?', 'dict key',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_hasKey( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the key is in the map otherwise nil."""
@@ -310,15 +278,14 @@ def register( primitive, parseLispString: Callable ) -> None:
 
       return L_T if aKey in aMap else L_NIL
 
-   @primitive( 'sort', 'sequence predicate &key (key nil)',
+   @primitive( 'sort', lambdaList='(sequence predicate &key (key nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_sort( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of the list sorted by predicate (a two-arg less-than test).
 The optional :key function extracts the comparison key from each element."""
-      kw       = _bind_kw( _SORT_LL, args, ctx, env, LP_sort )
-      seq      = kw.lookup( 'SEQUENCE' )
-      pred     = kw.lookup( 'PREDICATE' )
-      key_fn   = kw.lookup( 'KEY' )
+      seq      = env.lookup( 'SEQUENCE' )
+      pred     = env.lookup( 'PREDICATE' )
+      key_fn   = env.lookup( 'KEY' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_sort, 'Argument 1 expected to be a list.' )
 
@@ -336,7 +303,7 @@ The optional :key function extracts the comparison key from each element."""
       except TypeError:
          raise LispRuntimeFuncError( LP_sort, 'Cannot sort a list with incomparable types.' )
 
-   @primitive( 'length', '<sequence>',
+   @primitive( 'length', 'sequence',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_length( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in a list, string, or map."""
@@ -345,7 +312,7 @@ The optional :key function extracts the comparison key from each element."""
          return len(arg)
       raise LispRuntimeFuncError( LP_length, 'Argument 1 must be a List, String, or Map.' )
 
-   @primitive( 'subseq', '<sequence> <start> &optional <end>',
+   @primitive( 'subseq', 'sequence start &optional end',
                min_args=2, max_args=3, arity_msg='2 or 3 arguments expected.' )
    def LP_subseq( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a subsequence of a list or string from start (inclusive) to end (exclusive).
@@ -379,17 +346,16 @@ If end is not provided, returns from start to the end of the sequence."""
 
    # ── CL sequence functions with full keyword-argument support ───────────────
 
-   @primitive( 'member', 'item list &key (test eql) (key nil)',
+   @primitive( 'member', lambdaList='(item list &key (test eql) (key nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_member( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the tail of list beginning with the first element whose :key
 satisfies :test when compared to item.  Returns NIL if no match is found.
 Default :test is eql.  Default :key is identity (NIL)."""
-      kw      = _bind_kw( _MEMBER_LL, args, ctx, env, LP_member )
-      item    = kw.lookup( 'ITEM' )
-      lst     = kw.lookup( 'LIST' )
-      test_fn = kw.lookup( 'TEST' )
-      key_fn  = kw.lookup( 'KEY' )
+      item    = env.lookup( 'ITEM' )
+      lst     = env.lookup( 'LIST' )
+      test_fn = env.lookup( 'TEST' )
+      key_fn  = env.lookup( 'KEY' )
       if not isinstance( lst, list ):
          raise LispRuntimeFuncError( LP_member, '2nd argument must be a list.' )
       for i in range( len(lst) ):
@@ -397,17 +363,16 @@ Default :test is eql.  Default :key is identity (NIL)."""
             return lst[i:]
       return L_NIL
 
-   @primitive( 'assoc', 'item alist &key (test eql) (key nil)',
+   @primitive( 'assoc', lambdaList='(item alist &key (test eql) (key nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_assoc( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first pair in alist whose car (optionally extracted via :key)
 satisfies :test when compared to item.  Non-cons elements in alist are skipped.
 Returns NIL if no match is found.  Default :test is eql.  Default :key is identity."""
-      kw      = _bind_kw( _ASSOC_LL, args, ctx, env, LP_assoc )
-      item    = kw.lookup( 'ITEM' )
-      alist   = kw.lookup( 'ALIST' )
-      test_fn = kw.lookup( 'TEST' )
-      key_fn  = kw.lookup( 'KEY' )
+      item    = env.lookup( 'ITEM' )
+      alist   = env.lookup( 'ALIST' )
+      test_fn = env.lookup( 'TEST' )
+      key_fn  = env.lookup( 'KEY' )
       if not isinstance( alist, list ):
          raise LispRuntimeFuncError( LP_assoc, '2nd argument must be a list.' )
       for pair in alist:
@@ -416,20 +381,19 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
                return pair
       return L_NIL
 
-   @primitive( 'find', 'item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil)',
+   @primitive( 'find', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_find( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) whose :key
 satisfies :test when compared to item.  If :from-end is true, searches right
 to left and returns the rightmost match.  Returns NIL if not found."""
-      kw       = _bind_kw( _FIND_LL, args, ctx, env, LP_find )
-      item     = kw.lookup( 'ITEM' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      test_fn  = kw.lookup( 'TEST' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
+      item     = env.lookup( 'ITEM' )
+      seq      = env.lookup( 'SEQUENCE' )
+      test_fn  = env.lookup( 'TEST' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_find, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_find )
@@ -441,19 +405,18 @@ to left and returns the rightmost match.  Returns NIL if not found."""
             return seq[i]
       return L_NIL
 
-   @primitive( 'find-if', 'pred sequence &key (key nil) (from-end nil) (start 0) (end nil)',
+   @primitive( 'find-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_find_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) for which
 pred returns true when applied to the element's :key.  If :from-end is true,
 returns the rightmost such element.  Returns NIL if none found."""
-      kw       = _bind_kw( _FIND_IF_LL, args, ctx, env, LP_find_if )
-      pred     = kw.lookup( 'PRED' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
+      pred     = env.lookup( 'PRED' )
+      seq      = env.lookup( 'SEQUENCE' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_find_if, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_find_if )
@@ -466,20 +429,19 @@ returns the rightmost such element.  Returns NIL if none found."""
             return seq[i]
       return L_NIL
 
-   @primitive( 'position', 'item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil)',
+   @primitive( 'position', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_position( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element whose :key satisfies
 :test when compared to item.  If :from-end is true, returns the index of the
 rightmost such element.  Returns NIL if not found."""
-      kw       = _bind_kw( _POS_LL, args, ctx, env, LP_position )
-      item     = kw.lookup( 'ITEM' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      test_fn  = kw.lookup( 'TEST' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
+      item     = env.lookup( 'ITEM' )
+      seq      = env.lookup( 'SEQUENCE' )
+      test_fn  = env.lookup( 'TEST' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_position, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_position )
@@ -491,19 +453,18 @@ rightmost such element.  Returns NIL if not found."""
             return i
       return L_NIL
 
-   @primitive( 'position-if', 'pred sequence &key (key nil) (from-end nil) (start 0) (end nil)',
+   @primitive( 'position-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_position_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element for which pred returns
 true when applied to the element's :key.  If :from-end is true, returns the
 index of the rightmost such element.  Returns NIL if none found."""
-      kw       = _bind_kw( _POS_IF_LL, args, ctx, env, LP_position_if )
-      pred     = kw.lookup( 'PRED' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
+      pred     = env.lookup( 'PRED' )
+      seq      = env.lookup( 'SEQUENCE' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_position_if, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_position_if )
@@ -516,18 +477,17 @@ index of the rightmost such element.  Returns NIL if none found."""
             return i
       return L_NIL
 
-   @primitive( 'count', 'item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil)',
+   @primitive( 'count', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_count( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) whose
 :key satisfies :test when compared to item."""
-      kw      = _bind_kw( _COUNT_LL, args, ctx, env, LP_count )
-      item    = kw.lookup( 'ITEM' )
-      seq     = kw.lookup( 'SEQUENCE' )
-      test_fn = kw.lookup( 'TEST' )
-      key_fn  = kw.lookup( 'KEY' )
-      start   = kw.lookup( 'START' )
-      end     = kw.lookup( 'END' )
+      item    = env.lookup( 'ITEM' )
+      seq     = env.lookup( 'SEQUENCE' )
+      test_fn = env.lookup( 'TEST' )
+      key_fn  = env.lookup( 'KEY' )
+      start   = env.lookup( 'START' )
+      end     = env.lookup( 'END' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_count, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_count )
@@ -537,17 +497,16 @@ index of the rightmost such element.  Returns NIL if none found."""
             n += 1
       return n
 
-   @primitive( 'count-if', 'pred sequence &key (key nil) (from-end nil) (start 0) (end nil)',
+   @primitive( 'count-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_count_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) for
 which pred returns true when applied to the element's :key."""
-      kw     = _bind_kw( _COUNT_IF_LL, args, ctx, env, LP_count_if )
-      pred   = kw.lookup( 'PRED' )
-      seq    = kw.lookup( 'SEQUENCE' )
-      key_fn = kw.lookup( 'KEY' )
-      start  = kw.lookup( 'START' )
-      end    = kw.lookup( 'END' )
+      pred   = env.lookup( 'PRED' )
+      seq    = env.lookup( 'SEQUENCE' )
+      key_fn = env.lookup( 'KEY' )
+      start  = env.lookup( 'START' )
+      end    = env.lookup( 'END' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_count_if, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_count_if )
@@ -558,22 +517,21 @@ which pred returns true when applied to the element's :key."""
             n += 1
       return n
 
-   @primitive( 'remove', 'item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil)',
+   @primitive( 'remove', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_remove( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements matching item removed.  An
 element matches if its :key satisfies :test when compared to item.  Only the
 bounded region [:start, :end) is considered.  :count limits how many elements
 are removed; :from-end causes removal from the right when :count is supplied."""
-      kw       = _bind_kw( _REMOVE_LL, args, ctx, env, LP_remove )
-      item     = kw.lookup( 'ITEM' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      test_fn  = kw.lookup( 'TEST' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
-      count    = kw.lookup( 'COUNT' )
+      item     = env.lookup( 'ITEM' )
+      seq      = env.lookup( 'SEQUENCE' )
+      test_fn  = env.lookup( 'TEST' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
+      count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_remove, '2nd argument must be a list.' )
       seqlen = len( seq )
@@ -592,20 +550,19 @@ are removed; :from-end causes removal from the right when :count is supplied."""
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
-   @primitive( 'remove-if', 'pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil)',
+   @primitive( 'remove-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_remove_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements removed where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
 :count limits removals; :from-end causes removal from the right."""
-      kw       = _bind_kw( _REM_IF_LL, args, ctx, env, LP_remove_if )
-      pred     = kw.lookup( 'PRED' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
-      count    = kw.lookup( 'COUNT' )
+      pred     = env.lookup( 'PRED' )
+      seq      = env.lookup( 'SEQUENCE' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
+      count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_remove_if, '2nd argument must be a list.' )
       seqlen = len( seq )
@@ -625,20 +582,19 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
-   @primitive( 'remove-if-not', 'pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil)',
+   @primitive( 'remove-if-not', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                min_args=2, arity_msg='At least 2 arguments expected.' )
    def LP_remove_if_not( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence keeping only elements where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
 :count limits how many elements are removed; :from-end removes from the right."""
-      kw       = _bind_kw( _REM_IFNOT_LL, args, ctx, env, LP_remove_if_not )
-      pred     = kw.lookup( 'PRED' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
-      count    = kw.lookup( 'COUNT' )
+      pred     = env.lookup( 'PRED' )
+      seq      = env.lookup( 'SEQUENCE' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
+      count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_remove_if_not, '2nd argument must be a list.' )
       seqlen = len( seq )
@@ -658,23 +614,22 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
-   @primitive( 'substitute', 'new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil)',
+   @primitive( 'substitute', lambdaList='(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                min_args=3, arity_msg='At least 3 arguments expected.' )
    def LP_substitute( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with occurrences of old replaced by new.  An
 element matches old if its :key satisfies :test when compared to old.  Only
 the bounded region [:start, :end) is considered.  :count limits replacements;
 :from-end replaces from the right when :count is supplied."""
-      kw       = _bind_kw( _SUBST_LL, args, ctx, env, LP_substitute )
-      new      = kw.lookup( 'NEW' )
-      old      = kw.lookup( 'OLD' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      test_fn  = kw.lookup( 'TEST' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
-      count    = kw.lookup( 'COUNT' )
+      new      = env.lookup( 'NEW' )
+      old      = env.lookup( 'OLD' )
+      seq      = env.lookup( 'SEQUENCE' )
+      test_fn  = env.lookup( 'TEST' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
+      count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_substitute, '3rd argument must be a list.' )
       seqlen = len( seq )
@@ -693,21 +648,20 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
             n_done += 1
       return result
 
-   @primitive( 'substitute-if', 'new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil)',
+   @primitive( 'substitute-if', lambdaList='(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                min_args=3, arity_msg='At least 3 arguments expected.' )
    def LP_substitute_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements replaced by new where pred returns
 true for the element's :key.  Only the bounded region [:start, :end) is
 considered.  :count limits replacements; :from-end replaces from the right."""
-      kw       = _bind_kw( _SUBST_IF_LL, args, ctx, env, LP_substitute_if )
-      new      = kw.lookup( 'NEW' )
-      pred     = kw.lookup( 'PRED' )
-      seq      = kw.lookup( 'SEQUENCE' )
-      key_fn   = kw.lookup( 'KEY' )
-      from_end = kw.lookup( 'FROM-END' )
-      start    = kw.lookup( 'START' )
-      end      = kw.lookup( 'END' )
-      count    = kw.lookup( 'COUNT' )
+      new      = env.lookup( 'NEW' )
+      pred     = env.lookup( 'PRED' )
+      seq      = env.lookup( 'SEQUENCE' )
+      key_fn   = env.lookup( 'KEY' )
+      from_end = env.lookup( 'FROM-END' )
+      start    = env.lookup( 'START' )
+      end      = env.lookup( 'END' )
+      count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
          raise LispRuntimeFuncError( LP_substitute_if, '3rd argument must be a list.' )
       seqlen = len( seq )

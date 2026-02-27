@@ -454,61 +454,61 @@
 ... (numberp)
 
 %%% ERROR 'NUMBERP': 1 argument expected.
-%%% USAGE: (NUMBERP <sexpr>)
+%%% USAGE: (NUMBERP sexpr)
 ==>
 
 >>> (numberp 1 2)
 
 %%% ERROR 'NUMBERP': 1 argument expected.
-%%% USAGE: (NUMBERP <sexpr>)
+%%% USAGE: (NUMBERP sexpr)
 ==>
 
 >>> (integerp)
 
 %%% ERROR 'INTEGERP': 1 argument expected.
-%%% USAGE: (INTEGERP <sexpr>)
+%%% USAGE: (INTEGERP sexpr)
 ==>
 
 >>> (floatp)
 
 %%% ERROR 'FLOATP': 1 argument expected.
-%%% USAGE: (FLOATP <sexpr>)
+%%% USAGE: (FLOATP sexpr)
 ==>
 
 >>> (rationalp)
 
 %%% ERROR 'RATIONALP': 1 argument expected.
-%%% USAGE: (RATIONALP <sexpr>)
+%%% USAGE: (RATIONALP sexpr)
 ==>
 
 >>> (symbolp)
 
 %%% ERROR 'SYMBOLP': 1 argument expected.
-%%% USAGE: (SYMBOLP <sexpr>)
+%%% USAGE: (SYMBOLP sexpr)
 ==>
 
 >>> (listp)
 
 %%% ERROR 'LISTP': 1 argument expected.
-%%% USAGE: (LISTP <sexpr>)
+%%% USAGE: (LISTP sexpr)
 ==>
 
 >>> (stringp)
 
 %%% ERROR 'STRINGP': 1 argument expected.
-%%% USAGE: (STRINGP <sexpr>)
+%%% USAGE: (STRINGP sexpr)
 ==>
 
 >>> (functionp)
 
 %%% ERROR 'FUNCTIONP': 1 argument expected.
-%%% USAGE: (FUNCTIONP <sexpr>)
+%%% USAGE: (FUNCTIONP sexpr)
 ==>
 
 >>> (macrop)
 
 %%% ERROR 'MACROP': 1 argument expected.
-%%% USAGE: (MACROP <sexpr>)
+%%% USAGE: (MACROP sexpr)
 ==>
 
 ; --- consp ---
@@ -541,14 +541,14 @@
 ... (consp)
 
 %%% ERROR 'CONSP': 1 argument expected.
-%%% USAGE: (CONSP <sexpr>)
+%%% USAGE: (CONSP sexpr)
 ==>
 
 >>> ;;; consp error: too many args
 ... (consp 1 2)
 
 %%% ERROR 'CONSP': 1 argument expected.
-%%% USAGE: (CONSP <sexpr>)
+%%% USAGE: (CONSP sexpr)
 ==>
 
 ; --- notany / notevery ---

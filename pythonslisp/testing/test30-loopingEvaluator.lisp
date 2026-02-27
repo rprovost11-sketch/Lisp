@@ -223,7 +223,7 @@
 ... (tco-err 50000)
 
 %%% ERROR '//': division by zero
-%%% USAGE: (// <number1> <number2>)
+%%% USAGE: (// number1 number2)
 ==>
 
 ; --- 13. Arity error in tail position preserves function name ---
@@ -320,17 +320,17 @@
 ; call/cc requires exactly 1 argument
 >>> (call/cc)
 %%% ERROR 'CALL/CC': 1 argument expected.
-%%% USAGE: (CALL/CC <procedure>)
+%%% USAGE: (CALL/CC procedure)
 
 ; call/cc argument must be a callable
 >>> (call/cc 42)
 %%% ERROR 'CALL/CC': Argument must be a callable.
-%%% USAGE: (CALL/CC <procedure>)
+%%% USAGE: (CALL/CC procedure)
 
 ; call/cc argument may not be a special form pass quote (unquoted) to get the primitive
 >>> (call/cc quote)
 %%% ERROR 'CALL/CC': Argument may not be a special form.
-%%% USAGE: (CALL/CC <procedure>)
+%%% USAGE: (CALL/CC procedure)
 
 ; Continuation requires exactly 1 argument
 >>> (call/cc (lambda (k) (k 1 2)))
@@ -416,4 +416,4 @@
 ; throw requires exactly 2 args
 >>> (throw 'foo)
 %%% ERROR 'THROW': 2 arguments expected.
-%%% USAGE: (THROW <tag> <result>)
+%%% USAGE: (THROW tag result)

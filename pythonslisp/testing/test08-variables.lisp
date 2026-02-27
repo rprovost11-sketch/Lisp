@@ -203,13 +203,13 @@ T
 ... (makunbound 1 2)
 
 %%% ERROR 'MAKUNBOUND': 1 argument expected.
-%%% USAGE: (MAKUNBOUND <symbol>)
+%%% USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> (makunbound 1)
 
 %%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
-%%% USAGE: (MAKUNBOUND <symbol>)
+%%% USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> ;;; undef! is an alias for makunbound

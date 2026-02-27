@@ -9,77 +9,77 @@
 ... (*)
 
 %%% ERROR '*': Invalid argument.
-%%% USAGE: (* <number1> <number2> ...)
+%%% USAGE: (* number1 number2 ...)
 ==>
 
 >>> ;;; (-) with no args
 ... (-)
 
 %%% ERROR '-': Invalid argument.
-%%% USAGE: (- <number1> <number2> ...)
+%%% USAGE: (- number1 number2 ...)
 ==>
 
 >>> ;;; (/) with no args
 ... (/)
 
 %%% ERROR '/': At least 1 argument expected.
-%%% USAGE: (/ <number1> <number2> ...)
+%%% USAGE: (/ number1 number2 ...)
 ==>
 
 >>> ;;; integer division by zero
 ... (// 7 0)
 
 %%% ERROR '//': division by zero
-%%% USAGE: (// <number1> <number2>)
+%%% USAGE: (// number1 number2)
 ==>
 
 >>> ;;; modulo by zero
 ... (mod 7 0)
 
 %%% ERROR 'MOD': division by zero
-%%% USAGE: (MOD <number1> <number2>)
+%%% USAGE: (MOD number1 number2)
 ==>
 
 >>> ;;; integer division with non-number
 ... (// "a" 2)
 
 %%% ERROR '//': Invalid argument.
-%%% USAGE: (// <number1> <number2>)
+%%% USAGE: (// number1 number2)
 ==>
 
 >>> ;;; modulo with non-number
 ... (mod "a" 2)
 
 %%% ERROR 'MOD': Invalid argument.
-%%% USAGE: (MOD <number1> <number2>)
+%%% USAGE: (MOD number1 number2)
 ==>
 
 >>> ;;; negation of non-number
 ... (- "a")
 
 %%% ERROR '-': Invalid argument.
-%%% USAGE: (- <number1> <number2> ...)
+%%% USAGE: (- number1 number2 ...)
 ==>
 
 >>> ;;; division with non-number
 ... (/ "a" 2)
 
 %%% ERROR '/': Invalid argument.
-%%% USAGE: (/ <number1> <number2> ...)
+%%% USAGE: (/ number1 number2 ...)
 ==>
 
 >>> ;;; min with no args
 ... (min)
 
 %%% ERROR 'MIN': Invalid argument.
-%%% USAGE: (MIN <number1> <number2> ...)
+%%% USAGE: (MIN number1 number2 ...)
 ==>
 
 >>> ;;; max with no args
 ... (max)
 
 %%% ERROR 'MAX': Invalid argument.
-%%% USAGE: (MAX <number1> <number2> ...)
+%%% USAGE: (MAX number1 number2 ...)
 ==>
 
 ; --- Trig domain errors ---
@@ -88,14 +88,14 @@
 ... (asin 2)
 
 %%% ERROR 'ASIN': Invalid argument.
-%%% USAGE: (ASIN <number>)
+%%% USAGE: (ASIN number)
 ==>
 
 >>> ;;; acos out of domain
 ... (acos 2)
 
 %%% ERROR 'ACOS': Invalid argument.
-%%% USAGE: (ACOS <number>)
+%%% USAGE: (ACOS number)
 ==>
 
 ; --- Random errors ---
@@ -104,28 +104,28 @@
 ... (random -1)
 
 %%% ERROR 'RANDOM': Argument expected to be positive.
-%%% USAGE: (RANDOM <integerOrFloat>)
+%%% USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random with string
 ... (random "a")
 
 %%% ERROR 'RANDOM': Invalid argument type.
-%%% USAGE: (RANDOM <integerOrFloat>)
+%%% USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random with no args
 ... (random)
 
 %%% ERROR 'RANDOM': Exactly 1 number argument expected.
-%%% USAGE: (RANDOM <integerOrFloat>)
+%%% USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random with too many args
 ... (random 1 2)
 
 %%% ERROR 'RANDOM': Exactly 1 number argument expected.
-%%% USAGE: (RANDOM <integerOrFloat>)
+%%% USAGE: (RANDOM integerOrFloat)
 ==>
 
 ; --- Relational type errors ---
@@ -134,28 +134,28 @@
 ... (< "a" 1)
 
 %%% ERROR '<': Invalid argument.  Arguments are not comparable.
-%%% USAGE: (< <expr1> <expr2> ...)
+%%% USAGE: (< expr1 expr2 ...)
 ==>
 
 >>> ;;; greater-than with incomparable types
 ... (> "a" 1)
 
 %%% ERROR '>': Invalid argument.  Arguments are not comparable.
-%%% USAGE: (> <expr1> <expr2> ...)
+%%% USAGE: (> expr1 expr2 ...)
 ==>
 
 >>> ;;; less-equal with incomparable types
 ... (<= "a" 1)
 
 %%% ERROR '<=': Invalid argument.  Arguments are not comparable.
-%%% USAGE: (<= <expr1> <expr2> ...)
+%%% USAGE: (<= expr1 expr2 ...)
 ==>
 
 >>> ;;; greater-equal with incomparable types
 ... (>= "a" 1)
 
 %%% ERROR '>=': Invalid argument.  Arguments are not comparable.
-%%% USAGE: (>= <expr1> <expr2> ...)
+%%% USAGE: (>= expr1 expr2 ...)
 ==>
 
 ; --- List operation errors ---
@@ -164,63 +164,63 @@
 ... (push! 1 2)
 
 %%% ERROR 'PUSH!': 1st argument expected to be a list.
-%%% USAGE: (PUSH! <list> <value>)
+%%% USAGE: (PUSH! list value)
 ==>
 
 >>> ;;; pop! with non-list
 ... (pop! 1)
 
 %%% ERROR 'POP!': 1st argument expected to be a list.
-%%% USAGE: (POP! <list>)
+%%% USAGE: (POP! list)
 ==>
 
 >>> ;;; pop! on empty list
 ... (pop! '())
 
 %%% ERROR 'POP!': Invalid argument.
-%%% USAGE: (POP! <list>)
+%%% USAGE: (POP! list)
 ==>
 
 >>> ;;; cons with non-list second arg
 ... (cons 1 2)
 
 %%% ERROR 'CONS': 2nd argument expected to be a list.
-%%% USAGE: (CONS <obj> <list>)
+%%% USAGE: (CONS obj list)
 ==>
 
 >>> ;;; at-insert with non-integer index
 ... (at-insert "a" '(1 2) 3)
 
 %%% ERROR 'AT-INSERT': Argument 1 expected to be an integer index.
-%%% USAGE: (AT-INSERT <index> <list> <newItem>)
+%%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 >>> ;;; at-insert with non-list
 ... (at-insert 0 1 3)
 
 %%% ERROR 'AT-INSERT': Argument 2 expected to be a list.
-%%% USAGE: (AT-INSERT <index> <list> <newItem>)
+%%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 >>> ;;; at on non-collection
 ... (at 0 42)
 
 %%% ERROR 'AT': Invalid argument.  List, Map, or String expected.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> ;;; at-delete with bad index
 ... (at-delete 5 '(1 2 3))
 
 %%% ERROR 'AT-DELETE': Bad index or key into collection.
-%%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
+%%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> ;;; at-delete on non-collection
 ... (at-delete 1 1)
 
 %%% ERROR 'AT-DELETE': Argument 2 expected to be a list or map.
-%%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
+%%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> ;;; sort requires a predicate argument
@@ -235,73 +235,73 @@
 >>> (push!)
 
 %%% ERROR 'PUSH!': 2 arguments expected.
-%%% USAGE: (PUSH! <list> <value>)
+%%% USAGE: (PUSH! list value)
 ==>
 
 >>> (push! '() 1 2)
 
 %%% ERROR 'PUSH!': 2 arguments expected.
-%%% USAGE: (PUSH! <list> <value>)
+%%% USAGE: (PUSH! list value)
 ==>
 
 >>> (pop!)
 
 %%% ERROR 'POP!': 1 argument expected.
-%%% USAGE: (POP! <list>)
+%%% USAGE: (POP! list)
 ==>
 
 >>> (pop! '() 1)
 
 %%% ERROR 'POP!': 1 argument expected.
-%%% USAGE: (POP! <list>)
+%%% USAGE: (POP! list)
 ==>
 
 >>> (at)
 
 %%% ERROR 'AT': 2 arguments expected.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> (at 1)
 
 %%% ERROR 'AT': 2 arguments expected.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> (at 1 2 3)
 
 %%% ERROR 'AT': 2 arguments expected.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> (at-delete)
 
 %%% ERROR 'AT-DELETE': Exactly 2 arguments expected.
-%%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
+%%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> (at-delete 1)
 
 %%% ERROR 'AT-DELETE': Exactly 2 arguments expected.
-%%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
+%%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> (at-insert)
 
 %%% ERROR 'AT-INSERT': Exactly 3 arguments expected.
-%%% USAGE: (AT-INSERT <index> <list> <newItem>)
+%%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 >>> (at-insert 1)
 
 %%% ERROR 'AT-INSERT': Exactly 3 arguments expected.
-%%% USAGE: (AT-INSERT <index> <list> <newItem>)
+%%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 >>> (at-insert 1 2)
 
 %%% ERROR 'AT-INSERT': Exactly 3 arguments expected.
-%%% USAGE: (AT-INSERT <index> <list> <newItem>)
+%%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 ; --- hasValue? / hasKey? / update! errors ---
@@ -309,47 +309,47 @@
 >>> (hasValue?)
 
 %%% ERROR 'HASVALUE?': 2 arguments expected.
-%%% USAGE: (HASVALUE? <listOrMap> <value>)
+%%% USAGE: (HASVALUE? listOrDict value)
 ==>
 
 >>> ;;; hasValue? on non-collection
 ... (hasValue? 1 2)
 
 %%% ERROR 'HASVALUE?': Invalid argument.  Argument 1 expected to be a list or map.
-%%% USAGE: (HASVALUE? <listOrMap> <value>)
+%%% USAGE: (HASVALUE? listOrDict value)
 ==>
 
 >>> (hasKey?)
 
 %%% ERROR 'HASKEY?': 2 arguments expected.
-%%% USAGE: (HASKEY? <map> <key>)
+%%% USAGE: (HASKEY? dict key)
 ==>
 
 >>> ;;; hasKey? with non-map first arg
 ... (hasKey? 1 (make-dict))
 
 %%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
-%%% USAGE: (HASKEY? <map> <key>)
+%%% USAGE: (HASKEY? dict key)
 ==>
 
 >>> (update!)
 
 %%% ERROR 'UPDATE!': 2 arguments expected.
-%%% USAGE: (UPDATE! <map1> <map2>)
+%%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> ;;; update! with non-map first arg
 ... (update! 1 (make-dict))
 
 %%% ERROR 'UPDATE!': Argument 1 expected to be a map.
-%%% USAGE: (UPDATE! <map1> <map2>)
+%%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> ;;; update! with non-map second arg
 ... (update! (make-dict) 1)
 
 %%% ERROR 'UPDATE!': Argument 2 expected to be a map.
-%%% USAGE: (UPDATE! <map1> <map2>)
+%%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 ; --- Map errors ---
@@ -358,7 +358,7 @@
 ... (make-dict (a 1) (2 2))
 
 %%% ERROR 'MAKE-DICT': All keys in a map must be the same type. Entry 2 is int, expected str.
-%%% USAGE: (MAKE-DICT (<key1> <val1>) (<key2> <val2>) ...)
+%%% USAGE: (MAKE-DICT (key1 val1) (key2 val2) ...)
 ==>
 
 ; --- Control structure errors ---
@@ -435,7 +435,7 @@
 >>> (case)
 
 %%% ERROR 'CASE': 2 or more arguments expected.
-%%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
+%%% USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 ==>
 
 ; --- let / let* errors ---
@@ -443,41 +443,41 @@
 >>> (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> ;;; let first arg must be list
 ... (let 1 2)
 
 %%% ERROR 'LET': The first argument to let expected to be a list of variable initializations.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> ;;; let var spec first element must be symbol
 ... (let ((1 2)) 1)
 
 %%% ERROR 'LET': First element of a variable initializer pair expected to be a symbol.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> ;;; let var spec must be 1 or 2 elements
 ... (let ((x 1 2)) 1)
 
 %%% ERROR 'LET': Variable initializer spec expected to be 1 or 2 elements long.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> (let*)
 
 %%% ERROR 'LET*': 2 or more arguments expected.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> ;;; let* first arg must be list
 ... (let* 1 2)
 
 %%% ERROR 'LET*': The first argument to let expected to be a list of variable initializations.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 ; --- Macro / lambda errors ---
@@ -485,27 +485,27 @@
 >>> (defmacro)
 
 %%% ERROR 'DEFMACRO': 3 or more arguments expected.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
 ==>
 
 >>> ;;; defmacro first arg must be symbol
 ... (defmacro 1 () 1)
 
 %%% ERROR 'DEFMACRO': Argument 1 expected to be a symbol.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
 ==>
 
 >>> ;;; defmacro second arg must be list
 ... (defmacro foo 1 1)
 
 %%% ERROR 'DEFMACRO': Argument 2 expected to be a list of params.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
 ==>
 
 >>> (lambda)
 
 %%% ERROR 'LAMBDA': 1 or more arguments expected.
-%%% USAGE: (LAMBDA <lambda-list> <sexpr1> <sexpr2> ...)
+%%% USAGE: (LAMBDA lambda-list sexpr1 sexpr2 ...)
 ==>
 
 >>> ;;; lambda with no body valid in CL, returns NIL when called
@@ -518,34 +518,34 @@
 >>> (quote)
 
 %%% ERROR 'QUOTE': 1 argument expected.
-%%% USAGE: (QUOTE <sexpr>)
+%%% USAGE: (QUOTE sexpr)
 ==>
 
 >>> (quote 1 2)
 
 %%% ERROR 'QUOTE': 1 argument expected.
-%%% USAGE: (QUOTE <sexpr>)
+%%% USAGE: (QUOTE sexpr)
 ==>
 
 >>> ;;; comma outside backquote
 ... ,x
 
 %%% ERROR 'COMMA': COMMA can only occur inside a BACKQUOTE.
-%%% USAGE: (COMMA <sexpr>)
+%%% USAGE: (COMMA sexpr)
 ==>
 
 >>> ;;; comma-at outside backquote
 ... ,@x
 
 %%% ERROR 'COMMA-AT': COMMA-AT can only occur inside a BACKQUOTE.
-%%% USAGE: (COMMA-AT <sexpr>)
+%%% USAGE: (COMMA-AT sexpr)
 ==>
 
 >>> ;;; comma-at result must be a list
 ... `(a ,@1 c)
 
 %%% ERROR 'COMMA-AT': Argument 1 must evaluate to a List.
-%%% USAGE: (COMMA-AT <sexpr>)
+%%% USAGE: (COMMA-AT sexpr)
 ==>
 
 >>> ;;; comma-at at top level of backquote: splice requires a list context
@@ -560,7 +560,7 @@
 >>> (macroexpand)
 
 %%% ERROR 'MACROEXPAND': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND '(<macroName> <arg1> <arg2> ...))
+%%% USAGE: (MACROEXPAND '(macroName arg1 arg2 ...))
 ==>
 
 >>> ;;; macroexpand non-list returns unchanged
@@ -595,21 +595,21 @@
 >>> (makunbound)
 
 %%% ERROR 'MAKUNBOUND': 1 argument expected.
-%%% USAGE: (MAKUNBOUND <symbol>)
+%%% USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> ;;; makunbound with non-symbol
 ... (makunbound 1)
 
 %%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
-%%% USAGE: (MAKUNBOUND <symbol>)
+%%% USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> ;;; makunbound with too many args
 ... (makunbound 'a 'b)
 
 %%% ERROR 'MAKUNBOUND': 1 argument expected.
-%%% USAGE: (MAKUNBOUND <symbol>)
+%%% USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> ;;; symtab! with args
@@ -653,51 +653,51 @@
 ... (integer "hello")
 
 %%% ERROR 'INTEGER': Invalid argument.
-%%% USAGE: (INTEGER <number> &optional (<base> 10))
+%%% USAGE: (INTEGER number &optional (base 10))
 ==>
 
 >>> (string)
 
 %%% ERROR 'STRING': 1 or more arguments expected.
-%%% USAGE: (STRING <object1> <object2> ...)
+%%% USAGE: (STRING object1 object2 ...)
 ==>
 
 >>> (ustring)
 
 %%% ERROR 'USTRING': 1 or more arguments expected.
-%%% USAGE: (USTRING <object1> <object2> ...)
+%%% USAGE: (USTRING object1 object2 ...)
 ==>
 
 >>> (make-symbol)
 
 %%% ERROR 'MAKE-SYMBOL': 1 argument expected.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> (make-symbol "a" "b")
 
 %%% ERROR 'MAKE-SYMBOL': 1 argument expected.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> ;;; make-symbol with non-string argument
 ... (make-symbol 42)
 
 %%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> (make-symbol '())
 
 %%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> ;;; make-symbol from numeric string is not a valid symbol name
 ... (make-symbol "42")
 
 %%% ERROR 'MAKE-SYMBOL': "42" is not a valid symbol name.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 ; --- Parse errors ---
@@ -705,14 +705,14 @@
 >>> (parse)
 
 %%% ERROR 'PARSE': 1 string argument expected.
-%%% USAGE: (PARSE <string>)
+%%% USAGE: (PARSE string)
 ==>
 
 >>> ;;; parse with non-string
 ... (parse 1)
 
 %%% ERROR 'PARSE': Argument expected to be a string.
-%%% USAGE: (PARSE <string>)
+%%% USAGE: (PARSE string)
 ==>
 
 ; ============================================================
@@ -738,7 +738,7 @@
 ... (setf (blah 42) 5)
 
 %%% ERROR 'SET-ACCESSOR!': No setf expander registered for BLAH.
-%%% USAGE: (SET-ACCESSOR! <accessor-symbol> <instance> <newValue>)
+%%% USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
 ==>
 
 ; --- IF error paths ---
@@ -747,14 +747,14 @@
 ... (if)
 
 %%% ERROR 'IF': 2 or 3 arguments expected.
-%%% USAGE: (IF <cond> <conseq> &optional <alt>)
+%%% USAGE: (IF cond conseq &optional alt)
 ==>
 
 >>> ;;; if with too many arguments
 ... (if t 1 2 3)
 
 %%% ERROR 'IF': 2 or 3 arguments expected.
-%%% USAGE: (IF <cond> <conseq> &optional <alt>)
+%%% USAGE: (IF cond conseq &optional alt)
 ==>
 
 ; --- COND additional error paths ---
@@ -763,7 +763,7 @@
 ... (cond 1)
 
 %%% ERROR 'COND': Entry 1 must be a non-empty list.
-%%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
+%%% USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
 
 >>> ;;; cond entry with condition but no body
@@ -777,14 +777,14 @@
 ... (case 1)
 
 %%% ERROR 'CASE': 2 or more arguments expected.
-%%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
+%%% USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 ==>
 
 >>> ;;; case entry that is not a list
 ... (case 1 2)
 
 %%% ERROR 'CASE': Entry 1 must be a non-empty list.
-%%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
+%%% USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 ==>
 
 >>> ;;; case entry with value but no body
@@ -798,7 +798,7 @@
 ... (make-dict (1))
 
 %%% ERROR 'MAKE-DICT': Entry 1 does not contain a (key value) pair.
-%%% USAGE: (MAKE-DICT (<key1> <val1>) (<key2> <val2>) ...)
+%%% USAGE: (MAKE-DICT (key1 val1) (key2 val2) ...)
 ==>
 
 ; --- MACROEXPAND additional error path ---
@@ -814,7 +814,7 @@
 ... (defmacro foo () "docstring")
 
 %%% ERROR 'DEFMACRO': At least one body expression expected after docstring.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
 ==>
 
 ; --- LAMBDA docstring-only error ---
@@ -830,7 +830,7 @@
 ... (let (1) x)
 
 %%% ERROR 'LET': Variable initializer spec expected to be a symbol or a list.
-%%% USAGE: (LET ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 ; --- LET* additional error paths ---
@@ -839,21 +839,21 @@
 ... (let* ((1 2)) 1)
 
 %%% ERROR 'LET*': First element of a variable initializer pair expected to be a symbol.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> ;;; let* initializer spec too long
 ... (let* ((x 1 2)) 1)
 
 %%% ERROR 'LET*': Variable initializer spec expected to be 1 or 2 elements long.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 >>> ;;; let* with non-symbol non-list initializer
 ... (let* (1) x)
 
 %%% ERROR 'LET*': Variable initializer spec expected to be a symbol or a list.
-%%% USAGE: (LET* ( (<var1> <sexpr1>) (<var2> <sexpr2>) ...) <sexpr1> <sexpr2> ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
 ==>
 
 ; --- DOLIST additional error path ---
@@ -870,56 +870,56 @@
 ... (sin)
 
 %%% ERROR 'SIN': 1 argument expected.
-%%% USAGE: (SIN <radians>)
+%%% USAGE: (SIN radians)
 ==>
 
 >>> ;;; sin with too many arguments
 ... (sin 1 2)
 
 %%% ERROR 'SIN': 1 argument expected.
-%%% USAGE: (SIN <radians>)
+%%% USAGE: (SIN radians)
 ==>
 
 >>> ;;; cos with no arguments
 ... (cos)
 
 %%% ERROR 'COS': 1 argument expected.
-%%% USAGE: (COS <radians>)
+%%% USAGE: (COS radians)
 ==>
 
 >>> ;;; cos with too many arguments
 ... (cos 1 2)
 
 %%% ERROR 'COS': 1 argument expected.
-%%% USAGE: (COS <radians>)
+%%% USAGE: (COS radians)
 ==>
 
 >>> ;;; asin with no arguments
 ... (asin)
 
 %%% ERROR 'ASIN': 1 argument expected.
-%%% USAGE: (ASIN <number>)
+%%% USAGE: (ASIN number)
 ==>
 
 >>> ;;; acos with no arguments
 ... (acos)
 
 %%% ERROR 'ACOS': 1 argument expected.
-%%% USAGE: (ACOS <number>)
+%%% USAGE: (ACOS number)
 ==>
 
 >>> ;;; integer division with too many arguments
 ... (// 1 2 3)
 
 %%% ERROR '//': 2 arguments expected.
-%%% USAGE: (// <number1> <number2>)
+%%% USAGE: (// number1 number2)
 ==>
 
 >>> ;;; modulo with too many arguments
 ... (mod 1 2 3)
 
 %%% ERROR 'MOD': 2 arguments expected.
-%%% USAGE: (MOD <number1> <number2>)
+%%% USAGE: (MOD number1 number2)
 ==>
 
 ; --- Arithmetic type errors ---
@@ -928,49 +928,49 @@
 ... (gcd "a" 2)
 
 %%% ERROR 'GCD': Invalid argument.
-%%% USAGE: (GCD <integer1> <integer2> ...)
+%%% USAGE: (GCD integer1 integer2 ...)
 ==>
 
 >>> ;;; lcm with non-number
 ... (lcm "a" 2)
 
 %%% ERROR 'LCM': Invalid argument.
-%%% USAGE: (LCM <integer1> <integer2> ...)
+%%% USAGE: (LCM integer1 integer2 ...)
 ==>
 
 >>> ;;; min with non-number
 ... (min "a" 1)
 
 %%% ERROR 'MIN': Invalid argument.
-%%% USAGE: (MIN <number1> <number2> ...)
+%%% USAGE: (MIN number1 number2 ...)
 ==>
 
 >>> ;;; max with non-number
 ... (max "a" 1)
 
 %%% ERROR 'MAX': Invalid argument.
-%%% USAGE: (MAX <number1> <number2> ...)
+%%% USAGE: (MAX number1 number2 ...)
 ==>
 
 >>> ;;; expt with non-number base
 ... (expt "a" 2)
 
 %%% ERROR 'EXPT': Invalid argument type.  Arguments expected to be numbers.
-%%% USAGE: (EXPT <base> <power>)
+%%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; cos with non-number
 ... (cos "a")
 
 %%% ERROR 'COS': Invalid argument.
-%%% USAGE: (COS <radians>)
+%%% USAGE: (COS radians)
 ==>
 
 >>> ;;; sin with non-number
 ... (sin "a")
 
 %%% ERROR 'SIN': Invalid argument.
-%%% USAGE: (SIN <radians>)
+%%% USAGE: (SIN radians)
 ==>
 
 ; --- Additional math argument count errors ---
@@ -979,42 +979,42 @@
 ... (expt)
 
 %%% ERROR 'EXPT': Exactly two arguments expected.
-%%% USAGE: (EXPT <base> <power>)
+%%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; expt with one argument
 ... (expt 1)
 
 %%% ERROR 'EXPT': Exactly two arguments expected.
-%%% USAGE: (EXPT <base> <power>)
+%%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; expt with three arguments
 ... (expt 1 2 3)
 
 %%% ERROR 'EXPT': Exactly two arguments expected.
-%%% USAGE: (EXPT <base> <power>)
+%%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; log with no arguments
 ... (log)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 >>> ;;; log with too many arguments
 ... (log 1 2 3)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 >>> ;;; log with non-number
 ... (log "a")
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 ; --- Predicate argument count errors ---
@@ -1023,28 +1023,28 @@
 ... (atom)
 
 %%% ERROR 'ATOM': 1 argument expected.
-%%% USAGE: (ATOM <sexpr>)
+%%% USAGE: (ATOM sexpr)
 ==>
 
 >>> ;;; atom with too many arguments
 ... (atom 1 2)
 
 %%% ERROR 'ATOM': 1 argument expected.
-%%% USAGE: (ATOM <sexpr>)
+%%% USAGE: (ATOM sexpr)
 ==>
 
 >>> ;;; dictp with no arguments
 ... (dictp)
 
 %%% ERROR 'DICTP': 1 argument expected.
-%%% USAGE: (DICTP <sexpr>)
+%%% USAGE: (DICTP sexpr)
 ==>
 
 >>> ;;; dictp with too many arguments
 ... (dictp 1 2)
 
 %%% ERROR 'DICTP': 1 argument expected.
-%%% USAGE: (DICTP <sexpr>)
+%%% USAGE: (DICTP sexpr)
 ==>
 
 ; --- eq / is? argument count errors (is? is an alias for eq) ---
@@ -1053,21 +1053,21 @@
 ... (is?)
 
 %%% ERROR 'EQ': 2 arguments expected.
-%%% USAGE: (EQ <a> <b>)
+%%% USAGE: (EQ a b)
 ==>
 
 >>> ;;; is? with one argument
 ... (is? 1)
 
 %%% ERROR 'EQ': 2 arguments expected.
-%%% USAGE: (EQ <a> <b>)
+%%% USAGE: (EQ a b)
 ==>
 
 >>> ;;; is? with too many arguments
 ... (is? 1 2 3)
 
 %%% ERROR 'EQ': 2 arguments expected.
-%%% USAGE: (EQ <a> <b>)
+%%% USAGE: (EQ a b)
 ==>
 
 ; --- Conversion argument count errors ---
@@ -1076,35 +1076,35 @@
 ... (float)
 
 %%% ERROR 'FLOAT': 1 argument expected.
-%%% USAGE: (FLOAT <number>)
+%%% USAGE: (FLOAT number)
 ==>
 
 >>> ;;; float with too many arguments
 ... (float 1 2)
 
 %%% ERROR 'FLOAT': 1 argument expected.
-%%% USAGE: (FLOAT <number>)
+%%% USAGE: (FLOAT number)
 ==>
 
 >>> ;;; integer with no arguments
 ... (integer)
 
 %%% ERROR 'INTEGER': 1 or 2 arguments expected.
-%%% USAGE: (INTEGER <number> &optional (<base> 10))
+%%% USAGE: (INTEGER number &optional (base 10))
 ==>
 
 >>> ;;; integer with too many arguments
 ... (integer 1 2 3)
 
 %%% ERROR 'INTEGER': 1 or 2 arguments expected.
-%%% USAGE: (INTEGER <number> &optional (<base> 10))
+%%% USAGE: (INTEGER number &optional (base 10))
 ==>
 
 >>> ;;; rational with non-number
 ... (rational "hello")
 
 %%% ERROR 'RATIONAL': Invalid argument.
-%%% USAGE: (RATIONAL <number>)
+%%% USAGE: (RATIONAL number)
 ==>
 
 ; --- CAR/CDR argument count errors ---
@@ -1113,28 +1113,28 @@
 ... (car)
 
 %%% ERROR 'CAR': 1 argument expected.
-%%% USAGE: (CAR <list>)
+%%% USAGE: (CAR list)
 ==>
 
 >>> ;;; car with too many arguments
 ... (car 1 2)
 
 %%% ERROR 'CAR': 1 argument expected.
-%%% USAGE: (CAR <list>)
+%%% USAGE: (CAR list)
 ==>
 
 >>> ;;; cdr with no arguments
 ... (cdr)
 
 %%% ERROR 'CDR': 1 argument expected.
-%%% USAGE: (CDR <list>)
+%%% USAGE: (CDR list)
 ==>
 
 >>> ;;; cdr with too many arguments
 ... (cdr 1 2)
 
 %%% ERROR 'CDR': 1 argument expected.
-%%% USAGE: (CDR <list>)
+%%% USAGE: (CDR list)
 ==>
 
 ; --- ATAN additional error paths ---
@@ -1143,14 +1143,14 @@
 ... (atan 1 2 3)
 
 %%% ERROR 'ATAN': 1 or 2 arguments expected.
-%%% USAGE: (ATAN <number1> &optional <number2>)
+%%% USAGE: (ATAN number1 &optional number2)
 ==>
 
 >>> ;;; atan with non-number
 ... (atan "a")
 
 %%% ERROR 'ATAN': Invalid argument.
-%%% USAGE: (ATAN <number1> &optional <number2>)
+%%% USAGE: (ATAN number1 &optional number2)
 ==>
 
 ; --- EVAL additional error path ---
@@ -1159,7 +1159,7 @@
 ... (eval 1 2)
 
 %%% ERROR 'EVAL': 1 argument expected.
-%%% USAGE: (EVAL <sexpr>)
+%%% USAGE: (EVAL sexpr)
 ==>
 
 ; --- NTH out-of-range error ---
@@ -1168,7 +1168,7 @@
 ... (nth 10 '(1 2 3))
 
 %%% ERROR 'AT': Invalid argument key/index.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 ; --- WRITEF format error ---
@@ -1177,7 +1177,7 @@
 ... (writef "{2}" (list 1))
 
 %%% ERROR 'WRITEF': Format error: Replacement index 2 out of range for positional args tuple
-%%% USAGE: (WRITEF <formatString> &optional <MapOrList> <stream>)
+%%% USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 ; --- SETF AT: container type and key/index errors ---
@@ -1186,14 +1186,14 @@
 ... (setf (at 0 42) 5)
 
 %%% ERROR 'AT-SET': Invalid argument.  List or Map expected.
-%%% USAGE: (AT-SET <keyOrIndex> <mapListOrStr> <newValue>)
+%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; setf at with out-of-range index
 ... (setf (at 99 (list 1 2)) 5)
 
 %%% ERROR 'AT-SET': Invalid argument key/index.
-%%% USAGE: (AT-SET <keyOrIndex> <mapListOrStr> <newValue>)
+%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 ; --- DEFMACRO: empty body without docstring ---
@@ -1202,7 +1202,7 @@
 ... (defmacro emptyb22 ())
 
 %%% ERROR 'DEFMACRO': At least one body expression expected.
-%%% USAGE: (DEFMACRO <symbol> <lambda-list> &optional <sexpr1> <sexpr2> ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
 ==>
 
 ; --- APPLY additional error paths ---
@@ -1211,14 +1211,14 @@
 ... (apply 'nonexistent-fn-xyz '(1 2))
 
 %%% ERROR 'APPLY': First argument "NONEXISTENT-FN-XYZ" expected to be the name of a callable.
-%%% USAGE: (APPLY <function> &rest <args> <argsList>)
+%%% USAGE: (APPLY function &rest args argsList)
 ==>
 
 >>> ;;; apply with non-symbol non-callable first arg
 ... (apply 42 '(1 2))
 
 %%% ERROR 'APPLY': First argument expected to be a symbol.
-%%% USAGE: (APPLY <function> &rest <args> <argsList>)
+%%% USAGE: (APPLY function &rest args argsList)
 ==>
 
 ; --- ASIN/ACOS: too many arguments ---
@@ -1227,14 +1227,14 @@
 ... (asin 0 1)
 
 %%% ERROR 'ASIN': 1 argument expected.
-%%% USAGE: (ASIN <number>)
+%%% USAGE: (ASIN number)
 ==>
 
 >>> ;;; acos with too many arguments
 ... (acos 0 1)
 
 %%% ERROR 'ACOS': 1 argument expected.
-%%% USAGE: (ACOS <number>)
+%%% USAGE: (ACOS number)
 ==>
 
 ; --- MAKE-DICT: invalid key type ---
@@ -1242,8 +1242,8 @@
 >>> ;;; make-dict with list as key
 ... (make-dict ('(1) 2))
 
-%%% ERROR 'MAKE-DICT': Entry 1 has an invalid <key> type.
-%%% USAGE: (MAKE-DICT (<key1> <val1>) (<key2> <val2>) ...)
+%%% ERROR 'MAKE-DICT': Entry 1 has an invalid key type.
+%%% USAGE: (MAKE-DICT (key1 val1) (key2 val2) ...)
 ==>
 
 ; --- Division: zero by zero ---
@@ -1252,7 +1252,7 @@
 ... (/ 0 0)
 
 %%% ERROR '/': division by zero
-%%% USAGE: (/ <number1> <number2> ...)
+%%% USAGE: (/ number1 number2 ...)
 ==>
 
 ; --- Conversion: symbol arguments ---
@@ -1261,14 +1261,14 @@
 ... (float 'abc)
 
 %%% ERROR 'FLOAT': Invalid argument.
-%%% USAGE: (FLOAT <number>)
+%%% USAGE: (FLOAT number)
 ==>
 
 >>> ;;; integer with symbol argument
 ... (integer 'abc)
 
 %%% ERROR 'INTEGER': Invalid argument.
-%%% USAGE: (INTEGER <number> &optional (<base> 10))
+%%% USAGE: (INTEGER number &optional (base 10))
 ==>
 
 ; --- APPEND: non-list argument in middle ---
@@ -1277,7 +1277,7 @@
 ... (append '(1) 2 '(3))
 
 %%% ERROR 'APPEND': Invalid argument.
-%%% USAGE: (APPEND &rest <lists>)
+%%% USAGE: (APPEND &rest lists)
 ==>
 
 ; --- DEFSETF-INTERNAL errors ---
@@ -1286,14 +1286,14 @@
 ... (defsetf-internal)
 
 %%% ERROR 'DEFSETF-INTERNAL': 2 arguments expected.
-%%% USAGE: (DEFSETF-INTERNAL <accessor-symbol> <field-symbol>)
+%%% USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
 ==>
 
 >>> ;;; defsetf-internal with non-symbol arguments
 ... (defsetf-internal 1 2)
 
 %%% ERROR 'DEFSETF-INTERNAL': Both arguments must be symbols.
-%%% USAGE: (DEFSETF-INTERNAL <accessor-symbol> <field-symbol>)
+%%% USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
 ==>
 
 ; --- HELP errors ---
@@ -1335,7 +1335,7 @@
 ... (cond (nil 1) 2)
 
 %%% ERROR 'COND': Entry 2 must be a non-empty list.
-%%% USAGE: (COND (<cond1> <body1>) (<cond2> <body2>) ...)
+%%% USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
 
 ; --- CASE: bad entry in non-first position ---
@@ -1344,7 +1344,7 @@
 ... (case 99 (1 "one") 2)
 
 %%% ERROR 'CASE': Entry 2 must be a non-empty list.
-%%% USAGE: (CASE <sexpr> (<val1> <body1>) (<val2> <body2>) ...)
+%%% USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 
 ; ============================================================
 ; test24-coverage-errors.lisp
@@ -1357,14 +1357,14 @@
 ... (backquote)
 
 %%% ERROR 'BACKQUOTE': 1 argument expected.
-%%% USAGE: (BACKQUOTE <sexpr>)
+%%% USAGE: (BACKQUOTE sexpr)
 ==>
 
 >>> ;;; backquote with too many arguments
 ... (backquote 1 2)
 
 %%% ERROR 'BACKQUOTE': 1 argument expected.
-%%% USAGE: (BACKQUOTE <sexpr>)
+%%% USAGE: (BACKQUOTE sexpr)
 ==>
 
 ; --- log domain errors ---
@@ -1373,14 +1373,14 @@
 ... (log 0)
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 >>> ;;; log of negative is domain error
 ... (log -1)
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG <number> &optional <base>)
+%%% USAGE: (LOG number &optional base)
 ==>
 
 ; --- eval argument count errors ---
@@ -1389,7 +1389,7 @@
 ... (eval)
 
 %%% ERROR 'EVAL': 1 argument expected.
-%%% USAGE: (EVAL <sexpr>)
+%%% USAGE: (EVAL sexpr)
 ==>
 
 ; --- funcall errors ---
@@ -1398,7 +1398,7 @@
 ... (funcall)
 
 %%% ERROR 'FUNCALL': 1 or more arguments expected
-%%% USAGE: (FUNCALL <fnNameSymbol> <arg1> <arg2> ...)
+%%% USAGE: (FUNCALL fnNameSymbol arg1 arg2 ...)
 ==>
 
 ; --- at errors on strings ---
@@ -1407,21 +1407,21 @@
 ... (at 5 "hi")
 
 %%% ERROR 'AT': Invalid argument key/index.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> ;;; at on empty string
 ... (at 0 "")
 
 %%% ERROR 'AT': Invalid argument key/index.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> ;;; at with missing key on map
 ... (at 'missing (make-dict (a 1)))
 
 %%% ERROR 'AT': Invalid argument key/index.
-%%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
+%%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 ; --- at-delete additional errors ---
@@ -1430,14 +1430,14 @@
 ... (at-delete 10 '(1 2))
 
 %%% ERROR 'AT-DELETE': Bad index or key into collection.
-%%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
+%%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> ;;; at-delete missing key on map
 ... (at-delete 'missing (make-dict (a 1)))
 
 %%% ERROR 'AT-DELETE': Bad index or key into collection.
-%%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
+%%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 ; --- conversion errors ---
@@ -1446,28 +1446,28 @@
 ... (float (list 1))
 
 %%% ERROR 'FLOAT': Invalid argument.
-%%% USAGE: (FLOAT <number>)
+%%% USAGE: (FLOAT number)
 ==>
 
 >>> ;;; rational on list (non-numeric)
 ... (rational (list 1))
 
 %%% ERROR 'RATIONAL': Invalid argument.
-%%% USAGE: (RATIONAL <number>)
+%%% USAGE: (RATIONAL number)
 ==>
 
 >>> ;;; make-symbol with empty string
 ... (make-symbol "")
 
 %%% ERROR 'MAKE-SYMBOL': "" is not a valid symbol name.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> ;;; make-symbol with string starting with a digit
 ... (make-symbol "123foo")
 
 %%% ERROR 'MAKE-SYMBOL': "123foo" is not a valid symbol name.
-%%% USAGE: (MAKE-SYMBOL <string>)
+%%% USAGE: (MAKE-SYMBOL string)
 ==>
 
 ; --- python errors ---
@@ -1476,7 +1476,7 @@
 ... (python 42)
 
 %%% ERROR 'PYTHON': Argument expected to be a string.
-%%% USAGE: (PYTHON <string>)
+%%% USAGE: (PYTHON string)
 ==>
 
 ; --- recursion-limit errors ---
@@ -1485,14 +1485,14 @@
 ... (recursion-limit "abc")
 
 %%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% USAGE: (RECURSION-LIMIT &optional <newLimit>)
+%%% USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
 >>> ;;; recursion-limit with too many args
 ... (recursion-limit 1 2)
 
 %%% ERROR 'RECURSION-LIMIT': Only one optional arg is allowed.
-%%% USAGE: (RECURSION-LIMIT &optional <newLimit>)
+%%% USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
 ; --- library function argument count errors ---
@@ -1537,13 +1537,13 @@
 >>> (readall)
 
 %%% ERROR 'READALL': 1 argument expected.
-%%% USAGE: (READALL <stream>)
+%%% USAGE: (READALL stream)
 ==>
 
 >>> (readall 42)
 
 %%% ERROR 'READALL': Argument expected to be a stream.
-%%% USAGE: (READALL <stream>)
+%%% USAGE: (READALL stream)
 ==>
 
 ; --- tmpdir and path-join errors ---
@@ -1557,17 +1557,17 @@
 >>> (path-join)
 
 %%% ERROR 'PATH-JOIN': 1 or more arguments expected.
-%%% USAGE: (PATH-JOIN <path1> <path2> ...)
+%%% USAGE: (PATH-JOIN path1 path2 ...)
 ==>
 
 >>> (path-join 42)
 
 %%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
-%%% USAGE: (PATH-JOIN <path1> <path2> ...)
+%%% USAGE: (PATH-JOIN path1 path2 ...)
 ==>
 
 >>> (path-join "a" 42)
 
 %%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
-%%% USAGE: (PATH-JOIN <path1> <path2> ...)
+%%% USAGE: (PATH-JOIN path1 path2 ...)
 ==>
