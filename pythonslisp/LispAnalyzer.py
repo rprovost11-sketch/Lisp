@@ -90,6 +90,14 @@ class LispAnalyzer:
          LispAnalyzer._analyzeReturnFrom(env, args)
          return
 
+      # ---------- RETURN ---------------------------------------------------
+      if name == 'RETURN':
+         if len(args) > 1:
+            raise LispRuntimeError('return: 0 or 1 arguments expected.')
+         if len(args) == 1:
+            LispAnalyzer.analyze(env, args[0])
+         return
+
       # ---------- CATCH ----------------------------------------------------
       if name == 'CATCH':
          if len(args) < 1:
@@ -140,12 +148,19 @@ class LispAnalyzer:
       if isinstance(head, LSymbol):
          try:
             callableObj = env.lookup(head.strval)
-            if isinstance(callableObj, LPrimitive) and callableObj.arity_msg:
-               numArgs = len(args)
-               tooFew  = numArgs < callableObj.min_args
-               tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
-               if tooFew or tooMany:
-                  raise LispRuntimeFuncError(callableObj, callableObj.arity_msg)
+            if isinstance(callableObj, LPrimitive):
+               if callableObj.arity_msg:
+                  numArgs = len(args)
+                  tooFew  = numArgs < callableObj.min_args
+                  tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
+                  if tooFew or tooMany:
+                     raise LispRuntimeFuncError(callableObj, callableObj.arity_msg)
+               if callableObj.specialForm:
+                  # Special-form primitives receive un-evaluated args whose
+                  # structure is defined by the form itself (e.g. make-dict's
+                  # (key val) pairs).  The analyzer cannot safely recurse into
+                  # them, so delegate sub-expression analysis to the evaluator.
+                  return
          except KeyError:
             pass
       for elt in sexpr:
@@ -208,11 +223,16 @@ class LispAnalyzer:
          LispAnalyzer.analyze(env, rval)
 
    @staticmethod
+   def _is_nil_val( val ) -> bool:
+      """True iff val is the Lisp NIL (empty list)."""
+      return isinstance(val, list) and not val
+
+   @staticmethod
    def _analyzeBlock( env: Environment, args: list ) -> None:
       """Structural checks for (block ...) forms."""
       if len(args) < 1:
          raise LispRuntimeError('block: at least 1 argument (name) expected.')
-      if not isinstance(args[0], LSymbol):
+      if not (isinstance(args[0], LSymbol) or LispAnalyzer._is_nil_val(args[0])):
          raise LispRuntimeError('block: name must be a symbol.')
       for bodyForm in args[1:]:
          LispAnalyzer.analyze(env, bodyForm)
@@ -222,7 +242,7 @@ class LispAnalyzer:
       """Structural checks for (return-from ...) forms."""
       if len(args) < 1 or len(args) > 2:
          raise LispRuntimeError('return-from: 1 or 2 arguments expected.')
-      if not isinstance(args[0], LSymbol):
+      if not (isinstance(args[0], LSymbol) or LispAnalyzer._is_nil_val(args[0])):
          raise LispRuntimeError('return-from: name must be a symbol.')
       if len(args) == 2:
          LispAnalyzer.analyze(env, args[1])

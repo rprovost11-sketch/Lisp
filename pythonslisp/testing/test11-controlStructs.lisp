@@ -77,17 +77,21 @@
 4
 5
 
-==> 5
+==> NIL
 
-; --- foreach (legacy alias) ---
+; --- dolist with result form ---
 
->>> (foreach item '(a b c) (writeLn! item))
+; result form evaluated after loop; var = NIL
+>>> (let ((total 0)) (dolist (x '(1 2 3) total) (setf total (+ total x))))
 ...
-A
-B
-C
 
-==> C
+==> 6
+
+; result form can be any expr (evaluated with var = NIL)
+>>> (dolist (x '(a b c) 'done) (write! x))
+...
+ABC
+==> DONE
 
 >>> (dotimes (i 3) (writeLn! i))
 ...
@@ -95,7 +99,7 @@ C
 1
 2
 
-==> 2
+==> NIL
 
 >>> (let ((sum 0)) (dotimes (i 5) (setf sum (+ sum i))) sum)
 ...
@@ -212,11 +216,62 @@ C
 >>> (find-even '(1 3 5 7))
 ==> NIL
 
+; --- block nil and return ---
+
+; (block nil ...) acts like a named block
+>>> (block nil 1 2 3)
+==> 3
+
+; (return value) exits (block nil ...)
+>>> (block nil
+...    (return 42)
+...    99)
+==> 42
+
+; (return) with no value returns NIL
+>>> (block nil
+...    (return)
+...    99)
+==> NIL
+
+; dotimes with early (return ...)
+>>> (let ((sum 0))
+...    (dotimes (i 10)
+...       (if (= i 5) (return sum))
+...       (setf sum (+ sum i)))
+...    sum)
+...
+
+==> 10
+
+; dotimes with result form
+>>> (let ((total 0)) (dotimes (i 5 total) (setf total (+ total i))))
+...
+
+==> 10
+
+; dotimes result form - var = count when evaluated
+>>> (dotimes (i 5 i) nil)
+...
+
+==> 5
+
+; dolist with early (return ...)
+>>> (dolist (x '(1 2 3 4 5))
+...    (if (= x 3) (return x)))
+...
+
+==> 3
+
 ; Error: stale return-from (no matching block active)
 >>> (return-from nowhere 42)
 %%% return-from: no block named NOWHERE is currently active.
 
-; Error: block name must be a symbol
+; Error: stale return (no block nil active)
+>>> (return 42)
+%%% return-from: no block named NIL is currently active.
+
+; Error: block name must be a symbol (not an integer)
 >>> (block 42 1 2 3)
 %%% block: name must be a symbol.
 

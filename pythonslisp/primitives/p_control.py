@@ -105,32 +105,37 @@ in sequence.  However if conditionExpr evaluates to nil, the loop terminates
 and returns the result of the last expr evaluated."""
       raise LispRuntimeFuncError( LP_while, 'Evaluation handled by macro.' )
 
-   @primitive( 'dotimes', '(<var> <countExpr>) <sexpr1> <sexpr2> ...', specialForm=True )
+   @primitive( 'dotimes', '(<var> <countExpr> &optional <result>) <sexpr1> <sexpr2> ...', specialForm=True )
    def LP_dotimes( ctx: LispContext, env: Environment, *args ) -> Any:
       """Performs a loop over a body of exprs countExpr times.  Before each iteration
 the loop variable is set to the next loop count number (starting with 0 for
-the first loop).  The value of the last sexpr evaluated is returned."""
+the first loop).  Returns result (default NIL) after the loop completes.
+Supports (return value) for early exit."""
       raise LispRuntimeFuncError( LP_dotimes, 'Evaluation handled by macro.' )
 
-   @primitive( 'foreach', '<variable> <list> <sexpr1> <sexpr2> ...', specialForm=True )
-   def LP_foreach( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Perform a loop over the elements of list.  On each iteration var is set
-to the next element in the list, then the expr's are evaluated in order.
-Returns the result of the very last evaluation."""
-      raise LispRuntimeFuncError( LP_foreach, 'Evaluation handled by macro.' )
-
-   @primitive( 'dolist', '(<variable> <list>) <sexpr1> <sexpr2> ...', specialForm=True )
+   @primitive( 'dolist', '(<variable> <list> &optional <result>) <sexpr1> <sexpr2> ...', specialForm=True )
    def LP_dolist( ctx: LispContext, env: Environment, *args ) -> Any:
       """Iterate over the elements of list, binding variable to each in turn.
-Returns the result of the last body expression, or NIL if the list is empty."""
+Returns result (default NIL) after the loop completes.
+Supports (return value) for early exit."""
       raise LispRuntimeFuncError( LP_dolist, 'Evaluation handled by macro.' )
+
+   def _block_name( obj ):
+      """Extract the block name string from a BLOCK or RETURN-FROM name argument.
+Accepts a symbol or NIL (the empty list) as the name."""
+      if isinstance(obj, LSymbol):
+         return obj.strval
+      if isinstance(obj, list) and not obj:   # L_NIL / empty list
+         return 'NIL'
+      raise LispRuntimeError('block: name must be a symbol.')
 
    @primitive( 'block', '<name> <sexpr1> <sexpr2> ...', specialForm=True )
    def LP_block( ctx: LispContext, env: Environment, *args ) -> Any:
       """Establishes a named lexical block.  Evaluates body forms in sequence and
 returns the value of the last one.  A (return-from name value) anywhere in the
-dynamic extent of the block performs an immediate non-local exit, returning value."""
-      blockName = args[0]   # analyzer guarantees: LSymbol
+dynamic extent of the block performs an immediate non-local exit, returning value.
+The name may be a symbol or NIL."""
+      blockNameStr = _block_name(args[0])   # analyzer guarantees: symbol or NIL
       body = args[1:]
       if len(body) == 0:
          return L_NIL
@@ -139,7 +144,7 @@ dynamic extent of the block performs an immediate non-local exit, returning valu
             ctx.lEval( env, sexpr )
          return ctx.lEval( env, body[-1] )
       except ReturnFrom as e:
-         if e.name == blockName.strval:
+         if e.name == blockNameStr:
             return e.value
          raise
 
@@ -147,9 +152,16 @@ dynamic extent of the block performs an immediate non-local exit, returning valu
    def LP_return_from( ctx: LispContext, env: Environment, *args ) -> Any:
       """Performs a non-local exit from the nearest enclosing (block name ...).
 Returns value (default NIL) from that block.  name is not evaluated."""
-      blockName = args[0]   # analyzer guarantees: LSymbol
+      blockNameStr = _block_name(args[0])   # analyzer guarantees: symbol or NIL
       value = ctx.lEval( env, args[1] ) if len(args) == 2 else L_NIL
-      raise ReturnFrom( blockName.strval, value )
+      raise ReturnFrom( blockNameStr, value )
+
+   @primitive( 'return', '&optional <value>', specialForm=True )
+   def LP_return( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Performs a non-local exit from the nearest enclosing (block nil ...).
+Returns value (default NIL) from that block.  Equivalent to (return-from nil value)."""
+      value = ctx.lEval( env, args[0] ) if len(args) == 1 else L_NIL
+      raise ReturnFrom( 'NIL', value )
 
    @primitive( 'funcall', '<fnNameSymbol> <arg1> <arg2> ...',
                min_args=1, arity_msg='1 or more arguments expected' )

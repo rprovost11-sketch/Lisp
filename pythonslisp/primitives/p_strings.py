@@ -1,11 +1,16 @@
-from typing import Any
+from typing import Any, Callable
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.primitives.p_sequences import _is_nil_val, _bind_kw, _validate_bounds
 
 
-def register(primitive) -> None:
+def register(primitive, parseLispString: Callable) -> None:
+
+   def _ll( s: str ) -> list:
+      """Parse a lambda-list string; strip the PROGN wrapper parseLispString adds."""
+      return parseLispString( s )[1]
 
    @primitive( 'string-upcase', '<string>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
@@ -72,12 +77,35 @@ def register(primitive) -> None:
          raise LispRuntimeFuncError( LP_code_char, 'Argument 1 must be an Integer.' )
       return chr( args[0] )
 
-   @primitive( 'string-capitalize', '<string>',
-               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   _STRCAP_LL = _ll( '(string &key (start 0) (end nil))' )
+
+   def _cl_capitalize( s: str ) -> str:
+      """CL word-boundary capitalize: first alpha/digit in a word → upper,
+rest → lower.  Non-alphanumeric characters end the current word."""
+      result   = []
+      in_word  = False
+      for c in s:
+         if c.isalpha() or c.isdigit():
+            result.append( c.upper() if not in_word else c.lower() )
+            in_word = True
+         else:
+            result.append( c )
+            in_word = False
+      return ''.join( result )
+
+   @primitive( 'string-capitalize', 'string &key (start 0) (end nil)',
+               min_args=1, arity_msg='At least 1 argument expected.' )
    def LP_string_capitalize( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns a copy of string with the first letter of each word capitalized
-and all other letters lowercased."""
-      s = args[0]
+      """Returns a copy of string with CL word-boundary capitalization applied.
+Optional :start and :end bound the region affected; text outside is unchanged."""
+      kw      = _bind_kw( _STRCAP_LL, args, ctx, env, LP_string_capitalize )
+      s       = kw.lookup( 'STRING' )
+      start   = kw.lookup( 'START' )
+      end     = kw.lookup( 'END' )
       if not isinstance( s, str ):
          raise LispRuntimeFuncError( LP_string_capitalize, '1st argument must be a string.' )
-      return s.title()
+      start_n, end_n = _validate_bounds( start, end, len(s), LP_string_capitalize )
+      prefix   = s[:start_n]
+      middle   = s[start_n:end_n]
+      suffix   = s[end_n:]
+      return prefix + _cl_capitalize( middle ) + suffix

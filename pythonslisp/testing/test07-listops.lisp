@@ -113,12 +113,12 @@
 
 ==> (10 20 30)
 
->>> (sort (list 3 1 2))
+>>> (sort (list 3 1 2) <)
 ...
 
 ==> (1 2 3)
 
->>> (sort (list "b" "a" "c"))
+>>> (sort (list "b" "a" "c") string<)
 ...
 
 ==> ("a" "b" "c")
@@ -144,18 +144,23 @@
 %%% USAGE: (CONS <obj> <list>)
 ==>
 
->>> ;;; Error: append requires at least two arguments
-... (append '(1))
+>>> ;;; append with no arguments returns NIL
+... (append)
+...
 
-%%% ERROR 'APPEND': At least 2 arguments expected.
-%%% USAGE: (APPEND <list1> <list2> ...)
-==>
+==> NIL
+
+>>> ;;; append with one argument returns it unchanged
+... (append '(1 2 3))
+...
+
+==> (1 2 3)
 
 >>> ;;; Error: append requires list arguments
 ... (append 1 '(2 3))
 
 %%% ERROR 'APPEND': Invalid argument.
-%%% USAGE: (APPEND <list1> <list2> ...)
+%%% USAGE: (APPEND &rest <lists>)
 ==>
 
 >>> ;;; Error: at with out-of-range index
@@ -165,11 +170,11 @@
 %%% USAGE: (AT <keyOrIndex> <mapListOrStr>)
 ==>
 
->>> ;;; Error: sort requires a list argument
-... (sort 1)
+>>> ;;; Error: sort requires a list argument (predicate now required)
+... (sort 1 <)
 
 %%% ERROR 'SORT': Argument 1 expected to be a list.
-%%% USAGE: (SORT <list>)
+%%% USAGE: (SORT sequence predicate &key (key nil))
 ==>
 
 ; --- subseq ---

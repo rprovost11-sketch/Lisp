@@ -51,8 +51,8 @@
    (> numVal 0))
 
 (defun zerop (numVal)
-   "Returns t if the number is very close to zero (within 1e-15) otherwise nil."
-   (< (abs numVal) 1e-15))
+   "Returns t if the number is exactly zero otherwise nil."
+   (= numVal 0))
 
 (alias isPositive? plusp)
 

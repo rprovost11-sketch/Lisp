@@ -1,12 +1,18 @@
 import functools
 import math
 import random as _random
+from fractions import Fraction
 from typing import Any
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LNUMBER
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
+
+
+def _frac_or_int( frac: Fraction ):
+   """Return frac as an int if it has no remainder, otherwise as a Fraction."""
+   return int(frac) if frac.denominator == 1 else frac
 
 
 def register(primitive, primitiveDict: dict) -> None:
@@ -44,12 +50,24 @@ def register(primitive, primitiveDict: dict) -> None:
       except TypeError:
          raise LispRuntimeFuncError( LP_mul, 'Invalid argument.' )
 
-   @primitive( '/', '<number1> <number2> ...' )
+   @primitive( '/', '<number1> <number2> ...',
+               min_args=1, arity_msg='At least 1 argument expected.' )
    def LP_div( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns the quotient of numbers."""
+      """Returns the quotient of numbers.  With one argument returns the reciprocal.
+Integer and Fraction inputs produce exact Fraction results (simplified to int
+when the denominator is 1).  Any float input yields a float result."""
       try:
-         return functools.reduce( lambda x,y: x / y, iter(args) )
-      except TypeError:
+         if len(args) == 1:
+            n = args[0]
+            if isinstance(n, float):
+               return 1.0 / n
+            return _frac_or_int( Fraction(1) / Fraction(n) )
+         if any( isinstance(a, float) for a in args ):
+            return functools.reduce( lambda x, y: x / y, args )
+         fracs  = [ Fraction(a) for a in args ]
+         result = functools.reduce( lambda x, y: x / y, fracs )
+         return _frac_or_int( result )
+      except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_div, 'Invalid argument.' )
       except ZeroDivisionError:
          raise LispRuntimeFuncError( LP_div, 'division by zero' )
@@ -222,16 +240,18 @@ Returns only the primary value; remainder is discarded."""
    @primitive( 'random', '<integerOrFloat>',
                min_args=1, max_args=1, arity_msg='Exactly 1 number argument expected.' )
    def LP_random( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns a random int or float in the range 0 <= n <= arg.  If the argument
-is an int the random number will be an int, if the argument is a float the
-random number will be a float."""
+      """Returns a random number in [0, n).  n must be positive.
+For integer n returns a random integer in [0, n).
+For float n returns a random float in [0.0, n)."""
       num = args[0]
 
       if isinstance( num, int ):
-         if num < 0:
-            raise LispRuntimeFuncError( LP_random, 'Argument expected to be non-negative.' )
-         return _random.randint(0, num)
+         if num <= 0:
+            raise LispRuntimeFuncError( LP_random, 'Argument expected to be positive.' )
+         return _random.randrange( num )
       elif isinstance( num, float ):
-         return _random.uniform(0.0, num)
+         if num <= 0.0:
+            raise LispRuntimeFuncError( LP_random, 'Argument expected to be positive.' )
+         return _random.uniform( 0.0, num )
       else:
          raise LispRuntimeFuncError( LP_random, 'Invalid argument type.' )

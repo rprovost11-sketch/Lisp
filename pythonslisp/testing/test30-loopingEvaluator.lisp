@@ -293,11 +293,11 @@
 >>> (+ 1000 (call/cc (lambda (k1) (+ 100 (call/cc (lambda (k2) (k1 5)))))))
 ==> 1005
 
-; Early exit from foreach loop using call/cc
+; Early exit from dolist loop using call/cc
 >>> (defun find-first (pred lst)
-...    (call/cc (lambda (return)
-...                (foreach x lst
-...                   (if (pred x) (return x) nil))
+...    (call/cc (lambda (exit)
+...                (dolist (x lst)
+...                   (if (pred x) (exit x) nil))
 ...                nil)))
 ==> (FUNCTION FIND-FIRST (PRED LST) ... )
 

@@ -210,12 +210,6 @@ Multiple (place value) pairs expand to a progn of individual setfs."
    "Return the arguments in a list maintaining order."
    lst)
 
-(defun remove (sym lst)
-   "Remove a symbol from a list."
-         (cond
-            ((null lst)           nil)
-            ((= sym (first lst))  (remove sym (rest lst)))
-            (1                    (cons (first lst) (remove sym (rest lst))))))
 
 
 (defun reverse (lst)
@@ -306,97 +300,78 @@ Returns the last body value from the last iteration, or NIL if the loop never ru
 
 (defmacro dotimes (control &rest body)
    "Executes body count times with the loop variable bound to 0, 1, ..., count-1.
-Returns the last body value from the last iteration, or NIL if count <= 0."
+Returns result (default NIL) after the loop; var = count when result is evaluated.
+Supports (return value) for early exit."
    (cond
       ((not (listp control))
        (error "dotimes: first argument must be a (var count) list"))
-      ((/= (length control) 2)
-       (error "dotimes: first argument must have exactly 2 elements"))
+      ((< (length control) 2)
+       (error "dotimes: first argument must have at least 2 elements"))
+      ((> (length control) 3)
+       (error "dotimes: first argument must have at most 3 elements"))
       ((not (symbolp (car control)))
        (error "dotimes: loop variable must be a symbol"))
       ((not body)
        (error "dotimes: at least one body expression is required"))
       (t
-       (let ((fn  (gensym "DOTIMES"))
-             (cnt (gensym "COUNT"))
-             (res (gensym "RESULT"))
-             (var (car control))
-             (count-expr (car (cdr control))))
-          `(let ((,cnt ,count-expr) (,fn nil) (,res nil))
-               (if (not (integerp ,cnt))
-                   (error "dotimes: count must be an integer")
-                   (progn
-                      (setq ,fn (lambda (,var)
-                                   (if (< ,var ,cnt)
-                                       (progn (setq ,res (progn ,@body))
-                                              (,fn (+ ,var 1)))
-                                       ,res)))
-                      (,fn 0))))))))
-
-(defmacro foreach (var list-expr &rest body)
-   "Iterates over each element of list-expr, binding var to the current element.
-Returns the last body value from the last iteration, or NIL if the list is empty."
-   (cond
-      ((not (symbolp var))
-       (error "foreach: first argument must be a symbol"))
-      ((not body)
-       (error "foreach: at least one body expression is required"))
-      (t
-       (let ((fn  (gensym "FOREACH"))
-             (lst (gensym "LST"))
-             (rem (gensym "REM"))
-             (res (gensym "RESULT")))
-          `(let ((,lst ,list-expr) (,fn nil) (,res nil))
-               (if (not (listp ,lst))
-                   (error "foreach: second argument must evaluate to a list")
-                   (progn
-                      (setq ,fn (lambda (,rem)
-                                   (if ,rem
-                                       (let ((,var (car ,rem)))
-                                          (setq ,res (progn ,@body))
-                                          (,fn (cdr ,rem)))
-                                       ,res)))
-                      (,fn ,lst))))))))
+       (let ((fn          (gensym "DOTIMES"))
+             (cnt         (gensym "COUNT"))
+             (var         (car control))
+             (count-expr  (car (cdr control)))
+             (result-form (if (cdr (cdr control)) (car (cdr (cdr control))) 'nil)))
+          `(block nil
+               (let ((,cnt ,count-expr) (,fn nil) (,var 0))
+                   (if (not (integerp ,cnt))
+                       (error "dotimes: count must be an integer")
+                       (progn
+                          (setq ,fn (lambda ()
+                                       (if (< ,var ,cnt)
+                                           (progn ,@body
+                                                  (setq ,var (+ ,var 1))
+                                                  (,fn))
+                                           nil)))
+                          (,fn)))
+                   ,result-form))))))
 
 (defmacro dolist (control &rest body)
-   "Iterates over each element of a list, binding the control variable to the current element.
-Returns the last body value from the last iteration, or NIL if the list is empty or body is absent."
+   "Iterates over each element of a list, binding the control variable to each element.
+Returns result (default NIL) after the loop; var = NIL when result is evaluated.
+Supports (return value) for early exit."
    (cond
       ((not (listp control))
        (error "dolist: first argument must be a (variable list) control spec"))
-      ((/= (length control) 2)
-       (error "dolist: control spec must have exactly 2 elements"))
+      ((< (length control) 2)
+       (error "dolist: control spec must have at least 2 elements"))
+      ((> (length control) 3)
+       (error "dolist: control spec must have at most 3 elements"))
       ((not (symbolp (car control)))
        (error "dolist: control spec variable must be a symbol"))
       (t
-       (let ((fn   (gensym "DOLIST"))
-             (lst  (gensym "LST"))
-             (rem  (gensym "REM"))
-             (res  (gensym "RESULT"))
-             (var  (car control))
-             (list-expr (car (cdr control))))
+       (let ((fn          (gensym "DOLIST"))
+             (rem         (gensym "REM"))
+             (var         (car control))
+             (list-expr   (car (cdr control)))
+             (result-form (if (cdr (cdr control)) (car (cdr (cdr control))) 'nil)))
           (if body
-              `(let ((,lst ,list-expr) (,fn nil) (,res nil))
-                   (if (not (listp ,lst))
+              `(block nil
+                   (let ((,rem ,list-expr) (,fn nil) (,var nil))
+                       (if (not (listp ,rem))
+                           (error "dolist: list must evaluate to a list")
+                           (progn
+                              (setq ,fn (lambda ()
+                                           (if ,rem
+                                               (progn (setq ,var (car ,rem))
+                                                      (setq ,rem (cdr ,rem))
+                                                      ,@body
+                                                      (,fn))
+                                               nil)))
+                              (,fn)))
+                       (setq ,var nil)
+                       ,result-form))
+              `(block nil
+                   (if (not (listp ,list-expr))
                        (error "dolist: list must evaluate to a list")
-                       (progn
-                          (setq ,fn (lambda (,rem)
-                                       (if ,rem
-                                           (let ((,var (car ,rem)))
-                                              (setq ,res (progn ,@body))
-                                              (,fn (cdr ,rem)))
-                                           ,res)))
-                          (,fn ,lst))))
-              `(if (not (listp ,list-expr))
-                   (error "dolist: list must evaluate to a list")
-                   nil))))))
-
-(defun mapcar (fn lst)
-   "Apply fn to each element of lst and return the list of results."
-   (let ((result nil))
-      (dolist (item lst)
-         (setf result (append result (list (funcall fn item)))))
-      result))
+                       nil)))))))
 
 (defun last (lst &optional (n 1))
    "Returns the last n cons cells of lst."
@@ -415,29 +390,6 @@ Returns the last body value from the last iteration, or NIL if the list is empty
        nil
        (cons (first lst) (butlast (rest lst) n))))
 
-(defun member (item lst)
-   "Returns the tail of lst starting at the first occurrence of item, or NIL."
-   (cond ((null lst)            nil)
-         ((= item (first lst))  lst)
-         (1                     (member item (rest lst)))))
-
-(defun assoc (key alist)
-   "Returns the first pair in alist whose car equals key, or NIL."
-   (cond ((null alist)                   nil)
-         ((= key (first (first alist)))  (first alist))
-         (1                              (assoc key (rest alist)))))
-
-(defun every (fn lst)
-   "Returns T if fn returns true for every element of lst, NIL otherwise."
-   (cond ((null lst)                        t)
-         ((null (funcall fn (first lst)))   nil)
-         (1                                 (every fn (rest lst)))))
-
-(defun some (fn lst)
-   "Returns T if fn returns true for at least one element of lst, NIL otherwise."
-   (cond ((null lst)                   nil)
-         ((funcall fn (first lst))     t)
-         (1                            (some fn (rest lst)))))
 
 (defun reduce (fn lst)
    "Cumulatively apply fn to lst elements left to right, reducing to a single value."
@@ -447,80 +399,6 @@ Returns the last body value from the last iteration, or NIL if the list is empty
           (dolist (item (rest lst))
              (setf acc (funcall fn acc item)))
           acc)))
-
-(defun mapc (fn lst)
-   "Apply fn to each element of lst for side effects. Returns lst."
-   (dolist (item lst)
-      (funcall fn item))
-   lst)
-
-(defun remove-if (pred lst)
-   "Returns a copy of lst with all elements satisfying pred removed."
-   (cond ((null lst)                  nil)
-         ((funcall pred (first lst))  (remove-if pred (rest lst)))
-         (1                           (cons (first lst) (remove-if pred (rest lst))))))
-
-(defun remove-if-not (pred lst)
-   "Returns a copy of lst keeping only elements satisfying pred."
-   (cond ((null lst)                  nil)
-         ((funcall pred (first lst))  (cons (first lst) (remove-if-not pred (rest lst))))
-         (1                           (remove-if-not pred (rest lst)))))
-
-(defun find (item lst)
-   "Returns the first element of lst equal to item, or NIL if not found."
-   (cond ((null lst)               nil)
-         ((= item (first lst))     (first lst))
-         (1                        (find item (rest lst)))))
-
-(defun find-if (pred lst)
-   "Returns the first element of lst satisfying pred, or NIL if not found."
-   (cond ((null lst)                  nil)
-         ((funcall pred (first lst))  (first lst))
-         (1                           (find-if pred (rest lst)))))
-
-(defun position (item lst)
-   "Returns the 0-based index of the first element of lst equal to item, or NIL."
-   (block position
-      (let ((idx 0))
-         (dolist (x lst)
-            (if (= item x) (return-from position idx))
-            (setf idx (+ idx 1)))
-         nil)))
-
-(defun position-if (pred lst)
-   "Returns the 0-based index of the first element satisfying pred, or NIL."
-   (block position-if
-      (let ((idx 0))
-         (dolist (x lst)
-            (if (funcall pred x) (return-from position-if idx))
-            (setf idx (+ idx 1)))
-         nil)))
-
-(defun count (item lst)
-   "Returns the number of elements in lst equal to item."
-   (let ((n 0))
-      (dolist (x lst)
-         (if (= item x) (setf n (+ n 1))))
-      n))
-
-(defun count-if (pred lst)
-   "Returns the number of elements in lst satisfying pred."
-   (let ((n 0))
-      (dolist (x lst)
-         (if (funcall pred x) (setf n (+ n 1))))
-      n))
-
-(defun substitute (new old lst)
-   "Returns a copy of lst with all occurrences of old replaced by new."
-   (cond ((null lst)               nil)
-         ((= old (first lst))      (cons new (substitute new old (rest lst))))
-         (1                        (cons (first lst) (substitute new old (rest lst))))))
-
-(defun substitute-if (new pred lst)
-   "Returns a copy of lst with all elements satisfying pred replaced by new."
-   (cond ((null lst)                  nil)
-         ((funcall pred (first lst))  (cons new (substitute-if new pred (rest lst))))
-         (1                           (cons (first lst) (substitute-if new pred (rest lst))))))
 
 (defun notany (pred lst)
    "Returns T if no element of lst satisfies pred, NIL otherwise."

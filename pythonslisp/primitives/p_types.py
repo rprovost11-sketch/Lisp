@@ -180,14 +180,13 @@ def register(primitive, parseLispString: Callable) -> None:
    @primitive( 'eq', '<a> <b>',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_eq( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if the two values are the same object otherwise nil.
-For numbers and strings uses value equality as a pragmatic choice since
-Python does not guarantee object identity for equal primitive values."""
+      """Returns t if the two values are the same object (CL eq semantics).
+Symbols with the same name are always eq.  All other types use object
+identity.  Note: small integers and interned strings may be identical
+in CPython due to implementation-level caching."""
       arg1, arg2 = args
       if isinstance(arg1, LSymbol) and isinstance(arg2, LSymbol):
          return L_T if (arg1.strval == arg2.strval) else L_NIL
-      if isinstance(arg1, (int, float, str)):
-         return L_T if (arg1 == arg2) else L_NIL
       return L_T if (arg1 is arg2) else L_NIL
 
    @primitive( 'eql', '<a> <b>',

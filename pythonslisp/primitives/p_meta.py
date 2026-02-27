@@ -101,10 +101,11 @@ value.
 Alternate usage: (setf (at <keyOrIndex> <mapOrList>) <newValue>)"""
       raise LispRuntimeFuncError( LP_setq, 'Handled by main eval loop.' )
 
-   @primitive( 'makunbound', '<symbol>', specialForm=True,
+   @primitive( 'makunbound', '<symbol>',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_makunbound( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Undefines the global definition for a symbol and returns nil."""
+      """Undefines the global definition for a symbol and returns nil.
+The argument is evaluated: (makunbound 'x) unbinds X."""
       key = args[0]
       if not isinstance(key, LSymbol):
          raise LispRuntimeFuncError( LP_makunbound, 'Argument expected to be a symbol.' )

@@ -29,10 +29,10 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
    from pythonslisp.primitives import p_meta, p_control, p_sequences, p_math, p_types, p_strings, p_io
    p_meta.register( primitive )
    p_control.register( primitive )
-   p_sequences.register( primitive )
+   p_sequences.register( primitive, parseLispString )
    p_math.register( primitive, primitiveDict )    # also adds PI and E
    p_types.register( primitive, parseLispString )
-   p_strings.register( primitive )
+   p_strings.register( primitive, parseLispString )
    p_io.register( primitive, parseLispString )
 
    return primitiveDict

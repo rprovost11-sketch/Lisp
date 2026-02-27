@@ -150,7 +150,7 @@
 
 ==> 2
 
->>> (makunbound var3)
+>>> (makunbound 'var3)
 ...
 
 ==> NIL
@@ -217,7 +217,7 @@ T
 
 ==> 99
 
->>> (undef! _tmp_var_)
+>>> (undef! '_tmp_var_)
 ...
 
 ==> NIL

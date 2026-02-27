@@ -254,7 +254,7 @@
 ==> 1
 
 >>> ;;; sort on empty list
-... (sort '())
+... (sort '() <)
 ...
 
 ==> NIL
@@ -483,7 +483,7 @@
 >>> (dolist (x '(1 2 3 4 5)) (setf fsum (+ fsum x)))
 ...
 
-==> 15
+==> NIL
 
 >>> fsum
 ...
@@ -500,7 +500,7 @@
 >>> (dotimes (i 5) (setf dsum (+ dsum i)))
 ...
 
-==> 10
+==> NIL
 
 >>> dsum
 ...
@@ -583,11 +583,11 @@
 
 ==> 0
 
->>> ;;; division produces float
+>>> ;;; division produces exact fraction
 ... (/ 1 2)
 ...
 
-==> 0.5
+==> 1/2
 
 ; --- Additional list operation edge cases ---
 
@@ -598,7 +598,7 @@
 ==> (1 2 3)
 
 >>> ;;; sort on single-element list
-... (sort (list 3))
+... (sort (list 3) <)
 ...
 
 ==> (3)
@@ -1209,7 +1209,7 @@
 ; --- sort with strings ---
 
 >>> ;;; sort works on string lists
-... (sort '("c" "a" "b"))
+... (sort '("c" "a" "b") string<)
 ...
 
 ==> ("a" "b" "c")
@@ -1276,13 +1276,13 @@
 ... (average 5)
 ...
 
-==> 5.0
+==> 5
 
 >>> ;;; average with rationals
 ... (average 1/2 3/2)
 ...
 
-==> 1/1
+==> 1
 
 ; --- string/ustring from symbol ---
 
@@ -1400,17 +1400,19 @@
 
 ; --- random zero edge cases ---
 
->>> ;;; random of 0 returns 0
+>>> ;;; random of 0 is an error (must be positive)
 ... (random 0)
-...
 
-==> 0
+%%% ERROR 'RANDOM': Argument expected to be positive.
+%%% USAGE: (RANDOM <integerOrFloat>)
+==>
 
->>> ;;; random of 0.0 returns 0.0
+>>> ;;; random of 0.0 is an error (must be positive)
 ... (random 0.0)
-...
 
-==> 0.0
+%%% ERROR 'RANDOM': Argument expected to be positive.
+%%% USAGE: (RANDOM <integerOrFloat>)
+==>
 
 ; --- make-symbol from string edge case ---
 
@@ -1667,22 +1669,22 @@ Unknown topic: "UNKNOWN-TOPIC"
 ; --- sort edge cases ---
 
 >>> ;;; sort with duplicates preserved
-... (sort '(3 1 2 1))
+... (sort '(3 1 2 1) <)
 
 ==> (1 1 2 3)
 
 >>> ;;; sort with rationals
-... (sort (list 1/2 1/3 1/4))
+... (sort (list 1/2 1/3 1/4) <)
 
 ==> (1/4 1/3 1/2)
 
 >>> ;;; sort with mixed int/float
-... (sort (list 1 2.5 3))
+... (sort (list 1 2.5 3) <)
 
 ==> (1 2.5 3)
 
 >>> ;;; sort empty list
-... (sort '())
+... (sort '() <)
 
 ==> NIL
 

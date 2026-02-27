@@ -22,7 +22,7 @@
 >>> ;;; (/) with no args
 ... (/)
 
-%%% ERROR '/': Invalid argument.
+%%% ERROR '/': At least 1 argument expected.
 %%% USAGE: (/ <number1> <number2> ...)
 ==>
 
@@ -103,7 +103,7 @@
 >>> ;;; random with negative
 ... (random -1)
 
-%%% ERROR 'RANDOM': Argument expected to be non-negative.
+%%% ERROR 'RANDOM': Argument expected to be positive.
 %%% USAGE: (RANDOM <integerOrFloat>)
 ==>
 
@@ -223,11 +223,11 @@
 %%% USAGE: (AT-DELETE <keyOrIndex> <mapOrList>)
 ==>
 
->>> ;;; sort with incomparable types
+>>> ;;; sort requires a predicate argument
 ... (sort (list 3 "a" 1))
 
-%%% ERROR 'SORT': Cannot sort a list with incomparable types.
-%%% USAGE: (SORT <list>)
+%%% ERROR 'SORT': At least 2 arguments expected.
+%%% USAGE: (SORT sequence predicate &key (key nil))
 ==>
 
 ; --- Arg count errors for list ops ---
@@ -391,10 +391,10 @@
 %%% dotimes: first argument must be a (var count) list
 ==>
 
->>> ;;; dotimes control list must have 2 elements
-... (dotimes (i 3 4) 1)
+>>> ;;; dotimes control list must have at most 3 elements
+... (dotimes (i 3 4 5) 1)
 
-%%% dotimes: first argument must have exactly 2 elements
+%%% dotimes: first argument must have at most 3 elements
 ==>
 
 >>> ;;; dotimes variable must be a symbol
@@ -626,7 +626,7 @@
 
 ==> 42
 
->>> (makunbound _mk_test_)
+>>> (makunbound '_mk_test_)
 ...
 
 ==> NIL
@@ -642,7 +642,7 @@
 
 ==> 77
 
->>> (undef! _ud_test_)
+>>> (undef! '_ud_test_)
 ...
 
 ==> NIL
@@ -1277,7 +1277,7 @@
 ... (append '(1) 2 '(3))
 
 %%% ERROR 'APPEND': Invalid argument.
-%%% USAGE: (APPEND <list1> <list2> ...)
+%%% USAGE: (APPEND &rest <lists>)
 ==>
 
 ; --- DEFSETF-INTERNAL errors ---
@@ -1315,10 +1315,10 @@
 ; --- SORT: non-list argument ---
 
 >>> ;;; sort with non-list argument
-... (sort 'abc)
+... (sort 'abc <)
 
 %%% ERROR 'SORT': Argument 1 expected to be a list.
-%%% USAGE: (SORT <list>)
+%%% USAGE: (SORT sequence predicate &key (key nil))
 ==>
 
 ; --- DOLIST: non-list evaluated argument ---
