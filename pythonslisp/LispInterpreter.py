@@ -45,9 +45,9 @@ class LispInterpreter( Interpreter ):
 
       # Create the GLOBAL environment and load in the primitives
       primitiveDict: dict[str, Any] = constructPrimitives( self._parser.parse )
-      bareCtx = self._makeContext( None )
+      ctx = self._makeContext( outStrm )
       self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict,
-                                                    evalFn=bareCtx.lEval )
+                                                    evalFn=ctx.lEval )
 
       # Load in the runtime library
       if self._libDir:

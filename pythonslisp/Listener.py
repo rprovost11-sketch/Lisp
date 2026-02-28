@@ -48,6 +48,8 @@ class Listener( object ):
    def __init__( self, anInterpreter: Interpreter, testdir: str='', **kwargs ) -> None:
       useColor   = sys.stdout.isatty()
       BOLD_WHITE = '\033[1;97m' if useColor else ''
+      BOLD_GREEN = '\033[1;92m' if useColor else ''
+      CYAN       = '\033[96m'   if useColor else ''
       DIM        = '\033[2m'    if useColor else ''
       RESET      = '\033[0m'    if useColor else ''
       print( f'{BOLD_WHITE}{{language}} {{version}} by {{author}}{RESET}'.format(**kwargs) )
@@ -83,7 +85,11 @@ class Listener( object ):
                atexit.register(Listener._rl.write_history_file, Listener._HIST_FILE)
             except ImportError:
                pass
-      self._cmd_reboot( [ ] )
+      print( )
+      print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
+      print( 'Enter any expression to have it evaluated by the interpreter.' )
+      print( f'{BOLD_GREEN}Welcome!{RESET}' )
+      print( )
 
    def readEvalPrintLoop( self ) -> None:
       '''Execute a read-eval-print-loop.  Handles all exceptions internally.'''
