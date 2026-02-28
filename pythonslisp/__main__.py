@@ -5,7 +5,7 @@ from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.30.26'
+VERSION      = '0.30.27'
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 PROJECT = 'https://github.com/rprovost11-sketch/Lisp'
@@ -70,7 +70,6 @@ def main( ) -> None:
    else:
       # Execute a lisp source file
       try:
-         interp.reboot()
          interp.evalFile( source_file )
       except FileNotFoundError as ex:
          print( f'File not found: "{ex.filename}"', file=sys.stderr )

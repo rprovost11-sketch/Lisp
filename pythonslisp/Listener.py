@@ -54,6 +54,8 @@ class Listener( object ):
       print( f'{DIM}Project home {{project}}{RESET}'.format(**kwargs) )
       print( )
       print( f'{DIM}- Initializing Listener{RESET}', flush=True )
+      print( f'{DIM}- Initializing interpreter{RESET}' )
+      print( f'{DIM}- Loading Runtime library{RESET}' )
       self._interp        = anInterpreter
       self._testdir       = testdir
       self._logFile: Any  = None
@@ -440,7 +442,7 @@ class Listener( object ):
       CYAN       = '\033[96m'   if useColor else ''
       DIM        = '\033[2m'    if useColor else ''
       RESET      = '\033[0m'    if useColor else ''
-      print( f'{DIM}- Initializing interpreter{RESET}' )
+      print( f'{DIM}- Reinitializing interpreter{RESET}' )
       print( f'{DIM}- Loading Runtime library{RESET}' )
       self._interp.reboot( )                     # boot/Reboot the interpreter
       print( )

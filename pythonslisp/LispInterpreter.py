@@ -29,6 +29,7 @@ class LispInterpreter( Interpreter ):
       self._parser: LispParser = LispParser( )
       self.tracer: Tracer = Tracer()
       self._setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
+      self.reboot()
 
    def _makeContext( self, outStrm ) -> LispContext:
       ctx = LispContext( outStrm, self.tracer, self._setf_registry )
