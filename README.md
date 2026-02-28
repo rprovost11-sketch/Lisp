@@ -83,10 +83,11 @@ API: Using Lisp as a Package
 ============================
 
 The easiest way to use the package is to import then instantiate a
-LispInterpreter.  If at any time you want completely reset the interpreter you
-can call reboot().  Next use the interpreter's eval() functions to call into
-lisp.  Everything is persistent across calls to these eval functions so you can
-mix and match which one you use at any given time.
+LispInterpreter.  Call reboot to initialize the interpreter and load the
+runtime.  If at any time you want completely reset the interpreter you can call
+reboot() again.  Next use the interpreter's eval() functions to call into lisp.
+Everything is persistent across calls to these eval functions so you can mix
+and match which one you use at any given time.
 
 The example below simply defines a fibonacci function in lisp, then calls the
 function from python and prints the results.
@@ -95,6 +96,7 @@ function from python and prints the results.
           from pythonslisp.LispAST import prettyPrintSExpr
 
           interp = LispInterpreter( )
+          interp.reboot( )
           interp.rawEval( '''(defun fibo (num)
                                  (if (< num 2)
                                      1

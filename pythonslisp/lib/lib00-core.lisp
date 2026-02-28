@@ -409,4 +409,4 @@ Supports (return value) for early exit."
    "Returns the character (as a single-character string) at position idx in str."
    `(at ,idx ,str))
 
-(alias call-with-current-continuation call/cc)
+

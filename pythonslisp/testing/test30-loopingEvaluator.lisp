@@ -281,8 +281,7 @@
 >>> (call/cc (lambda (k) (macrop k)))
 ==> NIL
 
-; call-with-current-continuation is an alias for call/cc
->>> (call-with-current-continuation (lambda (k) (k 99)))
+>>> (call/cc (lambda (k) (k 99)))
 ==> 99
 
 ; Inner call/cc escape stays within the inner scope; outer computation proceeds normally
