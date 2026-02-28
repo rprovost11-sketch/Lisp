@@ -193,6 +193,18 @@
 
 ==> NIL
 
+>>> ;;; /= non-adjacent duplicate: 1st and 3rd are equal
+... (/= 1 2 1)
+...
+
+==> NIL
+
+>>> ;;; /= three all-distinct values
+... (/= 1 2 3)
+...
+
+==> T
+
 >>> (> 5 3)
 ...
 

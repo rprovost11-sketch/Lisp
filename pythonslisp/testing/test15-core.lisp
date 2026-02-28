@@ -1732,6 +1732,16 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 ==> T
 
+>>> ;;; evenp type error on float
+... (evenp 2.0)
+
+%%% evenp: argument must be an integer
+
+>>> ;;; oddp type error on float
+... (oddp 3.0)
+
+%%% oddp: argument must be an integer
+
 >>> ;;; zerop float zero
 ... (zerop 0.0)
 

@@ -32,11 +32,15 @@
 
 (defun evenp (intVal)
    "Returns t if the argument is even otherwise nil."
-         (= (mod intVal 2) 0))
+   (if (not (integerp intVal))
+      (error "evenp: argument must be an integer")
+      (= (mod intVal 2) 0)))
 
 (defun oddp (intVal)
    "Returns t if the argument is odd otherwise nil."
-         (= (mod intVal 2) 1))
+   (if (not (integerp intVal))
+      (error "oddp: argument must be an integer")
+      (= (mod intVal 2) 1)))
 
 (alias isEven? evenp)
 

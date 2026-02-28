@@ -230,14 +230,14 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
    @primitive( '/=', 'expr1 expr2 ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
    def LP_notEqual( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if the two exprs are different values otherwise nil."""
+      """Returns t if no two arguments are numerically equal, otherwise nil.
+CL semantics: all pairwise combinations are checked, not just adjacent pairs.
+(/= 1 2 1) is NIL because the 1st and 3rd arguments are equal."""
 
-      prior = None
-      for mbr in args:
-         if prior is not None:
-            if not( prior != mbr ):
+      for i in range(len(args)):
+         for j in range(i + 1, len(args)):
+            if args[i] == args[j]:
                return L_NIL
-         prior = mbr
 
       return L_T
 

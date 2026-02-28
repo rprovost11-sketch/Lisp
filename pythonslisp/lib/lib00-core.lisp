@@ -210,8 +210,6 @@ Multiple (place value) pairs expand to a progn of individual setfs."
    "Return the arguments in a list maintaining order."
    lst)
 
-
-
 (defun reverse (lst)
    "Return a copy of a list in reverse order."
          (reverse-aux (list) lst))
@@ -390,7 +388,6 @@ Supports (return value) for early exit."
        nil
        (cons (first lst) (butlast (rest lst) n))))
 
-
 (defun reduce (fn lst)
    "Cumulatively apply fn to lst elements left to right, reducing to a single value."
    (if (null lst)
@@ -413,4 +410,3 @@ Supports (return value) for early exit."
    `(at ,idx ,str))
 
 (alias call-with-current-continuation call/cc)
-
