@@ -45,7 +45,9 @@ class LispInterpreter( Interpreter ):
 
       # Create the GLOBAL environment and load in the primitives
       primitiveDict: dict[str, Any] = constructPrimitives( self._parser.parse )
-      self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict )
+      bareCtx = self._makeContext( None )
+      self._env: LispEnvironment = LispEnvironment( parent=None, initialBindings=primitiveDict,
+                                                    evalFn=bareCtx.lEval )
 
       # Load in the runtime library
       if self._libDir:
@@ -305,14 +307,14 @@ class LispInterpreter( Interpreter ):
             try:
                if isinstance( function, LPrimitive ):
                   if function.lambdaListAST is not None:
-                     kw_env = LispEnvironment( env )
-                     kw_env.bindArguments( function.lambdaListAST, args, ctx.lEval )
+                     kw_env = LispEnvironment( env, evalFn=ctx.lEval )
+                     kw_env.bindArguments( function.lambdaListAST, args )
                      result = function.pythonFn( ctx, kw_env, *args )
                   else:
                      result = function.pythonFn( ctx, env, *args )
                else:
-                  env = LispEnvironment( function.capturedEnvironment )
-                  env.bindArguments( function.lambdaListAST, args, ctx.lEval )
+                  env = LispEnvironment( function.capturedEnvironment, evalFn=ctx.lEval )
+                  env.bindArguments( function.lambdaListAST, args )
                   if printed:
                      # Traced: evaluate recursively so the exit trace fires at the right time.
                      result = L_NIL
@@ -365,16 +367,16 @@ class LispInterpreter( Interpreter ):
       try:
          if isinstance( function, LPrimitive ):
             if function.lambdaListAST is not None:
-               kw_env = LispEnvironment( env )
-               kw_env.bindArguments( function.lambdaListAST, args, ctx.lEval )
+               kw_env = LispEnvironment( env, evalFn=ctx.lEval )
+               kw_env.bindArguments( function.lambdaListAST, args )
                result = function.pythonFn( ctx, kw_env, *args )
             else:
                result = function.pythonFn( ctx, env, *args )
          elif isinstance( function, LFunction ):
-            env = LispEnvironment( function.capturedEnvironment ) # Open a new scope on the function's captured env to support closures.
+            env = LispEnvironment( function.capturedEnvironment, evalFn=ctx.lEval ) # Open a new scope on the function's captured env to support closures.
 
             # store the arguments as locals
-            env.bindArguments( function.lambdaListAST, args, ctx.lEval )
+            env.bindArguments( function.lambdaListAST, args )
 
             # evaluate the body expressions.
             result = L_NIL

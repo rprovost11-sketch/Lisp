@@ -105,8 +105,8 @@ class LispExpander:
     @staticmethod
     def _expandMacroCall(ctx: LispContext, env: Environment, macro: LMacro, argsList: list) -> Any:
         """Expand a single macro call and return the unevaluated expansion."""
-        expansionEnv = LispEnvironment(env)
-        expansionEnv.bindArguments(macro.lambdaListAST, argsList, ctx.lEval)
+        expansionEnv = LispEnvironment(env, evalFn=ctx.lEval)
+        expansionEnv.bindArguments(macro.lambdaListAST, argsList)
 
         result = L_NIL
         for bodySExpr in macro.bodyAST:

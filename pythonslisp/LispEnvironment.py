@@ -4,8 +4,10 @@ Extends Environment with the argument-binding methods needed by the evaluator
 and expander.  Keeping them here makes the binding logic part of the environment
 object that it mutates.
 
-evalFn (LispInterpreter._lEval) is still passed in as a parameter to avoid a
-circular import (LispEnvironment cannot import LispInterpreter).
+evalFn is stored as an instance attribute so argument-binding methods do not
+need to carry it as a parameter.  Child environments inherit evalFn from their
+parent; the evaluator (LispInterpreter._lApply) passes ctx.lEval when creating
+a new scope so default-value evaluation always uses the current call context.
 """
 
 from typing import Any, Callable, Sequence
@@ -16,10 +18,20 @@ from pythonslisp.LispExceptions import LispArgBindingError
 
 
 class LispEnvironment(Environment):
-   __slots__ = ()
+   __slots__ = ('_evalFn',)
 
-   def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any],
-                      evalFn: Callable ) -> None:
+   def __init__( self, parent: (Environment|None) = None,
+                 initialBindings: (dict[str, Any]|None) = None,
+                 evalFn: (Callable|None) = None ) -> None:
+      super().__init__( parent, initialBindings )
+      if evalFn is not None:
+         self._evalFn = evalFn
+      elif parent is not None:
+         self._evalFn = parent._evalFn
+      else:
+         self._evalFn = None
+
+   def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any] ) -> None:
       self._validateNoDuplicateParams( lambdaListAST )
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
@@ -37,7 +49,7 @@ class LispEnvironment(Environment):
          raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
       if nextParam == '&OPTIONAL':
-         paramNum, argNum = self._bindOptionalArgs( lambdaListAST, paramNum+1, argList, argNum, evalFn )
+         paramNum, argNum = self._bindOptionalArgs( lambdaListAST, paramNum+1, argList, argNum )
 
          try:
             nextParam = lambdaListAST[paramNum]
@@ -59,7 +71,7 @@ class LispEnvironment(Environment):
             raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
       if nextParam == '&KEY':
-         paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum, evalFn )
+         paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum )
 
          try:
             nextParam = lambdaListAST[paramNum]
@@ -69,7 +81,7 @@ class LispEnvironment(Environment):
             raise LispArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
       if nextParam == '&AUX':
-         paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum, evalFn )
+         paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
       elif nextParam.startswith('&'):
          _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
          if nextParam.strval in _KNOWN_KEYWORDS:
@@ -143,8 +155,7 @@ class LispEnvironment(Environment):
       return paramNum, argNum
 
    def _bindOptionalArgs( self, lambdaListAST: list[Any], paramNum: int,
-                          argList: Sequence[Any], argNum: int,
-                          evalFn: Callable ) -> tuple[int, int]:
+                          argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
       '''Syntax:  &optional {var | (var [initform [svar]])}*'''
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
@@ -189,7 +200,7 @@ class LispEnvironment(Environment):
             initForm = argList[argNum]
 
          if (argNum >= argListLength) or (isinstance(initForm, LSymbol) and (initForm.startswith(':'))):
-            initForm = evalFn( self, originalInitForm )   # evaluate the spec default
+            initForm = self._evalFn( self, originalInitForm )   # evaluate the spec default
             svarVal  = list()   # Nil, False
          else:
             argNum  += 1
@@ -219,8 +230,7 @@ class LispEnvironment(Environment):
       return paramNum + 1, argNum
 
    def _bindKeyArgs( self, lambdaListAST: list[Any], paramNum: int,
-                     argList: Sequence[Any], argNum: int,
-                     evalFn: Callable ) -> tuple[int, int]:
+                     argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
       '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [svar]])}* [&allow-other-keys]'''
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
@@ -338,15 +348,14 @@ class LispEnvironment(Environment):
             if svarName:
                self.bindLocal( svarName.strval, tVal )
          else:
-            self.bindLocal( varName.strval, evalFn( self, initForm ) )
+            self.bindLocal( varName.strval, self._evalFn( self, initForm ) )
             if svarName:
                self.bindLocal( svarName.strval, nilVal )
 
       return paramNum, argNum
 
    def _bindAuxArgs( self, lambdaListAST: list[Any], paramNum: int,
-                     argList: Sequence[Any], argNum: int,
-                     evalFn: Callable ) -> tuple[int, int]:
+                     argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
       '''Syntax:  &aux {var | (var [initForm])}*
       These are not really arguments.  At least: these parameters get no corresponding arguments.
       These parameters are strictly local variables for the function.'''
@@ -373,7 +382,7 @@ class LispEnvironment(Environment):
             if not isinstance(varName, LSymbol) or varName.startswith('&'):
                raise LispArgBindingError( 'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
 
-            initForm = evalFn( self, initForm )
+            initForm = self._evalFn( self, initForm )
          else:
             raise LispArgBindingError( 'Parameter spec following &AUX must be a <variable> or a list of (<variable> [<defaultvalue>]).' )
 
