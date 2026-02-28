@@ -93,7 +93,7 @@ no substitution needed
 >>> ;;; Error: writef second argument must be a list or map
 ... (writef "hello" 1)
 
-%%% ERROR 'WRITEF': 2nd argument expected to be a list, map or stream.
+%%% ERROR 'WRITEF': 2nd argument expected to be a list, dict or stream.
 %%% USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 

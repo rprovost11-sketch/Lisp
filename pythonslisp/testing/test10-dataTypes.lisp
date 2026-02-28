@@ -83,12 +83,12 @@
 
 ==> ("a" 1 "c" "d" PI E)
 
->>> (hasvalue? '(a b c d) pi)
+>>> (hasvalue? pi '(a b c d))
 ...
 
 ==> NIL
 
->>> (hasvalue? '(a b c d) 'c)
+>>> (hasvalue? 'c '(a b c d))
 ...
 
 ==> T
@@ -116,7 +116,7 @@
 >>> (setf mymap (make-dict ("a" 1) ("b" 2) ("c" 3) ) )
 ...
 
-==> (MAP
+==> (DICT
    ("a" 1)
    ("b" 2)
    ("c" 3)
@@ -125,7 +125,7 @@
 >>> mymap
 ...
 
-==> (MAP
+==> (DICT
    ("a" 1)
    ("b" 2)
    ("c" 3)
@@ -144,18 +144,18 @@
 >>> mymap
 ...
 
-==> (MAP
+==> (DICT
    ("a" 1)
    ("b" 2.718281828459045)
    ("c" 3)
 )
 
->>> (hasValue? mymap 1)
+>>> (hasValue? 1 mymap)
 ...
 
 ==> T
 
->>> (hasValue? mymap 10)
+>>> (hasValue? 10 mymap)
 ...
 
 ==> NIL
@@ -163,7 +163,7 @@
 >>> (update! mymap (make-dict ("b" 5) ("d" 10)))
 ...
 
-==> (MAP
+==> (DICT
    ("a" 1)
    ("b" 5)
    ("c" 3)
@@ -173,47 +173,47 @@
 >>> mymap
 ...
 
-==> (MAP
+==> (DICT
    ("a" 1)
    ("b" 5)
    ("c" 3)
    ("d" 10)
 )
 
->>> (hasKey? mymap "a")
+>>> (hasKey? "a" mymap)
 ...
 
 ==> T
 
->>> (hasKey? mymap 3)
+>>> (hasKey? 3 mymap)
 ...
 
 ==> NIL
 
->>> ;;; Error: hasKey? requires a map as first argument
-... (hasKey? 1 (make-dict))
+>>> ;;; Error: hasKey? requires a map as second argument
+... (hasKey? "a" 1)
 
-%%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
-%%% USAGE: (HASKEY? dict key)
+%%% ERROR 'HASKEY?': Invalid argument 2.  Dict expected.
+%%% USAGE: (HASKEY? key dict)
 ==>
 
->>> ;;; Error: hasValue? requires a list or map as first argument
-... (hasValue? 1 '(1 2))
+>>> ;;; Error: hasValue? requires a list or map as second argument
+... (hasValue? 2 1)
 
-%%% ERROR 'HASVALUE?': Invalid argument.  Argument 1 expected to be a list or map.
-%%% USAGE: (HASVALUE? listOrDict value)
+%%% ERROR 'HASVALUE?': Invalid argument.  Argument 2 expected to be a list or dict.
+%%% USAGE: (HASVALUE? value listOrDict)
 ==>
 
 >>> ;;; Error: update! requires map arguments
 ... (update! 1 (make-dict))
 
-%%% ERROR 'UPDATE!': Argument 1 expected to be a map.
+%%% ERROR 'UPDATE!': Argument 1 expected to be a dict.
 %%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> (update! (make-dict) 1)
 
-%%% ERROR 'UPDATE!': Argument 2 expected to be a map.
+%%% ERROR 'UPDATE!': Argument 2 expected to be a dict.
 %%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
@@ -396,7 +396,7 @@
 >>> (setf p0 (make-point))
 ...
 
-==> (MAP
+==> (DICT
    ("STRUCT-TYPE" POINT)
    ("X" 0)
    ("Y" 0)
@@ -415,7 +415,7 @@
 >>> (setf p1 (make-point :x 3 :y 4))
 ...
 
-==> (MAP
+==> (DICT
    ("STRUCT-TYPE" POINT)
    ("X" 3)
    ("Y" 4)
@@ -434,7 +434,7 @@
 >>> (setf p-partial (make-point :x 5))
 ...
 
-==> (MAP
+==> (DICT
    ("STRUCT-TYPE" POINT)
    ("X" 5)
    ("Y" 0)
@@ -503,7 +503,7 @@
 >>> (setf p2 (copy-point p1))
 ...
 
-==> (MAP
+==> (DICT
    ("STRUCT-TYPE" POINT)
    ("X" 10)
    ("Y" 99)
@@ -547,7 +547,7 @@
 >>> (setf n1 (make-node :value 42))
 ...
 
-==> (MAP
+==> (DICT
    ("NEXT" NIL)
    ("STRUCT-TYPE" NODE)
    ("VALUE" 42)
@@ -581,7 +581,7 @@
 >>> (setf bob (make-person :name "Bob" :age 30))
 ...
 
-==> (MAP
+==> (DICT
    ("AGE" 30)
    ("NAME" "Bob")
    ("STRUCT-TYPE" PERSON)
@@ -625,7 +625,7 @@
 >>> (setf lbl (make-labeled))
 ...
 
-==> (MAP
+==> (DICT
    ("COUNT" 0)
    ("STRUCT-TYPE" LABELED)
    ("TAG" "none")
@@ -675,7 +675,7 @@
 >>> (point-x 42)
 ...
 
-%%% ERROR 'AT': Invalid argument.  List, Map, or String expected.
+%%% ERROR 'AT': Invalid argument.  List, Dict, or String expected.
 %%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 

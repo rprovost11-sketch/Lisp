@@ -17,4 +17,3 @@ class LispContext:
       self.lEval:            Callable = None   # set by LispInterpreter after construction
       self.lApply:           Callable = None   # set by LispInterpreter after construction
       self.lBackquoteExpand: Callable = None   # set by LispInterpreter after construction
-      self.lEql:             Callable = None   # set by LispInterpreter after construction

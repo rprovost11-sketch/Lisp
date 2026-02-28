@@ -111,7 +111,7 @@
 ... (string)
 
 %%% ERROR 'STRING': 1 or more arguments expected.
-%%% USAGE: (STRING object1 object2 ...)
+%%% USAGE: (STRING &rest objects)
 ==>
 
 >>> ;;; Error: make-symbol requires exactly one argument

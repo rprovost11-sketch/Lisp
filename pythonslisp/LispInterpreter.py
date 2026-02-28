@@ -35,7 +35,6 @@ class LispInterpreter( Interpreter ):
       ctx.lEval            = lambda env, sexpr: LispInterpreter._lEval( ctx, env, sexpr )
       ctx.lApply           = lambda env, fn, a: LispInterpreter._lApply( ctx, env, fn, a )
       ctx.lBackquoteExpand = lambda env, expr, depth=1: LispInterpreter._lbackquoteExpand( ctx, env, expr, depth )
-      ctx.lEql             = LispInterpreter._lEql
       return ctx
 
    def reboot( self, outStrm=None ) -> None:
@@ -128,16 +127,6 @@ class LispInterpreter( Interpreter ):
       if isinstance(sExpr, list):
          return len(sExpr) != 0
       return True
-
-   @staticmethod
-   def _lEql( a: Any, b: Any ) -> bool:
-      '''CL eql semantics: symbols compare by name; numbers compare by type and
-      value (so 1 and 1.0 are not eql); everything else compares by identity.'''
-      if isinstance(a, LSymbol) and isinstance(b, LSymbol):
-         return a.strval == b.strval
-      if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
-         return a == b
-      return a is b
 
    @staticmethod
    def _lEval( ctx: LispContext, env: Environment, sExprAST: Any ) -> Any:

@@ -223,7 +223,7 @@
 ... (tco-err 50000)
 
 %%% ERROR '//': division by zero
-%%% USAGE: (// number1 number2)
+%%% USAGE: (// &rest numbers)
 ==>
 
 ; --- 13. Arity error in tail position preserves function name ---

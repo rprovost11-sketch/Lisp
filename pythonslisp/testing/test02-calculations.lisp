@@ -309,7 +309,7 @@
 ... (+ "a" 1)
 
 %%% ERROR '+': Invalid argument.
-%%% USAGE: (+ number1 number2 ...)
+%%% USAGE: (+ &rest numbers)
 ==>
 
 >>> ;;; reciprocal: (/ n) = 1/n
@@ -334,7 +334,7 @@
 ... (/ 1 0)
 
 %%% ERROR '/': division by zero
-%%% USAGE: (/ number1 number2 ...)
+%%% USAGE: (/ &rest numbers)
 ==>
 
 >>> ;;; Error: expt requires exactly two arguments
@@ -348,14 +348,14 @@
 ... (log)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; Error: non-numeric argument to log
 ... (log "a")
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; Error: non-numeric argument to sin

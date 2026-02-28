@@ -158,7 +158,7 @@ def register( primitive ) -> None:
       key, keyed = args
 
       if not isinstance(keyed, (list, dict, str) ):
-         raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List, Map, or String expected.' )
+         raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List, Dict, or String expected.' )
 
       if isinstance( key, LSymbol ):
          key = key.strval
@@ -176,7 +176,7 @@ def register( primitive ) -> None:
       key, keyed, newValue = args
 
       if not isinstance(keyed, (list, dict)):
-         raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or Map expected.' )
+         raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or Dict expected.' )
 
       if isinstance( key, LSymbol ):
          key = key.strval
@@ -195,7 +195,7 @@ def register( primitive ) -> None:
       key, keyed = args
 
       if not isinstance( keyed, (list, dict) ):
-         raise LispRuntimeFuncError( LP_atDelete, "Argument 2 expected to be a list or map." )
+         raise LispRuntimeFuncError( LP_atDelete, "Argument 2 expected to be a list or dict." )
 
       try:
          del keyed[key]
@@ -234,18 +234,18 @@ def register( primitive ) -> None:
          resultList.extend( lst )
       return resultList
 
-   @primitive( 'hasValue?', 'listOrDict value',
+   @primitive( 'hasValue?', 'value listOrDict',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_hasValue( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the list/map contains value otherwise nil."""
-      keyed, aVal = args
+      aVal, keyed = args
 
       if isinstance(keyed, list):
          pass
       elif isinstance(keyed, dict):
          keyed = keyed.values()
       else:
-         raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.  Argument 1 expected to be a list or map.')
+         raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.  Argument 2 expected to be a list or dict.')
 
       return L_T if aVal in keyed else L_NIL
 
@@ -256,22 +256,22 @@ def register( primitive ) -> None:
       dict1, dict2 = args
 
       if not isinstance( dict1, dict ):
-         raise LispRuntimeFuncError( LP_update, 'Argument 1 expected to be a map.' )
+         raise LispRuntimeFuncError( LP_update, 'Argument 1 expected to be a dict.' )
 
       if not isinstance( dict2, dict ):
-         raise LispRuntimeFuncError( LP_update, 'Argument 2 expected to be a map.' )
+         raise LispRuntimeFuncError( LP_update, 'Argument 2 expected to be a dict.' )
 
       dict1.update( dict2 )
       return dict1
 
-   @primitive( 'hasKey?', 'dict key',
+   @primitive( 'hasKey?', 'key dict',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_hasKey( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the key is in the map otherwise nil."""
-      aMap, aKey = args
+      aKey, aMap = args
 
       if not isinstance(aMap, dict):
-         raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 1.  Map expected.')
+         raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 2.  Dict expected.')
 
       if isinstance( aKey, LSymbol ):
          aKey = aKey.strval
@@ -279,7 +279,7 @@ def register( primitive ) -> None:
       return L_T if aKey in aMap else L_NIL
 
    @primitive( 'sort', lambdaList='(sequence predicate &key (key nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_sort( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of the list sorted by predicate (a two-arg less-than test).
 The optional :key function extracts the comparison key from each element."""
@@ -347,7 +347,7 @@ If end is not provided, returns from start to the end of the sequence."""
    # ── CL sequence functions with full keyword-argument support ───────────────
 
    @primitive( 'member', lambdaList='(item list &key (test eql) (key nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_member( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the tail of list beginning with the first element whose :key
 satisfies :test when compared to item.  Returns NIL if no match is found.
@@ -364,7 +364,7 @@ Default :test is eql.  Default :key is identity (NIL)."""
       return L_NIL
 
    @primitive( 'assoc', lambdaList='(item alist &key (test eql) (key nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_assoc( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first pair in alist whose car (optionally extracted via :key)
 satisfies :test when compared to item.  Non-cons elements in alist are skipped.
@@ -382,7 +382,7 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
       return L_NIL
 
    @primitive( 'find', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_find( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) whose :key
 satisfies :test when compared to item.  If :from-end is true, searches right
@@ -406,7 +406,7 @@ to left and returns the rightmost match.  Returns NIL if not found."""
       return L_NIL
 
    @primitive( 'find-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_find_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) for which
 pred returns true when applied to the element's :key.  If :from-end is true,
@@ -430,7 +430,7 @@ returns the rightmost such element.  Returns NIL if none found."""
       return L_NIL
 
    @primitive( 'position', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_position( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element whose :key satisfies
 :test when compared to item.  If :from-end is true, returns the index of the
@@ -454,7 +454,7 @@ rightmost such element.  Returns NIL if not found."""
       return L_NIL
 
    @primitive( 'position-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_position_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element for which pred returns
 true when applied to the element's :key.  If :from-end is true, returns the
@@ -478,7 +478,7 @@ index of the rightmost such element.  Returns NIL if none found."""
       return L_NIL
 
    @primitive( 'count', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_count( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) whose
 :key satisfies :test when compared to item."""
@@ -498,7 +498,7 @@ index of the rightmost such element.  Returns NIL if none found."""
       return n
 
    @primitive( 'count-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_count_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) for
 which pred returns true when applied to the element's :key."""
@@ -518,7 +518,7 @@ which pred returns true when applied to the element's :key."""
       return n
 
    @primitive( 'remove', lambdaList='(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_remove( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements matching item removed.  An
 element matches if its :key satisfies :test when compared to item.  Only the
@@ -551,7 +551,7 @@ are removed; :from-end causes removal from the right when :count is supplied."""
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
    @primitive( 'remove-if', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_remove_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements removed where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
@@ -583,7 +583,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
    @primitive( 'remove-if-not', lambdaList='(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               min_args=2, arity_msg='At least 2 arguments expected.' )
+               arity_msg='At least 2 arguments expected.' )
    def LP_remove_if_not( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence keeping only elements where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
@@ -615,7 +615,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
    @primitive( 'substitute', lambdaList='(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               min_args=3, arity_msg='At least 3 arguments expected.' )
+               arity_msg='At least 3 arguments expected.' )
    def LP_substitute( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with occurrences of old replaced by new.  An
 element matches old if its :key satisfies :test when compared to old.  Only
@@ -649,7 +649,7 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
       return result
 
    @primitive( 'substitute-if', lambdaList='(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               min_args=3, arity_msg='At least 3 arguments expected.' )
+               arity_msg='At least 3 arguments expected.' )
    def LP_substitute_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements replaced by new where pred returns
 true for the element's :key.  Only the bounded region [:start, :end) is

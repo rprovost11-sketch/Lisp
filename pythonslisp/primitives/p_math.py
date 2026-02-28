@@ -20,7 +20,7 @@ def register(primitive, primitiveDict: dict) -> None:
    primitiveDict['PI'] = math.pi
    primitiveDict['E']  = math.e
 
-   @primitive( '+', 'number1 number2 ...' )
+   @primitive( '+', '&rest numbers' )
    def LP_add( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the sum of numbers."""
       try:
@@ -28,7 +28,7 @@ def register(primitive, primitiveDict: dict) -> None:
       except TypeError:
          raise LispRuntimeFuncError( LP_add, 'Invalid argument.' )
 
-   @primitive( '-', 'number1 number2 ...' )
+   @primitive( '-', '&rest numbers' )
    def LP_sub( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the difference of numbers."""
       try:
@@ -42,7 +42,7 @@ def register(primitive, primitiveDict: dict) -> None:
       except TypeError:
          raise LispRuntimeFuncError( LP_sub, 'Invalid argument.' )
 
-   @primitive( '*', 'number1 number2 ...' )
+   @primitive( '*', '&rest numbers' )
    def LP_mul( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the product of numbers."""
       try:
@@ -50,7 +50,7 @@ def register(primitive, primitiveDict: dict) -> None:
       except TypeError:
          raise LispRuntimeFuncError( LP_mul, 'Invalid argument.' )
 
-   @primitive( '/', 'number1 number2 ...',
+   @primitive( '/', '&rest numbers',
                min_args=1, arity_msg='At least 1 argument expected.' )
    def LP_div( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the quotient of numbers.  With one argument returns the reciprocal.
@@ -72,7 +72,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except ZeroDivisionError:
          raise LispRuntimeFuncError( LP_div, 'division by zero' )
 
-   @primitive( '//', 'number1 number2',
+   @primitive( '//', '&rest numbers',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_intdiv( ctx: LispContext, env: Environment, *args ) -> Any:
       """Return the integer division of two numbers."""
@@ -83,7 +83,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except ZeroDivisionError:
          raise LispRuntimeFuncError( LP_intdiv, 'division by zero' )
 
-   @primitive( 'mod', 'number1 number2',
+   @primitive( 'mod', '&rest numbers',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
    def LP_moddiv( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the integer remainder of division of two numbers."""
@@ -94,7 +94,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except ZeroDivisionError:
          raise LispRuntimeFuncError( LP_moddiv, 'division by zero' )
 
-   @primitive( 'gcd', 'integer1 integer2 ...' )
+   @primitive( 'gcd', '&rest integers' )
    def LP_gcd( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the greatest common divisor of some integers."""
       try:
@@ -102,7 +102,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except TypeError:
          raise LispRuntimeFuncError( LP_gcd, 'Invalid argument.' )
 
-   @primitive( 'lcm', 'integer1 integer2 ...' )
+   @primitive( 'lcm', '&rest integers' )
    def LP_lcm( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the least common multiple of some integers."""
       try:
@@ -110,7 +110,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except TypeError:
          raise LispRuntimeFuncError( LP_lcm, 'Invalid argument.' )
 
-   @primitive( 'log', 'number &optional base',
+   @primitive( 'log', 'number &optional (base e)',
                min_args=1, max_args=2, arity_msg='1 or 2 arguments expected.' )
    def LP_log( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the logarithm of a number.  With one argument, returns the natural
@@ -221,7 +221,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LispRuntimeFuncError( LP_round, f'Invalid argument: {e}' )
 
-   @primitive( 'min', 'number1 number2 ...' )
+   @primitive( 'min', '&rest numbers' )
    def LP_min( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the smallest of a set of numbers."""
       try:
@@ -229,7 +229,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_min, 'Invalid argument.' )
 
-   @primitive( 'max', 'number1 number2 ...' )
+   @primitive( 'max', '&rest numbers' )
    def LP_max( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the largest of a set of numbers."""
       try:

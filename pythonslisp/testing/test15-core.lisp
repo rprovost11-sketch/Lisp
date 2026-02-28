@@ -97,7 +97,7 @@
 ... (funcall)
 
 %%% ERROR 'FUNCALL': 1 or more arguments expected
-%%% USAGE: (FUNCALL fnNameSymbol arg1 arg2 ...)
+%%% USAGE: (FUNCALL fnNameSymbol &rest args)
 ==>
 
 ; --- apply errors ---
@@ -266,31 +266,31 @@
 ==> (3)
 
 >>> ;;; hasValue? on list (true)
-... (hasValue? '(1 2 3) 2)
+... (hasValue? 2 '(1 2 3))
 ...
 
 ==> T
 
 >>> ;;; hasValue? on list (false)
-... (hasValue? '(1 2 3) 5)
+... (hasValue? 5 '(1 2 3))
 ...
 
 ==> NIL
 
 >>> ;;; hasValue? on map (true)
-... (hasValue? (make-dict (a 1) (b 2)) 2)
+... (hasValue? 2 (make-dict (a 1) (b 2)))
 ...
 
 ==> T
 
 >>> ;;; hasValue? on map (false)
-... (hasValue? (make-dict (a 1) (b 2)) 3)
+... (hasValue? 3 (make-dict (a 1) (b 2)))
 ...
 
 ==> NIL
 
 >>> ;;; hasKey? on empty map
-... (hasKey? (make-dict) 'a)
+... (hasKey? 'a (make-dict))
 ...
 
 ==> NIL
@@ -335,7 +335,7 @@
 >>> (setf tmap (make-dict (a 10) (b 20) (c 30)))
 ...
 
-==> (MAP
+==> (DICT
    ("A" 10)
    ("B" 20)
    ("C" 30)
@@ -349,7 +349,7 @@
 >>> tmap
 ...
 
-==> (MAP
+==> (DICT
    ("B" 20)
    ("C" 30)
 )
@@ -858,7 +858,7 @@
 >>> (setf skmap (make-dict (x 10) (y 20)))
 ...
 
-==> (MAP
+==> (DICT
    ("X" 10)
    ("Y" 20)
 )
@@ -872,7 +872,7 @@
 >>> skmap
 ...
 
-==> (MAP
+==> (DICT
    ("X" 99)
    ("Y" 20)
 )
@@ -886,7 +886,7 @@
 >>> skmap
 ...
 
-==> (MAP
+==> (DICT
    ("X" 99)
    ("Y" 20)
    ("Z" 30)
@@ -897,7 +897,7 @@
 >>> (setf strmap (make-dict ("p" 1) ("q" 2)))
 ...
 
-==> (MAP
+==> (DICT
    ("p" 1)
    ("q" 2)
 )
@@ -910,7 +910,7 @@
 >>> strmap
 ...
 
-==> (MAP
+==> (DICT
    ("p" 88)
    ("q" 2)
 )
@@ -934,14 +934,14 @@
 >>> ;;; second argument is an integer (not a list or map)
 ... (at-set 0 42 9)
 
-%%% ERROR 'AT-SET': Invalid argument.  List or Map expected.
+%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
 %%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; second argument is a string (strings are immutable)
 ... (at-set 0 "abc" 9)
 
-%%% ERROR 'AT-SET': Invalid argument.  List or Map expected.
+%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
 %%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1013,7 +1013,7 @@
 ... (setf sf-map (make-dict (x 1) (y 2)))
 ...
 
-==> (MAP
+==> (DICT
    ("X" 1)
    ("Y" 2)
 )
@@ -1026,7 +1026,7 @@
 >>> sf-map
 ...
 
-==> (MAP
+==> (DICT
    ("X" 1)
    ("Y" 77)
 )
@@ -1150,7 +1150,7 @@
 >>> (setf smap22 (make-dict (a 1) (b 2)))
 ...
 
-==> (MAP
+==> (DICT
    ("A" 1)
    ("B" 2)
 )
@@ -1164,7 +1164,7 @@
 >>> smap22
 ...
 
-==> (MAP
+==> (DICT
    ("A" 99)
    ("B" 2)
 )
@@ -1193,7 +1193,7 @@
 ... (copy-tree (make-dict (a 1) (b 2)))
 ...
 
-==> (MAP
+==> (DICT
    ("A" 1)
    ("B" 2)
 )
@@ -1509,7 +1509,7 @@
 
 >>> ;;; help with primitive shows usage and returns T
 ... (help +)
-USAGE: (+ number1 number2 ...)
+USAGE: (+ &rest numbers)
 
 Returns the sum of numbers.
 ==> T
@@ -1531,7 +1531,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; alias creates a working alias for +
 ... (alias myadd23 +)
 
-==> (+ number1 number2 ...)
+==> (+ &rest numbers)
 
 >>> ;;; alias for + works
 ... (myadd23 1 2)
@@ -1614,7 +1614,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; empty dict
 ... (make-dict)
 
-==> (MAP
+==> (DICT
 )
 
 >>> ;;; empty dict is a dict
@@ -1625,7 +1625,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; dict values are evaluated
 ... (make-dict (a (+ 1 2)))
 
-==> (MAP
+==> (DICT
    ("A" 3)
 )
 
@@ -1637,14 +1637,14 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; dict with duplicate keys (last wins)
 ... (make-dict (a 1) (a 2))
 
-==> (MAP
+==> (DICT
    ("A" 2)
 )
 
 >>> ;;; dict with integer keys
 ... (make-dict (1 "one") (2 "two"))
 
-==> (MAP
+==> (DICT
    (1 "one")
    (2 "two")
 )
@@ -1889,7 +1889,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; create a struct instance
 ... (setf pt23 (make-point23 :x 10 :y 20))
 
-==> (MAP
+==> (DICT
    ("STRUCT-TYPE" POINT23)
    ("X" 10)
    ("Y" 20)

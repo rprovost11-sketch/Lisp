@@ -9,77 +9,77 @@
 ... (*)
 
 %%% ERROR '*': Invalid argument.
-%%% USAGE: (* number1 number2 ...)
+%%% USAGE: (* &rest numbers)
 ==>
 
 >>> ;;; (-) with no args
 ... (-)
 
 %%% ERROR '-': Invalid argument.
-%%% USAGE: (- number1 number2 ...)
+%%% USAGE: (- &rest numbers)
 ==>
 
 >>> ;;; (/) with no args
 ... (/)
 
 %%% ERROR '/': At least 1 argument expected.
-%%% USAGE: (/ number1 number2 ...)
+%%% USAGE: (/ &rest numbers)
 ==>
 
 >>> ;;; integer division by zero
 ... (// 7 0)
 
 %%% ERROR '//': division by zero
-%%% USAGE: (// number1 number2)
+%%% USAGE: (// &rest numbers)
 ==>
 
 >>> ;;; modulo by zero
 ... (mod 7 0)
 
 %%% ERROR 'MOD': division by zero
-%%% USAGE: (MOD number1 number2)
+%%% USAGE: (MOD &rest numbers)
 ==>
 
 >>> ;;; integer division with non-number
 ... (// "a" 2)
 
 %%% ERROR '//': Invalid argument.
-%%% USAGE: (// number1 number2)
+%%% USAGE: (// &rest numbers)
 ==>
 
 >>> ;;; modulo with non-number
 ... (mod "a" 2)
 
 %%% ERROR 'MOD': Invalid argument.
-%%% USAGE: (MOD number1 number2)
+%%% USAGE: (MOD &rest numbers)
 ==>
 
 >>> ;;; negation of non-number
 ... (- "a")
 
 %%% ERROR '-': Invalid argument.
-%%% USAGE: (- number1 number2 ...)
+%%% USAGE: (- &rest numbers)
 ==>
 
 >>> ;;; division with non-number
 ... (/ "a" 2)
 
 %%% ERROR '/': Invalid argument.
-%%% USAGE: (/ number1 number2 ...)
+%%% USAGE: (/ &rest numbers)
 ==>
 
 >>> ;;; min with no args
 ... (min)
 
 %%% ERROR 'MIN': Invalid argument.
-%%% USAGE: (MIN number1 number2 ...)
+%%% USAGE: (MIN &rest numbers)
 ==>
 
 >>> ;;; max with no args
 ... (max)
 
 %%% ERROR 'MAX': Invalid argument.
-%%% USAGE: (MAX number1 number2 ...)
+%%% USAGE: (MAX &rest numbers)
 ==>
 
 ; --- Trig domain errors ---
@@ -205,7 +205,7 @@
 >>> ;;; at on non-collection
 ... (at 0 42)
 
-%%% ERROR 'AT': Invalid argument.  List, Map, or String expected.
+%%% ERROR 'AT': Invalid argument.  List, Dict, or String expected.
 %%% USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
@@ -219,7 +219,7 @@
 >>> ;;; at-delete on non-collection
 ... (at-delete 1 1)
 
-%%% ERROR 'AT-DELETE': Argument 2 expected to be a list or map.
+%%% ERROR 'AT-DELETE': Argument 2 expected to be a list or dict.
 %%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
@@ -309,27 +309,27 @@
 >>> (hasValue?)
 
 %%% ERROR 'HASVALUE?': 2 arguments expected.
-%%% USAGE: (HASVALUE? listOrDict value)
+%%% USAGE: (HASVALUE? value listOrDict)
 ==>
 
 >>> ;;; hasValue? on non-collection
-... (hasValue? 1 2)
+... (hasValue? 2 1)
 
-%%% ERROR 'HASVALUE?': Invalid argument.  Argument 1 expected to be a list or map.
-%%% USAGE: (HASVALUE? listOrDict value)
+%%% ERROR 'HASVALUE?': Invalid argument.  Argument 2 expected to be a list or dict.
+%%% USAGE: (HASVALUE? value listOrDict)
 ==>
 
 >>> (hasKey?)
 
 %%% ERROR 'HASKEY?': 2 arguments expected.
-%%% USAGE: (HASKEY? dict key)
+%%% USAGE: (HASKEY? key dict)
 ==>
 
->>> ;;; hasKey? with non-map first arg
-... (hasKey? 1 (make-dict))
+>>> ;;; hasKey? with non-map second arg
+... (hasKey? "a" 1)
 
-%%% ERROR 'HASKEY?': Invalid argument 1.  Map expected.
-%%% USAGE: (HASKEY? dict key)
+%%% ERROR 'HASKEY?': Invalid argument 2.  Dict expected.
+%%% USAGE: (HASKEY? key dict)
 ==>
 
 >>> (update!)
@@ -341,14 +341,14 @@
 >>> ;;; update! with non-map first arg
 ... (update! 1 (make-dict))
 
-%%% ERROR 'UPDATE!': Argument 1 expected to be a map.
+%%% ERROR 'UPDATE!': Argument 1 expected to be a dict.
 %%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> ;;; update! with non-map second arg
 ... (update! (make-dict) 1)
 
-%%% ERROR 'UPDATE!': Argument 2 expected to be a map.
+%%% ERROR 'UPDATE!': Argument 2 expected to be a dict.
 %%% USAGE: (UPDATE! dict1 dict2)
 ==>
 
@@ -443,41 +443,41 @@
 >>> (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> ;;; let first arg must be list
 ... (let 1 2)
 
 %%% ERROR 'LET': The first argument to let expected to be a list of variable initializations.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> ;;; let var spec first element must be symbol
 ... (let ((1 2)) 1)
 
 %%% ERROR 'LET': First element of a variable initializer pair expected to be a symbol.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> ;;; let var spec must be 1 or 2 elements
 ... (let ((x 1 2)) 1)
 
 %%% ERROR 'LET': Variable initializer spec expected to be 1 or 2 elements long.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> (let*)
 
 %%% ERROR 'LET*': 2 or more arguments expected.
-%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> ;;; let* first arg must be list
 ... (let* 1 2)
 
 %%% ERROR 'LET*': The first argument to let expected to be a list of variable initializations.
-%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 ; --- Macro / lambda errors ---
@@ -485,27 +485,27 @@
 >>> (defmacro)
 
 %%% ERROR 'DEFMACRO': 3 or more arguments expected.
-%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 
 >>> ;;; defmacro first arg must be symbol
 ... (defmacro 1 () 1)
 
 %%% ERROR 'DEFMACRO': Argument 1 expected to be a symbol.
-%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 
 >>> ;;; defmacro second arg must be list
 ... (defmacro foo 1 1)
 
 %%% ERROR 'DEFMACRO': Argument 2 expected to be a list of params.
-%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 
 >>> (lambda)
 
 %%% ERROR 'LAMBDA': 1 or more arguments expected.
-%%% USAGE: (LAMBDA lambda-list sexpr1 sexpr2 ...)
+%%% USAGE: (LAMBDA lambda-list &rest body)
 ==>
 
 >>> ;;; lambda with no body valid in CL, returns NIL when called
@@ -560,7 +560,7 @@
 >>> (macroexpand)
 
 %%% ERROR 'MACROEXPAND': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND '(macroName arg1 arg2 ...))
+%%% USAGE: (MACROEXPAND '(macroName &rest args))
 ==>
 
 >>> ;;; macroexpand non-list returns unchanged
@@ -659,7 +659,7 @@
 >>> (string)
 
 %%% ERROR 'STRING': 1 or more arguments expected.
-%%% USAGE: (STRING object1 object2 ...)
+%%% USAGE: (STRING &rest objects)
 ==>
 
 >>> (ustring)
@@ -814,7 +814,7 @@
 ... (defmacro foo () "docstring")
 
 %%% ERROR 'DEFMACRO': At least one body expression expected after docstring.
-%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 
 ; --- LAMBDA docstring-only error ---
@@ -830,7 +830,7 @@
 ... (let (1) x)
 
 %%% ERROR 'LET': Variable initializer spec expected to be a symbol or a list.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 ; --- LET* additional error paths ---
@@ -839,21 +839,21 @@
 ... (let* ((1 2)) 1)
 
 %%% ERROR 'LET*': First element of a variable initializer pair expected to be a symbol.
-%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> ;;; let* initializer spec too long
 ... (let* ((x 1 2)) 1)
 
 %%% ERROR 'LET*': Variable initializer spec expected to be 1 or 2 elements long.
-%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 >>> ;;; let* with non-symbol non-list initializer
 ... (let* (1) x)
 
 %%% ERROR 'LET*': Variable initializer spec expected to be a symbol or a list.
-%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 ; --- DOLIST additional error path ---
@@ -912,14 +912,14 @@
 ... (// 1 2 3)
 
 %%% ERROR '//': 2 arguments expected.
-%%% USAGE: (// number1 number2)
+%%% USAGE: (// &rest numbers)
 ==>
 
 >>> ;;; modulo with too many arguments
 ... (mod 1 2 3)
 
 %%% ERROR 'MOD': 2 arguments expected.
-%%% USAGE: (MOD number1 number2)
+%%% USAGE: (MOD &rest numbers)
 ==>
 
 ; --- Arithmetic type errors ---
@@ -928,28 +928,28 @@
 ... (gcd "a" 2)
 
 %%% ERROR 'GCD': Invalid argument.
-%%% USAGE: (GCD integer1 integer2 ...)
+%%% USAGE: (GCD &rest integers)
 ==>
 
 >>> ;;; lcm with non-number
 ... (lcm "a" 2)
 
 %%% ERROR 'LCM': Invalid argument.
-%%% USAGE: (LCM integer1 integer2 ...)
+%%% USAGE: (LCM &rest integers)
 ==>
 
 >>> ;;; min with non-number
 ... (min "a" 1)
 
 %%% ERROR 'MIN': Invalid argument.
-%%% USAGE: (MIN number1 number2 ...)
+%%% USAGE: (MIN &rest numbers)
 ==>
 
 >>> ;;; max with non-number
 ... (max "a" 1)
 
 %%% ERROR 'MAX': Invalid argument.
-%%% USAGE: (MAX number1 number2 ...)
+%%% USAGE: (MAX &rest numbers)
 ==>
 
 >>> ;;; expt with non-number base
@@ -1000,21 +1000,21 @@
 ... (log)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; log with too many arguments
 ... (log 1 2 3)
 
 %%% ERROR 'LOG': 1 or 2 arguments expected.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; log with non-number
 ... (log "a")
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 ; --- Predicate argument count errors ---
@@ -1185,7 +1185,7 @@
 >>> ;;; setf at with non-list non-map container
 ... (setf (at 0 42) 5)
 
-%%% ERROR 'AT-SET': Invalid argument.  List or Map expected.
+%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
 %%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1202,7 +1202,7 @@
 ... (defmacro emptyb22 ())
 
 %%% ERROR 'DEFMACRO': At least one body expression expected.
-%%% USAGE: (DEFMACRO symbol lambda-list &optional sexpr1 sexpr2 ...)
+%%% USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 
 ; --- APPLY additional error paths ---
@@ -1252,7 +1252,7 @@
 ... (/ 0 0)
 
 %%% ERROR '/': division by zero
-%%% USAGE: (/ number1 number2 ...)
+%%% USAGE: (/ &rest numbers)
 ==>
 
 ; --- Conversion: symbol arguments ---
@@ -1373,14 +1373,14 @@
 ... (log 0)
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; log of negative is domain error
 ... (log -1)
 
 %%% ERROR 'LOG': Invalid argument.
-%%% USAGE: (LOG number &optional base)
+%%% USAGE: (LOG number &optional (base e))
 ==>
 
 ; --- eval argument count errors ---
@@ -1398,7 +1398,7 @@
 ... (funcall)
 
 %%% ERROR 'FUNCALL': 1 or more arguments expected
-%%% USAGE: (FUNCALL fnNameSymbol arg1 arg2 ...)
+%%% USAGE: (FUNCALL fnNameSymbol &rest args)
 ==>
 
 ; --- at errors on strings ---
@@ -1557,17 +1557,17 @@
 >>> (path-join)
 
 %%% ERROR 'PATH-JOIN': 1 or more arguments expected.
-%%% USAGE: (PATH-JOIN path1 path2 ...)
+%%% USAGE: (PATH-JOIN &rest path-segments)
 ==>
 
 >>> (path-join 42)
 
 %%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
-%%% USAGE: (PATH-JOIN path1 path2 ...)
+%%% USAGE: (PATH-JOIN &rest path-segments)
 ==>
 
 >>> (path-join "a" 42)
 
 %%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
-%%% USAGE: (PATH-JOIN path1 path2 ...)
+%%% USAGE: (PATH-JOIN &rest path-segments)
 ==>

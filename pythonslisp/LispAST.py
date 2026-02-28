@@ -137,7 +137,7 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       resultStr = f'({mbrListStr})'
       return resultStr
    elif isinstance(sExpr, dict):
-      resultStrLines = [ '(MAP' ]
+      resultStrLines = [ '(DICT' ]
       for key in sorted(sExpr.keys()):
          value = sExpr[ key ]
          key = prettyPrintSExpr(key)
@@ -172,7 +172,7 @@ def prettyPrint( sExpr: Any ) -> str:
       resultStr = f'({mbrListStr})'
       return resultStr
    elif isinstance(sExpr, dict):
-      resultStrLines = [ '(MAP' ]
+      resultStrLines = [ '(DICT' ]
       for key in sorted(sExpr.keys()):
          value = sExpr[ key ]
          key = prettyPrint(key)
@@ -192,6 +192,39 @@ def prettyPrint( sExpr: Any ) -> str:
       return '#<STREAM>'
    else:
       return str(sExpr)
+
+
+def eql( a: Any, b: Any ) -> bool:
+   """CL eql: symbols by name, numbers by type+value, everything else by identity."""
+   if isinstance(a, LSymbol) and isinstance(b, LSymbol):
+      return a.strval == b.strval
+   if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
+      return a == b
+   return a is b
+
+def equal( a: Any, b: Any ) -> bool:
+   """CL equal: recursive structural equality; falls back to eql at leaves."""
+   if isinstance(a, list) and isinstance(b, list):
+      return len(a) == len(b) and all(equal(x, y) for x, y in zip(a, b))
+   if isinstance(a, str) and isinstance(b, str):
+      return a == b
+   if isinstance(a, dict) and isinstance(b, dict):
+      return ( set(a.keys()) == set(b.keys()) and
+               all(equal(a[k], b[k]) for k in a) )
+   return eql(a, b)
+
+def equalp( a: Any, b: Any ) -> bool:
+   """CL equalp: equal + case-insensitive strings + cross-type numbers."""
+   if isinstance(a, list) and isinstance(b, list):
+      return len(a) == len(b) and all(equalp(x, y) for x, y in zip(a, b))
+   if isinstance(a, str) and isinstance(b, str):
+      return a.lower() == b.lower()
+   if isinstance(a, (int, float, Fraction)) and isinstance(b, (int, float, Fraction)):
+      return a == b
+   if isinstance(a, dict) and isinstance(b, dict):
+      return ( set(a.keys()) == set(b.keys()) and
+               all(equalp(a[k], b[k]) for k in a) )
+   return eql(a, b)
 
 
 class LNil(list):

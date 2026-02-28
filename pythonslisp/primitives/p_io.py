@@ -214,10 +214,10 @@ def register(primitive, parseLispString: Callable) -> None:
       """Returns the system temporary directory as a string."""
       return tempfile.gettempdir()
 
-   @primitive( 'path-join', 'path1 path2 ...',
+   @primitive( 'path-join', '&rest path-segments',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_path_join( ctx: LispContext, env: Environment, *args ) -> str:
-      """Joins path components using the OS path separator.  Returns the result as a string."""
+      """Joins path-segments using the OS path separator.  Returns the result as a string."""
       for i, arg in enumerate(args):
          if not isinstance(arg, str):
             raise LispRuntimeFuncError( LP_path_join, f'Argument {i+1} expected to be a string.' )
@@ -250,11 +250,11 @@ Returns the output string."""
             if not stream.writable():
                raise LispRuntimeFuncError( LP_writef, 'Stream is not writable.' )
          else:
-            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list, map or stream." )
+            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list, dict or stream." )
       else: # numArgs == 3
          dictOrList, stream = args[1:]
          if not isinstance(dictOrList, (list, dict)):
-            raise LispRuntimeFuncError( LP_writef, '2nd argument expected to be a list or map.' )
+            raise LispRuntimeFuncError( LP_writef, '2nd argument expected to be a list or dict.' )
          if not isinstance(stream, TextIOWrapper):
             raise LispRuntimeFuncError( LP_writef, '3rd argument expected to be a stream.' )
          if not stream.writable():
@@ -268,7 +268,7 @@ Returns the output string."""
          elif isinstance( dictOrList, dict ):
             formattedStr = formatString.format( **dictOrList )
          else:
-            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or map." )
+            raise LispRuntimeFuncError( LP_writef, "2nd argument expected to be a list or dict." )
       except (IndexError, KeyError, ValueError) as e:
          raise LispRuntimeFuncError( LP_writef, f"Format error: {e}" )
 
@@ -418,7 +418,7 @@ being raised.  With no second argument the format string is used as-is."""
          elif isinstance( dictOrList, dict ):
             message = formatString.format( **dictOrList )
          else:
-            raise LispRuntimeFuncError( LP_error, '2nd argument expected to be a list or map.' )
+            raise LispRuntimeFuncError( LP_error, '2nd argument expected to be a list or dict.' )
       except (IndexError, KeyError, ValueError) as e:
          raise LispRuntimeFuncError( LP_error, f'Format error: {e}' )
       raise LispRuntimeError( message )

@@ -10,9 +10,9 @@ from pythonslisp.LispExpander import LispExpander
 
 def register(primitive) -> None:
 
-   @primitive( 'defmacro', 'symbol lambda-list &optional sexpr1 sexpr2 ...', specialForm=True )
+   @primitive( 'defmacro', 'symbol lambda-list &rest body', specialForm=True )
    def LP_defmacro( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Defines and returns a new globally named macro.  The first expr of the body
+      """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
       fnName, funcParams, *funcBody = args   # analyzer guarantees structure
       if funcBody and isinstance(funcBody[0], str):
@@ -23,7 +23,7 @@ can be an optional documentation string."""
       theFunc = LMacro( fnName, funcParams, docString, funcBody )
       return env.bindGlobal( fnName.strval, theFunc )
 
-   @primitive( 'macroexpand', '\'(macroName arg1 arg2 ...)',
+   @primitive( 'macroexpand', '\'(macroName &rest args)',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
    def LP_macroexpand( ctx: LispContext, env: Environment, *args ) -> Any:
       """Fully expands a macro call at the top level, looping until the form is no
@@ -43,7 +43,7 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
          form = LispExpander._expandMacroCall( ctx, env, macroDef, form[1:] )
       return form
 
-   @primitive( 'macroexpand-1', '\'(macroName arg1 arg2 ...)',
+   @primitive( 'macroexpand-1', '\'(macroName &rest args)',
                min_args=1, max_args=1, arity_msg='Exactly 1 argument expected.' )
    def LP_macroexpand_1( ctx: LispContext, env: Environment, *args ) -> Any:
       """Expands a macro call exactly once.  Returns the form unchanged if it is

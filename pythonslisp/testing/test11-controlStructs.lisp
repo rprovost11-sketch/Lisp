@@ -158,7 +158,7 @@ ABC
 ... (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) sexpr1 sexpr2 ...))
+%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 ; --- block and return-from ---

@@ -5,44 +5,12 @@ from _io import TextIOWrapper
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LPrimitive,
-                                   LContinuation, prettyPrint, prettyPrintSExpr )
+                                   LContinuation, prettyPrint, prettyPrintSExpr,
+                                   eql, equal, equalp )
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
 from pythonslisp.LispParser import ParseError
-
-
-def _eql( a: Any, b: Any ) -> bool:
-   """CL eql: symbols by name, numbers by type+value, everything else by identity."""
-   if isinstance(a, LSymbol) and isinstance(b, LSymbol):
-      return a.strval == b.strval
-   if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
-      return a == b
-   return a is b
-
-def _equal( a: Any, b: Any ) -> bool:
-   """CL equal: recursive structural equality; falls back to eql at leaves."""
-   if isinstance(a, list) and isinstance(b, list):
-      return len(a) == len(b) and all(_equal(x, y) for x, y in zip(a, b))
-   if isinstance(a, str) and isinstance(b, str):
-      return a == b
-   if isinstance(a, dict) and isinstance(b, dict):
-      return ( set(a.keys()) == set(b.keys()) and
-               all(_equal(a[k], b[k]) for k in a) )
-   return _eql(a, b)
-
-def _equalp( a: Any, b: Any ) -> bool:
-   """CL equalp: equal + case-insensitive strings + cross-type numbers."""
-   if isinstance(a, list) and isinstance(b, list):
-      return len(a) == len(b) and all(_equalp(x, y) for x, y in zip(a, b))
-   if isinstance(a, str) and isinstance(b, str):
-      return a.lower() == b.lower()
-   if isinstance(a, (int, float, Fraction)) and isinstance(b, (int, float, Fraction)):
-      return a == b
-   if isinstance(a, dict) and isinstance(b, dict):
-      return ( set(a.keys()) == set(b.keys()) and
-               all(_equalp(a[k], b[k]) for k in a) )
-   return _eql(a, b)
 
 
 def register(primitive, parseLispString: Callable) -> None:
@@ -195,7 +163,7 @@ in CPython due to implementation-level caching."""
       """Returns t if a and b are eql: symbols with the same name; numbers of the
 same type with the same value (so 1 and 1.0 are not eql); or any other objects
 that are the same (identical) object."""
-      return L_T if _eql(args[0], args[1]) else L_NIL
+      return L_T if eql(args[0], args[1]) else L_NIL
 
    @primitive( 'equal', 'a b',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
@@ -203,7 +171,7 @@ that are the same (identical) object."""
       """Returns t if a and b are structurally equal.  Recursively compares lists
 element by element and strings by content.  Uses eql at the leaves so numbers
 must be the same type: (equal 1 1.0) is nil."""
-      return L_T if _equal(args[0], args[1]) else L_NIL
+      return L_T if equal(args[0], args[1]) else L_NIL
 
    @primitive( 'equalp', 'a b',
                min_args=2, max_args=2, arity_msg='2 arguments expected.' )
@@ -211,7 +179,7 @@ must be the same type: (equal 1 1.0) is nil."""
       """Returns t if a and b are equalp.  Like equal but case-insensitive for
 strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 (equalp \"ABC\" \"abc\") is t."""
-      return L_T if _equalp(args[0], args[1]) else L_NIL
+      return L_T if equalp(args[0], args[1]) else L_NIL
 
    @primitive( '=', 'expr1 expr2 ...',
                min_args=2, arity_msg='2 or more arguments expected.' )
@@ -337,29 +305,26 @@ containing a valid lisp number that can be expressed as a fraction."""
       except (IndexError, TypeError, ValueError):
          raise LispRuntimeFuncError( LP_rational, 'Invalid argument.' )
 
-   @primitive( 'string', 'object1 object2 ...',
+   @primitive( 'string', '&rest objects',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_string( ctx: LispContext, env: Environment, *args ) -> Any:
-      """PrettyPrints as programmer readable strings each argument object and
-concatenates the results to form a new string."""
-
+      """PrettyPrints into programmer readable strings each argument object and
+returns the concatenation of those strings."""
       resultStrs = [ prettyPrintSExpr(sExpr) for sExpr in args ]
       return ''.join(resultStrs)
 
    @primitive( 'ustring', 'object1 object2 ...',
                min_args=1, arity_msg='1 or more arguments expected.' )
    def LP_ustring( ctx: LispContext, env: Environment, *args ) -> Any:
-      """PrettyPrints as user readable strings each argument object and
-concatenates the results to form a new string."""
-
+      """PrettyPrints into user readable strings each argument object and
+returns the concatenation of those strings."""
       resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
       return ''.join(resultStrs)
 
    @primitive( 'make-symbol', 'string',
                min_args=1, max_args=1, arity_msg='1 argument expected.' )
    def LP_make_symbol( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Takes a string and returns a new symbol whose name is that string."""
-
+      """Takes a string and returns a new symbol whose print string is that string."""
       arg = args[0]
       if not isinstance(arg, str):
          raise LispRuntimeFuncError( LP_make_symbol, '1st argument expected to be a string.' )
