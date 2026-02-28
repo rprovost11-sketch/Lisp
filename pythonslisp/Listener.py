@@ -57,8 +57,9 @@ class Listener( object ):
       print( )
       print( f'{DIM}- Initializing Listener{RESET}', flush=True )
       print( f'{DIM}- Initializing interpreter{RESET}' )
-      print( f'{DIM}- Loading Runtime library{RESET}' )
+      print( f'{DIM}- Loading Runtime library{RESET}', flush=True )
       self._interp        = anInterpreter
+      self._interp.reboot( )
       self._testdir       = testdir
       self._logFile: Any  = None
       self._instrumenting = False
