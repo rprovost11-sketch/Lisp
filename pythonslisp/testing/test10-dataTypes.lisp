@@ -699,3 +699,146 @@
 %%% Unexpected keyword found Z.
 ==>
 
+
+; --- type-of: stream subtypes ---
+
+>>> (type-of (make-string-output-stream))
+==> STRING-STREAM
+
+>>> (type-of (make-string-input-stream "hello"))
+==> STRING-STREAM
+
+; --- file-stream-p / string-stream-p ---
+
+>>> (string-stream-p (make-string-output-stream))
+==> T
+
+>>> (file-stream-p (make-string-output-stream))
+==> NIL
+
+>>> (string-stream-p (make-string-input-stream "hi"))
+==> T
+
+>>> (string-stream-p 42)
+==> NIL
+
+>>> (file-stream-p 42)
+==> NIL
+
+; --- typep: basic types ---
+
+>>> (typep 42 'integer)
+==> T
+
+>>> (typep 3.14 'float)
+==> T
+
+>>> (typep 1/3 'ratio)
+==> T
+
+>>> (typep 42 'rational)
+==> T
+
+>>> (typep 1/3 'rational)
+==> T
+
+>>> (typep 42 'number)
+==> T
+
+>>> (typep 3.14 'real)
+==> T
+
+>>> (typep "hello" 'string)
+==> T
+
+>>> (typep 'foo 'symbol)
+==> T
+
+>>> (typep nil 'null)
+==> T
+
+>>> (typep nil 'list)
+==> T
+
+>>> (typep (list 1 2) 'cons)
+==> T
+
+>>> (typep nil 'atom)
+==> T
+
+>>> (typep t 'boolean)
+==> T
+
+>>> (typep nil 'boolean)
+==> T
+
+>>> (typep 42 'boolean)
+==> NIL
+
+>>> (typep (make-string-output-stream) 'stream)
+==> T
+
+>>> (typep (make-string-output-stream) 'string-stream)
+==> T
+
+>>> (typep (make-string-output-stream) 'file-stream)
+==> NIL
+
+>>> (typep 42 't)
+==> T
+
+>>> (typep 42 'nil)
+==> NIL
+
+; --- typep: error ---
+
+>>> (typep 42 "not-a-symbol")
+%%% ERROR 'TYPEP': Argument 2 must be a type symbol.
+%%% USAGE: (TYPEP object type-specifier)
+
+; --- typecase ---
+
+>>> (typecase 42
+...   (string "str")
+...   (integer "int")
+...   (otherwise "other"))
+==> "int"
+
+>>> (typecase "hi"
+...   (integer "int")
+...   (string "str"))
+==> "str"
+
+>>> (typecase nil
+...   (integer "int")
+...   (null "null"))
+==> "null"
+
+; no matching clause returns nil
+>>> (typecase 3.14
+...   (integer "int")
+...   (string "str"))
+==> NIL
+
+; t as catch-all
+>>> (typecase 'foo
+...   (integer "int")
+...   (t "other"))
+==> "other"
+
+; --- etypecase ---
+
+>>> (etypecase 42
+...   (integer "int")
+...   (string "str"))
+==> "int"
+
+>>> (etypecase "hello"
+...   (integer "int")
+...   (string "str"))
+==> "str"
+
+>>> (etypecase 3.14
+...   (integer "int")
+...   (string "str"))
+%%% etypecase: no matching clause for value: 3.14

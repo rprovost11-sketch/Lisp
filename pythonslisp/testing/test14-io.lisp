@@ -292,9 +292,9 @@ ab
 ... (streamp st14w)
 ==> T
 
->>> ;;; type-of: STREAM
+>>> ;;; type-of: FILE-STREAM
 ... (type-of st14w)
-==> STREAM
+==> FILE-STREAM
 
 >>> (output-stream-p st14w)
 ==> T
@@ -778,9 +778,9 @@ ab
 ... (streamp ss14)
 ==> T
 
->>> ;;; type-of: STREAM
+>>> ;;; type-of: STRING-STREAM
 ... (type-of ss14)
-==> STREAM
+==> STRING-STREAM
 
 >>> ;;; string streams are writable
 ... (output-stream-p ss14)

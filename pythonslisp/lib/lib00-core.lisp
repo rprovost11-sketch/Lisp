@@ -402,3 +402,30 @@ Supports (return value) for early exit."
    `(at ,idx ,str))
 
 
+
+(defmacro typecase (keyform &rest clauses)
+   "Evaluate keyform once and execute the body of the first clause whose
+type specifier matches.  Each clause is (type-spec form*).  Use T or
+OTHERWISE as a catch-all.  Returns NIL if no clause matches."
+   (let ((var (gensym "TC")))
+      `(let ((,var ,keyform))
+         (cond ,@(mapcar (lambda (clause)
+                           (let ((spec (first clause))
+                                 (body (rest  clause)))
+                              (cond ((eq spec 'otherwise) `(t ,@body))
+                                    ((eq spec 't)         `(t ,@body))
+                                    (t                    `((typep ,var ',spec) ,@body)))))
+                         clauses)))))
+
+(defmacro etypecase (keyform &rest clauses)
+   "Like typecase but signals an error if no clause matches."
+   (let ((var (gensym "TC")))
+      `(let ((,var ,keyform))
+         (cond ,@(mapcar (lambda (clause)
+                           (let ((spec (first clause))
+                                 (body (rest  clause)))
+                              (cond ((eq spec 'otherwise) `(t ,@body))
+                                    ((eq spec 't)         `(t ,@body))
+                                    (t                    `((typep ,var ',spec) ,@body)))))
+                         clauses)
+               (t (error (ustring "etypecase: no matching clause for value: " ,var)))))))

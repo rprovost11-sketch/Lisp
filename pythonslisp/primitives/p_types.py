@@ -1,6 +1,6 @@
 from fractions import Fraction
 from typing import Any, Callable
-from io import TextIOBase
+from io import TextIOBase, StringIO
 
 
 from pythonslisp.Environment import Environment
@@ -12,6 +12,38 @@ from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
 from pythonslisp.LispParser import ParseError
 from pythonslisp.primitives import LambdaListMode
+
+
+def _typep( obj, tname: str ) -> bool:
+   """Return True if obj belongs to the named CL type specifier."""
+   if tname == 'T':              return True
+   if tname == 'NIL':            return False
+   if tname == 'NULL':           return isinstance(obj, list) and len(obj) == 0
+   if tname == 'CONS':           return isinstance(obj, list) and len(obj) > 0
+   if tname == 'LIST':           return isinstance(obj, list)
+   if tname == 'ATOM':           return not (isinstance(obj, list) and len(obj) > 0)
+   if tname == 'BOOLEAN':
+      if isinstance(obj, list) and len(obj) == 0: return True
+      if isinstance(obj, LSymbol) and obj.strval == 'T': return True
+      return False
+   if tname in ('NUMBER', 'REAL'): return isinstance(obj, LNUMBER)
+   if tname == 'INTEGER':        return isinstance(obj, int)
+   if tname == 'FLOAT':          return isinstance(obj, float)
+   if tname == 'RATIO':          return isinstance(obj, Fraction)
+   if tname == 'RATIONAL':       return isinstance(obj, (int, Fraction))
+   if tname == 'STRING':         return isinstance(obj, str)
+   if tname == 'SYMBOL':         return isinstance(obj, LSymbol)
+   if tname == 'FUNCTION':       return isinstance(obj, LFunction)
+   if tname == 'MACRO':          return isinstance(obj, LMacro)
+   if tname == 'STREAM':         return isinstance(obj, TextIOBase)
+   if tname == 'FILE-STREAM':    return isinstance(obj, TextIOBase) and not isinstance(obj, StringIO)
+   if tname == 'STRING-STREAM':  return isinstance(obj, StringIO)
+   if tname == 'DICT':           return isinstance(obj, dict)
+   if isinstance(obj, dict):
+      struct_type = obj.get('STRUCT-TYPE')
+      if isinstance(struct_type, LSymbol) and struct_type.strval == tname:
+         return True
+   return False
 
 
 def register(primitive, parseLispString: Callable) -> None:
@@ -92,6 +124,18 @@ def register(primitive, parseLispString: Callable) -> None:
       """Returns t if expr is a stream otherwise nil."""
       return L_T if isinstance(args[0], TextIOBase) else L_NIL
 
+   @primitive( 'file-stream-p', '(sexpr)' )
+   def LP_file_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if expr is a file stream (opened with open), nil otherwise."""
+      arg = args[0]
+      return L_T if (isinstance(arg, TextIOBase) and not isinstance(arg, StringIO)) else L_NIL
+
+   @primitive( 'string-stream-p', '(sexpr)' )
+   def LP_string_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns t if expr is a string stream (opened with make-string-input-stream
+or open-string), nil otherwise."""
+      return L_T if isinstance(args[0], StringIO) else L_NIL
+
    @primitive( 'type-of', '(sexpr)' )
    def LP_typeof( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the type of its argument as a symbol (CL type-of conventions)."""
@@ -119,10 +163,24 @@ def register(primitive, parseLispString: Callable) -> None:
          return LSymbol('PRIMITIVE')
       elif isinstance( arg, LContinuation ):
          return LSymbol('CONTINUATION')
+      elif isinstance( arg, StringIO ):
+         return LSymbol('STRING-STREAM')
       elif isinstance( arg, TextIOBase ):
-         return LSymbol('STREAM')
+         return LSymbol('FILE-STREAM')
       else:
          return LSymbol('T')
+
+   @primitive( 'typep', '(object type-specifier)' )
+   def LP_typep( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns T if object is of the type named by type-specifier (a symbol),
+NIL otherwise.  Recognised type specifiers: T, NIL, ATOM, LIST, NULL, CONS,
+BOOLEAN, NUMBER, REAL, INTEGER, FLOAT, RATIO, RATIONAL, STRING, SYMBOL,
+FUNCTION, MACRO, STREAM, FILE-STREAM, STRING-STREAM, DICT, and any struct
+type name created with defstruct."""
+      obj, type_sym = args
+      if not isinstance(type_sym, LSymbol):
+         raise LispRuntimeFuncError( LP_typep, 'Argument 2 must be a type symbol.' )
+      return L_T if _typep(obj, type_sym.strval) else L_NIL
 
    @primitive( 'not', '(object)' )
    def LP_not( ctx: LispContext, env: Environment, *args ) -> Any:

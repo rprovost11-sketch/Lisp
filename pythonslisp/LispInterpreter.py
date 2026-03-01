@@ -290,6 +290,12 @@ class LispInterpreter( Interpreter ):
                value = LispInterpreter._lEval( ctx, env, args[0] )
                raise ContinuationInvoked( function.token, value )
 
+            # Inline macro expansion: handles macros called directly inside _lEval
+            # (e.g. from within another macro's body, which bypasses the top-level expander)
+            if isinstance( function, LMacro ):
+               sExprAST = LispExpander._expandMacroCall( ctx, env, function, args )
+               continue
+
             # Tracing
             tracer  = ctx.tracer
             printed = False
