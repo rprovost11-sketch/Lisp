@@ -1938,3 +1938,26 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 >>> (string-capitalize "already Capitalized words")
 ==> "Already Capitalized Words"
+
+; --- gensym ---
+
+>>> (symbolp (gensym))
+==> T
+
+>>> (symbolp (gensym "FOO"))
+==> T
+
+; each call returns a distinct symbol
+>>> (let ((g1 (gensym)) (g2 (gensym)))
+...   (not (eq g1 g2)))
+==> T
+
+; prefix is upper-cased like all symbols
+>>> (let ((g (gensym "test")))
+...   (string= (symbol-name g) (string-upcase (symbol-name g))))
+==> T
+
+; error: non-string prefix
+>>> (gensym 42)
+%%% ERROR 'GENSYM': Argument must be a string prefix.
+%%% USAGE: (GENSYM &optional prefix)

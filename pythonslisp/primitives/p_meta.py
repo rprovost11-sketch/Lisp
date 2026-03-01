@@ -186,3 +186,19 @@ continuations are supported; invoking a stale continuation is an error."""
          return L_T
       except KeyError:
          return L_NIL
+
+   _gensym_counter = 0
+
+   @primitive( 'gensym', '(&optional prefix)' )
+   def LP_gensym( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Generate and return a new, unique symbol.  The optional prefix
+string (default "G") is prepended to an ever-increasing counter.  Each
+call is guaranteed to return a symbol not returned by any previous call."""
+      nonlocal _gensym_counter
+      prefix = 'G'
+      if args:
+         if not isinstance( args[0], str ):
+            raise LispRuntimeFuncError( LP_gensym, 'Argument must be a string prefix.' )
+         prefix = args[0]
+      _gensym_counter += 1
+      return LSymbol( f'{prefix}{_gensym_counter}' )

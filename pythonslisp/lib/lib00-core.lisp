@@ -250,14 +250,6 @@ Multiple (place value) pairs expand to a progn of individual setfs."
                    (1
                                  nil)))
 
-(let ( (symbolCounter 1) )
-   (defun gensym (&optional (prefix "G"))
-      "Generate a unique symbol with a prefix of 'G' or other value specified by\nthe user and affixing a counting-number."
-      (let
-         ((theSymbol (make-symbol (ustring prefix symbolCounter))))
-         (setq symbolCounter (+ symbolCounter 1))
-         theSymbol)))
-
 (defmacro when (condition &rest body)
    "Executes body if c is truthy (non-nil)."
    `(if ,condition (progn ,@body)))
