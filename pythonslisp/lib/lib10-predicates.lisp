@@ -35,7 +35,6 @@
 
 ; CL-compatible I/O aliases
 (alias write-line uwriteLn!)
-(alias read-line  readLn!)
 (alias prin1      write!)
 (alias princ      uwrite!)
 

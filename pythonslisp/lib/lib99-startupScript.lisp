@@ -56,12 +56,11 @@
          (incf ct))))
 
 (defun testrd (filename)
-   (let ( (st (open filename))
-          (line "") )
-      (setf line (readln! st))
-      (while (/= line "")
-         (write! line)
-         (setf line (readln! st)))))
+   (let ((st (open filename)))
+      (let ((line (read-line st nil nil)))
+         (while line
+            (uwriteLn! line)
+            (setf line (read-line st nil nil))))))
 
 (defmacro with-open-file (spec &rest body)
    "Opens a file, binds it to var, evaluates body forms, then closes the file.
@@ -84,3 +83,35 @@ of var-spec bound to the stream, then returns the accumulated string content."
       `(let ((,var (make-string-output-stream)))
           ,@body
           (get-output-stream-string ,var))))
+
+(defmacro with-input-from-string (var-spec &rest body)
+   "Creates a string input stream from string, binds it to var, evaluates body
+forms, closes the stream, then returns the result of the last body form.
+var-spec is (var string), (var string start), or (var string start end)."
+   (let ((var    (car var-spec))
+         (string (car (cdr var-spec)))
+         (rest   (cdr (cdr var-spec))))
+      `(let ((,var (make-string-input-stream ,string ,@rest)))
+          (let ((_wifs_result_ (progn ,@body)))
+             (when ,var (close ,var))
+             _wifs_result_))))
+
+;;; CL stream predicate aliases (backward compatibility)
+(alias readable       input-stream-p)
+(alias writable       output-stream-p)
+(alias isatty         interactive-stream-p)
+
+;;; closed: inverted open-stream-p (backward compatibility)
+(defun closed (s)
+   "Returns T if the stream is closed, NIL if it is open.
+Backward-compatible alias for (not (open-stream-p s))."
+   (not (open-stream-p s)))
+
+;;; Standard CL stream variables
+(setf *standard-input*  (stdin))
+(setf *standard-output* (stdout))
+(setf *error-output*    (stderr))
+(setf *terminal-io*     (stdout))
+(setf *debug-io*        (stderr))
+(setf *query-io*        (stdout))
+(setf *trace-output*    (stdout))

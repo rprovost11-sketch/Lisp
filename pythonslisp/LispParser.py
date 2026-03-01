@@ -381,6 +381,30 @@ class LispParser( Parser ):
 
       return ast
 
+   def parseOne( self, source: str ):
+      """Parse exactly one s-expression from the start of source.
+      Returns (ast, chars_consumed) where chars_consumed is the number of
+      characters consumed from source, including the expression itself and
+      any trailing whitespace/comments up to the next expression.
+      Raises ParseError if source contains no parseable expression."""
+      self._scanner.reset( source )
+      if self._scanner.peekToken( ) == LispLexer.EOF_TOK:
+         raise ParseError( self._scanner, 'End of file: no expression found.' )
+      ast = self._parseObject( )
+      tok = self._scanner.peekToken( )
+      buf = self._scanner.buffer
+      if tok == LispLexer.EOF_TOK:
+         chars_consumed = buf._point
+      elif tok == LispLexer.COMMA_AT_TOK:
+         chars_consumed = buf._point - 2
+      elif tok in ( LispLexer.OPEN_PAREN_TOK, LispLexer.CLOSE_PAREN_TOK,
+                    LispLexer.SINGLE_QUOTE_TOK, LispLexer.BACK_QUOTE_TOK,
+                    LispLexer.COMMA_TOK ):
+         chars_consumed = buf._point - 1
+      else:
+         chars_consumed = buf._mark
+      return ast, chars_consumed
+
    def _parseList( self ) -> list:
       scn = self._scanner
       

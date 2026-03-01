@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import tempfile
@@ -10,9 +11,11 @@ from pythonslisp.LispAST import LSymbol, LCallable, LPrimitive, LFunction, LMacr
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeError, LispRuntimeFuncError
-from pythonslisp.LispParser import ParseError
+from pythonslisp.LispParser import LispParser, ParseError
 from pythonslisp.Utils import columnize
 from pythonslisp.primitives import LambdaListMode
+
+_LISP_PARSER = LispParser()
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
@@ -192,13 +195,15 @@ The stream remains open and writable.  (CL semantics.)"""
       stream.truncate( 0 )
       return content
 
-   @primitive( 'close', '(stream)' )
+   @primitive( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
    def LP_close( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Closes a stream and returns t."""
-      stream = args[0]
+      """Closes a stream and returns T.
+The :abort keyword argument is accepted for CL compatibility but is ignored
+in this implementation (flushing on close cannot be suppressed)."""
+      stream = env.lookup( LSymbol('STREAM') )
       if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_close, 'Argument expected to be a stream.' )
-      stream.close( )
+      stream.close()
       return L_T
 
    @primitive( 'flush', '(&optional stream)' )
@@ -213,37 +218,52 @@ The stream remains open and writable.  (CL semantics.)"""
          sys.stdout.flush()
       return L_T
 
-   @primitive( 'closed', '(stream)' )
-   def LP_closed( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if the stream is closed, nil otherwise."""
+   @primitive( 'open-stream-p', '(stream)' )
+   def LP_open_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns T if the stream is open, NIL if it is closed."""
       stream = args[0]
       if not isinstance(stream, TextIOBase):
-         raise LispRuntimeFuncError( LP_closed, 'Argument expected to be a stream.' )
-      return L_T if stream.closed else L_NIL
+         raise LispRuntimeFuncError( LP_open_stream_p, 'Argument expected to be a stream.' )
+      return L_NIL if stream.closed else L_T
 
-   @primitive( 'isatty', '(stream)' )
-   def LP_isatty( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if the stream is a tty, nil otherwise."""
+   @primitive( 'interactive-stream-p', '(stream)' )
+   def LP_interactive_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
       stream = args[0]
       if not isinstance(stream, TextIOBase):
-         raise LispRuntimeFuncError( LP_isatty, 'Argument expected to be a stream.' )
+         raise LispRuntimeFuncError( LP_interactive_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.isatty() else L_NIL
 
-   @primitive( 'readable', '(stream)' )
-   def LP_readable( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if the stream is readable, nil otherwise."""
+   @primitive( 'input-stream-p', '(stream)' )
+   def LP_input_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns T if the stream can be read from, NIL otherwise."""
       stream = args[0]
       if not isinstance(stream, TextIOBase):
-         raise LispRuntimeFuncError( LP_readable, 'Argument expected to be a stream.' )
+         raise LispRuntimeFuncError( LP_input_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.readable() else L_NIL
 
-   @primitive( 'writable', '(stream)' )
-   def LP_writable( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Returns t if the stream is writable, nil otherwise."""
+   @primitive( 'output-stream-p', '(stream)' )
+   def LP_output_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns T if the stream can be written to, NIL otherwise."""
       stream = args[0]
       if not isinstance(stream, TextIOBase):
-         raise LispRuntimeFuncError( LP_writable, 'Argument expected to be a stream.' )
+         raise LispRuntimeFuncError( LP_output_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.writable() else L_NIL
+
+   @primitive( 'stdin', '()' )
+   def LP_stdin( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns the standard input stream (sys.stdin)."""
+      return sys.stdin
+
+   @primitive( 'stdout', '()' )
+   def LP_stdout( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns the standard output stream (sys.stdout)."""
+      return sys.stdout
+
+   @primitive( 'stderr', '()' )
+   def LP_stderr( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns the standard error stream (sys.stderr)."""
+      return sys.stderr
 
    @primitive( 'tmpdir', '()' )
    def LP_tmpdir( ctx: LispContext, env: Environment, *args ) -> str:
@@ -406,6 +426,131 @@ of text entry."""
          if not stream.readable():
             raise LispRuntimeFuncError( LP_readln, 'Stream is not readable.' )
          return stream.readline(-1)
+
+   @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+   def LP_read_line( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Reads one line of text from stream (default: standard input) and
+returns it as a string, without the trailing newline character.
+At end of file: signals an error if eof-error-p is T (default), otherwise
+returns eof-value (default NIL).  recursive-p is accepted but ignored."""
+      stream       = None
+      eof_error_p  = True
+      eof_value    = L_NIL
+      if len( args ) >= 1 and args[0] is not L_NIL:
+         stream = args[0]
+         if not isinstance( stream, TextIOBase ):
+            raise LispRuntimeFuncError( LP_read_line, 'Argument 1 must be a stream.' )
+      if len( args ) >= 2:
+         eof_error_p = args[1] is not L_NIL
+      if len( args ) >= 3:
+         eof_value = args[2]
+      if stream is None:
+         try:
+            return input( )
+         except EOFError:
+            if eof_error_p:
+               raise LispRuntimeError( 'read-line: end of file on standard input.' )
+            return eof_value
+      if not stream.readable( ):
+         raise LispRuntimeFuncError( LP_read_line, 'Stream is not readable.' )
+      line = stream.readline( )
+      if line == '':
+         if eof_error_p:
+            raise LispRuntimeError( 'read-line: end of file.' )
+         return eof_value
+      return line[:-1] if line.endswith( '\n' ) else line
+
+   @primitive( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+   def LP_read_char( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Reads and returns the next character from stream (default: standard input)
+as a one-character string.
+At end of file: signals an error if eof-error-p is T (default), otherwise
+returns eof-value (default NIL).  recursive-p is accepted but ignored."""
+      stream       = None
+      eof_error_p  = True
+      eof_value    = L_NIL
+      if len( args ) >= 1 and args[0] is not L_NIL:
+         stream = args[0]
+         if not isinstance( stream, TextIOBase ):
+            raise LispRuntimeFuncError( LP_read_char, 'Argument 1 must be a stream.' )
+      if len( args ) >= 2:
+         eof_error_p = args[1] is not L_NIL
+      if len( args ) >= 3:
+         eof_value = args[2]
+      if stream is None:
+         ch = sys.stdin.read( 1 )
+         if ch == '':
+            if eof_error_p:
+               raise LispRuntimeError( 'read-char: end of file on standard input.' )
+            return eof_value
+         return ch
+      if not stream.readable( ):
+         raise LispRuntimeFuncError( LP_read_char, 'Stream is not readable.' )
+      ch = stream.read( 1 )
+      if ch == '':
+         if eof_error_p:
+            raise LispRuntimeError( 'read-char: end of file.' )
+         return eof_value
+      return ch
+
+   @primitive( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+   def LP_read( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Reads and returns one s-expression from stream (default: standard input),
+without evaluating it.  At end of file, signals an error if eof-error-p is T
+(default), otherwise returns eof-value (default NIL).
+recursive-p is accepted but ignored.
+Seekable streams (files, string streams) are supported via tell/seek.
+Non-seekable streams (stdin) are read line by line until a complete expression
+is accumulated."""
+      stream       = None
+      eof_error_p  = True
+      eof_value    = L_NIL
+      if len( args ) >= 1 and args[0] is not L_NIL:
+         stream = args[0]
+         if not isinstance( stream, TextIOBase ):
+            raise LispRuntimeFuncError( LP_read, 'Argument 1 must be a stream.' )
+      if len( args ) >= 2:
+         eof_error_p = args[1] is not L_NIL
+      if len( args ) >= 3:
+         eof_value = args[2]
+      if stream is None:
+         stream = sys.stdin
+      if not stream.readable( ):
+         raise LispRuntimeFuncError( LP_read, 'Stream is not readable.' )
+      if stream.seekable( ):
+         pos     = stream.tell( )
+         content = stream.read( )
+         if not content:
+            if eof_error_p:
+               raise LispRuntimeError( 'read: end of file.' )
+            return eof_value
+         try:
+            ast, chars_consumed = _LISP_PARSER.parseOne( content )
+         except ParseError as exc:
+            raise LispRuntimeError( f'read: {exc}' )
+         stream.seek( pos + chars_consumed )
+         return ast
+      else:
+         accumulated = ''
+         while True:
+            line = stream.readline( )
+            if line == '':
+               if not accumulated:
+                  if eof_error_p:
+                     raise LispRuntimeError( 'read: end of file.' )
+                  return eof_value
+               break
+            accumulated += line
+            try:
+               ast, _ = _LISP_PARSER.parseOne( accumulated )
+               return ast
+            except ParseError:
+               continue
+         try:
+            ast, _ = _LISP_PARSER.parseOne( accumulated )
+            return ast
+         except ParseError as exc:
+            raise LispRuntimeError( f'read: {exc}' )
 
    @primitive( 'save', '(filename &rest objects)' )
    def LP_save( ctx: LispContext, env: Environment, *args ) -> Any:

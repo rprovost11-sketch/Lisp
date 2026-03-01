@@ -296,17 +296,17 @@ ab
 ... (type-of st14w)
 ==> STREAM
 
->>> (writable st14w)
+>>> (output-stream-p st14w)
 ==> T
 
->>> (readable st14w)
+>>> (input-stream-p st14w)
 ==> NIL
 
->>> (isatty st14w)
+>>> (interactive-stream-p st14w)
 ==> NIL
 
->>> (closed st14w)
-==> NIL
+>>> (open-stream-p st14w)
+==> T
 
 >>> ;;; uwriteLn! to stream: no stdout output, returns last arg
 ... (uwriteLn! st14w "hi")
@@ -321,8 +321,8 @@ ab
 >>> (close st14w)
 ==> T
 
->>> (closed st14w)
-==> T
+>>> (open-stream-p st14w)
+==> NIL
 
 ; ============================================================
 ; open (default :direction :input), read lines, EOF detection
@@ -331,14 +331,14 @@ ab
 >>> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
->>> (readable st14r)
+>>> (input-stream-p st14r)
 ==> T
 
->>> (writable st14r)
+>>> (output-stream-p st14r)
 ==> NIL
 
->>> (closed st14r)
-==> NIL
+>>> (open-stream-p st14r)
+==> T
 
 >>> ;;; "hi\n" has length 3
 ... (= (length (readLn! st14r)) 3)
@@ -424,7 +424,7 @@ ab
 ... (setf st14a (open (path-join (tmpdir) "test14-append.tmp") :direction :output :if-exists :append))
 ==> #<STREAM>
 
->>> (writable st14a)
+>>> (output-stream-p st14a)
 ==> T
 
 >>> (uwriteLn! st14a "second")
@@ -539,32 +539,32 @@ ab
 
 >>> (close)
 
-%%% ERROR 'CLOSE': 1 argument expected.
-%%% USAGE: (CLOSE stream)
+%%% ERROR 'CLOSE': At least 1 argument expected.
+%%% USAGE: (CLOSE stream &key (abort nil))
 ==>
 
->>> (readable)
+>>> (open-stream-p)
 
-%%% ERROR 'READABLE': 1 argument expected.
-%%% USAGE: (READABLE stream)
+%%% ERROR 'OPEN-STREAM-P': 1 argument expected.
+%%% USAGE: (OPEN-STREAM-P stream)
 ==>
 
->>> (writable)
+>>> (input-stream-p)
 
-%%% ERROR 'WRITABLE': 1 argument expected.
-%%% USAGE: (WRITABLE stream)
+%%% ERROR 'INPUT-STREAM-P': 1 argument expected.
+%%% USAGE: (INPUT-STREAM-P stream)
 ==>
 
->>> (closed)
+>>> (output-stream-p)
 
-%%% ERROR 'CLOSED': 1 argument expected.
-%%% USAGE: (CLOSED stream)
+%%% ERROR 'OUTPUT-STREAM-P': 1 argument expected.
+%%% USAGE: (OUTPUT-STREAM-P stream)
 ==>
 
->>> (isatty)
+>>> (interactive-stream-p)
 
-%%% ERROR 'ISATTY': 1 argument expected.
-%%% USAGE: (ISATTY stream)
+%%% ERROR 'INTERACTIVE-STREAM-P': 1 argument expected.
+%%% USAGE: (INTERACTIVE-STREAM-P stream)
 ==>
 
 >>> (save)
@@ -627,31 +627,31 @@ ab
 >>> (close 42)
 
 %%% ERROR 'CLOSE': Argument expected to be a stream.
-%%% USAGE: (CLOSE stream)
+%%% USAGE: (CLOSE stream &key (abort nil))
 ==>
 
->>> (readable 42)
+>>> (open-stream-p 42)
 
-%%% ERROR 'READABLE': Argument expected to be a stream.
-%%% USAGE: (READABLE stream)
+%%% ERROR 'OPEN-STREAM-P': Argument expected to be a stream.
+%%% USAGE: (OPEN-STREAM-P stream)
 ==>
 
->>> (writable 42)
+>>> (input-stream-p 42)
 
-%%% ERROR 'WRITABLE': Argument expected to be a stream.
-%%% USAGE: (WRITABLE stream)
+%%% ERROR 'INPUT-STREAM-P': Argument expected to be a stream.
+%%% USAGE: (INPUT-STREAM-P stream)
 ==>
 
->>> (closed 42)
+>>> (output-stream-p 42)
 
-%%% ERROR 'CLOSED': Argument expected to be a stream.
-%%% USAGE: (CLOSED stream)
+%%% ERROR 'OUTPUT-STREAM-P': Argument expected to be a stream.
+%%% USAGE: (OUTPUT-STREAM-P stream)
 ==>
 
->>> (isatty 42)
+>>> (interactive-stream-p 42)
 
-%%% ERROR 'ISATTY': Argument expected to be a stream.
-%%% USAGE: (ISATTY stream)
+%%% ERROR 'INTERACTIVE-STREAM-P': Argument expected to be a stream.
+%%% USAGE: (INTERACTIVE-STREAM-P stream)
 ==>
 
 >>> (flush 42)
@@ -783,20 +783,20 @@ ab
 ==> STREAM
 
 >>> ;;; string streams are writable
-... (writable ss14)
+... (output-stream-p ss14)
 ==> T
 
 >>> ;;; string streams are also readable (StringIO supports both)
-... (readable ss14)
+... (input-stream-p ss14)
 ==> T
 
 >>> ;;; string streams are not ttys
-... (isatty ss14)
+... (interactive-stream-p ss14)
 ==> NIL
 
 >>> ;;; not closed initially
-... (closed ss14)
-==> NIL
+... (open-stream-p ss14)
+==> T
 
 >>> ;;; flush is a no-op on a string stream, returns T
 ... (flush ss14)
@@ -879,12 +879,12 @@ ab
 >>> (get-output-stream-string ss14)
 ==> "FOO"
 
->>> ;;; close returns T, closed then returns T
+>>> ;;; close returns T, open-stream-p then returns NIL
 ... (close ss14)
 ==> T
 
->>> (closed ss14)
-==> T
+>>> (open-stream-p ss14)
+==> NIL
 
 >>> ;;; fresh one-liner: open, write, retrieve, all in one expression
 ... (let ((s (make-string-output-stream)))
@@ -969,7 +969,7 @@ ab
 >>> (streamp si14)
 ==> T
 
->>> (readable si14)
+>>> (input-stream-p si14)
 ==> T
 
 >>> ;;; readLn! on a string with no actual newlines returns full content (length 11)
@@ -1044,3 +1044,233 @@ ab
 >>> ;;; write! uses programmer format: "quoted" with surrounding quotes is 8 chars
 ... (= (length (with-output-to-string (s) (write! s "quoted"))) 8)
 ==> T
+
+; ============================================================
+; close with :abort keyword (CL compatibility)
+; ============================================================
+
+>>> ;;; close with :abort nil (default) — same as plain close
+... (let ((s (make-string-output-stream)))
+...    (close s :abort nil)
+...    (open-stream-p s))
+==> NIL
+
+>>> ;;; close with :abort t — accepted, ignored; stream still closed
+... (let ((s (make-string-output-stream)))
+...    (close s :abort t)
+...    (open-stream-p s))
+==> NIL
+
+; ============================================================
+; backward-compatible aliases: readable, writable, isatty, closed
+; ============================================================
+
+>>> ;;; readable is alias for input-stream-p
+... (let ((s (open (path-join (tmpdir) "test14-stream.tmp"))))
+...    (let ((r (readable s)))
+...       (close s)
+...       r))
+==> T
+
+>>> ;;; writable is alias for output-stream-p
+... (let ((s (open (path-join (tmpdir) "test14-stream.tmp") :direction :output)))
+...    (let ((r (writable s)))
+...       (close s)
+...       r))
+==> T
+
+>>> ;;; isatty is alias for interactive-stream-p
+... (isatty (make-string-output-stream))
+==> NIL
+
+>>> ;;; closed is defun: (not (open-stream-p s))
+... (let ((s (make-string-output-stream)))
+...    (list (closed s)
+...          (progn (close s) (closed s))))
+==> (NIL T)
+
+; ============================================================
+; standard stream variables
+; ============================================================
+
+>>> ;;; *standard-input* is a stream
+... (streamp *standard-input*)
+==> T
+
+>>> (streamp *standard-output*)
+==> T
+
+>>> (streamp *error-output*)
+==> T
+
+>>> (streamp *terminal-io*)
+==> T
+
+>>> (streamp *debug-io*)
+==> T
+
+>>> (streamp *query-io*)
+==> T
+
+>>> (streamp *trace-output*)
+==> T
+
+>>> ;;; *standard-output* is writable
+... (output-stream-p *standard-output*)
+==> T
+
+>>> ;;; *standard-input* is readable
+... (input-stream-p *standard-input*)
+==> T
+
+; ============================================================
+; with-input-from-string
+; ============================================================
+
+>>> ;;; basic: read from a string
+... (with-input-from-string (s "hello world")
+...    (readLn! s))
+==> "hello world"
+
+>>> ;;; with start offset
+... (with-input-from-string (s "hello world" 6)
+...    (readLn! s))
+==> "world"
+
+>>> ;;; with start and end
+... (with-input-from-string (s "hello world" 0 5)
+...    (readLn! s))
+==> "hello"
+
+>>> ;;; returns last body form
+... (with-input-from-string (s "hello")
+...    (readLn! s)
+...    42)
+==> 42
+
+>>> ;;; stream is closed after body
+... (let ((captured nil))
+...    (with-input-from-string (s "test")
+...       (setf captured s))
+...    (open-stream-p captured))
+==> NIL
+
+; ============================================================
+; read-line — CL-compatible: no trailing newline
+; ============================================================
+
+>>> ;;; read-line from a string stream returns line without trailing newline
+... (let ((str (with-output-to-string (s) (uwrite! s "hello") (terpri s) (uwrite! s "world") (terpri s))))
+...    (let ((st (make-string-input-stream str)))
+...       (list (read-line st) (read-line st))))
+==> ("hello" "world")
+
+>>> ;;; read-line nil eof: returns NIL at end of file when eof-error-p is NIL
+... (let ((s (make-string-input-stream "hi")))
+...    (read-line s)
+...    (read-line s nil nil))
+==> NIL
+
+>>> ;;; read-line nil custom eof-value: returns given value at EOF
+... (let ((s (make-string-input-stream "x")))
+...    (read-line s)
+...    (read-line s nil :eof))
+==> :EOF
+
+>>> ;;; read-line at EOF with eof-error-p T (default) signals error
+... (read-line (make-string-input-stream ""))
+%%% read-line: end of file.
+==>
+
+>>> ;;; read-line strips exactly one trailing newline: result has correct length
+... (let ((str (with-output-to-string (s) (uwrite! s "abc") (terpri s))))
+...    (let ((st (make-string-input-stream str)))
+...       (length (read-line st nil nil))))
+==> 3
+
+>>> ;;; uwriteLn! adds a newline: result is 6 chars ("hello" + newline)
+... (let ((out (make-string-output-stream)))
+...    (uwriteLn! out "hello")
+...    (= (length (get-output-stream-string out)) 6))
+==> T
+
+>>> ;;; read-line: stream argument type error
+... (read-line 42)
+%%% ERROR 'READ-LINE': Argument 1 must be a stream.
+%%% USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
+==>
+
+; ============================================================
+; read-char — reads one character at a time
+; ============================================================
+
+>>> ;;; read-char returns a one-character string
+... (let ((s (make-string-input-stream "abc")))
+...    (list (read-char s) (read-char s) (read-char s)))
+==> ("a" "b" "c")
+
+>>> ;;; read-char at EOF with eof-error-p NIL returns eof-value
+... (let ((s (make-string-input-stream "")))
+...    (read-char s nil :done))
+==> :DONE
+
+>>> ;;; read-char at EOF with eof-error-p T signals error
+... (read-char (make-string-input-stream ""))
+%%% read-char: end of file.
+==>
+
+>>> ;;; read-char: stream argument type error
+... (read-char 42)
+%%% ERROR 'READ-CHAR': Argument 1 must be a stream.
+%%% USAGE: (READ-CHAR &optional stream (eof-error-p t) eof-value recursive-p)
+==>
+
+; ============================================================
+; read — reads one s-expression from a stream
+; ============================================================
+
+>>> ;;; read parses a symbol
+... (let ((s (make-string-input-stream "foo")))
+...    (read s))
+==> FOO
+
+>>> ;;; read parses a number
+... (let ((s (make-string-input-stream "42")))
+...    (read s))
+==> 42
+
+>>> ;;; read parses a list
+... (let ((s (make-string-input-stream "(a b c)")))
+...    (read s))
+==> (A B C)
+
+>>> ;;; read repositions stream: second read sees next expression
+... (let ((s (make-string-input-stream "42 hello")))
+...    (list (read s) (read s)))
+==> (42 HELLO)
+
+>>> ;;; read handles leading whitespace correctly
+... (let ((s (make-string-input-stream "   99")))
+...    (read s))
+==> 99
+
+>>> ;;; read returns nested list correctly
+... (let ((s (make-string-input-stream "(1 (2 3) 4)")))
+...    (read s))
+==> (1 (2 3) 4)
+
+>>> ;;; read at EOF with eof-error-p NIL returns eof-value
+... (let ((s (make-string-input-stream "")))
+...    (read s nil :done))
+==> :DONE
+
+>>> ;;; read at EOF with eof-error-p T signals error
+... (read (make-string-input-stream ""))
+%%% read: end of file.
+==>
+
+>>> ;;; read: stream argument type error
+... (read 42)
+%%% ERROR 'READ': Argument 1 must be a stream.
+%%% USAGE: (READ &optional stream (eof-error-p t) eof-value recursive-p)
+==>
