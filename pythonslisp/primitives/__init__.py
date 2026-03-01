@@ -1,6 +1,13 @@
+from enum import Enum, auto
 from typing import Callable, Any
 
 from pythonslisp.LispAST import LPrimitive, LSymbol, L_T, L_NIL
+
+
+class LambdaListMode(Enum):
+   DOC_ONLY     = auto()   # informal display string; min/max specified manually; arity_msg auto
+   ARITY_ONLY   = auto()   # valid lambda list; arity auto-derived; no bindArguments at call time
+   FULL_BINDING = auto()   # valid lambda list with outer (); arity auto-derived; bindArguments each call
 
 
 def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, Any]:
@@ -42,28 +49,58 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
          return min_args, None
       return min_args, max_args
 
+   def _make_arity_msg( min_args: int, max_args: int|None ) -> str:
+      """Auto-generate a standard arity error message from min/max arg counts."""
+      if max_args is None:
+         if min_args == 0:
+            return ''
+         if min_args == 1:
+            return 'At least 1 argument expected.'
+         return f'At least {min_args} arguments expected.'
+      if min_args == max_args:
+         if min_args == 0:
+            return '0 arguments expected.'
+         if min_args == 1:
+            return '1 argument expected.'
+         return f'{min_args} arguments expected.'
+      if max_args == min_args + 1:
+         return f'{min_args} or {max_args} arguments expected.'
+      return f'{min_args} to {max_args} arguments expected.'
+
    class primitive:
-      def __init__( self, primitiveSymbolString: str, paramsString: str = '', specialForm: bool = False,
-                    min_args = _UNSET, max_args = _UNSET, arity_msg: str = '',
-                    lambdaList: str = '' ) -> None:
+      def __init__( self, primitiveSymbolString: str, params: str = '', specialForm: bool = False,
+                    lambdaListMode: LambdaListMode = LambdaListMode.ARITY_ONLY,
+                    min_args = _UNSET, max_args = _UNSET ) -> None:
          self._name        = primitiveSymbolString.upper()
          self._specialForm = specialForm
-         self._arity_msg   = arity_msg
-         if lambdaList:
-            ll_ast = parseLispString( lambdaList )[1]
+         if lambdaListMode is LambdaListMode.FULL_BINDING:
+            # params must be a full lambda list with outer (...)
+            ll_ast = parseLispString( params )[1]
             self._lambdaListAST = ll_ast
-            stripped = lambdaList.strip()
+            stripped = params.strip()
             if stripped.startswith('(') and stripped.endswith(')'):
                stripped = stripped[1:-1].strip()
             self._paramsString = stripped
             derived_min, derived_max = _derive_arity( ll_ast )
             self._min_args = derived_min if min_args is _UNSET else min_args
             self._max_args = derived_max if max_args is _UNSET else max_args
-         else:
+         elif lambdaListMode is LambdaListMode.ARITY_ONLY:
+            # params is a valid lambda list without outer parens; wrap for parsing
+            if params:
+               ll_ast = parseLispString( '(' + params + ')' )[1]
+            else:
+               ll_ast = []
+            self._lambdaListAST = None    # not used at call time
+            self._paramsString  = params
+            derived_min, derived_max = _derive_arity( ll_ast )
+            self._min_args = derived_min if min_args is _UNSET else min_args
+            self._max_args = derived_max if max_args is _UNSET else max_args
+         else:  # DOC_ONLY
             self._lambdaListAST = None
-            self._paramsString  = paramsString
+            self._paramsString  = params
             self._min_args = 0    if min_args is _UNSET else min_args
             self._max_args = None if max_args is _UNSET else max_args
+         self._arity_msg = _make_arity_msg( self._min_args, self._max_args )
 
       def __call__( self, pythonFn ):
          docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''

@@ -334,13 +334,13 @@
 ... (/ 1 0)
 
 %%% ERROR '/': division by zero
-%%% USAGE: (/ &rest numbers)
+%%% USAGE: (/ number &rest more-numbers)
 ==>
 
 >>> ;;; Error: expt requires exactly two arguments
 ... (expt 2)
 
-%%% ERROR 'EXPT': Exactly two arguments expected.
+%%% ERROR 'EXPT': 2 arguments expected.
 %%% USAGE: (EXPT base power)
 ==>
 

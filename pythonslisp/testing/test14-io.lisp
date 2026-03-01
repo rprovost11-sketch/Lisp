@@ -51,30 +51,18 @@ x=99
 no substitution needed
 ==> "no substitution needed"
 
->>> ;;; Error: write!/writeLn! require at least one argument
+>>> ;;; write!/writeLn! with no arguments are valid no-ops returning NIL
 ... (write!)
-
-%%% ERROR 'WRITE!': 1 or more arguments expected.
-%%% USAGE: (WRITE! obj1 obj2 ... &optional stream)
-==>
+==> NIL
 
 >>> (writeLn!)
-
-%%% ERROR 'WRITELN!': 1 or more arguments expected.
-%%% USAGE: (WRITELN! obj1 obj2 ... &optional stream)
-==>
+==> NIL
 
 >>> (uwrite!)
-
-%%% ERROR 'UWRITE!': 1 or more arguments expected.
-%%% USAGE: (UWRITE! obj1 obj2 ... &optional stream)
-==>
+==> NIL
 
 >>> (uwriteLn!)
-
-%%% ERROR 'UWRITELN!': 1 or more arguments expected.
-%%% USAGE: (UWRITELN! obj1 obj2 ... &optional stream)
-==>
+==> NIL
 
 >>> ;;; Error: writef requires at least one argument
 ... (writef)
@@ -321,10 +309,10 @@ ab
 ==> NIL
 
 >>> ;;; uwriteLn! to stream: no stdout output, returns last arg
-... (uwriteLn! "hi" st14w)
+... (uwriteLn! st14w "hi")
 ==> "hi"
 
->>> (uwriteLn! "bye" st14w)
+>>> (uwriteLn! st14w "bye")
 ==> "bye"
 
 >>> (flush st14w)
@@ -379,11 +367,11 @@ ab
 ==> NIL
 
 >>> ;;; write! to stream: writes programmer-format, no newline
-... (write! 7 st14w)
+... (write! st14w 7)
 ==> 7
 
 >>> ;;; writeLn! to stream: writes programmer-format with trailing newline
-... (writeLn! "ok" st14w)
+... (writeLn! st14w "ok")
 ==> "ok"
 
 >>> ;;; writef 3-arg: format + list + stream
@@ -426,7 +414,7 @@ ab
 ... (setf st14a (open-write (path-join (tmpdir) "test14-append.tmp")))
 ==> #<STREAM>
 
->>> (uwriteLn! "first" st14a)
+>>> (uwriteLn! st14a "first")
 ==> "first"
 
 >>> (close st14a)
@@ -439,7 +427,7 @@ ab
 >>> (writable st14a)
 ==> T
 
->>> (uwriteLn! "second" st14a)
+>>> (uwriteLn! st14a "second")
 ==> "second"
 
 >>> (close st14a)
@@ -469,10 +457,10 @@ ab
 >>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
->>> (uwriteLn! "hello" st14w)
+>>> (uwriteLn! st14w "hello")
 ==> "hello"
 
->>> (uwriteLn! "world" st14w)
+>>> (uwriteLn! st14w "world")
 ==> "world"
 
 >>> (close st14w)
@@ -593,8 +581,8 @@ ab
 
 >>> (save)
 
-%%% ERROR 'SAVE': 1 or more arguments expected.
-%%% USAGE: (SAVE filename obj1 obj2 ...)
+%%% ERROR 'SAVE': At least 1 argument expected.
+%%% USAGE: (SAVE filename &rest objects)
 ==>
 
 >>> (load)
@@ -666,7 +654,7 @@ ab
 >>> (save 42)
 
 %%% ERROR 'SAVE': 1st argument expected to be a filename.
-%%% USAGE: (SAVE filename obj1 obj2 ...)
+%%% USAGE: (SAVE filename &rest objects)
 ==>
 
 >>> (load 42)
@@ -688,28 +676,28 @@ ab
 >>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
->>> (write! "hello" st14r)
+>>> (write! st14r "hello")
 
 %%% ERROR 'WRITE!': Stream is not writable.
-%%% USAGE: (WRITE! obj1 obj2 ... &optional stream)
+%%% USAGE: (WRITE! &optional stream &rest objects)
 ==>
 
->>> (writeLn! "hello" st14r)
+>>> (writeLn! st14r "hello")
 
 %%% ERROR 'WRITELN!': Stream is not writable.
-%%% USAGE: (WRITELN! obj1 obj2 ... &optional stream)
+%%% USAGE: (WRITELN! &optional stream &rest objects)
 ==>
 
->>> (uwrite! "hello" st14r)
+>>> (uwrite! st14r "hello")
 
 %%% ERROR 'UWRITE!': Stream is not writable.
-%%% USAGE: (UWRITE! obj1 obj2 ... &optional stream)
+%%% USAGE: (UWRITE! &optional stream &rest objects)
 ==>
 
->>> (uwriteLn! "hello" st14r)
+>>> (uwriteLn! st14r "hello")
 
 %%% ERROR 'UWRITELN!': Stream is not writable.
-%%% USAGE: (UWRITELN! obj1 obj2 ... &optional stream)
+%%% USAGE: (UWRITELN! &optional stream &rest objects)
 ==>
 
 >>> (terpri st14r)
@@ -743,7 +731,7 @@ ab
 
 >>> ;;; write to a file then read it back
 ... (with-open-file (f "_wof_test_.txt" output)
-...    (uwrite! "hello from with-open-file" f)
+...    (uwrite! f "hello from with-open-file")
 ...    (terpri f))
 ==> NIL
 
@@ -759,7 +747,7 @@ ab
 
 >>> ;;; append mode
 ... (with-open-file (f "_wof_test_.txt" append)
-...    (uwrite! "second line" f)
+...    (uwrite! f "second line")
 ...    (terpri f))
 ==> NIL
 

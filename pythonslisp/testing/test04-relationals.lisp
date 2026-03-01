@@ -259,37 +259,37 @@
 >>> ;;; Error: relational operators need at least 2 arguments
 ... (= 1)
 
-%%% ERROR '=': 2 or more arguments expected.
+%%% ERROR '=': At least 2 arguments expected.
 %%% USAGE: (= expr1 expr2 ...)
 ==>
 
 >>> (/= 1)
 
-%%% ERROR '/=': 2 or more arguments expected.
+%%% ERROR '/=': At least 2 arguments expected.
 %%% USAGE: (/= expr1 expr2 ...)
 ==>
 
 >>> (< 1)
 
-%%% ERROR '<': 2 or more arguments expected.
+%%% ERROR '<': At least 2 arguments expected.
 %%% USAGE: (< expr1 expr2 ...)
 ==>
 
 >>> (<= 1)
 
-%%% ERROR '<=': 2 or more arguments expected.
+%%% ERROR '<=': At least 2 arguments expected.
 %%% USAGE: (<= expr1 expr2 ...)
 ==>
 
 >>> (> 1)
 
-%%% ERROR '>': 2 or more arguments expected.
+%%% ERROR '>': At least 2 arguments expected.
 %%% USAGE: (> expr1 expr2 ...)
 ==>
 
 >>> (>= 1)
 
-%%% ERROR '>=': 2 or more arguments expected.
+%%% ERROR '>=': At least 2 arguments expected.
 %%% USAGE: (>= expr1 expr2 ...)
 ==>
 

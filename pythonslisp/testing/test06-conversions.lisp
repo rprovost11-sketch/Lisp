@@ -97,21 +97,21 @@
 >>> ;;; Error: rational requires exactly one argument
 ... (rational)
 
-%%% ERROR 'RATIONAL': Exactly 1 argument expected.
+%%% ERROR 'RATIONAL': 1 argument expected.
 %%% USAGE: (RATIONAL number)
 ==>
 
 >>> (rational 1 2)
 
-%%% ERROR 'RATIONAL': Exactly 1 argument expected.
+%%% ERROR 'RATIONAL': 1 argument expected.
 %%% USAGE: (RATIONAL number)
 ==>
 
 >>> ;;; Error: string requires at least one argument
 ... (string)
 
-%%% ERROR 'STRING': 1 or more arguments expected.
-%%% USAGE: (STRING &rest objects)
+%%% ERROR 'STRING': At least 1 argument expected.
+%%% USAGE: (STRING object &rest more-objects)
 ==>
 
 >>> ;;; Error: make-symbol requires exactly one argument

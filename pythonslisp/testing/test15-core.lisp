@@ -96,8 +96,8 @@
 >>> ;;; Error: funcall with no arguments
 ... (funcall)
 
-%%% ERROR 'FUNCALL': 1 or more arguments expected
-%%% USAGE: (FUNCALL fnNameSymbol &rest args)
+%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% USAGE: (FUNCALL callable &rest args)
 ==>
 
 ; --- apply errors ---
@@ -105,22 +105,22 @@
 >>> ;;; Error: apply with no arguments
 ... (apply)
 
-%%% ERROR 'APPLY': At least 2 arguments expected to apply.
-%%% USAGE: (APPLY function &rest args argsList)
+%%% ERROR 'APPLY': At least 2 arguments expected.
+%%% USAGE: (APPLY function &rest args)
 ==>
 
 >>> ;;; Error: apply last arg not a list
 ... (apply + 1)
 
 %%% ERROR 'APPLY': Last argument expected to be a list.
-%%% USAGE: (APPLY function &rest args argsList)
+%%% USAGE: (APPLY function &rest args)
 ==>
 
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
 %%% ERROR 'APPLY': First argument may not be a special form.
-%%% USAGE: (APPLY function &rest args argsList)
+%%% USAGE: (APPLY function &rest args)
 ==>
 
 ; --- python errors ---
@@ -128,7 +128,7 @@
 >>> ;;; Error: python with no arguments
 ... (python)
 
-%%% ERROR 'PYTHON': 1 string argument expected by python.
+%%% ERROR 'PYTHON': 1 argument expected.
 %%% USAGE: (PYTHON string)
 ==>
 
@@ -167,7 +167,7 @@
 >>> ;;; Error: recursion-limit with too many args
 ... (recursion-limit 1 2)
 
-%%% ERROR 'RECURSION-LIMIT': Only one optional arg is allowed.
+%%% ERROR 'RECURSION-LIMIT': 0 or 1 arguments expected.
 %%% USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
@@ -920,14 +920,14 @@
 >>> ;;; too few arguments
 ... (at-set 0 (list 1 2 3))
 
-%%% ERROR 'AT-SET': Exactly 3 arguments expected.
+%%% ERROR 'AT-SET': 3 arguments expected.
 %%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; too many arguments
 ... (at-set 0 (list 1 2 3) 9 9)
 
-%%% ERROR 'AT-SET': Exactly 3 arguments expected.
+%%% ERROR 'AT-SET': 3 arguments expected.
 %%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 

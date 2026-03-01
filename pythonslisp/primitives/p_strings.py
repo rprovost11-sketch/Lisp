@@ -3,29 +3,27 @@ from typing import Any, Callable
 from pythonslisp.Environment import Environment
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.primitives import LambdaListMode
 from pythonslisp.primitives.p_sequences import _validate_bounds
 
 
 def register(primitive) -> None:
 
-   @primitive( 'string-upcase', 'string',
-               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   @primitive( 'string-upcase', 'string' )
    def LP_string_upcase( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of string with all characters converted to uppercase."""
       if not isinstance( args[0], str ):
          raise LispRuntimeFuncError( LP_string_upcase, 'Argument 1 must be a String.' )
       return args[0].upper()
 
-   @primitive( 'string-downcase', 'string',
-               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   @primitive( 'string-downcase', 'string' )
    def LP_string_downcase( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of string with all characters converted to lowercase."""
       if not isinstance( args[0], str ):
          raise LispRuntimeFuncError( LP_string_downcase, 'Argument 1 must be a String.' )
       return args[0].lower()
 
-   @primitive( 'string-trim', 'char-bag string',
-               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
+   @primitive( 'string-trim', 'char-bag string' )
    def LP_string_trim( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes leading and trailing characters in char-bag from string."""
       charBag, s = args[0], args[1]
@@ -35,8 +33,7 @@ def register(primitive) -> None:
          raise LispRuntimeFuncError( LP_string_trim, 'Argument 2 must be a String.' )
       return s.strip( charBag )
 
-   @primitive( 'string-left-trim', 'char-bag string',
-               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
+   @primitive( 'string-left-trim', 'char-bag string' )
    def LP_string_left_trim( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes leading characters in char-bag from string."""
       charBag, s = args[0], args[1]
@@ -46,8 +43,7 @@ def register(primitive) -> None:
          raise LispRuntimeFuncError( LP_string_left_trim, 'Argument 2 must be a String.' )
       return s.lstrip( charBag )
 
-   @primitive( 'string-right-trim', 'char-bag string',
-               min_args=2, max_args=2, arity_msg='2 arguments expected.' )
+   @primitive( 'string-right-trim', 'char-bag string' )
    def LP_string_right_trim( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes trailing characters in char-bag from string."""
       charBag, s = args[0], args[1]
@@ -57,16 +53,14 @@ def register(primitive) -> None:
          raise LispRuntimeFuncError( LP_string_right_trim, 'Argument 2 must be a String.' )
       return s.rstrip( charBag )
 
-   @primitive( 'char-code', 'char',
-               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   @primitive( 'char-code', 'char' )
    def LP_char_code( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the integer character code of a single-character string."""
       if not isinstance( args[0], str ) or len( args[0] ) != 1:
          raise LispRuntimeFuncError( LP_char_code, 'Argument 1 must be a single-character String.' )
       return ord( args[0] )
 
-   @primitive( 'code-char', 'integer',
-               min_args=1, max_args=1, arity_msg='1 argument expected.' )
+   @primitive( 'code-char', 'integer' )
    def LP_code_char( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the single-character string corresponding to an integer character code."""
       if not isinstance( args[0], int ):
@@ -87,8 +81,8 @@ rest → lower.  Non-alphanumeric characters end the current word."""
             in_word = False
       return ''.join( result )
 
-   @primitive( 'string-capitalize', lambdaList='(string &key (start 0) (end nil))',
-               arity_msg='At least 1 argument expected.' )
+   @primitive( 'string-capitalize', '(string &key (start 0) (end nil))',
+               lambdaListMode=LambdaListMode.FULL_BINDING )
    def LP_string_capitalize( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of string with CL word-boundary capitalization applied.
 Optional :start and :end bound the region affected; text outside is unchanged."""

@@ -147,14 +147,14 @@
 >>> ;;; Error: macroexpand requires exactly one argument
 ... (macroexpand)
 
-%%% ERROR 'MACROEXPAND': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND '(macroName &rest args))
+%%% ERROR 'MACROEXPAND': 1 argument expected.
+%%% USAGE: (MACROEXPAND 'form)
 ==>
 
 >>> ;;; Error: macroexpand-1 requires exactly one argument
 ... (macroexpand-1)
 
-%%% ERROR 'MACROEXPAND-1': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND-1 '(macroName &rest args))
+%%% ERROR 'MACROEXPAND-1': 1 argument expected.
+%%% USAGE: (MACROEXPAND-1 'form)
 ==>
 

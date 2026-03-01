@@ -23,35 +23,35 @@
 ... (/)
 
 %%% ERROR '/': At least 1 argument expected.
-%%% USAGE: (/ &rest numbers)
+%%% USAGE: (/ number &rest more-numbers)
 ==>
 
 >>> ;;; integer division by zero
 ... (// 7 0)
 
 %%% ERROR '//': division by zero
-%%% USAGE: (// &rest numbers)
+%%% USAGE: (// dividend divisor)
 ==>
 
 >>> ;;; modulo by zero
 ... (mod 7 0)
 
 %%% ERROR 'MOD': division by zero
-%%% USAGE: (MOD &rest numbers)
+%%% USAGE: (MOD number divisor)
 ==>
 
 >>> ;;; integer division with non-number
 ... (// "a" 2)
 
 %%% ERROR '//': Invalid argument.
-%%% USAGE: (// &rest numbers)
+%%% USAGE: (// dividend divisor)
 ==>
 
 >>> ;;; modulo with non-number
 ... (mod "a" 2)
 
 %%% ERROR 'MOD': Invalid argument.
-%%% USAGE: (MOD &rest numbers)
+%%% USAGE: (MOD number divisor)
 ==>
 
 >>> ;;; negation of non-number
@@ -65,7 +65,7 @@
 ... (/ "a" 2)
 
 %%% ERROR '/': Invalid argument.
-%%% USAGE: (/ &rest numbers)
+%%% USAGE: (/ number &rest more-numbers)
 ==>
 
 >>> ;;; min with no args
@@ -117,14 +117,14 @@
 >>> ;;; random with no args
 ... (random)
 
-%%% ERROR 'RANDOM': Exactly 1 number argument expected.
+%%% ERROR 'RANDOM': 1 argument expected.
 %%% USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random with too many args
 ... (random 1 2)
 
-%%% ERROR 'RANDOM': Exactly 1 number argument expected.
+%%% ERROR 'RANDOM': 1 argument expected.
 %%% USAGE: (RANDOM integerOrFloat)
 ==>
 
@@ -276,31 +276,31 @@
 
 >>> (at-delete)
 
-%%% ERROR 'AT-DELETE': Exactly 2 arguments expected.
+%%% ERROR 'AT-DELETE': 2 arguments expected.
 %%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> (at-delete 1)
 
-%%% ERROR 'AT-DELETE': Exactly 2 arguments expected.
+%%% ERROR 'AT-DELETE': 2 arguments expected.
 %%% USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
 >>> (at-insert)
 
-%%% ERROR 'AT-INSERT': Exactly 3 arguments expected.
+%%% ERROR 'AT-INSERT': 3 arguments expected.
 %%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 >>> (at-insert 1)
 
-%%% ERROR 'AT-INSERT': Exactly 3 arguments expected.
+%%% ERROR 'AT-INSERT': 3 arguments expected.
 %%% USAGE: (AT-INSERT index list newItem)
 ==>
 
 >>> (at-insert 1 2)
 
-%%% ERROR 'AT-INSERT': Exactly 3 arguments expected.
+%%% ERROR 'AT-INSERT': 3 arguments expected.
 %%% USAGE: (AT-INSERT index list newItem)
 ==>
 
@@ -559,8 +559,8 @@
 
 >>> (macroexpand)
 
-%%% ERROR 'MACROEXPAND': Exactly 1 argument expected.
-%%% USAGE: (MACROEXPAND '(macroName &rest args))
+%%% ERROR 'MACROEXPAND': 1 argument expected.
+%%% USAGE: (MACROEXPAND 'form)
 ==>
 
 >>> ;;; macroexpand non-list returns unchanged
@@ -658,14 +658,14 @@
 
 >>> (string)
 
-%%% ERROR 'STRING': 1 or more arguments expected.
-%%% USAGE: (STRING &rest objects)
+%%% ERROR 'STRING': At least 1 argument expected.
+%%% USAGE: (STRING object &rest more-objects)
 ==>
 
 >>> (ustring)
 
-%%% ERROR 'USTRING': 1 or more arguments expected.
-%%% USAGE: (USTRING object1 object2 ...)
+%%% ERROR 'USTRING': At least 1 argument expected.
+%%% USAGE: (USTRING object &rest more-objects)
 ==>
 
 >>> (make-symbol)
@@ -704,7 +704,7 @@
 
 >>> (parse)
 
-%%% ERROR 'PARSE': 1 string argument expected.
+%%% ERROR 'PARSE': 1 argument expected.
 %%% USAGE: (PARSE string)
 ==>
 
@@ -912,14 +912,14 @@
 ... (// 1 2 3)
 
 %%% ERROR '//': 2 arguments expected.
-%%% USAGE: (// &rest numbers)
+%%% USAGE: (// dividend divisor)
 ==>
 
 >>> ;;; modulo with too many arguments
 ... (mod 1 2 3)
 
 %%% ERROR 'MOD': 2 arguments expected.
-%%% USAGE: (MOD &rest numbers)
+%%% USAGE: (MOD number divisor)
 ==>
 
 ; --- Arithmetic type errors ---
@@ -978,21 +978,21 @@
 >>> ;;; expt with no arguments
 ... (expt)
 
-%%% ERROR 'EXPT': Exactly two arguments expected.
+%%% ERROR 'EXPT': 2 arguments expected.
 %%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; expt with one argument
 ... (expt 1)
 
-%%% ERROR 'EXPT': Exactly two arguments expected.
+%%% ERROR 'EXPT': 2 arguments expected.
 %%% USAGE: (EXPT base power)
 ==>
 
 >>> ;;; expt with three arguments
 ... (expt 1 2 3)
 
-%%% ERROR 'EXPT': Exactly two arguments expected.
+%%% ERROR 'EXPT': 2 arguments expected.
 %%% USAGE: (EXPT base power)
 ==>
 
@@ -1211,14 +1211,14 @@
 ... (apply 'nonexistent-fn-xyz '(1 2))
 
 %%% ERROR 'APPLY': First argument "NONEXISTENT-FN-XYZ" expected to be the name of a callable.
-%%% USAGE: (APPLY function &rest args argsList)
+%%% USAGE: (APPLY function &rest args)
 ==>
 
 >>> ;;; apply with non-symbol non-callable first arg
 ... (apply 42 '(1 2))
 
 %%% ERROR 'APPLY': First argument expected to be a symbol.
-%%% USAGE: (APPLY function &rest args argsList)
+%%% USAGE: (APPLY function &rest args)
 ==>
 
 ; --- ASIN/ACOS: too many arguments ---
@@ -1252,7 +1252,7 @@
 ... (/ 0 0)
 
 %%% ERROR '/': division by zero
-%%% USAGE: (/ &rest numbers)
+%%% USAGE: (/ number &rest more-numbers)
 ==>
 
 ; --- Conversion: symbol arguments ---
@@ -1301,15 +1301,15 @@
 >>> ;;; help with too many arguments
 ... (help 1 2)
 
-%%% ERROR 'HELP': Too many arguments.  Received 2
-%%% USAGE: (HELP &optional callableSymbol)
+%%% ERROR 'HELP': 0 or 1 arguments expected.
+%%% USAGE: (HELP &optional callableOrString)
 ==>
 
 >>> ;;; help with non-callable argument
 ... (help 42)
 
 %%% ERROR 'HELP': First argument expected to be a callable.
-%%% USAGE: (HELP &optional callableSymbol)
+%%% USAGE: (HELP &optional callableOrString)
 ==>
 
 ; --- SORT: non-list argument ---
@@ -1397,8 +1397,8 @@
 >>> ;;; funcall with no arguments
 ... (funcall)
 
-%%% ERROR 'FUNCALL': 1 or more arguments expected
-%%% USAGE: (FUNCALL fnNameSymbol &rest args)
+%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% USAGE: (FUNCALL callable &rest args)
 ==>
 
 ; --- at errors on strings ---
@@ -1491,7 +1491,7 @@
 >>> ;;; recursion-limit with too many args
 ... (recursion-limit 1 2)
 
-%%% ERROR 'RECURSION-LIMIT': Only one optional arg is allowed.
+%%% ERROR 'RECURSION-LIMIT': 0 or 1 arguments expected.
 %%% USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
@@ -1556,18 +1556,18 @@
 
 >>> (path-join)
 
-%%% ERROR 'PATH-JOIN': 1 or more arguments expected.
-%%% USAGE: (PATH-JOIN &rest path-segments)
+%%% ERROR 'PATH-JOIN': At least 1 argument expected.
+%%% USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 
 >>> (path-join 42)
 
 %%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
-%%% USAGE: (PATH-JOIN &rest path-segments)
+%%% USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 
 >>> (path-join "a" 42)
 
 %%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
-%%% USAGE: (PATH-JOIN &rest path-segments)
+%%% USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
