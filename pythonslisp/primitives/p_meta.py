@@ -11,7 +11,7 @@ from pythonslisp.primitives import LambdaListMode
 
 def register(primitive) -> None:
 
-   @primitive( 'defmacro', 'symbol lambda-list &rest body', specialForm=True )
+   @primitive( 'defmacro', '(symbol lambda-list &rest body)', specialForm=True )
    def LP_defmacro( ctx: LispContext, env: Environment, *args ) -> Any:
       """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
@@ -65,7 +65,7 @@ not a macro call."""
 
       return LispExpander._expandMacroCall( ctx, env, macroDef, form[1:] )
 
-   @primitive( 'defsetf-internal', 'accessor-symbol field-symbol' )
+   @primitive( 'defsetf-internal', '(accessor-symbol field-symbol)' )
    def LP_defsetf_internal( ctx: LispContext, env: Environment, *args ) -> Any:
       """Register a struct field accessor as a valid setf target."""
       accessor_sym, field_sym = args
@@ -74,7 +74,7 @@ not a macro call."""
       ctx.setfRegistry[accessor_sym.strval] = field_sym.strval
       return accessor_sym
 
-   @primitive( 'set-accessor!', 'accessor-symbol instance newValue' )
+   @primitive( 'set-accessor!', '(accessor-symbol instance newValue)' )
    def LP_set_accessor( ctx: LispContext, env: Environment, *args ) -> Any:
       """Internal: write a struct field value via the defsetf registry."""
       accessor, instance, newval = args
@@ -101,7 +101,7 @@ value.
 Alternate usage: (setf (at keyOrIndex dictOrList) newValue)"""
       raise LispRuntimeFuncError( LP_setq, 'Handled by main eval loop.' )
 
-   @primitive( 'makunbound', 'symbol' )
+   @primitive( 'makunbound', '(symbol)' )
    def LP_makunbound( ctx: LispContext, env: Environment, *args ) -> Any:
       """Undefines the global definition for a symbol and returns nil.
 The argument is evaluated: (makunbound 'x) unbinds X."""
@@ -111,7 +111,7 @@ The argument is evaluated: (makunbound 'x) unbinds X."""
       env.getGlobalEnv().unbind( key.strval )
       return L_NIL
 
-   @primitive( 'symtab!', '', max_args=0 )
+   @primitive( 'symtab!', '()', max_args=0 )
    def LP_symtab( ctx: LispContext, env: Environment, *args ) -> Any:
       """Prints the entire environment stack and returns nil.  Each scope is printed
 in a separate list and begins on a new line.  The local scope is first; global
@@ -126,7 +126,7 @@ is last."""
 
       return L_NIL
 
-   @primitive( 'trace', '&rest fn-names', specialForm=True )
+   @primitive( 'trace', '(&rest fn-names)', specialForm=True )
    def LP_trace( ctx: LispContext, env: Environment, *args ) -> Any:
       """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
@@ -139,7 +139,7 @@ trace list.  With no arguments, returns the list of currently traced functions."
          tracer.addFnTrace( sym.strval )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
-   @primitive( 'untrace', '&rest fn-names', specialForm=True )
+   @primitive( 'untrace', '(&rest fn-names)', specialForm=True )
    def LP_untrace( ctx: LispContext, env: Environment, *args ) -> Any:
       """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
@@ -153,7 +153,7 @@ trace list.  With no arguments, clears all named function tracing."""
             tracer.removeFnTrace( sym.strval )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
-   @primitive( 'call/cc', 'procedure' )
+   @primitive( 'call/cc', '(procedure)' )
    def LP_callcc( ctx: LispContext, env: Environment, *args ) -> Any:
       """Calls procedure with one argument: an escape continuation object.
 Invoking the continuation with a value causes call/cc to immediately return
@@ -175,7 +175,7 @@ continuations are supported; invoking a stale continuation is an error."""
             return ci.value
          raise   # re-raise so an outer call/cc can catch it
 
-   @primitive( 'boundp', 'symbol' )
+   @primitive( 'boundp', '(symbol)' )
    def LP_boundp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
       sym = args[0]

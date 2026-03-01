@@ -6,7 +6,7 @@ from pythonslisp.LispAST import LPrimitive, LSymbol, L_T, L_NIL
 
 class LambdaListMode(Enum):
    DOC_ONLY     = auto()   # informal display string; min/max specified manually; arity_msg auto
-   ARITY_ONLY   = auto()   # valid lambda list; arity auto-derived; no bindArguments at call time
+   ARITY_ONLY   = auto()   # valid lambda list with outer (); arity auto-derived; no bindArguments at call time
    FULL_BINDING = auto()   # valid lambda list with outer (); arity auto-derived; bindArguments each call
 
 
@@ -85,13 +85,13 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
             self._min_args = derived_min if min_args is _UNSET else min_args
             self._max_args = derived_max if max_args is _UNSET else max_args
          elif lambdaListMode is LambdaListMode.ARITY_ONLY:
-            # params is a valid lambda list without outer parens; wrap for parsing
-            if params:
-               ll_ast = parseLispString( '(' + params + ')' )[1]
-            else:
-               ll_ast = []
+            # params is a valid lambda list WITH outer parens (same convention as FULL_BINDING)
+            ll_ast = parseLispString( params )[1]
             self._lambdaListAST = None    # not used at call time
-            self._paramsString  = params
+            stripped = params.strip()
+            if stripped.startswith('(') and stripped.endswith(')'):
+               stripped = stripped[1:-1].strip()
+            self._paramsString = stripped
             derived_min, derived_max = _derive_arity( ll_ast )
             self._min_args = derived_min if min_args is _UNSET else min_args
             self._max_args = derived_max if max_args is _UNSET else max_args

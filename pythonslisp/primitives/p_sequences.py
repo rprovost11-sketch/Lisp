@@ -90,7 +90,7 @@ def register( primitive ) -> None:
             raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum+1} has an invalid key type.' )
       return theMapping
 
-   @primitive( 'car', 'list' )
+   @primitive( 'car', '(list)' )
    def LP_car( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first item in a list."""
       theList = args[0]
@@ -103,7 +103,7 @@ def register( primitive ) -> None:
       except IndexError:
          return L_NIL
 
-   @primitive( 'cdr', 'list' )
+   @primitive( 'cdr', '(list)' )
    def LP_cdr( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of the list minus the first element."""
       theList = args[0]
@@ -113,7 +113,7 @@ def register( primitive ) -> None:
 
       return theList[1:]
 
-   @primitive( 'cons', 'obj list' )
+   @primitive( 'cons', '(obj list)' )
    def LP_cons( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of list with obj inserted into the front of the copy."""
       obj, consList = args
@@ -123,7 +123,7 @@ def register( primitive ) -> None:
 
       return [ obj, *consList ]
 
-   @primitive( 'push!', 'list value' )
+   @primitive( 'push!', '(list value)' )
    def LP_push( ctx: LispContext, env: Environment, *args ) -> Any:
       """Pushes a value onto the back of a list."""
       alist, value = args
@@ -133,7 +133,7 @@ def register( primitive ) -> None:
       alist.append( value )
       return alist
 
-   @primitive( 'pop!', 'list' )
+   @primitive( 'pop!', '(list)' )
    def LP_pop( ctx: LispContext, env: Environment, *args ) -> Any:
       """Pops and returns the last value of a list."""
       alist = args[0]
@@ -147,7 +147,7 @@ def register( primitive ) -> None:
          raise LispRuntimeFuncError( LP_pop, 'Invalid argument.' )
       return value
 
-   @primitive( 'at', 'keyOrIndex dictListOrStr' )
+   @primitive( 'at', '(keyOrIndex dictListOrStr)' )
    def LP_at( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the value at a specified index of a list or string,
       or specified key of a map."""
@@ -164,7 +164,7 @@ def register( primitive ) -> None:
       except ( KeyError, IndexError, TypeError ):
          raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
 
-   @primitive( 'at-set', 'keyOrIndex dictListOrStr newValue' )
+   @primitive( 'at-set', '(keyOrIndex dictListOrStr newValue)' )
    def LP_atSet( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sets the value at a specified index of a list,
       or specified key of a map.  Returns newValue."""
@@ -183,7 +183,7 @@ def register( primitive ) -> None:
 
       return newValue
 
-   @primitive( 'at-delete', 'keyOrIndex dictOrList' )
+   @primitive( 'at-delete', '(keyOrIndex dictOrList)' )
    def LP_atDelete( ctx: LispContext, env: Environment, *args ) -> bool:
       """Deletes the key-value pair from a map or list specified by keyOrIndex."""
       key, keyed = args
@@ -198,7 +198,7 @@ def register( primitive ) -> None:
 
       return L_T
 
-   @primitive( 'at-insert', 'index list newItem' )
+   @primitive( 'at-insert', '(index list newItem)' )
    def LP_atInsert( ctx: LispContext, env: Environment, *args ) -> bool:
       """Inserts newItem into list at the position specified by index.  Returns newItem."""
       index, lst, newItem = args
@@ -212,7 +212,7 @@ def register( primitive ) -> None:
       lst.insert( index, newItem )
       return newItem
 
-   @primitive( 'append', '&rest lists' )
+   @primitive( 'append', '(&rest lists)' )
    def LP_append( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a new list with the contents of the argument lists merged.  Order is retained.
 (append) = NIL; (append lst) = lst; 2+ args: all must be proper lists."""
@@ -227,7 +227,7 @@ def register( primitive ) -> None:
          resultList.extend( lst )
       return resultList
 
-   @primitive( 'hasValue?', 'value listOrDict' )
+   @primitive( 'hasValue?', '(value listOrDict)' )
    def LP_hasValue( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the list/map contains value otherwise nil."""
       aVal, keyed = args
@@ -241,7 +241,7 @@ def register( primitive ) -> None:
 
       return L_T if aVal in keyed else L_NIL
 
-   @primitive( 'update!', 'dict1 dict2' )
+   @primitive( 'update!', '(dict1 dict2)' )
    def LP_update( ctx: LispContext, env: Environment, *args ) -> Any:
       """Updates dict1's data with dict2's."""
       dict1, dict2 = args
@@ -255,7 +255,7 @@ def register( primitive ) -> None:
       dict1.update( dict2 )
       return dict1
 
-   @primitive( 'hasKey?', 'key dict' )
+   @primitive( 'hasKey?', '(key dict)' )
    def LP_hasKey( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the key is in the map otherwise nil."""
       aKey, aMap = args
@@ -293,7 +293,7 @@ The optional :key function extracts the comparison key from each element."""
       except TypeError:
          raise LispRuntimeFuncError( LP_sort, 'Cannot sort a list with incomparable types.' )
 
-   @primitive( 'length', 'sequence' )
+   @primitive( 'length', '(sequence)' )
    def LP_length( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in a list, string, or map."""
       arg = args[0]
@@ -301,7 +301,7 @@ The optional :key function extracts the comparison key from each element."""
          return len(arg)
       raise LispRuntimeFuncError( LP_length, 'Argument 1 must be a List, String, or Map.' )
 
-   @primitive( 'subseq', 'sequence start &optional end' )
+   @primitive( 'subseq', '(sequence start &optional end)' )
    def LP_subseq( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a subsequence of a list or string from start (inclusive) to end (exclusive).
 If end is not provided, returns from start to the end of the sequence."""
@@ -671,7 +671,7 @@ considered.  :count limits replacements; :from-end replaces from the right."""
 
    # ── Multi-sequence mapping functions ──────────────────────────────────────
 
-   @primitive( 'mapcar', 'fn seq &rest more-seqs' )
+   @primitive( 'mapcar', '(fn seq &rest more-seqs)' )
    def LP_mapcar( ctx: LispContext, env: Environment, *args ) -> Any:
       """Applies fn element-wise across one or more sequences (lists) and returns
 a list of the results.  Stops at the shortest sequence."""
@@ -685,7 +685,7 @@ a list of the results.  Stops at the shortest sequence."""
          result.append( ctx.lApply( env, fn, list(elts) ) )
       return result
 
-   @primitive( 'every', 'pred seq &rest more-seqs' )
+   @primitive( 'every', '(pred seq &rest more-seqs)' )
    def LP_every( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if pred returns true for every element-wise group across sequences.
 Returns NIL at the first false result.  Returns T for empty sequences."""
@@ -697,7 +697,7 @@ Returns NIL at the first false result.  Returns T for empty sequences."""
             return L_NIL
       return L_T
 
-   @primitive( 'some', 'pred seq &rest more-seqs' )
+   @primitive( 'some', '(pred seq &rest more-seqs)' )
    def LP_some( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first truthy value pred returns across the sequences.
 Returns NIL if pred returns NIL for every element-wise group."""
@@ -709,7 +709,7 @@ Returns NIL if pred returns NIL for every element-wise group."""
             return result
       return L_NIL
 
-   @primitive( 'mapc', 'fn seq &rest more-seqs' )
+   @primitive( 'mapc', '(fn seq &rest more-seqs)' )
    def LP_mapc( ctx: LispContext, env: Environment, *args ) -> Any:
       """Applies fn element-wise across one or more sequences for side effects.
 Returns the first sequence."""

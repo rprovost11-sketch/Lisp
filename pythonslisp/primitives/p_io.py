@@ -100,7 +100,7 @@ def register(primitive, parseLispString: Callable) -> None:
 
    # -----------------------------------------------------------------------
 
-   @primitive( 'open-read', 'filename &optional encoding' )
+   @primitive( 'open-read', '(filename &optional encoding)' )
    def LP_openRead( ctx: LispContext, env: Environment, *args):
       """Opens and returns a text stream for reading.  encoding may be \"utf-8\"."""
       fileName, *encoding = args
@@ -116,7 +116,7 @@ def register(primitive, parseLispString: Callable) -> None:
       except FileNotFoundError:
          raise LispRuntimeFuncError( LP_openRead, f'File not found "{fileName}".' )
 
-   @primitive( 'open-write', 'filename &optional encoding' )
+   @primitive( 'open-write', '(filename &optional encoding)' )
    def LP_openWrite( ctx: LispContext, env: Environment, *args):
       """Opens and returns a text stream for writing.  encoding may be \"utf-8\"."""
       fileName, *encoding = args
@@ -131,7 +131,7 @@ def register(primitive, parseLispString: Callable) -> None:
       except FileNotFoundError:
          raise LispRuntimeFuncError( LP_openWrite, f'File not found "{fileName}".' )
 
-   @primitive( 'open-append', 'filename &optional encoding' )
+   @primitive( 'open-append', '(filename &optional encoding)' )
    def LP_openAppend( ctx: LispContext, env: Environment, *args):
       """Opens and returns a text stream for appending.  encoding may be \"utf-8\"."""
       fileName, *encoding = args
@@ -146,7 +146,7 @@ def register(primitive, parseLispString: Callable) -> None:
       except FileNotFoundError:
          raise LispRuntimeFuncError( LP_openAppend, f'File not found "{fileName}".' )
 
-   @primitive( 'close', 'stream' )
+   @primitive( 'close', '(stream)' )
    def LP_close( ctx: LispContext, env: Environment, *args ) -> Any:
       """Closes a stream and returns t."""
       stream = args[0]
@@ -155,7 +155,7 @@ def register(primitive, parseLispString: Callable) -> None:
       stream.close( )
       return L_T
 
-   @primitive( 'flush', '&optional stream' )
+   @primitive( 'flush', '(&optional stream)' )
    def LP_flush( ctx: LispContext, env: Environment, *args ) -> Any:
       """Flushes a stream and returns t."""
       if len(args) == 1:
@@ -167,7 +167,7 @@ def register(primitive, parseLispString: Callable) -> None:
          sys.stdout.flush()
       return L_T
 
-   @primitive( 'closed', 'stream' )
+   @primitive( 'closed', '(stream)' )
    def LP_closed( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is closed, nil otherwise."""
       stream = args[0]
@@ -175,7 +175,7 @@ def register(primitive, parseLispString: Callable) -> None:
          raise LispRuntimeFuncError( LP_closed, 'Argument expected to be a stream.' )
       return L_T if stream.closed else L_NIL
 
-   @primitive( 'isatty', 'stream' )
+   @primitive( 'isatty', '(stream)' )
    def LP_isatty( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is a tty, nil otherwise."""
       stream = args[0]
@@ -183,7 +183,7 @@ def register(primitive, parseLispString: Callable) -> None:
          raise LispRuntimeFuncError( LP_isatty, 'Argument expected to be a stream.' )
       return L_T if stream.isatty() else L_NIL
 
-   @primitive( 'readable', 'stream' )
+   @primitive( 'readable', '(stream)' )
    def LP_readable( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is readable, nil otherwise."""
       stream = args[0]
@@ -191,7 +191,7 @@ def register(primitive, parseLispString: Callable) -> None:
          raise LispRuntimeFuncError( LP_readable, 'Argument expected to be a stream.' )
       return L_T if stream.readable() else L_NIL
 
-   @primitive( 'writable', 'stream' )
+   @primitive( 'writable', '(stream)' )
    def LP_writable( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is writable, nil otherwise."""
       stream = args[0]
@@ -199,12 +199,12 @@ def register(primitive, parseLispString: Callable) -> None:
          raise LispRuntimeFuncError( LP_writable, 'Argument expected to be a stream.' )
       return L_T if stream.writable() else L_NIL
 
-   @primitive( 'tmpdir', '' )
+   @primitive( 'tmpdir', '()' )
    def LP_tmpdir( ctx: LispContext, env: Environment, *args ) -> str:
       """Returns the system temporary directory as a string."""
       return tempfile.gettempdir()
 
-   @primitive( 'path-join', 'path-segment &rest more-segments' )
+   @primitive( 'path-join', '(path-segment &rest more-segments)' )
    def LP_path_join( ctx: LispContext, env: Environment, *args ) -> str:
       """Joins path-segments using the OS path separator.  Returns the result as a string."""
       for i, arg in enumerate(args):
@@ -212,7 +212,7 @@ def register(primitive, parseLispString: Callable) -> None:
             raise LispRuntimeFuncError( LP_path_join, f'Argument {i+1} expected to be a string.' )
       return os.path.join(*args)
 
-   @primitive( 'writef', 'formatString &optional dictOrList stream' )
+   @primitive( 'writef', '(formatString &optional dictOrList stream)' )
    def LP_writef( ctx: LispContext, env: Environment, *args ) -> str:
       """Writes formatted text.  Returns the string that is written.
 Takes a Python format string and an optional map or list of values.
@@ -264,7 +264,7 @@ Returns the output string."""
       print( outputStr, end='', file=stream )
       return outputStr
 
-   @primitive( 'write!', '&optional stream &rest objects' )
+   @primitive( 'write!', '(&optional stream &rest objects)' )
    def LP_write( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
@@ -278,7 +278,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
          stream = ctx.outStrm
       return lwrite( stream, *args, end='' )
 
-   @primitive( 'writeLn!', '&optional stream &rest objects' )
+   @primitive( 'writeLn!', '(&optional stream &rest objects)' )
    def LP_writeln( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
@@ -293,7 +293,7 @@ Returns the last value printed."""
          stream = ctx.outStrm
       return lwrite( stream, *args, end='\n' )
 
-   @primitive( 'uwrite!', '&optional stream &rest objects' )
+   @primitive( 'uwrite!', '(&optional stream &rest objects)' )
    def LP_uwrite( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
@@ -307,7 +307,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
          stream = ctx.outStrm
       return luwrite( stream, *args, end='' )
 
-   @primitive( 'uwriteLn!', '&optional stream &rest objects' )
+   @primitive( 'uwriteLn!', '(&optional stream &rest objects)' )
    def LP_uwriteln( ctx: LispContext, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
@@ -322,7 +322,7 @@ Returns the last value printed."""
          stream = ctx.outStrm
       return luwrite( stream, *args, end='\n' )
 
-   @primitive( 'terpri', '&optional stream' )
+   @primitive( 'terpri', '(&optional stream)' )
    def LP_terpri( ctx: LispContext, env: Environment, *args ) -> Any:
       """Outputs a newline character.  Returns NIL."""
       if len(args) == 0:
@@ -336,7 +336,7 @@ Returns the last value printed."""
       print( end='\n', file=stream )
       return L_NIL
 
-   @primitive( 'readall', 'stream' )
+   @primitive( 'readall', '(stream)' )
    def LP_readall( ctx: LispContext, env: Environment, *args ) -> Any:
       """Reads and returns the entire contents of a readable stream as a single string."""
       stream = args[0]
@@ -346,7 +346,7 @@ Returns the last value printed."""
          raise LispRuntimeFuncError( LP_readall, 'Stream is not readable.' )
       return stream.read()
 
-   @primitive( 'readLn!', '&optional stream' )
+   @primitive( 'readLn!', '(&optional stream)' )
    def LP_readln( ctx: LispContext, env: Environment, *args ) -> Any:
       """Reads and returns text input from standard input or stream.  For console input
 This function blocks while it waits for the input return key to be pressed at the end
@@ -361,7 +361,7 @@ of text entry."""
             raise LispRuntimeFuncError( LP_readln, 'Stream is not readable.' )
          return stream.readline(-1)
 
-   @primitive( 'save', 'filename &rest objects' )
+   @primitive( 'save', '(filename &rest objects)' )
    def LP_save( ctx: LispContext, env: Environment, *args ) -> Any:
       """Saves python object to a text file."""
       filename, *objs = args
@@ -372,7 +372,7 @@ of text entry."""
          st.writelines( lines )
       return L_NIL
 
-   @primitive( 'load', 'fileName' )
+   @primitive( 'load', '(fileName)' )
    def LP_load( ctx: LispContext, env: Environment, *args ) -> Any:
       """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
       filename = args[0]
@@ -385,7 +385,7 @@ of text entry."""
          raise LispRuntimeFuncError( LP_load, f'File not found "{filename}".' )
       return parseLispString( content )   # (progn form1 form2 ...)
 
-   @primitive( 'error', 'formatString &optional dictOrList' )
+   @primitive( 'error', '(formatString &optional dictOrList)' )
    def LP_error( ctx: LispContext, env: Environment, *args ) -> Any:
       """Signals a runtime error with the given message string.
 The format string may optionally be followed by a list or map of values,
@@ -408,7 +408,7 @@ being raised.  With no second argument the format string is used as-is."""
          raise LispRuntimeFuncError( LP_error, f'Format error: {e}' )
       raise LispRuntimeError( message )
 
-   @primitive( 'parse', 'string' )
+   @primitive( 'parse', '(string)' )
    def LP_parse( ctx: LispContext, env: Environment, *args ) -> Any:
       """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
       theExprStr = args[0]
@@ -416,7 +416,7 @@ being raised.  With no second argument the format string is used as-is."""
          raise LispRuntimeFuncError( LP_parse, 'Argument expected to be a string.' )
       return parseLispString( theExprStr )
 
-   @primitive( 'python', 'string' )
+   @primitive( 'python', '(string)' )
    def LP_python( ctx: LispContext, env: Environment, *args ) -> Any:
       """Executes some python code from Lisp."""
       thePythonCode = args[0]
@@ -425,7 +425,7 @@ being raised.  With no second argument the format string is used as-is."""
       theReturnVal = eval( thePythonCode, globals(), locals() )
       return theReturnVal
 
-   @primitive( 'recursion-limit', '&optional newLimit' )
+   @primitive( 'recursion-limit', '(&optional newLimit)' )
    def LP_recursionlimit( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns or sets the system recursion limit.  The higher the integer
 argument the deeper the recursion will be allowed to go.  If setting,
@@ -439,7 +439,7 @@ returns newLimit upon success."""
       except (TypeError, ValueError):
          raise LispRuntimeFuncError( LP_recursionlimit, 'Argument must be an integer.' )
 
-   @primitive( 'help', '&optional callableOrString' )
+   @primitive( 'help', '(&optional callableOrString)' )
    def LP_help( ctx: LispContext, env: Environment, *args ) -> Any:
       """Prints a set of tables for all the globally defined symbols and
 topics currently available in Python's Lisp. Or prints the usage and
@@ -486,7 +486,7 @@ Type '(help "topic")' for available documentation on the named topic."""
 
       return L_T
 
-   @primitive( 'define-help-topic', 'name-string text-string' )
+   @primitive( 'define-help-topic', '(name-string text-string)' )
    def LP_define_help_topic( ctx: LispContext, env: Environment, *args ) -> Any:
       """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
@@ -501,7 +501,7 @@ as a symbol.  An existing topic with the same name is overwritten."""
       topicFile.write_text( text, encoding='utf-8' )
       return LSymbol( name )
 
-   @primitive( 'undefine-help-topic', 'name-string' )
+   @primitive( 'undefine-help-topic', '(name-string)' )
    def LP_undefine_help_topic( ctx: LispContext, env: Environment, *args ) -> Any:
       """Removes a help topic by deleting its file from the help directory.
 Returns T if the topic existed and was removed, NIL if the topic was not found."""
