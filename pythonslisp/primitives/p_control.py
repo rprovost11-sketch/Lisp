@@ -22,8 +22,8 @@ expression can be a documentation string."""
          docString = ''
       return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
 
-   @primitive( 'let', '( (var1 sexpr1) (var2 sexpr2) ...) &rest body',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'let', '(( (var1 sexpr1) (var2 sexpr2) ...) &rest body)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_let( ctx: LispContext, env: Environment, *args ) -> Any:
       """Executes a list of expressions (body) in sequence in a nested scope and
 returns the result of the last one.  var1,var2,... are local variables bound to
@@ -31,8 +31,8 @@ results of expressions.  Variable initializations are not evaluated in
 sequence and are not evaluated in let's nested scope."""
       raise LispRuntimeFuncError( LP_let, 'Evaluation handled by main eval loop.' )
 
-   @primitive( 'let*', '( (var1 sexpr1) (var2 sexpr2) ...) &rest body',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'let*', '(( (var1 sexpr1) (var2 sexpr2) ...) &rest body)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_letstar( ctx: LispContext, env: Environment, *args ) -> Any:
       """Executes a list of expressions (body) in sequence in a nested scope and
 returns the result of the last one.  var1,var2,... are local variables bound to
@@ -54,8 +54,8 @@ evaluated and its result returned, otherwise alt is evaluated and its result
 is returned.  Or nil is returned if there is no alt."""
       raise LispRuntimeFuncError( LP_if, 'Expression evaluated in main eval loop.' )
 
-   @primitive( 'cond', '(cond1 body1) (cond2 body2) ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True, min_args=1 )
+   @primitive( 'cond', '((cond1 body1) (cond2 body2) ...)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True, min_args=1 )
    def LP_cond( ctx: LispContext, env: Environment, *args ) -> Any:
       """Evaluates each cond in order until one evaluates to truthy (non-nil).
 Then evaluates each expr in the paired body and returns the result of the
@@ -64,8 +64,8 @@ sequence with '(t bodyn)' to have code evaluated if no other condition
 is satisfied."""
       raise LispRuntimeFuncError( LP_cond, 'Handled by main eval loop.' )
 
-   @primitive( 'case', 'sexpr (val1 body1) (val2 body2) ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True, min_args=2 )
+   @primitive( 'case', '(sexpr (val1 body1) (val2 body2) ...)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True, min_args=2 )
    def LP_case( ctx: LispContext, env: Environment, *args ) -> Any:
       """Evaluates expr.  Finds the first val that equals expr's val.  Then
 evaluates each expr in the paired body and returns the result of the last expr
@@ -106,8 +106,8 @@ in sequence.  However if conditionExpr evaluates to nil, the loop terminates
 and returns the result of the last body expr evaluated."""
       raise LispRuntimeFuncError( LP_while, 'Evaluation handled by macro.' )
 
-   @primitive( 'dotimes', '(var countExpr &optional result) &rest body',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'dotimes', '((var countExpr &optional result) &rest body)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_dotimes( ctx: LispContext, env: Environment, *args ) -> Any:
       """Performs a loop over a body of sexprs countExpr times.  Before each
 iteration the loop variable is set to the next loop count number (starting with
@@ -115,8 +115,8 @@ iteration the loop variable is set to the next loop count number (starting with
 Supports (return value) for early exit."""
       raise LispRuntimeFuncError( LP_dotimes, 'Evaluation handled by macro.' )
 
-   @primitive( 'dolist', '(variable list &optional result) &rest body',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'dolist', '((variable list &optional result) &rest body)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_dolist( ctx: LispContext, env: Environment, *args ) -> Any:
       """Iterate over a body of sexprs, binding variable to each element of list
 before each iteration.  Returns result (default NIL) after the loop completes.
@@ -176,8 +176,8 @@ Returns value (default NIL) from that block.  Equivalent to (return-from nil val
       """Evaluates expr in the current scope."""
       return ctx.lEval( env, args[0] )
 
-   @primitive( 'apply', 'function &rest args',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( 'apply', '(function &rest args)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_apply( ctx: LispContext, env: Environment, *args ) -> Any:
       """The last argument must be a list of args.  Inserts arg1,arg2,... into
 the front of the list of args, then applies the function to the the whole list
@@ -230,8 +230,8 @@ invoked.  If no matching catch exists, an error is signaled."""
       tag, value = args
       raise Thrown( tag, value )
 
-   @primitive( 'catch', 'tag sexpr1 sexpr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'catch', '(tag sexpr1 sexpr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_catch( ctx: LispContext, env: Environment, *args ) -> Any:
       """Establishes a dynamic catch point tagged with tag (evaluated).  Evaluates
 body forms in sequence.  If (throw tag value) is executed within the dynamic

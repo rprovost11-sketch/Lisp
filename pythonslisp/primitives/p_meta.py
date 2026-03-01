@@ -24,8 +24,8 @@ can be an optional documentation string."""
       theFunc = LMacro( fnName, funcParams, docString, funcBody )
       return env.bindGlobal( fnName.strval, theFunc )
 
-   @primitive( 'macroexpand', '\'form',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
+   @primitive( 'macroexpand', '(\'form)',
+               mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
    def LP_macroexpand( ctx: LispContext, env: Environment, *args ) -> Any:
       """Fully expands a macro call at the top level, looping until the form is no
 longer headed by a macro.  Non-macro and non-list forms are returned unchanged."""
@@ -44,8 +44,8 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
          form = LispExpander._expandMacroCall( ctx, env, macroDef, form[1:] )
       return form
 
-   @primitive( 'macroexpand-1', '\'form',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
+   @primitive( 'macroexpand-1', '(\'form)',
+               mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
    def LP_macroexpand_1( ctx: LispContext, env: Environment, *args ) -> Any:
       """Expands a macro call exactly once.  Returns the form unchanged if it is
 not a macro call."""
@@ -89,8 +89,8 @@ not a macro call."""
       instance[ field_key ] = newval
       return newval
 
-   @primitive( 'setq', 'symbol1 sexpr1 symbol2 sexpr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_setq( ctx: LispContext, env: Environment, *args ) -> Any:
       """Updates one or more variables' values', returns value.  The search for
 the variable begins locally and proceeds to search ever less local scopes until

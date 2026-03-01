@@ -82,7 +82,7 @@ rest → lower.  Non-alphanumeric characters end the current word."""
       return ''.join( result )
 
    @primitive( 'string-capitalize', '(string &key (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_string_capitalize( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of string with CL word-boundary capitalization applied.
 Optional :start and :end bound the region affected; text outside is unchanged."""

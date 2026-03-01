@@ -62,8 +62,8 @@ def register( primitive ) -> None:
 
    # ── Existing non-keyword primitives ────────────────────────────────────────
 
-   @primitive( 'make-dict', '(key1 val1) (key2 val2) ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, specialForm=True )
+   @primitive( 'make-dict', '((key1 val1) (key2 val2) ...)',
+               mode=LambdaListMode.DOC_ONLY, specialForm=True )
    def LP_make_dict( ctx: LispContext, env: Environment, *args ) -> Any:
       """Constructs and returns a dict of key-value pairs."""
       theMapping = dict()
@@ -269,7 +269,7 @@ def register( primitive ) -> None:
       return L_T if aKey in aMap else L_NIL
 
    @primitive( 'sort', '(sequence predicate &key (key nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_sort( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of the list sorted by predicate (a two-arg less-than test).
 The optional :key function extracts the comparison key from each element."""
@@ -335,7 +335,7 @@ If end is not provided, returns from start to the end of the sequence."""
    # ── CL sequence functions with full keyword-argument support ───────────────
 
    @primitive( 'member', '(item list &key (test eql) (key nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_member( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the tail of list beginning with the first element whose :key
 satisfies :test when compared to item.  Returns NIL if no match is found.
@@ -352,7 +352,7 @@ Default :test is eql.  Default :key is identity (NIL)."""
       return L_NIL
 
    @primitive( 'assoc', '(item alist &key (test eql) (key nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_assoc( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first pair in alist whose car (optionally extracted via :key)
 satisfies :test when compared to item.  Non-cons elements in alist are skipped.
@@ -370,7 +370,7 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
       return L_NIL
 
    @primitive( 'find', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_find( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) whose :key
 satisfies :test when compared to item.  If :from-end is true, searches right
@@ -394,7 +394,7 @@ to left and returns the rightmost match.  Returns NIL if not found."""
       return L_NIL
 
    @primitive( 'find-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_find_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) for which
 pred returns true when applied to the element's :key.  If :from-end is true,
@@ -418,7 +418,7 @@ returns the rightmost such element.  Returns NIL if none found."""
       return L_NIL
 
    @primitive( 'position', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_position( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element whose :key satisfies
 :test when compared to item.  If :from-end is true, returns the index of the
@@ -442,7 +442,7 @@ rightmost such element.  Returns NIL if not found."""
       return L_NIL
 
    @primitive( 'position-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_position_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element for which pred returns
 true when applied to the element's :key.  If :from-end is true, returns the
@@ -466,7 +466,7 @@ index of the rightmost such element.  Returns NIL if none found."""
       return L_NIL
 
    @primitive( 'count', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_count( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) whose
 :key satisfies :test when compared to item."""
@@ -486,7 +486,7 @@ index of the rightmost such element.  Returns NIL if none found."""
       return n
 
    @primitive( 'count-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_count_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) for
 which pred returns true when applied to the element's :key."""
@@ -506,7 +506,7 @@ which pred returns true when applied to the element's :key."""
       return n
 
    @primitive( 'remove', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_remove( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements matching item removed.  An
 element matches if its :key satisfies :test when compared to item.  Only the
@@ -539,7 +539,7 @@ are removed; :from-end causes removal from the right when :count is supplied."""
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
    @primitive( 'remove-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_remove_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements removed where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
@@ -571,7 +571,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
    @primitive( 'remove-if-not', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_remove_if_not( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence keeping only elements where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
@@ -603,7 +603,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
    @primitive( 'substitute', '(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_substitute( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with occurrences of old replaced by new.  An
 element matches old if its :key satisfies :test when compared to old.  Only
@@ -637,7 +637,7 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
       return result
 
    @primitive( 'substitute-if', '(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
-               lambdaListMode=LambdaListMode.FULL_BINDING )
+               mode=LambdaListMode.FULL_BINDING )
    def LP_substitute_if( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements replaced by new where pred returns
 true for the element's :key.  Only the bounded region [:start, :end) is

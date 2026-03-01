@@ -69,11 +69,11 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
 
    class primitive:
       def __init__( self, primitiveSymbolString: str, params: str = '', specialForm: bool = False,
-                    lambdaListMode: LambdaListMode = LambdaListMode.ARITY_ONLY,
+                    mode: LambdaListMode = LambdaListMode.ARITY_ONLY,
                     min_args = _UNSET, max_args = _UNSET ) -> None:
          self._name        = primitiveSymbolString.upper()
          self._specialForm = specialForm
-         if lambdaListMode is LambdaListMode.FULL_BINDING:
+         if mode is LambdaListMode.FULL_BINDING:
             # params must be a full lambda list with outer (...)
             ll_ast = parseLispString( params )[1]
             self._lambdaListAST = ll_ast
@@ -84,7 +84,7 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
             derived_min, derived_max = _derive_arity( ll_ast )
             self._min_args = derived_min if min_args is _UNSET else min_args
             self._max_args = derived_max if max_args is _UNSET else max_args
-         elif lambdaListMode is LambdaListMode.ARITY_ONLY:
+         elif mode is LambdaListMode.ARITY_ONLY:
             # params is a valid lambda list WITH outer parens (same convention as FULL_BINDING)
             ll_ast = parseLispString( params )[1]
             self._lambdaListAST = None    # not used at call time
@@ -97,7 +97,10 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
             self._max_args = derived_max if max_args is _UNSET else max_args
          else:  # DOC_ONLY
             self._lambdaListAST = None
-            self._paramsString  = params
+            stripped = params.strip()
+            if stripped.startswith('(') and stripped.endswith(')'):
+               stripped = stripped[1:-1].strip()
+            self._paramsString  = stripped
             self._min_args = 0    if min_args is _UNSET else min_args
             self._max_args = None if max_args is _UNSET else max_args
          self._arity_msg = _make_arity_msg( self._min_args, self._max_args )

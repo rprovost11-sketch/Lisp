@@ -162,8 +162,8 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 (equalp \"ABC\" \"abc\") is t."""
       return L_T if equalp(args[0], args[1]) else L_NIL
 
-   @primitive( '=', 'expr1 expr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( '=', '(expr1 expr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_equal( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the two exprs are the same value otherwise nil."""
 
@@ -176,8 +176,8 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
       return L_T
 
-   @primitive( '/=', 'expr1 expr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( '/=', '(expr1 expr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_notEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if no two arguments are numerically equal, otherwise nil.
 CL semantics: all pairwise combinations are checked, not just adjacent pairs.
@@ -190,8 +190,8 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @primitive( '<', 'expr1 expr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( '<', '(expr1 expr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_less( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in ascending order."""
 
@@ -207,8 +207,8 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @primitive( '<=', 'expr1 expr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( '<=', '(expr1 expr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_lessOrEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are less-than-or-equal otherwise nil."""
 
@@ -224,8 +224,8 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @primitive( '>', 'expr1 expr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( '>', '(expr1 expr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_greater( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in descending order otherwise nil."""
 
@@ -241,8 +241,8 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @primitive( '>=', 'expr1 expr2 ...',
-               lambdaListMode=LambdaListMode.DOC_ONLY, min_args=2 )
+   @primitive( '>=', '(expr1 expr2 ...)',
+               mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_greaterOrEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are greater-than-or-equal otherwise nil."""
 
