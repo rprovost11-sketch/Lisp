@@ -340,16 +340,16 @@ ab
 >>> (open-stream-p st14r)
 ==> T
 
->>> ;;; "hi\n" has length 3
-... (= (length (readLn! st14r)) 3)
+>>> ;;; read-line returns "hi" (length 2)
+... (= (length (read-line st14r)) 2)
 ==> T
 
->>> ;;; "bye\n" has length 4
-... (= (length (readLn! st14r)) 4)
+>>> ;;; read-line returns "bye" (length 3)
+... (= (length (read-line st14r)) 3)
 ==> T
 
->>> ;;; past EOF returns empty string
-... (= (readLn! st14r) "")
+>>> ;;; past EOF returns NIL when eof-error-p is NIL
+... (= (read-line st14r nil nil) nil)
 ==> T
 
 >>> (close st14r)
@@ -388,19 +388,19 @@ ab
 >>> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
->>> ;;; line 1: "\n" from terpri, length 1
-... (= (length (readLn! st14r)) 1)
+>>> ;;; line 1: empty line from terpri (length 0)
+... (= (length (read-line st14r)) 0)
 ==> T
 
->>> ;;; line 2: "7" + '"ok"\n' = '7"ok"\n', length 6
-... (= (length (readLn! st14r)) 6)
+>>> ;;; line 2: 7"ok" without trailing newline (length 5)
+... (= (length (read-line st14r)) 5)
 ==> T
 
->>> ;;; rest of file: "n=5end" (no newline), length 6
-... (= (length (readLn! st14r)) 6)
+>>> ;;; rest of file: "n=5end" (no trailing newline), length 6
+... (= (length (read-line st14r)) 6)
 ==> T
 
->>> (= (readLn! st14r) "")
+>>> (= (read-line st14r nil nil) nil)
 ==> T
 
 >>> (close st14r)
@@ -436,15 +436,15 @@ ab
 >>> (setf st14r (open (path-join (tmpdir) "test14-append.tmp")))
 ==> #<STREAM>
 
->>> ;;; "first\n" has length 6
-... (= (length (readLn! st14r)) 6)
+>>> ;;; read-line returns "first" (length 5)
+... (= (length (read-line st14r)) 5)
 ==> T
 
->>> ;;; "second\n" has length 7
-... (= (length (readLn! st14r)) 7)
+>>> ;;; read-line returns "second" (length 6)
+... (= (length (read-line st14r)) 6)
 ==> T
 
->>> (= (readLn! st14r) "")
+>>> (= (read-line st14r nil nil) nil)
 ==> T
 
 >>> (close st14r)
@@ -473,8 +473,8 @@ ab
 ... (= (length (readall st14r)) 12)
 ==> T
 
->>> ;;; after readall, subsequent readLn! returns empty string (EOF)
-... (= (readLn! st14r) "")
+>>> ;;; after readall, subsequent read-line returns NIL (EOF)
+... (= (read-line st14r nil nil) nil)
 ==> T
 
 >>> (close st14r)
@@ -727,10 +727,10 @@ ab
 >>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
->>> (readLn! st14w)
+>>> (read-line st14w)
 
-%%% ERROR 'READLN!': Stream is not readable.
-%%% USAGE: (READLN! &optional stream)
+%%% ERROR 'READ-LINE': Stream is not readable.
+%%% USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 >>> (close st14w)
@@ -744,14 +744,14 @@ ab
 ...    (terpri f))
 ==> NIL
 
->>> ;;; read it back: readLn includes trailing newline, length = 26
+>>> ;;; read it back: read-line strips trailing newline, length = 25
 ... (with-open-file (f "_wof_test_.txt")
-...    (length (readLn! f)))
-==> 26
+...    (length (read-line f)))
+==> 25
 
 >>> ;;; content starts with expected prefix
 ... (with-open-file (f "_wof_test_.txt")
-...    (subseq (readLn! f) 0 5))
+...    (subseq (read-line f) 0 5))
 ==> "hello"
 
 >>> ;;; append mode
@@ -762,7 +762,7 @@ ab
 
 >>> ;;; with-open-file returns last body value
 ... (with-open-file (f "_wof_test_.txt")
-...    (readLn! f)
+...    (read-line f)
 ...    42)
 ==> 42
 
@@ -972,23 +972,23 @@ ab
 >>> (input-stream-p si14)
 ==> T
 
->>> ;;; readLn! on a string with no actual newlines returns full content (length 11)
-... (= (length (readLn! si14)) 11)
+>>> ;;; read-line on a string with no actual newlines returns full content (length 11)
+... (= (length (read-line si14)) 11)
 ==> T
 
->>> ;;; past end returns empty string
-... (= (readLn! si14) "")
+>>> ;;; past end returns NIL when eof-error-p is NIL
+... (= (read-line si14 nil nil) nil)
 ==> T
 
 >>> (close si14)
 ==> T
 
->>> ;;; readLn! with actual newlines: build multi-line string then read line by line
+>>> ;;; read-line with actual newlines: read line by line, no trailing newlines
 ... (let* ((str (with-output-to-string (s) (uwrite! s "hello") (terpri s) (uwrite! s "world") (terpri s)))
 ...        (si  (make-string-input-stream str)))
-...    (list (= (length (readLn! si)) 6)
-...          (= (length (readLn! si)) 6)
-...          (= (readLn! si) "")))
+...    (list (= (length (read-line si)) 5)
+...          (= (length (read-line si)) 5)
+...          (= (read-line si nil nil) nil)))
 ==> (T T T)
 
 >>> ;;; readall reads entire content in one call
@@ -1129,22 +1129,22 @@ ab
 
 >>> ;;; basic: read from a string
 ... (with-input-from-string (s "hello world")
-...    (readLn! s))
+...    (read-line s))
 ==> "hello world"
 
 >>> ;;; with start offset
 ... (with-input-from-string (s "hello world" 6)
-...    (readLn! s))
+...    (read-line s))
 ==> "world"
 
 >>> ;;; with start and end
 ... (with-input-from-string (s "hello world" 0 5)
-...    (readLn! s))
+...    (read-line s))
 ==> "hello"
 
 >>> ;;; returns last body form
 ... (with-input-from-string (s "hello")
-...    (readLn! s)
+...    (read-line s)
 ...    42)
 ==> 42
 

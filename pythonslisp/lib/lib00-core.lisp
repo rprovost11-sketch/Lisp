@@ -46,7 +46,7 @@ Multiple (place value) pairs expand to a progn of individual setfs."
 (defun read-prompt (promptStr)
    "Prompt the user for input and return the user input as a string."
             (write! promptStr)
-            (readLn!)          )
+            (read-line)          )
 
 (defun nth (index lst)
    "Return the nth item of a list; 0 based."
@@ -362,6 +362,49 @@ Supports (return value) for early exit."
                    (if (not (listp ,list-expr))
                        (error "dolist: list must evaluate to a list")
                        nil)))))))
+
+(defmacro for (initSpec cond nextForm &rest body)
+   "General-purpose for loop.
+Syntax: (for (variable initForm) cond nextForm body+)
+
+  initSpec -- a two-element list (variable initForm).  variable is bound to
+              the result of evaluating initForm before the first iteration.
+  cond     -- evaluated before each iteration; the body runs while non-NIL.
+  nextForm -- evaluated at the end of each iteration; its value replaces
+              variable for the next iteration.  nextForm may reference variable.
+  body     -- one or more forms evaluated each iteration.
+
+Returns NIL when the loop ends normally.  Supports (return value) for early
+exit.  variable is local to the loop and does not affect any outer binding.
+
+Examples:
+  Count from 0 to 4:
+    (for (i 0) (< i 5) (+ i 1) (process i))
+  Read a file line by line until EOF:
+    (for (line (read-line f nil nil)) line (read-line f nil nil)
+      (process-line line))"
+   (cond
+      ((not (listp initSpec))
+       (error "for: initSpec must be a (variable initForm) list"))
+      ((/= (length initSpec) 2)
+       (error "for: initSpec must have exactly 2 elements"))
+      ((not (symbolp (car initSpec)))
+       (error "for: loop variable must be a symbol"))
+      ((not body)
+       (error "for: at least one body expression is required"))
+      (t
+       (let ((var  (car initSpec))
+             (init (cadr initSpec))
+             (fn   (gensym "FOR")))
+          `(block nil
+               (let ((,var ,init) (,fn nil))
+                   (setq ,fn (lambda ()
+                                (if ,cond
+                                    (progn ,@body
+                                           (setq ,var ,nextForm)
+                                           (,fn))
+                                    nil)))
+                   (,fn)))))))
 
 (defun last (lst &optional (n 1))
    "Returns the last n cons cells of lst."

@@ -278,3 +278,71 @@ ABC
 ; Error: return-from name must be a symbol
 >>> (return-from 42 99)
 %%% return-from: name must be a symbol.
+
+; ============================================================
+; for loop
+; ============================================================
+
+; basic count: sum 0+1+2+3+4 = 10
+>>> (let ((acc 0)) (for (i 0) (< i 5) (+ i 1) (setf acc (+ acc i))) acc)
+...
+
+==> 10
+
+; nextForm references var: double each step (1+2+4+8+16 = 31)
+>>> (let ((acc 0)) (for (i 1) (<= i 16) (* i 2) (setf acc (+ acc i))) acc)
+...
+
+==> 31
+
+; never-run loop (condition false from start) returns NIL
+>>> (for (i 0) (< i 0) (+ i 1) (setf i 99))
+...
+
+==> NIL
+
+; collect into a list
+>>> (let ((lst nil))
+...    (for (i 0) (< i 4) (+ i 1) (setf lst (cons i lst)))
+...    (reverse lst))
+...
+
+==> (0 1 2 3)
+
+; early exit with (return ...)
+>>> (for (i 0) (< i 10) (+ i 1)
+...    (if (= i 3) (return i)))
+...
+
+==> 3
+
+; loop variable is local — does not leak into outer scope
+>>> (let ((i 99)) (for (i 0) (< i 3) (+ i 1) nil) i)
+...
+
+==> 99
+
+; string walking via index
+>>> (let ((s "hello") (acc ""))
+...    (for (i 0) (< i (length s)) (+ i 1)
+...       (setf acc (ustring acc (char s i))))
+...    acc)
+...
+
+==> "hello"
+
+; Error: initSpec not a list
+>>> (for x (< x 5) (+ x 1) nil)
+%%% for: initSpec must be a (variable initForm) list
+
+; Error: initSpec wrong number of elements
+>>> (for (x) (< x 5) (+ x 1) nil)
+%%% for: initSpec must have exactly 2 elements
+
+; Error: loop variable not a symbol
+>>> (for (42 0) (< 42 5) (+ 42 1) nil)
+%%% for: loop variable must be a symbol
+
+; Error: no body forms
+>>> (for (i 0) (< i 5) (+ i 1))
+%%% for: at least one body expression is required

@@ -412,21 +412,6 @@ Returns the last value printed."""
          raise LispRuntimeFuncError( LP_readall, 'Stream is not readable.' )
       return stream.read()
 
-   @primitive( 'readLn!', '(&optional stream)' )
-   def LP_readln( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Reads and returns text input from standard input or stream.  For console input
-This function blocks while it waits for the input return key to be pressed at the end
-of text entry."""
-      if len(args) == 0:
-         return input()
-      else:
-         stream = args[0]
-         if not isinstance(stream, TextIOBase):
-            raise LispRuntimeFuncError( LP_readln, 'Optional argument expected to be a stream.' )
-         if not stream.readable():
-            raise LispRuntimeFuncError( LP_readln, 'Stream is not readable.' )
-         return stream.readline(-1)
-
    @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
    def LP_read_line( ctx: LispContext, env: Environment, *args ) -> Any:
       """Reads one line of text from stream (default: standard input) and
