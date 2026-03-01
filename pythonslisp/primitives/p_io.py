@@ -12,6 +12,7 @@ from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeError, LispRuntimeFuncError
 from pythonslisp.LispParser import ParseError
 from pythonslisp.Utils import columnize
+from pythonslisp.primitives import LambdaListMode
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
@@ -100,57 +101,79 @@ def register(primitive, parseLispString: Callable) -> None:
 
    # -----------------------------------------------------------------------
 
-   @primitive( 'open-read', '(filename &optional encoding)' )
-   def LP_openRead( ctx: LispContext, env: Environment, *args):
-      """Opens and returns a text stream for reading.  encoding may be \"utf-8\"."""
-      fileName, *encoding = args
-      if not isinstance( fileName, str):
-         raise LispRuntimeFuncError( LP_openRead, "1st argument expected to be a filename string." )
-
-      try:
-         if len(encoding) == 1:
-            encoding = encoding[0]
-            return open( fileName, 'r', encoding=encoding )
+   @primitive( 'open',
+               '(filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))',
+               mode=LambdaListMode.FULL_BINDING )
+   def LP_open( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Opens and returns a stream connected to a file.
+:direction :input (default) opens for reading; :output opens for writing.
+:if-exists controls behaviour when an output file already exists:
+  :supersede (default) — truncate and overwrite
+  :append              — append to existing content
+  :error               — signal an error
+  nil                  — return nil without opening
+:if-does-not-exist controls behaviour when the file is absent:
+  :error (default) — signal an error
+  nil              — return nil without opening"""
+      filespec  = env.lookup( LSymbol('FILESPEC') )
+      direction = env.lookup( LSymbol('DIRECTION') )
+      if_exists = env.lookup( LSymbol('IF-EXISTS') )
+      if_dne    = env.lookup( LSymbol('IF-DOES-NOT-EXIST') )
+      if not isinstance( filespec, str ):
+         raise LispRuntimeFuncError( LP_open, '1st argument expected to be a filename string.' )
+      if direction == LSymbol(':INPUT'):
+         if isinstance( if_dne, list ) and not os.path.exists( filespec ):
+            return L_NIL
+         try:
+            return open( filespec, 'r' )
+         except FileNotFoundError:
+            raise LispRuntimeFuncError( LP_open, f'File not found "{filespec}".' )
+      elif direction == LSymbol(':OUTPUT'):
+         if isinstance( if_exists, list ):           # nil
+            if os.path.exists( filespec ):
+               return L_NIL
+            mode_str = 'w'
+         elif if_exists == LSymbol(':SUPERSEDE'):
+            mode_str = 'w'
+         elif if_exists == LSymbol(':APPEND'):
+            mode_str = 'a'
+         elif if_exists == LSymbol(':ERROR'):
+            if os.path.exists( filespec ):
+               raise LispRuntimeFuncError( LP_open, f'File already exists "{filespec}".' )
+            mode_str = 'w'
          else:
-            return open( fileName, 'r' )
-      except FileNotFoundError:
-         raise LispRuntimeFuncError( LP_openRead, f'File not found "{fileName}".' )
+            raise LispRuntimeFuncError( LP_open,
+               ':if-exists must be :supersede, :append, :error, or nil.' )
+         if isinstance( if_dne, list ) and not os.path.exists( filespec ):
+            return L_NIL
+         try:
+            return open( filespec, mode_str )
+         except (FileNotFoundError, OSError):
+            raise LispRuntimeFuncError( LP_open, f'Cannot open file "{filespec}".' )
+      else:
+         raise LispRuntimeFuncError( LP_open, ':direction must be :input or :output.' )
 
-   @primitive( 'open-write', '(filename &optional encoding)' )
-   def LP_openWrite( ctx: LispContext, env: Environment, *args):
-      """Opens and returns a text stream for writing.  encoding may be \"utf-8\"."""
-      fileName, *encoding = args
-      if not isinstance( fileName, str):
-         raise LispRuntimeFuncError( LP_openWrite, "1st argument expected to be a filename string." )
-      try:
-         if len(encoding) == 1:
-            encoding = encoding[0]
-            return open( fileName, 'w', encoding=encoding )
-         else:
-            return open( fileName, 'w' )
-      except FileNotFoundError:
-         raise LispRuntimeFuncError( LP_openWrite, f'File not found "{fileName}".' )
-
-   @primitive( 'open-append', '(filename &optional encoding)' )
-   def LP_openAppend( ctx: LispContext, env: Environment, *args):
-      """Opens and returns a text stream for appending.  encoding may be \"utf-8\"."""
-      fileName, *encoding = args
-      if not isinstance( fileName, str):
-         raise LispRuntimeFuncError( LP_openAppend, "1st argument expected to be a filename string." )
-      try:
-         if len(encoding) == 1:
-            encoding = encoding[0]
-            return open( fileName, 'a', encoding=encoding )
-         else:
-            return open( fileName, 'a' )
-      except FileNotFoundError:
-         raise LispRuntimeFuncError( LP_openAppend, f'File not found "{fileName}".' )
-
-   @primitive( 'open-string', '()' )
-   def LP_open_string( ctx: LispContext, env: Environment, *args ) -> Any:
+   @primitive( 'make-string-output-stream', '()' )
+   def LP_make_string_output_stream( ctx: LispContext, env: Environment, *args ) -> Any:
       """Creates and returns a new string output stream for writing.  Use
 get-output-stream-string to retrieve and clear the accumulated content."""
       return StringIO()
+
+   @primitive( 'make-string-input-stream', '(string &optional (start 0) end)',
+               mode=LambdaListMode.FULL_BINDING )
+   def LP_make_string_input_stream( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Creates and returns a readable string stream backed by string.
+Optionally constrained to the substring from start (default 0) up to
+but not including end (default: entire string)."""
+      s     = env.lookup( LSymbol('STRING') )
+      start = env.lookup( LSymbol('START') )
+      end   = env.lookup( LSymbol('END') )
+      if not isinstance( s, str ):
+         raise LispRuntimeFuncError( LP_make_string_input_stream,
+                                     '1st argument expected to be a string.' )
+      start_py = start if isinstance( start, int ) else 0
+      end_py   = end   if isinstance( end, int )   else None
+      return StringIO( s[start_py:end_py] )
 
    @primitive( 'get-output-stream-string', '(string-stream)' )
    def LP_get_output_stream_string( ctx: LispContext, env: Environment, *args ) -> Any:
@@ -160,7 +183,7 @@ The stream remains open and writable.  (CL semantics.)"""
       stream = args[0]
       if not isinstance( stream, StringIO ):
          raise LispRuntimeFuncError( LP_get_output_stream_string,
-                                     'Argument must be a string stream (created by open-string).' )
+                                     'Argument must be a string stream (created by make-string-output-stream).' )
       if stream.closed:
          raise LispRuntimeFuncError( LP_get_output_stream_string,
                                      'String stream is closed.' )

@@ -282,10 +282,10 @@ ab
 ==> NIL
 
 ; ============================================================
-; open-write, stream predicates, write to stream, close
+; open :direction :output, stream predicates, write to stream, close
 ; ============================================================
 
->>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
 >>> ;;; streamp: T for an open stream
@@ -325,10 +325,10 @@ ab
 ==> T
 
 ; ============================================================
-; open-read, read lines, EOF detection
+; open (default :direction :input), read lines, EOF detection
 ; ============================================================
 
->>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
 >>> (readable st14r)
@@ -359,7 +359,7 @@ ab
 ; terpri, write!, writeLn!, writef to stream
 ; ============================================================
 
->>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
 >>> ;;; terpri to stream: writes newline, returns NIL, no stdout output
@@ -385,7 +385,7 @@ ab
 >>> (close st14w)
 ==> T
 
->>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
 >>> ;;; line 1: "\n" from terpri, length 1
@@ -407,11 +407,11 @@ ab
 ==> T
 
 ; ============================================================
-; open-append: appends to existing file
+; open :if-exists :append — appends to existing file
 ; ============================================================
 
->>> ;;; use open-write to create a fresh file
-... (setf st14a (open-write (path-join (tmpdir) "test14-append.tmp")))
+>>> ;;; use open :direction :output to create a fresh file
+... (setf st14a (open (path-join (tmpdir) "test14-append.tmp") :direction :output))
 ==> #<STREAM>
 
 >>> (uwriteLn! st14a "first")
@@ -420,8 +420,8 @@ ab
 >>> (close st14a)
 ==> T
 
->>> ;;; open-append adds to the existing content
-... (setf st14a (open-append (path-join (tmpdir) "test14-append.tmp")))
+>>> ;;; :if-exists :append adds to the existing content
+... (setf st14a (open (path-join (tmpdir) "test14-append.tmp") :direction :output :if-exists :append))
 ==> #<STREAM>
 
 >>> (writable st14a)
@@ -433,7 +433,7 @@ ab
 >>> (close st14a)
 ==> T
 
->>> (setf st14r (open-read (path-join (tmpdir) "test14-append.tmp")))
+>>> (setf st14r (open (path-join (tmpdir) "test14-append.tmp")))
 ==> #<STREAM>
 
 >>> ;;; "first\n" has length 6
@@ -454,7 +454,7 @@ ab
 ; readall: reads entire file contents as one string
 ; ============================================================
 
->>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
 >>> (uwriteLn! st14w "hello")
@@ -466,7 +466,7 @@ ab
 >>> (close st14w)
 ==> T
 
->>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
 >>> ;;; readall returns "hello\nworld\n", length 12
@@ -531,22 +531,10 @@ ab
 %%% USAGE: (STREAMP sexpr)
 ==>
 
->>> (open-read)
+>>> (open)
 
-%%% ERROR 'OPEN-READ': 1 or 2 arguments expected.
-%%% USAGE: (OPEN-READ filename &optional encoding)
-==>
-
->>> (open-write)
-
-%%% ERROR 'OPEN-WRITE': 1 or 2 arguments expected.
-%%% USAGE: (OPEN-WRITE filename &optional encoding)
-==>
-
->>> (open-append)
-
-%%% ERROR 'OPEN-APPEND': 1 or 2 arguments expected.
-%%% USAGE: (OPEN-APPEND filename &optional encoding)
+%%% ERROR 'OPEN': At least 1 argument expected.
+%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 >>> (close)
@@ -596,24 +584,45 @@ ab
 ; ============================================================
 
 >>> ;;; non-string filename
-... (open-read 42)
+... (open 42)
 
-%%% ERROR 'OPEN-READ': 1st argument expected to be a filename string.
-%%% USAGE: (OPEN-READ filename &optional encoding)
-==>
-
->>> (open-write 42)
-
-%%% ERROR 'OPEN-WRITE': 1st argument expected to be a filename string.
-%%% USAGE: (OPEN-WRITE filename &optional encoding)
+%%% ERROR 'OPEN': 1st argument expected to be a filename string.
+%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 >>> ;;; file not found
-... (open-read "no-such-file-42.tmp")
+... (open "no-such-file-42.tmp")
 
-%%% ERROR 'OPEN-READ': File not found "no-such-file-42.tmp".
-%%% USAGE: (OPEN-READ filename &optional encoding)
+%%% ERROR 'OPEN': File not found "no-such-file-42.tmp".
+%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
+
+>>> ;;; bad :direction value
+... (open (path-join (tmpdir) "test14-stream.tmp") :direction :bad)
+
+%%% ERROR 'OPEN': :direction must be :input or :output.
+%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+==>
+
+>>> ;;; create a local file for the :if-exists :error test
+... (close (open "_wof_test_ifexists_.tmp" :direction :output))
+==> T
+
+>>> ;;; :if-exists :error raises an error when file already exists
+... (open "_wof_test_ifexists_.tmp" :direction :output :if-exists :error)
+
+%%% ERROR 'OPEN': File already exists "_wof_test_ifexists_.tmp".
+%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+==>
+
+
+>>> ;;; :if-exists nil returns nil when file exists
+... (open (path-join (tmpdir) "test14-stream.tmp") :direction :output :if-exists nil)
+==> NIL
+
+>>> ;;; :if-does-not-exist nil returns nil when file missing
+... (open "no-such-file-42.tmp" :if-does-not-exist nil)
+==> NIL
 
 >>> (close 42)
 
@@ -673,7 +682,7 @@ ab
 ; Error cases: write to read-only stream / read from write-only stream
 ; ============================================================
 
->>> (setf st14r (open-read (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
 ==> #<STREAM>
 
 >>> (write! st14r "hello")
@@ -715,7 +724,7 @@ ab
 >>> (close st14r)
 ==> T
 
->>> (setf st14w (open-write (path-join (tmpdir) "test14-stream.tmp")))
+>>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
 >>> (readLn! st14w)
@@ -730,7 +739,7 @@ ab
 ; --- with-open-file ---
 
 >>> ;;; write to a file then read it back
-... (with-open-file (f "_wof_test_.txt" output)
+... (with-open-file (f "_wof_test_.txt" :direction :output)
 ...    (uwrite! f "hello from with-open-file")
 ...    (terpri f))
 ==> NIL
@@ -746,7 +755,7 @@ ab
 ==> "hello"
 
 >>> ;;; append mode
-... (with-open-file (f "_wof_test_.txt" append)
+... (with-open-file (f "_wof_test_.txt" :direction :output :if-exists :append)
 ...    (uwrite! f "second line")
 ...    (terpri f))
 ==> NIL
@@ -758,11 +767,11 @@ ab
 ==> 42
 
 ; ============================================================
-; open-string / get-output-stream-string — happy paths
+; make-string-output-stream / get-output-stream-string — happy paths
 ; ============================================================
 
->>> ;;; open-string returns a stream object
-... (setf ss14 (open-string))
+>>> ;;; make-string-output-stream returns a stream object
+... (setf ss14 (make-string-output-stream))
 ==> #<STREAM>
 
 >>> ;;; streamp: T for a string stream
@@ -878,14 +887,14 @@ ab
 ==> T
 
 >>> ;;; fresh one-liner: open, write, retrieve, all in one expression
-... (let ((s (open-string)))
+... (let ((s (make-string-output-stream)))
 ...    (uwrite! s "alpha")
 ...    (uwrite! s "beta")
 ...    (get-output-stream-string s))
 ==> "alphabeta"
 
 >>> ;;; CL clear in a single let: two gets return first/second half
-... (let ((s (open-string)))
+... (let ((s (make-string-output-stream)))
 ...    (uwrite! s "first")
 ...    (get-output-stream-string s)
 ...    (uwrite! s "second")
@@ -893,14 +902,14 @@ ab
 ==> "second"
 
 ; ============================================================
-; open-string / get-output-stream-string — error paths
+; make-string-output-stream / get-output-stream-string — error paths
 ; ============================================================
 
->>> ;;; open-string takes no arguments
-... (open-string 42)
+>>> ;;; make-string-output-stream takes no arguments
+... (make-string-output-stream 42)
 
-%%% ERROR 'OPEN-STRING': 0 arguments expected.
-%%% USAGE: (OPEN-STRING )
+%%% ERROR 'MAKE-STRING-OUTPUT-STREAM': 0 arguments expected.
+%%% USAGE: (MAKE-STRING-OUTPUT-STREAM )
 ==>
 
 >>> ;;; get-output-stream-string requires exactly 1 argument
@@ -910,7 +919,7 @@ ab
 %%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
->>> (get-output-stream-string (open-string) (open-string))
+>>> (get-output-stream-string (make-string-output-stream) (make-string-output-stream))
 
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': 1 argument expected.
 %%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
@@ -919,17 +928,17 @@ ab
 >>> ;;; get-output-stream-string rejects a non-string-stream value
 ... (get-output-stream-string 42)
 
-%%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by open-string).
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by make-string-output-stream).
 %%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
 >>> ;;; get-output-stream-string rejects a file stream
-... (setf ss14f (open-write (path-join (tmpdir) "test14-stream.tmp")))
+... (setf ss14f (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
 >>> (get-output-stream-string ss14f)
 
-%%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by open-string).
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by make-string-output-stream).
 %%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
@@ -937,7 +946,7 @@ ab
 ==> T
 
 >>> ;;; get-output-stream-string on a closed string stream is an error
-... (setf ss14c (open-string))
+... (setf ss14c (make-string-output-stream))
 ==> #<STREAM>
 
 >>> (close ss14c)
@@ -948,3 +957,90 @@ ab
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': String stream is closed.
 %%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
+
+; ============================================================
+; make-string-input-stream — happy paths
+; ============================================================
+
+>>> ;;; make-string-input-stream returns a readable stream
+... (setf si14 (make-string-input-stream "hello world"))
+==> #<STREAM>
+
+>>> (streamp si14)
+==> T
+
+>>> (readable si14)
+==> T
+
+>>> ;;; readLn! on a string with no actual newlines returns full content (length 11)
+... (= (length (readLn! si14)) 11)
+==> T
+
+>>> ;;; past end returns empty string
+... (= (readLn! si14) "")
+==> T
+
+>>> (close si14)
+==> T
+
+>>> ;;; readLn! with actual newlines: build multi-line string then read line by line
+... (let* ((str (with-output-to-string (s) (uwrite! s "hello") (terpri s) (uwrite! s "world") (terpri s)))
+...        (si  (make-string-input-stream str)))
+...    (list (= (length (readLn! si)) 6)
+...          (= (length (readLn! si)) 6)
+...          (= (readLn! si) "")))
+==> (T T T)
+
+>>> ;;; readall reads entire content in one call
+... (readall (make-string-input-stream "abc"))
+==> "abc"
+
+>>> ;;; start/end optional args constrain the substring used
+... (readall (make-string-input-stream "hello world" 6))
+==> "world"
+
+>>> (readall (make-string-input-stream "hello world" 0 5))
+==> "hello"
+
+; ============================================================
+; make-string-input-stream — error paths
+; ============================================================
+
+>>> ;;; arity: requires at least 1 argument
+... (make-string-input-stream)
+
+%%% ERROR 'MAKE-STRING-INPUT-STREAM': 1 to 3 arguments expected.
+%%% USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
+==>
+
+>>> ;;; too many arguments
+... (make-string-input-stream "a" 0 1 2)
+
+%%% ERROR 'MAKE-STRING-INPUT-STREAM': 1 to 3 arguments expected.
+%%% USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
+==>
+
+>>> ;;; non-string argument
+... (make-string-input-stream 42)
+
+%%% ERROR 'MAKE-STRING-INPUT-STREAM': 1st argument expected to be a string.
+%%% USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
+==>
+
+; ============================================================
+; with-output-to-string
+; ============================================================
+
+>>> ;;; basic accumulation
+... (with-output-to-string (s)
+...    (uwrite! s "hello")
+...    (uwrite! s " world"))
+==> "hello world"
+
+>>> ;;; terpri adds newline
+... (= (length (with-output-to-string (s) (terpri s))) 1)
+==> T
+
+>>> ;;; write! uses programmer format: "quoted" with surrounding quotes is 8 chars
+... (= (length (with-output-to-string (s) (write! s "quoted"))) 8)
+==> T

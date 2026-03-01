@@ -56,7 +56,7 @@
          (incf ct))))
 
 (defun testrd (filename)
-   (let ( (st (open-read filename))
+   (let ( (st (open filename))
           (line "") )
       (setf line (readln! st))
       (while (/= line "")
@@ -65,17 +65,22 @@
 
 (defmacro with-open-file (spec &rest body)
    "Opens a file, binds it to var, evaluates body forms, then closes the file.
-spec is (var filename) or (var filename direction).
-direction: input (default) = open-read, output = open-write, append = open-append.
+spec is (var filespec &rest open-options) where open-options are keyword args
+passed directly to open.  Default direction is :input.
 Returns the value of the last body form.
 Note: file is closed normally; on error the file may remain open (no unwind-protect)."
    (let ((var      (car spec))
-         (filename (car (cdr spec)))
-         (dir-spec (car (cdr (cdr spec)))))
-      (let ((direction (if dir-spec dir-spec 'input)))
-         `(let ((,var (cond ((eq ',direction 'output) (open-write ,filename))
-                            ((eq ',direction 'append) (open-append ,filename))
-                            (1                        (open-read  ,filename)))))
-             (let ((_wof_result_ (progn ,@body)))
-                (close ,var)
-                _wof_result_)))))
+         (filespec (car (cdr spec)))
+         (options  (cdr (cdr spec))))
+      `(let ((,var (open ,filespec ,@options)))
+          (let ((_wof_result_ (progn ,@body)))
+             (when ,var (close ,var))
+             _wof_result_))))
+
+(defmacro with-output-to-string (var-spec &rest body)
+   "Creates a string output stream, evaluates body forms with the first element
+of var-spec bound to the stream, then returns the accumulated string content."
+   (let ((var (car var-spec)))
+      `(let ((,var (make-string-output-stream)))
+          ,@body
+          (get-output-stream-string ,var))))
