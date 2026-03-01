@@ -24,7 +24,7 @@ version = {attr = "pythonslisp.__version__"}
 include = ["pythonslisp*"]
 
 [tool.setuptools.package-data]
-pythonslisp = ["lib/*.lisp", "help/*.txt", "doc/*.txt", "testing/*.lisp"]
+pythonslisp = ["lib/*.lisp", "help/*.txt", "doc/*.txt", "testing/*.lisp", "startup.lisp"]
 
 [project.urls]
 Homepage = "https://github.com/rprovost11-sketch/Lisp"

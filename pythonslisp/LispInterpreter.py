@@ -54,6 +54,16 @@ class LispInterpreter( Interpreter ):
          for filename in filenameList:
             self.evalFile( filename, outStrm )
 
+      # Load system startup script (always, from package directory)
+      startup_path = Path(__file__).parent / 'startup.lisp'
+      if startup_path.exists():
+         self.evalFile( str(startup_path), outStrm )
+
+      # Load user startup script if present (~/.pythonslisp_rc)
+      user_startup = Path.home() / '.pythonslisp_rc'
+      if user_startup.exists():
+         self.evalFile( str(user_startup), outStrm )
+
    def eval( self, source: str, outStrm=None ) -> str:
       returnVal = self.rawEval( source, outStrm=outStrm )
       return prettyPrintSExpr( returnVal ).strip()
