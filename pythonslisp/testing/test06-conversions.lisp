@@ -29,7 +29,7 @@
 >>> (string 3.5 "Hello" 1/2 )
 ...
 
-==> "3.5"Hello"1/2"
+==> "3.5\"Hello\"1/2"
 
 >>> (list pi 3/4 'asymbol "a string")
 ...
@@ -74,7 +74,13 @@
 >>> (string "hello")
 ...
 
-==> ""hello""
+==> "\"hello\""
+
+; string of a string wraps with quotes — length of "hello" is 7
+>>> (= (length (string "hello")) 7)
+...
+
+==> T
 
 >>> (make-symbol "hello")
 ...

@@ -1,5 +1,5 @@
 
-__version__ = '0.31.9'
+__version__ = '0.31.10'
 
 __all__ = [ 'Lisp',
             'LispAST',
