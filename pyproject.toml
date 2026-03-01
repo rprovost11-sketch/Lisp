@@ -1,6 +1,6 @@
 [project]
 name = "pythonslisp"
-version = "0.31.2"
+dynamic = ["version"]
 authors = [
   { name="Ronald H Provost/Longo", email="ronlongo9@outlook.com" },
 ]
@@ -16,6 +16,9 @@ license-files = [ "LICENSE*" ]
 
 [projects.scripts]
 lisp = "pythonslisp.lisp:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "pythonslisp.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["pythonslisp*"]

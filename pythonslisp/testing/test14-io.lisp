@@ -756,3 +756,195 @@ ab
 ...    (readLn! f)
 ...    42)
 ==> 42
+
+; ============================================================
+; open-string / get-output-stream-string — happy paths
+; ============================================================
+
+>>> ;;; open-string returns a stream object
+... (setf ss14 (open-string))
+==> #<STREAM>
+
+>>> ;;; streamp: T for a string stream
+... (streamp ss14)
+==> T
+
+>>> ;;; type-of: STREAM
+... (type-of ss14)
+==> STREAM
+
+>>> ;;; string streams are writable
+... (writable ss14)
+==> T
+
+>>> ;;; string streams are also readable (StringIO supports both)
+... (readable ss14)
+==> T
+
+>>> ;;; string streams are not ttys
+... (isatty ss14)
+==> NIL
+
+>>> ;;; not closed initially
+... (closed ss14)
+==> NIL
+
+>>> ;;; flush is a no-op on a string stream, returns T
+... (flush ss14)
+==> T
+
+>>> ;;; get-output-stream-string on a fresh empty stream returns ""
+... (get-output-stream-string ss14)
+==> ""
+
+>>> ;;; uwrite! to string stream: no stdout output, returns last value
+... (uwrite! ss14 "hello")
+==> "hello"
+
+>>> ;;; accumulate more content
+... (uwrite! ss14 " world")
+==> " world"
+
+>>> ;;; get-output-stream-string retrieves full accumulated content
+... (get-output-stream-string ss14)
+==> "hello world"
+
+>>> ;;; CL clear semantics: buffer is empty after retrieval
+... (get-output-stream-string ss14)
+==> ""
+
+>>> ;;; write after clearing accumulates again
+... (uwrite! ss14 "second")
+==> "second"
+
+>>> (get-output-stream-string ss14)
+==> "second"
+
+>>> ;;; write! uses programmer format — strings get extra surrounding quotes
+... (write! ss14 "quoted")
+==> "quoted"
+
+>>> ;;; "quoted" = 8 chars including the surrounding quote characters
+... (= (length (get-output-stream-string ss14)) 8)
+==> T
+
+>>> ;;; uwriteLn! adds a trailing newline: "line\n" = 5 chars
+... (uwriteLn! ss14 "line")
+==> "line"
+
+>>> (= (length (get-output-stream-string ss14)) 5)
+==> T
+
+>>> ;;; writeLn! programmer format with newline: '"line"\n' = 7 chars
+... (writeLn! ss14 "line")
+==> "line"
+
+>>> (= (length (get-output-stream-string ss14)) 7)
+==> T
+
+>>> ;;; terpri writes a single newline, returns NIL, no stdout output
+... (terpri ss14)
+==> NIL
+
+>>> (= (length (get-output-stream-string ss14)) 1)
+==> T
+
+>>> ;;; writef 3-arg: format + list + string stream
+... (writef "{0}+{1}" (list 1 2) ss14)
+==> "1+2"
+
+>>> (get-output-stream-string ss14)
+==> "1+2"
+
+>>> ;;; uwrite! with multiple args: returns last, all written
+... (uwrite! ss14 1 2 3)
+==> 3
+
+>>> (get-output-stream-string ss14)
+==> "123"
+
+>>> ;;; uwrite! with numbers and symbols
+... (uwrite! ss14 'foo)
+==> FOO
+
+>>> (get-output-stream-string ss14)
+==> "FOO"
+
+>>> ;;; close returns T, closed then returns T
+... (close ss14)
+==> T
+
+>>> (closed ss14)
+==> T
+
+>>> ;;; fresh one-liner: open, write, retrieve, all in one expression
+... (let ((s (open-string)))
+...    (uwrite! s "alpha")
+...    (uwrite! s "beta")
+...    (get-output-stream-string s))
+==> "alphabeta"
+
+>>> ;;; CL clear in a single let: two gets return first/second half
+... (let ((s (open-string)))
+...    (uwrite! s "first")
+...    (get-output-stream-string s)
+...    (uwrite! s "second")
+...    (get-output-stream-string s))
+==> "second"
+
+; ============================================================
+; open-string / get-output-stream-string — error paths
+; ============================================================
+
+>>> ;;; open-string takes no arguments
+... (open-string 42)
+
+%%% ERROR 'OPEN-STRING': 0 arguments expected.
+%%% USAGE: (OPEN-STRING )
+==>
+
+>>> ;;; get-output-stream-string requires exactly 1 argument
+... (get-output-stream-string)
+
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': 1 argument expected.
+%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+==>
+
+>>> (get-output-stream-string (open-string) (open-string))
+
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': 1 argument expected.
+%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+==>
+
+>>> ;;; get-output-stream-string rejects a non-string-stream value
+... (get-output-stream-string 42)
+
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by open-string).
+%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+==>
+
+>>> ;;; get-output-stream-string rejects a file stream
+... (setf ss14f (open-write (path-join (tmpdir) "test14-stream.tmp")))
+==> #<STREAM>
+
+>>> (get-output-stream-string ss14f)
+
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by open-string).
+%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+==>
+
+>>> (close ss14f)
+==> T
+
+>>> ;;; get-output-stream-string on a closed string stream is an error
+... (setf ss14c (open-string))
+==> #<STREAM>
+
+>>> (close ss14c)
+==> T
+
+>>> (get-output-stream-string ss14c)
+
+%%% ERROR 'GET-OUTPUT-STREAM-STRING': String stream is closed.
+%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+==>

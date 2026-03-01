@@ -1,11 +1,12 @@
 import os
 import sys
 
+from pythonslisp import __version__
 from pythonslisp.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'
-VERSION      = '0.31.2'
+VERSION      = __version__
 AUTHOR       = 'Ronald Provost/Longo'
 EMAIL        = 'ronLongo9@outlook.com'
 PROJECT = 'https://github.com/rprovost11-sketch/Lisp'

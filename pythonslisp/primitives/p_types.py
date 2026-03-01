@@ -1,6 +1,6 @@
 from fractions import Fraction
 from typing import Any, Callable
-from _io import TextIOWrapper
+from io import TextIOBase
 
 
 from pythonslisp.Environment import Environment
@@ -90,7 +90,7 @@ def register(primitive, parseLispString: Callable) -> None:
    @primitive( 'streamp', '(sexpr)' )
    def LP_streamp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a stream otherwise nil."""
-      return L_T if isinstance(args[0], TextIOWrapper) else L_NIL
+      return L_T if isinstance(args[0], TextIOBase) else L_NIL
 
    @primitive( 'type-of', '(sexpr)' )
    def LP_typeof( ctx: LispContext, env: Environment, *args ) -> Any:
@@ -119,7 +119,7 @@ def register(primitive, parseLispString: Callable) -> None:
          return LSymbol('PRIMITIVE')
       elif isinstance( arg, LContinuation ):
          return LSymbol('CONTINUATION')
-      elif isinstance( arg, TextIOWrapper ):
+      elif isinstance( arg, TextIOBase ):
          return LSymbol('STREAM')
       else:
          return LSymbol('T')

@@ -1,5 +1,5 @@
 from fractions import Fraction
-from _io import TextIOWrapper
+from io import TextIOBase
 from typing import Any, Callable
 
 from pythonslisp.Environment import Environment
@@ -153,7 +153,7 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LContinuation):
       return '#<CONTINUATION>'
-   elif isinstance(sExpr, TextIOWrapper):
+   elif isinstance(sExpr, TextIOBase):
       return '#<STREAM>'
    else:
       return repr(sExpr)
@@ -188,7 +188,7 @@ def prettyPrint( sExpr: Any ) -> str:
       return sExpr.usageString()
    elif isinstance(sExpr, LContinuation):
       return '#<CONTINUATION>'
-   elif isinstance(sExpr, TextIOWrapper):
+   elif isinstance(sExpr, TextIOBase):
       return '#<STREAM>'
    else:
       return str(sExpr)

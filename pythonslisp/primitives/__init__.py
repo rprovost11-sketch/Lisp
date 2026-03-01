@@ -113,7 +113,8 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
                                     arity_msg=self._arity_msg,
                                     lambdaListAST=self._lambdaListAST )
          primitiveDict[ self._name ] = lPrimitivObj
-         return lPrimitivObj
+         pythonFn.primitive = lPrimitivObj
+         return pythonFn
 
    from pythonslisp.primitives import p_meta, p_control, p_sequences, p_math, p_types, p_strings, p_io
    p_meta.register( primitive )

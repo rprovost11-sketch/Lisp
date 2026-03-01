@@ -3,7 +3,7 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Callable
-from _io import TextIOWrapper
+from io import TextIOBase, StringIO
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr
@@ -146,11 +146,34 @@ def register(primitive, parseLispString: Callable) -> None:
       except FileNotFoundError:
          raise LispRuntimeFuncError( LP_openAppend, f'File not found "{fileName}".' )
 
+   @primitive( 'open-string', '()' )
+   def LP_open_string( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Creates and returns a new string output stream for writing.  Use
+get-output-stream-string to retrieve and clear the accumulated content."""
+      return StringIO()
+
+   @primitive( 'get-output-stream-string', '(string-stream)' )
+   def LP_get_output_stream_string( ctx: LispContext, env: Environment, *args ) -> Any:
+      """Returns the string accumulated in string-stream since it was created or
+since the last call to get-output-stream-string, then clears the buffer.
+The stream remains open and writable.  (CL semantics.)"""
+      stream = args[0]
+      if not isinstance( stream, StringIO ):
+         raise LispRuntimeFuncError( LP_get_output_stream_string,
+                                     'Argument must be a string stream (created by open-string).' )
+      if stream.closed:
+         raise LispRuntimeFuncError( LP_get_output_stream_string,
+                                     'String stream is closed.' )
+      content = stream.getvalue()
+      stream.seek( 0 )
+      stream.truncate( 0 )
+      return content
+
    @primitive( 'close', '(stream)' )
    def LP_close( ctx: LispContext, env: Environment, *args ) -> Any:
       """Closes a stream and returns t."""
       stream = args[0]
-      if not isinstance(stream, TextIOWrapper ):
+      if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_close, 'Argument expected to be a stream.' )
       stream.close( )
       return L_T
@@ -160,7 +183,7 @@ def register(primitive, parseLispString: Callable) -> None:
       """Flushes a stream and returns t."""
       if len(args) == 1:
          stream = args[0]
-         if not isinstance(stream, TextIOWrapper ):
+         if not isinstance(stream, TextIOBase):
             raise LispRuntimeFuncError( LP_flush, 'Argument expected to be a stream.' )
          stream.flush( )
       else:
@@ -171,7 +194,7 @@ def register(primitive, parseLispString: Callable) -> None:
    def LP_closed( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is closed, nil otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOWrapper ):
+      if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_closed, 'Argument expected to be a stream.' )
       return L_T if stream.closed else L_NIL
 
@@ -179,7 +202,7 @@ def register(primitive, parseLispString: Callable) -> None:
    def LP_isatty( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is a tty, nil otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOWrapper ):
+      if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_isatty, 'Argument expected to be a stream.' )
       return L_T if stream.isatty() else L_NIL
 
@@ -187,7 +210,7 @@ def register(primitive, parseLispString: Callable) -> None:
    def LP_readable( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is readable, nil otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOWrapper ):
+      if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_readable, 'Argument expected to be a stream.' )
       return L_T if stream.readable() else L_NIL
 
@@ -195,7 +218,7 @@ def register(primitive, parseLispString: Callable) -> None:
    def LP_writable( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the stream is writable, nil otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOWrapper ):
+      if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_writable, 'Argument expected to be a stream.' )
       return L_T if stream.writable() else L_NIL
 
@@ -232,7 +255,7 @@ Returns the output string."""
          if isinstance( otherArg, (list, dict)):
             dictOrList = otherArg
             stream = ctx.outStrm
-         elif isinstance(otherArg, TextIOWrapper):
+         elif isinstance(otherArg, TextIOBase):
             dictOrList = None
             stream = otherArg
             if not stream.writable():
@@ -243,7 +266,7 @@ Returns the output string."""
          dictOrList, stream = args[1:]
          if not isinstance(dictOrList, (list, dict)):
             raise LispRuntimeFuncError( LP_writef, '2nd argument expected to be a list or dict.' )
-         if not isinstance(stream, TextIOWrapper):
+         if not isinstance(stream, TextIOBase):
             raise LispRuntimeFuncError( LP_writef, '3rd argument expected to be a stream.' )
          if not stream.writable():
             raise LispRuntimeFuncError( LP_writef, 'Stream is not writable.' )
@@ -269,7 +292,7 @@ Returns the output string."""
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
 the output is written.  If stream is omitted, output goes to stdout."""
-      if args and isinstance( args[0], TextIOWrapper ):
+      if args and isinstance( args[0], TextIOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -284,7 +307,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
 Returns the last value printed."""
-      if args and isinstance( args[0], TextIOWrapper ):
+      if args and isinstance( args[0], TextIOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -298,7 +321,7 @@ Returns the last value printed."""
       """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
 If stream is omitted, output goes to stdout.  Returns the last value printed."""
-      if args and isinstance( args[0], TextIOWrapper ):
+      if args and isinstance( args[0], TextIOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -313,7 +336,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
 Returns the last value printed."""
-      if args and isinstance( args[0], TextIOWrapper ):
+      if args and isinstance( args[0], TextIOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -329,7 +352,7 @@ Returns the last value printed."""
          stream = ctx.outStrm
       else:
          stream = args[0]
-         if not isinstance(stream, TextIOWrapper):
+         if not isinstance(stream, TextIOBase):
             raise LispRuntimeFuncError( LP_terpri, "Optional argument expected to be a stream." )
          if not stream.writable():
             raise LispRuntimeFuncError( LP_terpri, 'Stream is not writable.' )
@@ -340,7 +363,7 @@ Returns the last value printed."""
    def LP_readall( ctx: LispContext, env: Environment, *args ) -> Any:
       """Reads and returns the entire contents of a readable stream as a single string."""
       stream = args[0]
-      if not isinstance(stream, TextIOWrapper):
+      if not isinstance(stream, TextIOBase):
          raise LispRuntimeFuncError( LP_readall, 'Argument expected to be a stream.' )
       if not stream.readable():
          raise LispRuntimeFuncError( LP_readall, 'Stream is not readable.' )
@@ -355,7 +378,7 @@ of text entry."""
          return input()
       else:
          stream = args[0]
-         if not isinstance(stream, TextIOWrapper):
+         if not isinstance(stream, TextIOBase):
             raise LispRuntimeFuncError( LP_readln, 'Optional argument expected to be a stream.' )
          if not stream.readable():
             raise LispRuntimeFuncError( LP_readln, 'Stream is not readable.' )
