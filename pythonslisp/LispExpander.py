@@ -7,7 +7,7 @@ and then _lEval.
 """
 
 from typing import Any
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LMacro, L_NIL, prettyPrintSExpr
 from pythonslisp.LispEnvironment import LispEnvironment
 from pythonslisp.LispContext import LispContext

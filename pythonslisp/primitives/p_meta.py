@@ -1,6 +1,6 @@
 from typing import Any
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LMacro, LContinuation, LCallable
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispContext import LispContext

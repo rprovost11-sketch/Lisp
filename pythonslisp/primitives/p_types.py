@@ -3,7 +3,7 @@ from typing import Any, Callable
 from io import IOBase, StringIO
 
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LPrimitive,
                                    LContinuation, prettyPrint, prettyPrintSExpr,
                                    eql, equal, equalp )

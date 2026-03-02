@@ -2,7 +2,7 @@ import os
 import sys
 
 from pythonslisp import __version__
-from pythonslisp.Listener import Listener
+from pythonslisp.ltk.Listener import Listener
 from pythonslisp.LispInterpreter import LispInterpreter
 
 LANGUAGE     = 'Python\'s Lisp'

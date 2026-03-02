@@ -1,7 +1,7 @@
 from fractions import Fraction
 from typing import Any
 
-from pythonslisp.Parser import Lexer, Parser, ParseError
+from pythonslisp.ltk.Parser import Lexer, Parser, ParseError
 from pythonslisp.LispAST import LSymbol
 
 """

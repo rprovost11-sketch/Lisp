@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from pythonslisp.LispParser import LispParser
-from pythonslisp.Listener import Interpreter
-from pythonslisp.Utils import retrieveFileList
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Listener import Interpreter
+from pythonslisp.ltk.Utils import retrieveFileList
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import ( LSymbol, L_T, L_NIL,
                                   LCallable, LFunction, LPrimitive, LMacro, LContinuation,
                                   prettyPrintSExpr )
@@ -16,7 +16,7 @@ from pythonslisp.LispExceptions import ( LispRuntimeError, LispRuntimeFuncError,
 from pythonslisp.LispEnvironment import LispEnvironment
 from pythonslisp.LispExpander import LispExpander
 from pythonslisp.LispAnalyzer import LispAnalyzer
-from pythonslisp.Tracer import Tracer
+from pythonslisp.LispTracer import Tracer
 from pythonslisp.LispContext import LispContext
 from pythonslisp.primitives import constructPrimitives
 

@@ -2,7 +2,7 @@ from fractions import Fraction
 from io import IOBase
 from typing import Any, Callable
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 
 # #################
 # Lisp Function API

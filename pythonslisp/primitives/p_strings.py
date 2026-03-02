@@ -1,6 +1,6 @@
 from typing import Any, Callable
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError
 from pythonslisp.primitives import LambdaListMode

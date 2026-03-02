@@ -1,7 +1,7 @@
 import functools
 from typing import Any, Callable
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispContext import LispContext

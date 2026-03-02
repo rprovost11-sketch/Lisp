@@ -11,7 +11,7 @@ Phase 3: arity / type checks migrated out of primitives.
 
 from typing import Any
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LPrimitive
 from pythonslisp.LispExceptions import ( LispAnalysisError,      # noqa: F401 (re-exported)
                                          LispRuntimeError,

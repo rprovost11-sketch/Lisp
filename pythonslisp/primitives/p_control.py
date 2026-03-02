@@ -1,6 +1,6 @@
 from typing import Any
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LCallable, LFunction, L_NIL, eql
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeError, LispRuntimeFuncError, Thrown, ReturnFrom

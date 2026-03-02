@@ -12,7 +12,7 @@ a new scope so default-value evaluation always uses the current call context.
 
 from typing import Any, Callable, Sequence
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol
 from pythonslisp.LispExceptions import LispArgBindingError
 

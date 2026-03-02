@@ -4,7 +4,7 @@ import random as _random
 from fractions import Fraction
 from typing import Any
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LNUMBER
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeFuncError

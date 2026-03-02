@@ -6,13 +6,13 @@ from pathlib import Path
 from typing import Any, Callable
 from io import IOBase, StringIO
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr
 from pythonslisp.LispAST import L_T, L_NIL
 from pythonslisp.LispContext import LispContext
 from pythonslisp.LispExceptions import LispRuntimeError, LispRuntimeFuncError
 from pythonslisp.LispParser import LispParser, ParseError
-from pythonslisp.Utils import columnize
+from pythonslisp.ltk.Utils import columnize
 from pythonslisp.primitives import LambdaListMode
 
 _LISP_PARSER = LispParser()

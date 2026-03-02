@@ -1,5 +1,5 @@
 
-__version__ = '0.32.3'
+__version__ = '0.32.4'
 
 __all__ = [ 'Lisp',
             'LispAST',
@@ -10,8 +10,8 @@ __all__ = [ 'Lisp',
             'Listener'
             ]
 
-from pythonslisp.Environment import Environment
+from pythonslisp.ltk.Environment import Environment
 from pythonslisp.LispAST import *
 from pythonslisp.LispInterpreter import *
 from pythonslisp.LispParser import *
-from pythonslisp.Parser import * 
+from pythonslisp.ltk.Parser import *
