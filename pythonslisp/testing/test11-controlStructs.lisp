@@ -36,7 +36,7 @@
 ...    )
 ...
 
-==> (FUNCTION COUNTDOWN1 (NUM) ... )
+==> (FUNCTION COUNTDOWN1 (NUM) ...)
 
 >>> (countdown1 5)
 ...
@@ -58,7 +58,7 @@
 ... )
 ...
 
-==> (FUNCTION COUNTDOWN2 (NUM) ... )
+==> (FUNCTION COUNTDOWN2 (NUM) ...)
 
 >>> (countdown2 3)
 3
@@ -151,14 +151,14 @@ ABC
 ... (cond)
 
 %%% ERROR 'COND': 1 or more arguments expected.
-%%% USAGE: (COND (cond1 body1) (cond2 body2) ...)
+%%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
 
 >>> ;;; Error: let requires at least 2 arguments
 ... (let)
 
 %%% ERROR 'LET': 2 or more arguments expected.
-%%% USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+%%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
 ; --- block and return-from ---
@@ -208,7 +208,7 @@ ABC
 ...       (dolist (x lst)
 ...          (if (evenp x) (return-from found x)))
 ...       nil))
-==> (FUNCTION FIND-EVEN (LST) ... )
+==> (FUNCTION FIND-EVEN (LST) ...)
 
 >>> (find-even '(1 3 5 4 7))
 ==> 4

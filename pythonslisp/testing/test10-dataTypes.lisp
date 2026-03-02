@@ -194,33 +194,33 @@
 ... (hasKey? "a" 1)
 
 %%% ERROR 'HASKEY?': Invalid argument 2.  Dict expected.
-%%% USAGE: (HASKEY? key dict)
+%%% PRIMITIVE USAGE: (HASKEY? key dict)
 ==>
 
 >>> ;;; Error: hasValue? requires a list or map as second argument
 ... (hasValue? 2 1)
 
 %%% ERROR 'HASVALUE?': Invalid argument.  Argument 2 expected to be a list or dict.
-%%% USAGE: (HASVALUE? value listOrDict)
+%%% PRIMITIVE USAGE: (HASVALUE? value listOrDict)
 ==>
 
 >>> ;;; Error: update! requires map arguments
 ... (update! 1 (make-dict))
 
 %%% ERROR 'UPDATE!': Argument 1 expected to be a dict.
-%%% USAGE: (UPDATE! dict1 dict2)
+%%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> (update! (make-dict) 1)
 
 %%% ERROR 'UPDATE!': Argument 2 expected to be a dict.
-%%% USAGE: (UPDATE! dict1 dict2)
+%%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> (update!)
 
 %%% ERROR 'UPDATE!': 2 arguments expected.
-%%% USAGE: (UPDATE! dict1 dict2)
+%%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
 
 ; ========================
@@ -285,7 +285,7 @@
 >>> (defun fn14 (x) (* x x))
 ...
 
-==> (FUNCTION FN14 (X) ... )
+==> (FUNCTION FN14 (X) ...)
 
 >>> (type-of fn14)
 ...
@@ -377,7 +377,7 @@
 ...
 
 %%% ERROR 'TYPE-OF': 1 argument expected.
-%%% USAGE: (TYPE-OF sexpr)
+%%% PRIMITIVE USAGE: (TYPE-OF sexpr)
 ==>
 
 ; too many arguments
@@ -385,7 +385,7 @@
 ...
 
 %%% ERROR 'TYPE-OF': 1 argument expected.
-%%% USAGE: (TYPE-OF sexpr)
+%%% PRIMITIVE USAGE: (TYPE-OF sexpr)
 ==>
 
 >>> (defstruct point (x 0) (y 0))
@@ -676,14 +676,14 @@
 ...
 
 %%% ERROR 'AT': Invalid argument.  List, Dict, or String expected.
-%%% USAGE: (AT keyOrIndex dictListOrStr)
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> (setf (point-x 42) 5)
 ...
 
 %%% ERROR 'SET-ACCESSOR!': Argument 2 must be a struct instance.
-%%% USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
+%%% PRIMITIVE USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
 ==>
 
 >>> (setf (point-x p1 p1) 5)
@@ -794,7 +794,7 @@
 
 >>> (typep 42 "not-a-symbol")
 %%% ERROR 'TYPEP': Argument 2 must be a type symbol.
-%%% USAGE: (TYPEP object type-specifier)
+%%% PRIMITIVE USAGE: (TYPEP object type-specifier)
 
 ; --- typecase ---
 

@@ -54,6 +54,8 @@ def register(primitive, parseLispString: Callable) -> None:
       return values[-1]
 
    def printHelpListings( outStrm, env: Environment ) -> None:
+      # Create bins to sort symbols into
+      variablesList = []
       primitivesList = []
       functionsList  = []
       macrosList     = []
@@ -61,6 +63,7 @@ def register(primitive, parseLispString: Callable) -> None:
       outFile  = outStrm or sys.stdout
       useColor = hasattr(outFile, 'isatty') and outFile.isatty()
 
+      # Define the color strings
       BOLD_WHITE = '\033[1;97m' if useColor else ''
       CYAN       = '\033[96m'   if useColor else ''
       GREEN      = '\033[92m'   if useColor else ''
@@ -68,11 +71,13 @@ def register(primitive, parseLispString: Callable) -> None:
       YELLOW     = '\033[93m'   if useColor else ''
       RESET      = '\033[0m'    if useColor else ''
 
+      # Print a table header
       def hdr( text ):
          ul = '=' * len(text)
          print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
          print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
 
+      # Bin the global symbols into the various lists
       for symbolStr in env.getGlobalEnv().localSymbols():
          if symbolStr.startswith('%') or symbolStr.endswith('-INTERNAL'):
             continue
@@ -83,9 +88,12 @@ def register(primitive, parseLispString: Callable) -> None:
             functionsList.append(symbolStr)
          elif isinstance(obj, LMacro):
             macrosList.append(symbolStr)
+         else:
+            variablesList.append(symbolStr)
 
+      # Print out the table
       hdr( "Predefined Symbols" )
-      print( "E  NIL  PI  T", file=outStrm )
+      columnize( variablesList, 78, file=outStrm )
       print( file=outStrm )
       hdr( "Primitives" )
       columnize( primitivesList, 78, file=outStrm, itemColor=CYAN or None )
@@ -653,7 +661,7 @@ Type '(help "topic")' for available documentation on the named topic."""
       CYAN       = '\033[96m'   if useColor else ''
       RESET      = '\033[0m'    if useColor else ''
 
-      print( f'   {BOLD_WHITE}USAGE:{RESET} {CYAN}{callableObj.usageString()}{RESET}', file=outStrm )
+      print( f'   {CYAN}{callableObj.usageString()}{RESET}', file=outStrm )
       print( file=outStrm )
       if callableObj.docString != '':
          valueStr = prettyPrint( callableObj.docString )

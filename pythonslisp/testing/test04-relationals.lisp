@@ -260,37 +260,37 @@
 ... (= 1)
 
 %%% ERROR '=': At least 2 arguments expected.
-%%% USAGE: (= expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (= expr1 expr2 ...)
 ==>
 
 >>> (/= 1)
 
 %%% ERROR '/=': At least 2 arguments expected.
-%%% USAGE: (/= expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (/= expr1 expr2 ...)
 ==>
 
 >>> (< 1)
 
 %%% ERROR '<': At least 2 arguments expected.
-%%% USAGE: (< expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (< expr1 expr2 ...)
 ==>
 
 >>> (<= 1)
 
 %%% ERROR '<=': At least 2 arguments expected.
-%%% USAGE: (<= expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (<= expr1 expr2 ...)
 ==>
 
 >>> (> 1)
 
 %%% ERROR '>': At least 2 arguments expected.
-%%% USAGE: (> expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (> expr1 expr2 ...)
 ==>
 
 >>> (>= 1)
 
 %%% ERROR '>=': At least 2 arguments expected.
-%%% USAGE: (>= expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (>= expr1 expr2 ...)
 ==>
 
 

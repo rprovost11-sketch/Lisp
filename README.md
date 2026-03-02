@@ -78,6 +78,8 @@ documentation system will display a "function header" which includes the
 function name and its lambda list (formal parameter list).  This will be
 followed by any text in the documentation string coded by the lisp programmer.
 
+If you want a lisp startup script to run whenevr the interpreter is initialized/
+reinitialized you can add .pythonslisp_rc to your home directory.
 
 API: Using Lisp as a Package
 ============================

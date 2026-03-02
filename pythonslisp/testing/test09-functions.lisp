@@ -8,12 +8,12 @@
 ...    (lambda (y) (+ x y)))
 ... 
 
-==> (FUNCTION ADDER (X) ... )
+==> (FUNCTION ADDER (X) ...)
 
 >>> (setf add5 (adder 5))
 ... 
 
-==> (FUNCTION ADD5 (Y) ... )
+==> (FUNCTION ADD5 (Y) ...)
 
 >>> (add5 8)
 ... 
@@ -26,7 +26,7 @@
 ...          (incf i))))
 ... 
 
-==> (FUNCTION INT-SEQ () ... )
+==> (FUNCTION INT-SEQ () ...)
 
 >>> (defun main ()
 ...    (let ((next-int (int-seq)))
@@ -35,7 +35,7 @@
 ...       (writeln! (next-int))))
 ... 
 
-==> (FUNCTION MAIN () ... )
+==> (FUNCTION MAIN () ...)
 
 >>> (main)
 ... 
@@ -50,17 +50,17 @@
 ...       (lambda () (incf n))))
 ... 
 
-==> (FUNCTION MAKE-COUNTER () ... )
+==> (FUNCTION MAKE-COUNTER () ...)
 
 >>> (setf c1 (make-counter))
 ... 
 
-==> (FUNCTION C1 () ... )
+==> (FUNCTION C1 () ...)
 
 >>> (setf c2 (make-counter))
 ... 
 
-==> (FUNCTION C2 () ... )
+==> (FUNCTION C2 () ...)
 
 >>> (c1)
 ... 
@@ -93,22 +93,22 @@
 ...             (lambda () bal))))
 ... 
 
-==> (FUNCTION MAKE-ACCOUNT (BALANCE) ... )
+==> (FUNCTION MAKE-ACCOUNT (BALANCE) ...)
 
 >>> (setf acct (make-account 100))
 ... 
 
-==> ((FUNCTION  (AMT) ... ) (FUNCTION  () ... ))
+==> ((FUNCTION  (AMT) ...) (FUNCTION  () ...))
 
 >>> (setf withdraw (at 0 acct))
 ... 
 
-==> (FUNCTION WITHDRAW (AMT) ... )
+==> (FUNCTION WITHDRAW (AMT) ...)
 
 >>> (setf get-bal (at 1 acct))
 ... 
 
-==> (FUNCTION GET-BAL () ... )
+==> (FUNCTION GET-BAL () ...)
 
 >>> (get-bal)
 ... 
@@ -138,7 +138,7 @@
 >>> (setf multiplier (let ((factor 3)) (lambda (x) (* factor x))))
 ... 
 
-==> (FUNCTION MULTIPLIER (X) ... )
+==> (FUNCTION MULTIPLIER (X) ...)
 
 >>> (multiplier 5)
 ... 
@@ -153,12 +153,12 @@
 >>> (defun make-adder (x) (lambda (y) (lambda (z) (+ x y z))))
 ... 
 
-==> (FUNCTION MAKE-ADDER (X) ... )
+==> (FUNCTION MAKE-ADDER (X) ...)
 
 >>> (setf add1-2 ((make-adder 1) 2))
 ... 
 
-==> (FUNCTION ADD1-2 (Z) ... )
+==> (FUNCTION ADD1-2 (Z) ...)
 
 >>> (add1-2 10)
 ... 
@@ -181,6 +181,6 @@
 ... (eval)
 
 %%% ERROR 'EVAL': 1 argument expected.
-%%% USAGE: (EVAL sexpr)
+%%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 

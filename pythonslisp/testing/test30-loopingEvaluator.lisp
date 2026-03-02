@@ -14,7 +14,7 @@
 ...       (tco-count (- n 1))))
 ...
 
-==> (FUNCTION TCO-COUNT (N) ... )
+==> (FUNCTION TCO-COUNT (N) ...)
 
 >>> ;;; 50000 tail calls -- would overflow without TCO
 ... (tco-count 50000)
@@ -28,7 +28,7 @@
 ...       (tco-sum (- n 1) (+ acc n))))
 ...
 
-==> (FUNCTION TCO-SUM (N ACC) ... )
+==> (FUNCTION TCO-SUM (N ACC) ...)
 
 >>> ;;; accumulator-style sum of 1..50000
 ... (tco-sum 50000 0)
@@ -43,7 +43,7 @@
 ...       (if (= m 0) 'done (tco-let m))))
 ...
 
-==> (FUNCTION TCO-LET (N) ... )
+==> (FUNCTION TCO-LET (N) ...)
 
 >>> (tco-let 50000)
 ...
@@ -57,7 +57,7 @@
 ...       (if (= m 0) 'done (tco-letstar m))))
 ...
 
-==> (FUNCTION TCO-LETSTAR (N) ... )
+==> (FUNCTION TCO-LETSTAR (N) ...)
 
 >>> (tco-letstar 50000)
 ...
@@ -71,7 +71,7 @@
 ...       (if (= n 0) 'done (tco-progn (- n 1)))))
 ...
 
-==> (FUNCTION TCO-PROGN (N) ... )
+==> (FUNCTION TCO-PROGN (N) ...)
 
 >>> (tco-progn 50000)
 ...
@@ -84,7 +84,7 @@
 ...    (when (> n 0) (tco-when (- n 1))))
 ...
 
-==> (FUNCTION TCO-WHEN (N) ... )
+==> (FUNCTION TCO-WHEN (N) ...)
 
 >>> ;;; when body is in if-tail position via macro expansion
 ... (tco-when 50000)
@@ -98,7 +98,7 @@
 ...    (unless (= n 0) (tco-unless (- n 1))))
 ...
 
-==> (FUNCTION TCO-UNLESS (N) ... )
+==> (FUNCTION TCO-UNLESS (N) ...)
 
 >>> (tco-unless 50000)
 ...
@@ -110,12 +110,12 @@
 >>> (defun tco-even (n) (if (= n 0) t   (tco-odd  (- n 1))))
 ...
 
-==> (FUNCTION TCO-EVEN (N) ... )
+==> (FUNCTION TCO-EVEN (N) ...)
 
 >>> (defun tco-odd  (n) (if (= n 0) nil (tco-even (- n 1))))
 ...
 
-==> (FUNCTION TCO-ODD (N) ... )
+==> (FUNCTION TCO-ODD (N) ...)
 
 >>> ;;; even number of steps -> T
 ... (tco-even 50000)
@@ -135,7 +135,7 @@
 ...    (if (= n 0) s (tco-str (- n 1) s)))
 ...
 
-==> (FUNCTION TCO-STR (N S) ... )
+==> (FUNCTION TCO-STR (N S) ...)
 
 >>> (tco-str 50000 "hello")
 ...
@@ -146,7 +146,7 @@
 ...    (if (= n 0) '(1 2 3) (tco-lst (- n 1))))
 ...
 
-==> (FUNCTION TCO-LST (N) ... )
+==> (FUNCTION TCO-LST (N) ...)
 
 >>> (tco-lst 50000)
 ...
@@ -157,7 +157,7 @@
 ...    (if (= n 0) nil (tco-nil (- n 1))))
 ...
 
-==> (FUNCTION TCO-NIL (N) ... )
+==> (FUNCTION TCO-NIL (N) ...)
 
 >>> (tco-nil 50000)
 ...
@@ -172,7 +172,7 @@
 ...          (if (= n 0) x (tco-closure (- n 1))))))
 ...
 
-==> (FUNCTION TCO-CLOSURE (N) ... )
+==> (FUNCTION TCO-CLOSURE (N) ...)
 
 >>> (tco-closure 50000)
 ...
@@ -185,7 +185,7 @@
 ...    (if (= n 0) (length r) (tco-rest (- n 1) 1)))
 ...
 
-==> (FUNCTION TCO-REST (N &REST R) ... )
+==> (FUNCTION TCO-REST (N &REST R) ...)
 
 >>> ;;; each recursive call passes one rest arg; final sees (length '(1)) = 1
 ... (tco-rest 50000)
@@ -199,7 +199,7 @@
 ...    (if (= n 0) 1 (* n (fact (- n 1)))))
 ...
 
-==> (FUNCTION FACT (N) ... )
+==> (FUNCTION FACT (N) ...)
 
 >>> (fact 10)
 ...
@@ -217,13 +217,13 @@
 ...    (if (= n 0) (// 1 0) (tco-err (- n 1))))
 ...
 
-==> (FUNCTION TCO-ERR (N) ... )
+==> (FUNCTION TCO-ERR (N) ...)
 
 >>> ;;; division by zero at the bottom of 50000 tail calls
 ... (tco-err 50000)
 
 %%% ERROR '//': division by zero
-%%% USAGE: (// dividend divisor)
+%%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
 
 ; --- 13. Arity error in tail position preserves function name ---
@@ -232,7 +232,7 @@
 ...    (if (= n 0) (tco-arity) (tco-arity (- n 1))))
 ...
 
-==> (FUNCTION TCO-ARITY (N) ... )
+==> (FUNCTION TCO-ARITY (N) ...)
 
 >>> ;;; zero-arg call in tail position -> arg-binding error with correct name
 ... (tco-arity 3)
@@ -247,7 +247,7 @@
 ...    (if (= n 0) no-such-var (tco-unbound (- n 1))))
 ...
 
-==> (FUNCTION TCO-UNBOUND (N) ... )
+==> (FUNCTION TCO-UNBOUND (N) ...)
 
 >>> ;;; unbound symbol error at the end of the chain
 ... (tco-unbound 5)
@@ -298,7 +298,7 @@
 ...                (dolist (x lst)
 ...                   (if (pred x) (exit x) nil))
 ...                nil)))
-==> (FUNCTION FIND-FIRST (PRED LST) ... )
+==> (FUNCTION FIND-FIRST (PRED LST) ...)
 
 >>> (find-first evenp '(1 3 5 4 7))
 ==> 4
@@ -319,17 +319,17 @@
 ; call/cc requires exactly 1 argument
 >>> (call/cc)
 %%% ERROR 'CALL/CC': 1 argument expected.
-%%% USAGE: (CALL/CC procedure)
+%%% PRIMITIVE USAGE: (CALL/CC procedure)
 
 ; call/cc argument must be a callable
 >>> (call/cc 42)
 %%% ERROR 'CALL/CC': Argument must be a callable.
-%%% USAGE: (CALL/CC procedure)
+%%% PRIMITIVE USAGE: (CALL/CC procedure)
 
 ; call/cc argument may not be a special form pass quote (unquoted) to get the primitive
 >>> (call/cc quote)
 %%% ERROR 'CALL/CC': Argument may not be a special form.
-%%% USAGE: (CALL/CC procedure)
+%%% PRIMITIVE USAGE: (CALL/CC procedure)
 
 ; Continuation requires exactly 1 argument
 >>> (call/cc (lambda (k) (k 1 2)))
@@ -377,7 +377,7 @@
 
 ; throw crosses function-call boundary (dynamic extent)
 >>> (defun thrower () (throw 'escape 99))
-==> (FUNCTION THROWER () ... )
+==> (FUNCTION THROWER () ...)
 
 >>> (catch 'escape (thrower) 0)
 ==> 99
@@ -415,4 +415,4 @@
 ; throw requires exactly 2 args
 >>> (throw 'foo)
 %%% ERROR 'THROW': 2 arguments expected.
-%%% USAGE: (THROW tag result)
+%%% PRIMITIVE USAGE: (THROW tag result)

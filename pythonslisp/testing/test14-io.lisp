@@ -68,21 +68,21 @@ no substitution needed
 ... (writef)
 
 %%% ERROR 'WRITEF': 1 to 3 arguments expected.
-%%% USAGE: (WRITEF formatString &optional dictOrList stream)
+%%% PRIMITIVE USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 >>> ;;; Error: writef first argument must be a format string
 ... (writef 1 '(a b))
 
 %%% ERROR 'WRITEF': 1st argument expected to be a format string.
-%%% USAGE: (WRITEF formatString &optional dictOrList stream)
+%%% PRIMITIVE USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 >>> ;;; Error: writef second argument must be a list or map
 ... (writef "hello" 1)
 
 %%% ERROR 'WRITEF': 2nd argument expected to be a list, dict or stream.
-%%% USAGE: (WRITEF formatString &optional dictOrList stream)
+%%% PRIMITIVE USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 ; ============================================================
@@ -528,55 +528,55 @@ ab
 >>> (streamp)
 
 %%% ERROR 'STREAMP': 1 argument expected.
-%%% USAGE: (STREAMP sexpr)
+%%% PRIMITIVE USAGE: (STREAMP sexpr)
 ==>
 
 >>> (open)
 
 %%% ERROR 'OPEN': At least 1 argument expected.
-%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+%%% PRIMITIVE USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 >>> (close)
 
 %%% ERROR 'CLOSE': At least 1 argument expected.
-%%% USAGE: (CLOSE stream &key (abort nil))
+%%% PRIMITIVE USAGE: (CLOSE stream &key (abort nil))
 ==>
 
 >>> (open-stream-p)
 
 %%% ERROR 'OPEN-STREAM-P': 1 argument expected.
-%%% USAGE: (OPEN-STREAM-P stream)
+%%% PRIMITIVE USAGE: (OPEN-STREAM-P stream)
 ==>
 
 >>> (input-stream-p)
 
 %%% ERROR 'INPUT-STREAM-P': 1 argument expected.
-%%% USAGE: (INPUT-STREAM-P stream)
+%%% PRIMITIVE USAGE: (INPUT-STREAM-P stream)
 ==>
 
 >>> (output-stream-p)
 
 %%% ERROR 'OUTPUT-STREAM-P': 1 argument expected.
-%%% USAGE: (OUTPUT-STREAM-P stream)
+%%% PRIMITIVE USAGE: (OUTPUT-STREAM-P stream)
 ==>
 
 >>> (interactive-stream-p)
 
 %%% ERROR 'INTERACTIVE-STREAM-P': 1 argument expected.
-%%% USAGE: (INTERACTIVE-STREAM-P stream)
+%%% PRIMITIVE USAGE: (INTERACTIVE-STREAM-P stream)
 ==>
 
 >>> (save)
 
 %%% ERROR 'SAVE': At least 1 argument expected.
-%%% USAGE: (SAVE filename &rest objects)
+%%% PRIMITIVE USAGE: (SAVE filename &rest objects)
 ==>
 
 >>> (load)
 
 %%% ERROR 'LOAD': 1 argument expected.
-%%% USAGE: (LOAD fileName)
+%%% PRIMITIVE USAGE: (LOAD fileName)
 ==>
 
 ; ============================================================
@@ -587,21 +587,21 @@ ab
 ... (open 42)
 
 %%% ERROR 'OPEN': 1st argument expected to be a filename string.
-%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+%%% PRIMITIVE USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 >>> ;;; file not found
 ... (open "no-such-file-42.tmp")
 
 %%% ERROR 'OPEN': File not found "no-such-file-42.tmp".
-%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+%%% PRIMITIVE USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 >>> ;;; bad :direction value
 ... (open (path-join (tmpdir) "test14-stream.tmp") :direction :bad)
 
 %%% ERROR 'OPEN': :direction must be :input or :output.
-%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+%%% PRIMITIVE USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 >>> ;;; create a local file for the :if-exists :error test
@@ -612,7 +612,7 @@ ab
 ... (open "_wof_test_ifexists_.tmp" :direction :output :if-exists :error)
 
 %%% ERROR 'OPEN': File already exists "_wof_test_ifexists_.tmp".
-%%% USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
+%%% PRIMITIVE USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
 
 
@@ -627,55 +627,55 @@ ab
 >>> (close 42)
 
 %%% ERROR 'CLOSE': Argument expected to be a stream.
-%%% USAGE: (CLOSE stream &key (abort nil))
+%%% PRIMITIVE USAGE: (CLOSE stream &key (abort nil))
 ==>
 
 >>> (open-stream-p 42)
 
 %%% ERROR 'OPEN-STREAM-P': Argument expected to be a stream.
-%%% USAGE: (OPEN-STREAM-P stream)
+%%% PRIMITIVE USAGE: (OPEN-STREAM-P stream)
 ==>
 
 >>> (input-stream-p 42)
 
 %%% ERROR 'INPUT-STREAM-P': Argument expected to be a stream.
-%%% USAGE: (INPUT-STREAM-P stream)
+%%% PRIMITIVE USAGE: (INPUT-STREAM-P stream)
 ==>
 
 >>> (output-stream-p 42)
 
 %%% ERROR 'OUTPUT-STREAM-P': Argument expected to be a stream.
-%%% USAGE: (OUTPUT-STREAM-P stream)
+%%% PRIMITIVE USAGE: (OUTPUT-STREAM-P stream)
 ==>
 
 >>> (interactive-stream-p 42)
 
 %%% ERROR 'INTERACTIVE-STREAM-P': Argument expected to be a stream.
-%%% USAGE: (INTERACTIVE-STREAM-P stream)
+%%% PRIMITIVE USAGE: (INTERACTIVE-STREAM-P stream)
 ==>
 
 >>> (flush 42)
 
 %%% ERROR 'FLUSH': Argument expected to be a stream.
-%%% USAGE: (FLUSH &optional stream)
+%%% PRIMITIVE USAGE: (FLUSH &optional stream)
 ==>
 
 >>> (save 42)
 
 %%% ERROR 'SAVE': 1st argument expected to be a filename.
-%%% USAGE: (SAVE filename &rest objects)
+%%% PRIMITIVE USAGE: (SAVE filename &rest objects)
 ==>
 
 >>> (load 42)
 
 %%% ERROR 'LOAD': Argument expected to be a filename.
-%%% USAGE: (LOAD fileName)
+%%% PRIMITIVE USAGE: (LOAD fileName)
 ==>
 
 >>> (load "no-such-file-43.tmp")
 
 %%% ERROR 'LOAD': File not found "no-such-file-43.tmp".
-%%% USAGE: (LOAD fileName)
+%%% PRIMITIVE USAGE: (LOAD fileName)
 ==>
 
 ; ============================================================
@@ -688,37 +688,37 @@ ab
 >>> (write! st14r "hello")
 
 %%% ERROR 'WRITE!': Stream is not writable.
-%%% USAGE: (WRITE! &optional stream &rest objects)
+%%% PRIMITIVE USAGE: (WRITE! &optional stream &rest objects)
 ==>
 
 >>> (writeLn! st14r "hello")
 
 %%% ERROR 'WRITELN!': Stream is not writable.
-%%% USAGE: (WRITELN! &optional stream &rest objects)
+%%% PRIMITIVE USAGE: (WRITELN! &optional stream &rest objects)
 ==>
 
 >>> (uwrite! st14r "hello")
 
 %%% ERROR 'UWRITE!': Stream is not writable.
-%%% USAGE: (UWRITE! &optional stream &rest objects)
+%%% PRIMITIVE USAGE: (UWRITE! &optional stream &rest objects)
 ==>
 
 >>> (uwriteLn! st14r "hello")
 
 %%% ERROR 'UWRITELN!': Stream is not writable.
-%%% USAGE: (UWRITELN! &optional stream &rest objects)
+%%% PRIMITIVE USAGE: (UWRITELN! &optional stream &rest objects)
 ==>
 
 >>> (terpri st14r)
 
 %%% ERROR 'TERPRI': Stream is not writable.
-%%% USAGE: (TERPRI &optional stream)
+%%% PRIMITIVE USAGE: (TERPRI &optional stream)
 ==>
 
 >>> (writef "hello" st14r)
 
 %%% ERROR 'WRITEF': Stream is not writable.
-%%% USAGE: (WRITEF formatString &optional dictOrList stream)
+%%% PRIMITIVE USAGE: (WRITEF formatString &optional dictOrList stream)
 ==>
 
 >>> (close st14r)
@@ -730,7 +730,7 @@ ab
 >>> (read-line st14w)
 
 %%% ERROR 'READ-LINE': Stream is not readable.
-%%% USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
+%%% PRIMITIVE USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 >>> (close st14w)
@@ -909,27 +909,27 @@ ab
 ... (make-string-output-stream 42)
 
 %%% ERROR 'MAKE-STRING-OUTPUT-STREAM': 0 arguments expected.
-%%% USAGE: (MAKE-STRING-OUTPUT-STREAM )
+%%% PRIMITIVE USAGE: (MAKE-STRING-OUTPUT-STREAM)
 ==>
 
 >>> ;;; get-output-stream-string requires exactly 1 argument
 ... (get-output-stream-string)
 
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': 1 argument expected.
-%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+%%% PRIMITIVE USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
 >>> (get-output-stream-string (make-string-output-stream) (make-string-output-stream))
 
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': 1 argument expected.
-%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+%%% PRIMITIVE USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
 >>> ;;; get-output-stream-string rejects a non-string-stream value
 ... (get-output-stream-string 42)
 
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by make-string-output-stream).
-%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+%%% PRIMITIVE USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
 >>> ;;; get-output-stream-string rejects a file stream
@@ -939,7 +939,7 @@ ab
 >>> (get-output-stream-string ss14f)
 
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': Argument must be a string stream (created by make-string-output-stream).
-%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+%%% PRIMITIVE USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
 >>> (close ss14f)
@@ -955,7 +955,7 @@ ab
 >>> (get-output-stream-string ss14c)
 
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': String stream is closed.
-%%% USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
+%%% PRIMITIVE USAGE: (GET-OUTPUT-STREAM-STRING string-stream)
 ==>
 
 ; ============================================================
@@ -1010,21 +1010,21 @@ ab
 ... (make-string-input-stream)
 
 %%% ERROR 'MAKE-STRING-INPUT-STREAM': 1 to 3 arguments expected.
-%%% USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
+%%% PRIMITIVE USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
 ==>
 
 >>> ;;; too many arguments
 ... (make-string-input-stream "a" 0 1 2)
 
 %%% ERROR 'MAKE-STRING-INPUT-STREAM': 1 to 3 arguments expected.
-%%% USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
+%%% PRIMITIVE USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
 ==>
 
 >>> ;;; non-string argument
 ... (make-string-input-stream 42)
 
 %%% ERROR 'MAKE-STRING-INPUT-STREAM': 1st argument expected to be a string.
-%%% USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
+%%% PRIMITIVE USAGE: (MAKE-STRING-INPUT-STREAM string &optional (start 0) end)
 ==>
 
 ; ============================================================
@@ -1197,7 +1197,7 @@ ab
 >>> ;;; read-line: stream argument type error
 ... (read-line 42)
 %%% ERROR 'READ-LINE': Argument 1 must be a stream.
-%%% USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
+%%% PRIMITIVE USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 ; ============================================================
@@ -1222,7 +1222,7 @@ ab
 >>> ;;; read-char: stream argument type error
 ... (read-char 42)
 %%% ERROR 'READ-CHAR': Argument 1 must be a stream.
-%%% USAGE: (READ-CHAR &optional stream (eof-error-p t) eof-value recursive-p)
+%%% PRIMITIVE USAGE: (READ-CHAR &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 ; ============================================================
@@ -1272,5 +1272,5 @@ ab
 >>> ;;; read: stream argument type error
 ... (read 42)
 %%% ERROR 'READ': Argument 1 must be a stream.
-%%% USAGE: (READ &optional stream (eof-error-p t) eof-value recursive-p)
+%%% PRIMITIVE USAGE: (READ &optional stream (eof-error-p t) eof-value recursive-p)
 ==>

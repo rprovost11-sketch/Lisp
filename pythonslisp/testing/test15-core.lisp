@@ -97,7 +97,7 @@
 ... (funcall)
 
 %%% ERROR 'FUNCALL': At least 1 argument expected.
-%%% USAGE: (FUNCALL callable &rest args)
+%%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
 ==>
 
 ; --- apply errors ---
@@ -106,21 +106,21 @@
 ... (apply)
 
 %%% ERROR 'APPLY': At least 2 arguments expected.
-%%% USAGE: (APPLY function &rest args)
+%%% PRIMITIVE USAGE: (APPLY function &rest args)
 ==>
 
 >>> ;;; Error: apply last arg not a list
 ... (apply + 1)
 
 %%% ERROR 'APPLY': Last argument expected to be a list.
-%%% USAGE: (APPLY function &rest args)
+%%% PRIMITIVE USAGE: (APPLY function &rest args)
 ==>
 
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
 %%% ERROR 'APPLY': First argument may not be a special form.
-%%% USAGE: (APPLY function &rest args)
+%%% PRIMITIVE USAGE: (APPLY function &rest args)
 ==>
 
 ; --- python errors ---
@@ -129,14 +129,14 @@
 ... (python)
 
 %%% ERROR 'PYTHON': 1 argument expected.
-%%% USAGE: (PYTHON string)
+%%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
 >>> ;;; Error: python with non-string
 ... (python 1)
 
 %%% ERROR 'PYTHON': Argument expected to be a string.
-%%% USAGE: (PYTHON string)
+%%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
 ; --- eval errors ---
@@ -145,14 +145,14 @@
 ... (eval)
 
 %%% ERROR 'EVAL': 1 argument expected.
-%%% USAGE: (EVAL sexpr)
+%%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 
 >>> ;;; Error: eval with too many arguments
 ... (eval 1 2)
 
 %%% ERROR 'EVAL': 1 argument expected.
-%%% USAGE: (EVAL sexpr)
+%%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 
 ; --- recursion-limit errors ---
@@ -161,14 +161,14 @@
 ... (recursion-limit "a")
 
 %%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% USAGE: (RECURSION-LIMIT &optional newLimit)
+%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
 >>> ;;; Error: recursion-limit with too many args
 ... (recursion-limit 1 2)
 
 %%% ERROR 'RECURSION-LIMIT': 0 or 1 arguments expected.
-%%% USAGE: (RECURSION-LIMIT &optional newLimit)
+%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
 ; --- Control structure edge cases ---
@@ -615,7 +615,7 @@
 ... (defmacro test-docmacro19 (x) "a docstring" `(+ ,x 1))
 ...
 
-==> (MACRO TEST-DOCMACRO19 (X) ... )
+==> (MACRO TEST-DOCMACRO19 (X) ...)
 
 >>> (test-docmacro19 5)
 ...
@@ -750,7 +750,7 @@
 >>> (setq sq-fn (lambda (x) (* x x)))
 ...
 
-==> (FUNCTION SQ-FN (X) ... )
+==> (FUNCTION SQ-FN (X) ...)
 
 >>> (sq-fn 7)
 ...
@@ -763,21 +763,21 @@
 ... (setq)
 
 %%% ERROR 'SETQ': At least 2 arguments expected.
-%%% USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
+%%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
 
 >>> ;;; odd number of arguments
 ... (setq sq1 1 sq2)
 
 %%% ERROR 'SETQ': An even number of arguments is expected.  Received 3.
-%%% USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
+%%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
 
 >>> ;;; non-symbol lvalue
 ... (setq 42 1)
 
 %%% ERROR 'SETQ': First of setf pair must be a symbol.
-%%% USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
+%%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
 
 ; --- 6. at-set: list basic mutation ---
@@ -921,42 +921,42 @@
 ... (at-set 0 (list 1 2 3))
 
 %%% ERROR 'AT-SET': 3 arguments expected.
-%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; too many arguments
 ... (at-set 0 (list 1 2 3) 9 9)
 
 %%% ERROR 'AT-SET': 3 arguments expected.
-%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; second argument is an integer (not a list or map)
 ... (at-set 0 42 9)
 
 %%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
-%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; second argument is a string (strings are immutable)
 ... (at-set 0 "abc" 9)
 
 %%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
-%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; list index out of range
 ... (at-set 99 (list 1 2 3) 0)
 
 %%% ERROR 'AT-SET': Invalid argument key/index.
-%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 >>> ;;; float index into a list
 ... (at-set 1.5 (list 1 2 3) 0)
 
 %%% ERROR 'AT-SET': Invalid argument key/index.
-%%% USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 ; --- 11. setf macro expansion tests ---
@@ -965,7 +965,7 @@
 ... (setf sf-fn (lambda (x) (* x 3)))
 ...
 
-==> (FUNCTION SF-FN (X) ... )
+==> (FUNCTION SF-FN (X) ...)
 
 >>> (sf-fn 5)
 ...
@@ -1263,7 +1263,7 @@
 ... (defun square22 (x) "Returns x squared" (* x x))
 ...
 
-==> (FUNCTION SQUARE22 (X) ... )
+==> (FUNCTION SQUARE22 (X) ...)
 
 >>> (square22 7)
 ...
@@ -1404,14 +1404,14 @@
 ... (random 0)
 
 %%% ERROR 'RANDOM': Argument expected to be positive.
-%%% USAGE: (RANDOM integerOrFloat)
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random of 0.0 is an error (must be positive)
 ... (random 0.0)
 
 %%% ERROR 'RANDOM': Argument expected to be positive.
-%%% USAGE: (RANDOM integerOrFloat)
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 ; --- make-symbol from string edge case ---
@@ -1509,14 +1509,14 @@
 
 >>> ;;; help with primitive shows usage and returns T
 ... (help +)
-USAGE: (+ &rest numbers)
+PRIMITIVE USAGE: (+ &rest numbers)
 
 Returns the sum of numbers.
 ==> T
 
 >>> ;;; help with another primitive
 ... (help car)
-USAGE: (CAR list)
+PRIMITIVE USAGE: (CAR list)
 
 Returns the first item in a list.
 ==> T
@@ -1531,7 +1531,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; alias creates a working alias for +
 ... (alias myadd23 +)
 
-==> (+ &rest numbers)
+==> (PRIMITIVE + (&rest numbers) ...)
 
 >>> ;;; alias for + works
 ... (myadd23 1 2)
@@ -1541,7 +1541,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 >>> ;;; alias creates a working alias for car
 ... (alias mycar23 car)
 
-==> (CAR list)
+==> (PRIMITIVE CAR (list) ...)
 
 >>> ;;; alias for car works
 ... (mycar23 '(1 2 3))
@@ -1960,4 +1960,4 @@ Unknown topic: "UNKNOWN-TOPIC"
 ; error: non-string prefix
 >>> (gensym 42)
 %%% ERROR 'GENSYM': Argument must be a string prefix.
-%%% USAGE: (GENSYM &optional prefix)
+%%% PRIMITIVE USAGE: (GENSYM &optional prefix)

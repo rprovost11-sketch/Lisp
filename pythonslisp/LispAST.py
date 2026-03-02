@@ -76,22 +76,33 @@ class LPrimitive( LCallable ):
       super().__init__( name, docString, specialForm )
    
    def usageString( self ):
-      return f'({self.name} {self.paramsString})'
+      if self.paramsString:
+         return f'PRIMITIVE USAGE: ({self.name} {self.paramsString})'
+      return f'PRIMITIVE USAGE: ({self.name})'
+
+   def idString( self ):
+      params = f'({self.paramsString})' if self.paramsString else '()'
+      return f'(PRIMITIVE {self.name} {params} ...)'
 
 class LFunction( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST', 'capturedEnvironment')
-   
+
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: Environment ) -> None:
       self.lambdaListAST: list = lambdaListAST
       self.bodyAST: list   = bodyAST
       self.capturedEnvironment: Environment = capturedEnvironment
       super().__init__( name, docString, specialForm=False )
-   
+
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
-         return f'(FUNCTION {self.name} () ... )'
-      else:
-         return f'(FUNCTION {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+         return f'FUNCTION USAGE: ({self.name})'
+      inner = prettyPrintSExpr(self.lambdaListAST)[1:-1]
+      return f'FUNCTION USAGE: ({self.name} {inner})'
+
+   def idString( self ):
+      if len(self.lambdaListAST) == 0:
+         return f'(FUNCTION {self.name} () ...)'
+      return f'(FUNCTION {self.name} {prettyPrintSExpr(self.lambdaListAST)} ...)'
 
 
 class LMacro( LCallable ):
@@ -104,9 +115,14 @@ class LMacro( LCallable ):
 
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
-         return f'(MACRO {self.name} () ... )'
-      else:
-         return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ... )'
+         return f'MACRO USAGE: ({self.name})'
+      inner = prettyPrintSExpr(self.lambdaListAST)[1:-1]
+      return f'MACRO USAGE: ({self.name} {inner})'
+
+   def idString( self ):
+      if len(self.lambdaListAST) == 0:
+         return f'(MACRO {self.name} () ...)'
+      return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ...)'
 
 
 class LContinuation( LCallable ):
@@ -118,6 +134,9 @@ class LContinuation( LCallable ):
       super().__init__( 'continuation', '', specialForm=False )
 
    def usageString( self ) -> str:
+      return '#<CONTINUATION>'
+
+   def idString( self ) -> str:
       return '#<CONTINUATION>'
 
 
@@ -151,14 +170,8 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
          resultStrLines.append( f'   ({key} {value})')
       resultStrLines.append(')')
       return '\n'.join(resultStrLines)
-   elif isinstance(sExpr, LPrimitive):
-      return sExpr.usageString()
-   elif isinstance(sExpr, LFunction):
-      return sExpr.usageString()
-   elif isinstance(sExpr, LMacro):
-      return sExpr.usageString()
-   elif isinstance(sExpr, LContinuation):
-      return '#<CONTINUATION>'
+   elif isinstance(sExpr, LCallable):
+      return sExpr.idString()
    elif isinstance(sExpr, TextIOBase):
       return '#<STREAM>'
    else:
@@ -186,14 +199,8 @@ def prettyPrint( sExpr: Any ) -> str:
          resultStrLines.append( f'   ({key} {value})')
       resultStrLines.append(')')
       return '\n'.join(resultStrLines)
-   elif isinstance(sExpr, LPrimitive):
-      return sExpr.usageString()
-   elif isinstance(sExpr, LFunction):
-      return sExpr.usageString()
-   elif isinstance(sExpr, LMacro):
-      return sExpr.usageString()
-   elif isinstance(sExpr, LContinuation):
-      return '#<CONTINUATION>'
+   elif isinstance(sExpr, LCallable):
+      return sExpr.idString()
    elif isinstance(sExpr, TextIOBase):
       return '#<STREAM>'
    else:

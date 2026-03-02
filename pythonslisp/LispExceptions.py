@@ -8,7 +8,7 @@ class LispRuntimeFuncError( LispRuntimeError ):
       prim   = getattr( lispCallable, 'primitive', lispCallable )
       fnName = prim.name
       usage  = prim.usageString()
-      errStr = f"ERROR '{fnName}': {errorMsg}\nUSAGE: {usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
+      errStr = f"ERROR '{fnName}': {errorMsg}\n{usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
       super().__init__( errStr )
 
 

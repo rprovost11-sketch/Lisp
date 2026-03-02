@@ -128,20 +128,20 @@
 ... (car 1)
 
 %%% ERROR 'CAR': 1st argument expected to be a list.
-%%% USAGE: (CAR list)
+%%% PRIMITIVE USAGE: (CAR list)
 ==>
 
 >>> (cdr "str")
 
 %%% ERROR 'CDR': 1st argument expected to be a list.
-%%% USAGE: (CDR list)
+%%% PRIMITIVE USAGE: (CDR list)
 ==>
 
 >>> ;;; Error: cons requires exactly two arguments
 ... (cons 1)
 
 %%% ERROR 'CONS': 2 arguments expected.
-%%% USAGE: (CONS obj list)
+%%% PRIMITIVE USAGE: (CONS obj list)
 ==>
 
 >>> ;;; append with no arguments returns NIL
@@ -160,21 +160,21 @@
 ... (append 1 '(2 3))
 
 %%% ERROR 'APPEND': Invalid argument.
-%%% USAGE: (APPEND &rest lists)
+%%% PRIMITIVE USAGE: (APPEND &rest lists)
 ==>
 
 >>> ;;; Error: at with out-of-range index
 ... (at 5 '(1 2 3))
 
 %%% ERROR 'AT': Invalid argument key/index.
-%%% USAGE: (AT keyOrIndex dictListOrStr)
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> ;;; Error: sort requires a list argument (predicate now required)
 ... (sort 1 <)
 
 %%% ERROR 'SORT': Argument 1 expected to be a list.
-%%% USAGE: (SORT sequence predicate &key (key nil))
+%%% PRIMITIVE USAGE: (SORT sequence predicate &key (key nil))
 ==>
 
 ; --- subseq ---
@@ -218,49 +218,49 @@
 ... (subseq 42 0)
 
 %%% ERROR 'SUBSEQ': 1st argument must be a list or string.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 >>> ;;; start not integer
 ... (subseq '(1 2 3) 1.0)
 
 %%% ERROR 'SUBSEQ': 2nd argument must be an integer.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 >>> ;;; negative start
 ... (subseq '(1 2 3) -1)
 
 %%% ERROR 'SUBSEQ': Start index must be non-negative.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 >>> ;;; start out of bounds
 ... (subseq '(1 2 3) 4)
 
 %%% ERROR 'SUBSEQ': Start index out of bounds.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 >>> ;;; end < start
 ... (subseq '(1 2 3) 2 1)
 
 %%% ERROR 'SUBSEQ': End index must be >= start index.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 >>> ;;; too few args
 ... (subseq '(1 2 3))
 
 %%% ERROR 'SUBSEQ': 2 or 3 arguments expected.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 >>> ;;; too many args
 ... (subseq '(1 2 3) 0 2 99)
 
 %%% ERROR 'SUBSEQ': 2 or 3 arguments expected.
-%%% USAGE: (SUBSEQ sequence start &optional end)
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
 ; --- remove-if / remove-if-not ---

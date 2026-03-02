@@ -54,12 +54,12 @@
 ...       `(+ ,x ,,amount)))
 ...
 
-==> (MACRO MAKE-ADDER-MACRO (NAME AMOUNT) ... )
+==> (MACRO MAKE-ADDER-MACRO (NAME AMOUNT) ...)
 
 >>> (make-adder-macro add10 10)
 ...
 
-==> (MACRO ADD10 (X) ... )
+==> (MACRO ADD10 (X) ...)
 
 >>> (add10 5)
 ...
@@ -69,7 +69,7 @@
 >>> (defmacro zero (var) `(setf ,var 0))
 ...
 
-==> (MACRO ZERO (VAR) ... )
+==> (MACRO ZERO (VAR) ...)
 
 >>> x
 ...
@@ -90,7 +90,7 @@
 >>> (defmacro foo (a &rest b) `(a ,a ,@b))
 ...
 
-==> (MACRO FOO (A &REST B) ... )
+==> (MACRO FOO (A &REST B) ...)
 
 >>> (macroexpand '(foo 1 (a b c) (x y z)))
 ...
@@ -148,13 +148,13 @@
 ... (macroexpand)
 
 %%% ERROR 'MACROEXPAND': 1 argument expected.
-%%% USAGE: (MACROEXPAND 'form)
+%%% PRIMITIVE USAGE: (MACROEXPAND 'form)
 ==>
 
 >>> ;;; Error: macroexpand-1 requires exactly one argument
 ... (macroexpand-1)
 
 %%% ERROR 'MACROEXPAND-1': 1 argument expected.
-%%% USAGE: (MACROEXPAND-1 'form)
+%%% PRIMITIVE USAGE: (MACROEXPAND-1 'form)
 ==>
 
