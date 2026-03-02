@@ -525,6 +525,22 @@
 
 ==> (PROGN (+ 1 2))
 
+; --- derivative function setup ---
+
+>>> (defun d (expr)
+...    (cond ((isNumber? expr) 0)
+...          ((isSymbol? expr) 1)
+...          ((isList? expr)
+...           (case (first expr)
+...              ('+    (list '+ (d (at 1 expr)) (d (at 2 expr))))
+...              ('*    (list '+ (list '* (at 2 expr) (d (at 1 expr))) (list '* (at 1 expr) (d (at 2 expr)))))
+...              ('sin  (list '* (list 'cos (at 1 expr)) (d (at 1 expr))))
+...              ('cos  (list '* (list '- (list 'sin (at 1 expr))) (d (at 1 expr))))
+...              ('expt (list '* (list '* (at 2 expr) (list 'expt (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))))))
+...
+
+==> (FUNCTION D (EXPR) ...)
+
 ; --- derivative function ---
 
 >>> (d 5)

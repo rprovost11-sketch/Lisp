@@ -389,6 +389,12 @@ class Listener( object ):
       self._writeLn( '' )
       self._writeLn( '==> 0')
 
+   def _cmd_quit( self, args: list[str] ) -> None:
+      '''Usage:  quit
+      Exit the listener (same as exit).
+      '''
+      self._cmd_exit( args )
+
    def _cmd_readlog( self, args: list[str] ) -> None:
       '''Usage:  readlog <filename> [v|v]
       Read and execute a log file.  V is for verbose.

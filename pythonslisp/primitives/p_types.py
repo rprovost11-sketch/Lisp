@@ -240,7 +240,6 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
       """Returns t if no two arguments are numerically equal, otherwise nil.
 CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 (/= 1 2 1) is NIL because the 1st and 3rd arguments are equal."""
-
       for i in range(len(args)):
          for j in range(i + 1, len(args)):
             if args[i] == args[j]:
@@ -252,7 +251,6 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
                mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_less( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in ascending order."""
-
       prior = None
       try:
          for mbr in args:
@@ -269,7 +267,6 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
                mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_lessOrEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are less-than-or-equal otherwise nil."""
-
       prior = None
       try:
          for mbr in args:
@@ -286,7 +283,6 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
                mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_greater( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in descending order otherwise nil."""
-
       prior = None
       try:
          for mbr in args:
@@ -303,7 +299,6 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
                mode=LambdaListMode.DOC_ONLY, min_args=2 )
    def LP_greaterOrEqual( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are greater-than-or-equal otherwise nil."""
-
       prior = None
       try:
          for mbr in args:

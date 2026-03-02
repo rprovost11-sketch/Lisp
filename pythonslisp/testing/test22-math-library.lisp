@@ -248,6 +248,20 @@
 
 ==> 5/2
 
+; --- fact / fib setup ---
+
+>>> (defun fact (n)
+...    (if (= n 0) 1 (* n (fact (- n 1)))))
+...
+
+==> (FUNCTION FACT (N) ...)
+
+>>> (defun fib (n)
+...    (if (<= n 2) 1 (+ (fib (- n 1)) (fib (- n 2)))))
+...
+
+==> (FUNCTION FIB (N) ...)
+
 >>> (fact 5)
 ...
 
