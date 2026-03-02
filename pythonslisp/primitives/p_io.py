@@ -4,7 +4,7 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Callable
-from io import TextIOBase, StringIO
+from io import IOBase, StringIO
 
 from pythonslisp.Environment import Environment
 from pythonslisp.LispAST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr
@@ -209,7 +209,7 @@ The stream remains open and writable.  (CL semantics.)"""
 The :abort keyword argument is accepted for CL compatibility but is ignored
 in this implementation (flushing on close cannot be suppressed)."""
       stream = env.lookup( LSymbol('STREAM') )
-      if not isinstance(stream, TextIOBase):
+      if not isinstance(stream, IOBase):
          raise LispRuntimeFuncError( LP_close, 'Argument expected to be a stream.' )
       stream.close()
       return L_T
@@ -219,7 +219,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       """Flushes a stream and returns t."""
       if len(args) == 1:
          stream = args[0]
-         if not isinstance(stream, TextIOBase):
+         if not isinstance(stream, IOBase):
             raise LispRuntimeFuncError( LP_flush, 'Argument expected to be a stream.' )
          stream.flush( )
       else:
@@ -230,7 +230,7 @@ in this implementation (flushing on close cannot be suppressed)."""
    def LP_open_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if the stream is open, NIL if it is closed."""
       stream = args[0]
-      if not isinstance(stream, TextIOBase):
+      if not isinstance(stream, IOBase):
          raise LispRuntimeFuncError( LP_open_stream_p, 'Argument expected to be a stream.' )
       return L_NIL if stream.closed else L_T
 
@@ -238,7 +238,7 @@ in this implementation (flushing on close cannot be suppressed)."""
    def LP_interactive_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOBase):
+      if not isinstance(stream, IOBase):
          raise LispRuntimeFuncError( LP_interactive_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.isatty() else L_NIL
 
@@ -246,7 +246,7 @@ in this implementation (flushing on close cannot be suppressed)."""
    def LP_input_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if the stream can be read from, NIL otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOBase):
+      if not isinstance(stream, IOBase):
          raise LispRuntimeFuncError( LP_input_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.readable() else L_NIL
 
@@ -254,23 +254,35 @@ in this implementation (flushing on close cannot be suppressed)."""
    def LP_output_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns T if the stream can be written to, NIL otherwise."""
       stream = args[0]
-      if not isinstance(stream, TextIOBase):
+      if not isinstance(stream, IOBase):
          raise LispRuntimeFuncError( LP_output_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.writable() else L_NIL
 
    @primitive( 'stdin', '()' )
    def LP_stdin( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the standard input stream (sys.stdin)."""
+      if isinstance( sys.stdin, IOBase ):
+         return sys.stdin
+      if sys.__stdin__ is not None:
+         return sys.__stdin__
       return sys.stdin
 
    @primitive( 'stdout', '()' )
    def LP_stdout( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the standard output stream (sys.stdout)."""
+      if isinstance( sys.stdout, IOBase ):
+         return sys.stdout
+      if sys.__stdout__ is not None:
+         return sys.__stdout__
       return sys.stdout
 
    @primitive( 'stderr', '()' )
    def LP_stderr( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns the standard error stream (sys.stderr)."""
+      if isinstance( sys.stderr, IOBase ):
+         return sys.stderr
+      if sys.__stderr__ is not None:
+         return sys.__stderr__
       return sys.stderr
 
    @primitive( 'tmpdir', '()' )
@@ -306,7 +318,7 @@ Returns the output string."""
          if isinstance( otherArg, (list, dict)):
             dictOrList = otherArg
             stream = ctx.outStrm
-         elif isinstance(otherArg, TextIOBase):
+         elif isinstance(otherArg, IOBase):
             dictOrList = None
             stream = otherArg
             if not stream.writable():
@@ -317,7 +329,7 @@ Returns the output string."""
          dictOrList, stream = args[1:]
          if not isinstance(dictOrList, (list, dict)):
             raise LispRuntimeFuncError( LP_writef, '2nd argument expected to be a list or dict.' )
-         if not isinstance(stream, TextIOBase):
+         if not isinstance(stream, IOBase):
             raise LispRuntimeFuncError( LP_writef, '3rd argument expected to be a stream.' )
          if not stream.writable():
             raise LispRuntimeFuncError( LP_writef, 'Stream is not writable.' )
@@ -343,7 +355,7 @@ Returns the output string."""
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
 the output is written.  If stream is omitted, output goes to stdout."""
-      if args and isinstance( args[0], TextIOBase):
+      if args and isinstance( args[0], IOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -358,7 +370,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
 Returns the last value printed."""
-      if args and isinstance( args[0], TextIOBase):
+      if args and isinstance( args[0], IOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -372,7 +384,7 @@ Returns the last value printed."""
       """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
 If stream is omitted, output goes to stdout.  Returns the last value printed."""
-      if args and isinstance( args[0], TextIOBase):
+      if args and isinstance( args[0], IOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -387,7 +399,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
 Returns the last value printed."""
-      if args and isinstance( args[0], TextIOBase):
+      if args and isinstance( args[0], IOBase):
          stream = args[0]
          args = args[1:]
          if not stream.writable():
@@ -403,7 +415,7 @@ Returns the last value printed."""
          stream = ctx.outStrm
       else:
          stream = args[0]
-         if not isinstance(stream, TextIOBase):
+         if not isinstance(stream, IOBase):
             raise LispRuntimeFuncError( LP_terpri, "Optional argument expected to be a stream." )
          if not stream.writable():
             raise LispRuntimeFuncError( LP_terpri, 'Stream is not writable.' )
@@ -414,7 +426,7 @@ Returns the last value printed."""
    def LP_readall( ctx: LispContext, env: Environment, *args ) -> Any:
       """Reads and returns the entire contents of a readable stream as a single string."""
       stream = args[0]
-      if not isinstance(stream, TextIOBase):
+      if not isinstance(stream, IOBase):
          raise LispRuntimeFuncError( LP_readall, 'Argument expected to be a stream.' )
       if not stream.readable():
          raise LispRuntimeFuncError( LP_readall, 'Stream is not readable.' )
@@ -431,7 +443,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
       eof_value    = L_NIL
       if len( args ) >= 1 and args[0] is not L_NIL:
          stream = args[0]
-         if not isinstance( stream, TextIOBase ):
+         if not isinstance( stream, IOBase ):
             raise LispRuntimeFuncError( LP_read_line, 'Argument 1 must be a stream.' )
       if len( args ) >= 2:
          eof_error_p = args[1] is not L_NIL
@@ -464,7 +476,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
       eof_value    = L_NIL
       if len( args ) >= 1 and args[0] is not L_NIL:
          stream = args[0]
-         if not isinstance( stream, TextIOBase ):
+         if not isinstance( stream, IOBase ):
             raise LispRuntimeFuncError( LP_read_char, 'Argument 1 must be a stream.' )
       if len( args ) >= 2:
          eof_error_p = args[1] is not L_NIL
@@ -500,7 +512,7 @@ is accumulated."""
       eof_value    = L_NIL
       if len( args ) >= 1 and args[0] is not L_NIL:
          stream = args[0]
-         if not isinstance( stream, TextIOBase ):
+         if not isinstance( stream, IOBase ):
             raise LispRuntimeFuncError( LP_read, 'Argument 1 must be a stream.' )
       if len( args ) >= 2:
          eof_error_p = args[1] is not L_NIL

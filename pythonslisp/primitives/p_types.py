@@ -1,6 +1,6 @@
 from fractions import Fraction
 from typing import Any, Callable
-from io import TextIOBase, StringIO
+from io import IOBase, StringIO
 
 
 from pythonslisp.Environment import Environment
@@ -35,8 +35,8 @@ def _typep( obj, tname: str ) -> bool:
    if tname == 'SYMBOL':         return isinstance(obj, LSymbol)
    if tname == 'FUNCTION':       return isinstance(obj, LFunction)
    if tname == 'MACRO':          return isinstance(obj, LMacro)
-   if tname == 'STREAM':         return isinstance(obj, TextIOBase)
-   if tname == 'FILE-STREAM':    return isinstance(obj, TextIOBase) and not isinstance(obj, StringIO)
+   if tname == 'STREAM':         return isinstance(obj, IOBase)
+   if tname == 'FILE-STREAM':    return isinstance(obj, IOBase) and not isinstance(obj, StringIO)
    if tname == 'STRING-STREAM':  return isinstance(obj, StringIO)
    if tname == 'DICT':           return isinstance(obj, dict)
    if isinstance(obj, dict):
@@ -122,13 +122,13 @@ def register(primitive, parseLispString: Callable) -> None:
    @primitive( 'streamp', '(sexpr)' )
    def LP_streamp( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a stream otherwise nil."""
-      return L_T if isinstance(args[0], TextIOBase) else L_NIL
+      return L_T if isinstance(args[0], IOBase) else L_NIL
 
    @primitive( 'file-stream-p', '(sexpr)' )
    def LP_file_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
       """Returns t if expr is a file stream (opened with open), nil otherwise."""
       arg = args[0]
-      return L_T if (isinstance(arg, TextIOBase) and not isinstance(arg, StringIO)) else L_NIL
+      return L_T if (isinstance(arg, IOBase) and not isinstance(arg, StringIO)) else L_NIL
 
    @primitive( 'string-stream-p', '(sexpr)' )
    def LP_string_stream_p( ctx: LispContext, env: Environment, *args ) -> Any:
@@ -165,7 +165,7 @@ or open-string), nil otherwise."""
          return LSymbol('CONTINUATION')
       elif isinstance( arg, StringIO ):
          return LSymbol('STRING-STREAM')
-      elif isinstance( arg, TextIOBase ):
+      elif isinstance( arg, IOBase ):
          return LSymbol('FILE-STREAM')
       else:
          return LSymbol('T')
