@@ -7,13 +7,13 @@ import atexit
 from abc import ABC, abstractmethod
 from typing import Any
 
-import pythonslisp.ltk.Parser as Parser
+import pythonslisp.ltk.ParserBase as ParserBase
 from pythonslisp.ltk.Utils import columnize, retrieveFileList, writeln_multiFile
 
 
 ### The Listener Implementation
 ### ===========================
-class Interpreter( ABC ):
+class InterpreterBase( ABC ):
    '''Interpreter interface expected by the Listener class.'''
    @abstractmethod
    def reboot( self, outStrm=None ) -> None:
@@ -45,7 +45,7 @@ class Listener( object ):
    _rl         = None
    _historyMax = 500
 
-   def __init__( self, anInterpreter: Interpreter, testdir: str='', **kwargs ) -> None:
+   def __init__( self, anInterpreter: InterpreterBase, testdir: str='', **kwargs ) -> None:
       useColor   = sys.stdout.isatty()
       BOLD_WHITE = '\033[1;97m' if useColor else ''
       BOLD_GREEN = '\033[1;92m' if useColor else ''
@@ -119,7 +119,7 @@ class Listener( object ):
             except StopIteration:
                break
 
-            except (Parser.ParseError, ListenerCommandError) as ex:
+            except (ParserBase.ParseError, ListenerCommandError) as ex:
                self._writeErrorMsg( ex.args[-1] if ex.args else str(ex) )
 
             except Exception as ex:   # Unknowns raised by the interpreter
@@ -192,7 +192,7 @@ class Listener( object ):
          
          try:
             actualRetValStr = self._interp.eval( exprStr, outStrm=outputStream )
-         except Parser.ParseError as ex:
+         except ParserBase.ParseError as ex:
             actualErrorStr = ex.args[-1] if ex.args else str(ex)
          except Exception as ex:   # Unknowns raised by the interpreter
             actualErrorStr = ex.args[-1] if ex.args else str(ex)

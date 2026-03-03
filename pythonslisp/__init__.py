@@ -1,17 +1,17 @@
 
-__version__ = '0.32.8'
+__version__ = '0.32.9'
 
 __all__ = [ 'Lisp',
-            'LispAST',
-            'LispInterpreter',
-            'LispParser',
+            'AST',
+            'Interpreter',
             'Parser',
-            'Environment',
+            'ParserBase',
+            'EnvironmentBase',
             'Listener'
             ]
 
-from pythonslisp.ltk.Environment import Environment
-from pythonslisp.LispAST import *
-from pythonslisp.LispInterpreter import *
-from pythonslisp.LispParser import *
-from pythonslisp.ltk.Parser import *
+from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.AST import *
+from pythonslisp.Interpreter import *
+from pythonslisp.Parser import *
+from pythonslisp.ltk.ParserBase import *

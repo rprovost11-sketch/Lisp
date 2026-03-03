@@ -1,11 +1,11 @@
 import functools
 from typing import Any, Callable
 
-from pythonslisp.ltk.Environment import Environment
-from pythonslisp.LispAST import LSymbol
-from pythonslisp.LispAST import L_T, L_NIL
-from pythonslisp.LispContext import LispContext
-from pythonslisp.LispExceptions import LispRuntimeFuncError
+from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.AST import LSymbol
+from pythonslisp.AST import L_T, L_NIL
+from pythonslisp.Context import Context
+from pythonslisp.Exceptions import LRuntimePrimError
 from pythonslisp.primitives import LambdaListMode
 
 
@@ -31,17 +31,17 @@ def _apply_test( ctx: Any, env: Environment, test_fn: Any, item: Any, cell_key: 
 def _validate_bounds( start: Any, end: Any, seqlen: int, fn: Any ) -> tuple[int, int]:
    """Validate :start and :end; return (start_n, end_n) as concrete ints."""
    if not isinstance( start, int ) or isinstance( start, bool ):
-      raise LispRuntimeFuncError( fn, ':start must be a non-negative integer.' )
+      raise LRuntimePrimError( fn, ':start must be a non-negative integer.' )
    if start < 0:
-      raise LispRuntimeFuncError( fn, ':start must be non-negative.' )
+      raise LRuntimePrimError( fn, ':start must be non-negative.' )
    if _is_nil_val( end ):
       return start, seqlen
    if not isinstance( end, int ) or isinstance( end, bool ):
-      raise LispRuntimeFuncError( fn, ':end must be a non-negative integer or NIL.' )
+      raise LRuntimePrimError( fn, ':end must be a non-negative integer or NIL.' )
    if end < 0 or end > seqlen:
-      raise LispRuntimeFuncError( fn, f':end {end} out of range for sequence of length {seqlen}.' )
+      raise LRuntimePrimError( fn, f':end {end} out of range for sequence of length {seqlen}.' )
    if end < start:
-      raise LispRuntimeFuncError( fn, f':end {end} must be >= :start {start}.' )
+      raise LRuntimePrimError( fn, f':end {end} must be >= :start {start}.' )
    return start, end
 
 
@@ -50,9 +50,9 @@ def _validate_count( count: Any, fn: Any ):
    if _is_nil_val( count ):
       return None
    if not isinstance( count, int ) or isinstance( count, bool ):
-      raise LispRuntimeFuncError( fn, ':count must be a non-negative integer or NIL.' )
+      raise LRuntimePrimError( fn, ':count must be a non-negative integer or NIL.' )
    if count < 0:
-      raise LispRuntimeFuncError( fn, ':count must be non-negative.' )
+      raise LRuntimePrimError( fn, ':count must be non-negative.' )
    return count
 
 
@@ -64,7 +64,7 @@ def register( primitive ) -> None:
 
    @primitive( 'make-dict', '((key1 val1) (key2 val2) ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
-   def LP_make_dict( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_make_dict( ctx: Context, env: Environment, *args ) -> Any:
       """Constructs and returns a dict of key-value pairs."""
       theMapping = dict()
       requiredKeyType = None
@@ -72,7 +72,7 @@ def register( primitive ) -> None:
          try:
             key,expr = key_expr_pair
          except (ValueError, TypeError):
-            raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
+            raise LRuntimePrimError( LP_make_dict, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
 
          if isinstance( key, LSymbol ):
             key = key.strval
@@ -81,22 +81,22 @@ def register( primitive ) -> None:
             if requiredKeyType is None:
                requiredKeyType = type(key)
             elif type(key) != requiredKeyType:
-               raise LispRuntimeFuncError( LP_make_dict,
+               raise LRuntimePrimError( LP_make_dict,
                   f'All keys in a map must be the same type. '
                   f'Entry {entryNum + 1} is {type(key).__name__}'
                   f', expected {requiredKeyType.__name__}.' )
             theMapping[ key ] = ctx.lEval( env, expr )
          else:
-            raise LispRuntimeFuncError( LP_make_dict, f'Entry {entryNum+1} has an invalid key type.' )
+            raise LRuntimePrimError( LP_make_dict, f'Entry {entryNum+1} has an invalid key type.' )
       return theMapping
 
    @primitive( 'car', '(list)' )
-   def LP_car( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_car( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first item in a list."""
       theList = args[0]
 
       if not isinstance(theList, list):
-         raise LispRuntimeFuncError( LP_car, '1st argument expected to be a list.' )
+         raise LRuntimePrimError( LP_car, '1st argument expected to be a list.' )
 
       try:
          return theList[0]
@@ -104,57 +104,57 @@ def register( primitive ) -> None:
          return L_NIL
 
    @primitive( 'cdr', '(list)' )
-   def LP_cdr( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_cdr( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of the list minus the first element."""
       theList = args[0]
 
       if not isinstance(theList, list):
-         raise LispRuntimeFuncError( LP_cdr, '1st argument expected to be a list.' )
+         raise LRuntimePrimError( LP_cdr, '1st argument expected to be a list.' )
 
       return theList[1:]
 
    @primitive( 'cons', '(obj list)' )
-   def LP_cons( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_cons( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of list with obj inserted into the front of the copy."""
       obj, consList = args
 
       if not isinstance(consList, list):
-         raise LispRuntimeFuncError( LP_cons, '2nd argument expected to be a list.' )
+         raise LRuntimePrimError( LP_cons, '2nd argument expected to be a list.' )
 
       return [ obj, *consList ]
 
    @primitive( 'push!', '(list value)' )
-   def LP_push( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_push( ctx: Context, env: Environment, *args ) -> Any:
       """Pushes a value onto the back of a list."""
       alist, value = args
 
       if not isinstance(alist, list):
-         raise LispRuntimeFuncError( LP_push, '1st argument expected to be a list.' )
+         raise LRuntimePrimError( LP_push, '1st argument expected to be a list.' )
       alist.append( value )
       return alist
 
    @primitive( 'pop!', '(list)' )
-   def LP_pop( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_pop( ctx: Context, env: Environment, *args ) -> Any:
       """Pops and returns the last value of a list."""
       alist = args[0]
 
       if not isinstance(alist, list):
-         raise LispRuntimeFuncError( LP_pop, '1st argument expected to be a list.' )
+         raise LRuntimePrimError( LP_pop, '1st argument expected to be a list.' )
 
       try:
          value = alist.pop()
       except IndexError:
-         raise LispRuntimeFuncError( LP_pop, 'Invalid argument.' )
+         raise LRuntimePrimError( LP_pop, 'Invalid argument.' )
       return value
 
    @primitive( 'at', '(keyOrIndex dictListOrStr)' )
-   def LP_at( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_at( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the value at a specified index of a list or string,
       or specified key of a map."""
       key, keyed = args
 
       if not isinstance(keyed, (list, dict, str) ):
-         raise LispRuntimeFuncError( LP_at, 'Invalid argument.  List, Dict, or String expected.' )
+         raise LRuntimePrimError( LP_at, 'Invalid argument.  List, Dict, or String expected.' )
 
       if isinstance( key, LSymbol ):
          key = key.strval
@@ -162,16 +162,16 @@ def register( primitive ) -> None:
       try:
          return keyed[ key ]
       except ( KeyError, IndexError, TypeError ):
-         raise LispRuntimeFuncError( LP_at, 'Invalid argument key/index.' )
+         raise LRuntimePrimError( LP_at, 'Invalid argument key/index.' )
 
    @primitive( 'at-set', '(keyOrIndex dictListOrStr newValue)' )
-   def LP_atSet( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_atSet( ctx: Context, env: Environment, *args ) -> Any:
       """Sets the value at a specified index of a list,
       or specified key of a map.  Returns newValue."""
       key, keyed, newValue = args
 
       if not isinstance(keyed, (list, dict)):
-         raise LispRuntimeFuncError( LP_atSet, 'Invalid argument.  List or Dict expected.' )
+         raise LRuntimePrimError( LP_atSet, 'Invalid argument.  List or Dict expected.' )
 
       if isinstance( key, LSymbol ):
          key = key.strval
@@ -179,41 +179,41 @@ def register( primitive ) -> None:
       try:
          keyed[ key ] = newValue
       except ( KeyError, IndexError, TypeError ):
-         raise LispRuntimeFuncError( LP_atSet, 'Invalid argument key/index.' )
+         raise LRuntimePrimError( LP_atSet, 'Invalid argument key/index.' )
 
       return newValue
 
    @primitive( 'at-delete', '(keyOrIndex dictOrList)' )
-   def LP_atDelete( ctx: LispContext, env: Environment, *args ) -> bool:
+   def LP_atDelete( ctx: Context, env: Environment, *args ) -> bool:
       """Deletes the key-value pair from a map or list specified by keyOrIndex."""
       key, keyed = args
 
       if not isinstance( keyed, (list, dict) ):
-         raise LispRuntimeFuncError( LP_atDelete, "Argument 2 expected to be a list or dict." )
+         raise LRuntimePrimError( LP_atDelete, "Argument 2 expected to be a list or dict." )
 
       try:
          del keyed[key]
       except ( IndexError, KeyError, TypeError ):
-         raise LispRuntimeFuncError( LP_atDelete, "Bad index or key into collection." )
+         raise LRuntimePrimError( LP_atDelete, "Bad index or key into collection." )
 
       return L_T
 
    @primitive( 'at-insert', '(index list newItem)' )
-   def LP_atInsert( ctx: LispContext, env: Environment, *args ) -> bool:
+   def LP_atInsert( ctx: Context, env: Environment, *args ) -> bool:
       """Inserts newItem into list at the position specified by index.  Returns newItem."""
       index, lst, newItem = args
 
       if not isinstance(index, int):
-         raise LispRuntimeFuncError( LP_atInsert, "Argument 1 expected to be an integer index." )
+         raise LRuntimePrimError( LP_atInsert, "Argument 1 expected to be an integer index." )
 
       if not isinstance( lst, list ):
-         raise LispRuntimeFuncError( LP_atInsert, "Argument 2 expected to be a list." )
+         raise LRuntimePrimError( LP_atInsert, "Argument 2 expected to be a list." )
 
       lst.insert( index, newItem )
       return newItem
 
    @primitive( 'append', '(&rest lists)' )
-   def LP_append( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_append( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a new list with the contents of the argument lists merged.  Order is retained.
 (append) = NIL; (append lst) = lst; 2+ args: all must be proper lists."""
       if len(args) == 0:
@@ -223,12 +223,12 @@ def register( primitive ) -> None:
       resultList = list( )
       for lst in args:
          if not isinstance( lst, list ):
-            raise LispRuntimeFuncError( LP_append, 'Invalid argument.' )
+            raise LRuntimePrimError( LP_append, 'Invalid argument.' )
          resultList.extend( lst )
       return resultList
 
    @primitive( 'hasValue?', '(value listOrDict)' )
-   def LP_hasValue( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_hasValue( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the list/map contains value otherwise nil."""
       aVal, keyed = args
 
@@ -237,31 +237,31 @@ def register( primitive ) -> None:
       elif isinstance(keyed, dict):
          keyed = keyed.values()
       else:
-         raise LispRuntimeFuncError( LP_hasValue, 'Invalid argument.  Argument 2 expected to be a list or dict.')
+         raise LRuntimePrimError( LP_hasValue, 'Invalid argument.  Argument 2 expected to be a list or dict.')
 
       return L_T if aVal in keyed else L_NIL
 
    @primitive( 'update!', '(dict1 dict2)' )
-   def LP_update( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_update( ctx: Context, env: Environment, *args ) -> Any:
       """Updates dict1's data with dict2's."""
       dict1, dict2 = args
 
       if not isinstance( dict1, dict ):
-         raise LispRuntimeFuncError( LP_update, 'Argument 1 expected to be a dict.' )
+         raise LRuntimePrimError( LP_update, 'Argument 1 expected to be a dict.' )
 
       if not isinstance( dict2, dict ):
-         raise LispRuntimeFuncError( LP_update, 'Argument 2 expected to be a dict.' )
+         raise LRuntimePrimError( LP_update, 'Argument 2 expected to be a dict.' )
 
       dict1.update( dict2 )
       return dict1
 
    @primitive( 'hasKey?', '(key dict)' )
-   def LP_hasKey( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_hasKey( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the key is in the map otherwise nil."""
       aKey, aMap = args
 
       if not isinstance(aMap, dict):
-         raise LispRuntimeFuncError( LP_hasKey, 'Invalid argument 2.  Dict expected.')
+         raise LRuntimePrimError( LP_hasKey, 'Invalid argument 2.  Dict expected.')
 
       if isinstance( aKey, LSymbol ):
          aKey = aKey.strval
@@ -270,14 +270,14 @@ def register( primitive ) -> None:
 
    @primitive( 'sort', '(sequence predicate &key (key nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_sort( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_sort( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of the list sorted by predicate (a two-arg less-than test).
 The optional :key function extracts the comparison key from each element."""
       seq      = env.lookup( 'SEQUENCE' )
       pred     = env.lookup( 'PREDICATE' )
       key_fn   = env.lookup( 'KEY' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_sort, 'Argument 1 expected to be a list.' )
+         raise LRuntimePrimError( LP_sort, 'Argument 1 expected to be a list.' )
 
       def _cmp( a, b ):
          ka = _extract_key( ctx, env, key_fn, a )
@@ -291,18 +291,18 @@ The optional :key function extracts the comparison key from each element."""
       try:
          return sorted( seq, key=functools.cmp_to_key(_cmp) )
       except TypeError:
-         raise LispRuntimeFuncError( LP_sort, 'Cannot sort a list with incomparable types.' )
+         raise LRuntimePrimError( LP_sort, 'Cannot sort a list with incomparable types.' )
 
    @primitive( 'length', '(sequence)' )
-   def LP_length( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_length( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of elements in a list, string, or map."""
       arg = args[0]
       if isinstance(arg, (list, str, dict)):
          return len(arg)
-      raise LispRuntimeFuncError( LP_length, 'Argument 1 must be a List, String, or Map.' )
+      raise LRuntimePrimError( LP_length, 'Argument 1 must be a List, String, or Map.' )
 
    @primitive( 'subseq', '(sequence start &optional end)' )
-   def LP_subseq( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_subseq( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a subsequence of a list or string from start (inclusive) to end (exclusive).
 If end is not provided, returns from start to the end of the sequence."""
       seq = args[0]
@@ -310,24 +310,24 @@ If end is not provided, returns from start to the end of the sequence."""
       end = args[2] if len(args) > 2 else None
 
       if not isinstance(seq, (list, str)):
-         raise LispRuntimeFuncError( LP_subseq, '1st argument must be a list or string.' )
+         raise LRuntimePrimError( LP_subseq, '1st argument must be a list or string.' )
       if not isinstance(start, int) or isinstance(start, bool):
-         raise LispRuntimeFuncError( LP_subseq, '2nd argument must be an integer.' )
+         raise LRuntimePrimError( LP_subseq, '2nd argument must be an integer.' )
       if end is not None and (not isinstance(end, int) or isinstance(end, bool)):
-         raise LispRuntimeFuncError( LP_subseq, '3rd argument must be an integer.' )
+         raise LRuntimePrimError( LP_subseq, '3rd argument must be an integer.' )
 
       seqLen = len(seq)
       if start < 0:
-         raise LispRuntimeFuncError( LP_subseq, 'Start index must be non-negative.' )
+         raise LRuntimePrimError( LP_subseq, 'Start index must be non-negative.' )
       if start > seqLen:
-         raise LispRuntimeFuncError( LP_subseq, 'Start index out of bounds.' )
+         raise LRuntimePrimError( LP_subseq, 'Start index out of bounds.' )
       if end is not None:
          if end < 0:
-            raise LispRuntimeFuncError( LP_subseq, 'End index must be non-negative.' )
+            raise LRuntimePrimError( LP_subseq, 'End index must be non-negative.' )
          if end > seqLen:
-            raise LispRuntimeFuncError( LP_subseq, 'End index out of bounds.' )
+            raise LRuntimePrimError( LP_subseq, 'End index out of bounds.' )
          if end < start:
-            raise LispRuntimeFuncError( LP_subseq, 'End index must be >= start index.' )
+            raise LRuntimePrimError( LP_subseq, 'End index must be >= start index.' )
          return seq[start:end]
 
       return seq[start:]
@@ -336,7 +336,7 @@ If end is not provided, returns from start to the end of the sequence."""
 
    @primitive( 'member', '(item list &key (test eql) (key nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_member( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_member( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the tail of list beginning with the first element whose :key
 satisfies :test when compared to item.  Returns NIL if no match is found.
 Default :test is eql.  Default :key is identity (NIL)."""
@@ -345,7 +345,7 @@ Default :test is eql.  Default :key is identity (NIL)."""
       test_fn = env.lookup( 'TEST' )
       key_fn  = env.lookup( 'KEY' )
       if not isinstance( lst, list ):
-         raise LispRuntimeFuncError( LP_member, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_member, '2nd argument must be a list.' )
       for i in range( len(lst) ):
          if _apply_test( ctx, env, test_fn, item, _extract_key( ctx, env, key_fn, lst[i] ) ):
             return lst[i:]
@@ -353,7 +353,7 @@ Default :test is eql.  Default :key is identity (NIL)."""
 
    @primitive( 'assoc', '(item alist &key (test eql) (key nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_assoc( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_assoc( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first pair in alist whose car (optionally extracted via :key)
 satisfies :test when compared to item.  Non-cons elements in alist are skipped.
 Returns NIL if no match is found.  Default :test is eql.  Default :key is identity."""
@@ -362,7 +362,7 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
       test_fn = env.lookup( 'TEST' )
       key_fn  = env.lookup( 'KEY' )
       if not isinstance( alist, list ):
-         raise LispRuntimeFuncError( LP_assoc, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_assoc, '2nd argument must be a list.' )
       for pair in alist:
          if isinstance( pair, list ) and pair:
             if _apply_test( ctx, env, test_fn, item, _extract_key( ctx, env, key_fn, pair[0] ) ):
@@ -371,7 +371,7 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
 
    @primitive( 'find', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_find( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_find( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) whose :key
 satisfies :test when compared to item.  If :from-end is true, searches right
 to left and returns the rightmost match.  Returns NIL if not found."""
@@ -383,7 +383,7 @@ to left and returns the rightmost match.  Returns NIL if not found."""
       start    = env.lookup( 'START' )
       end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_find, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_find, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_find )
       indices = range( start_n, end_n )
       if not _is_nil_val( from_end ):
@@ -395,7 +395,7 @@ to left and returns the rightmost match.  Returns NIL if not found."""
 
    @primitive( 'find-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_find_if( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_find_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) for which
 pred returns true when applied to the element's :key.  If :from-end is true,
 returns the rightmost such element.  Returns NIL if none found."""
@@ -406,7 +406,7 @@ returns the rightmost such element.  Returns NIL if none found."""
       start    = env.lookup( 'START' )
       end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_find_if, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_find_if, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_find_if )
       indices = range( start_n, end_n )
       if not _is_nil_val( from_end ):
@@ -419,7 +419,7 @@ returns the rightmost such element.  Returns NIL if none found."""
 
    @primitive( 'position', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_position( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_position( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element whose :key satisfies
 :test when compared to item.  If :from-end is true, returns the index of the
 rightmost such element.  Returns NIL if not found."""
@@ -431,7 +431,7 @@ rightmost such element.  Returns NIL if not found."""
       start    = env.lookup( 'START' )
       end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_position, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_position, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_position )
       indices = range( start_n, end_n )
       if not _is_nil_val( from_end ):
@@ -443,7 +443,7 @@ rightmost such element.  Returns NIL if not found."""
 
    @primitive( 'position-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_position_if( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_position_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element for which pred returns
 true when applied to the element's :key.  If :from-end is true, returns the
 index of the rightmost such element.  Returns NIL if none found."""
@@ -454,7 +454,7 @@ index of the rightmost such element.  Returns NIL if none found."""
       start    = env.lookup( 'START' )
       end      = env.lookup( 'END' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_position_if, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_position_if, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_position_if )
       indices = range( start_n, end_n )
       if not _is_nil_val( from_end ):
@@ -467,7 +467,7 @@ index of the rightmost such element.  Returns NIL if none found."""
 
    @primitive( 'count', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_count( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_count( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) whose
 :key satisfies :test when compared to item."""
       item    = env.lookup( 'ITEM' )
@@ -477,7 +477,7 @@ index of the rightmost such element.  Returns NIL if none found."""
       start   = env.lookup( 'START' )
       end     = env.lookup( 'END' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_count, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_count, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_count )
       n = 0
       for i in range( start_n, end_n ):
@@ -487,7 +487,7 @@ index of the rightmost such element.  Returns NIL if none found."""
 
    @primitive( 'count-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_count_if( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_count_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) for
 which pred returns true when applied to the element's :key."""
       pred   = env.lookup( 'PRED' )
@@ -496,7 +496,7 @@ which pred returns true when applied to the element's :key."""
       start  = env.lookup( 'START' )
       end    = env.lookup( 'END' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_count_if, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_count_if, '2nd argument must be a list.' )
       start_n, end_n = _validate_bounds( start, end, len(seq), LP_count_if )
       n = 0
       for i in range( start_n, end_n ):
@@ -507,7 +507,7 @@ which pred returns true when applied to the element's :key."""
 
    @primitive( 'remove', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_remove( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_remove( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements matching item removed.  An
 element matches if its :key satisfies :test when compared to item.  Only the
 bounded region [:start, :end) is considered.  :count limits how many elements
@@ -521,7 +521,7 @@ are removed; :from-end causes removal from the right when :count is supplied."""
       end      = env.lookup( 'END' )
       count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_remove, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_remove, '2nd argument must be a list.' )
       seqlen = len( seq )
       start_n, end_n = _validate_bounds( start, end, seqlen, LP_remove )
       count_n = _validate_count( count, LP_remove )
@@ -540,7 +540,7 @@ are removed; :from-end causes removal from the right when :count is supplied."""
 
    @primitive( 'remove-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_remove_if( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_remove_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements removed where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
 :count limits removals; :from-end causes removal from the right."""
@@ -552,7 +552,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
       end      = env.lookup( 'END' )
       count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_remove_if, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_remove_if, '2nd argument must be a list.' )
       seqlen = len( seq )
       start_n, end_n = _validate_bounds( start, end, seqlen, LP_remove_if )
       count_n = _validate_count( count, LP_remove_if )
@@ -572,7 +572,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
 
    @primitive( 'remove-if-not', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_remove_if_not( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_remove_if_not( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence keeping only elements where pred returns true
 for the element's :key.  Only the bounded region [:start, :end) is considered.
 :count limits how many elements are removed; :from-end removes from the right."""
@@ -584,7 +584,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
       end      = env.lookup( 'END' )
       count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_remove_if_not, '2nd argument must be a list.' )
+         raise LRuntimePrimError( LP_remove_if_not, '2nd argument must be a list.' )
       seqlen = len( seq )
       start_n, end_n = _validate_bounds( start, end, seqlen, LP_remove_if_not )
       count_n = _validate_count( count, LP_remove_if_not )
@@ -604,7 +604,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
 
    @primitive( 'substitute', '(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_substitute( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_substitute( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with occurrences of old replaced by new.  An
 element matches old if its :key satisfies :test when compared to old.  Only
 the bounded region [:start, :end) is considered.  :count limits replacements;
@@ -619,7 +619,7 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
       end      = env.lookup( 'END' )
       count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_substitute, '3rd argument must be a list.' )
+         raise LRuntimePrimError( LP_substitute, '3rd argument must be a list.' )
       seqlen = len( seq )
       start_n, end_n = _validate_bounds( start, end, seqlen, LP_substitute )
       count_n = _validate_count( count, LP_substitute )
@@ -638,7 +638,7 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
 
    @primitive( 'substitute-if', '(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_substitute_if( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_substitute_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements replaced by new where pred returns
 true for the element's :key.  Only the bounded region [:start, :end) is
 considered.  :count limits replacements; :from-end replaces from the right."""
@@ -651,7 +651,7 @@ considered.  :count limits replacements; :from-end replaces from the right."""
       end      = env.lookup( 'END' )
       count    = env.lookup( 'COUNT' )
       if not isinstance( seq, list ):
-         raise LispRuntimeFuncError( LP_substitute_if, '3rd argument must be a list.' )
+         raise LRuntimePrimError( LP_substitute_if, '3rd argument must be a list.' )
       seqlen = len( seq )
       start_n, end_n = _validate_bounds( start, end, seqlen, LP_substitute_if )
       count_n = _validate_count( count, LP_substitute_if )
@@ -672,21 +672,21 @@ considered.  :count limits replacements; :from-end replaces from the right."""
    # ── Multi-sequence mapping functions ──────────────────────────────────────
 
    @primitive( 'mapcar', '(fn seq &rest more-seqs)' )
-   def LP_mapcar( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_mapcar( ctx: Context, env: Environment, *args ) -> Any:
       """Applies fn element-wise across one or more sequences (lists) and returns
 a list of the results.  Stops at the shortest sequence."""
       fn   = args[0]
       seqs = args[1:]
       for i, s in enumerate(seqs):
          if not isinstance( s, list ):
-            raise LispRuntimeFuncError( LP_mapcar, f'Argument {i + 2} must be a list.' )
+            raise LRuntimePrimError( LP_mapcar, f'Argument {i + 2} must be a list.' )
       result = []
       for elts in zip( *seqs ):
          result.append( ctx.lApply( env, fn, list(elts) ) )
       return result
 
    @primitive( 'every', '(pred seq &rest more-seqs)' )
-   def LP_every( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_every( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if pred returns true for every element-wise group across sequences.
 Returns NIL at the first false result.  Returns T for empty sequences."""
       pred = args[0]
@@ -698,7 +698,7 @@ Returns NIL at the first false result.  Returns T for empty sequences."""
       return L_T
 
    @primitive( 'some', '(pred seq &rest more-seqs)' )
-   def LP_some( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_some( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first truthy value pred returns across the sequences.
 Returns NIL if pred returns NIL for every element-wise group."""
       pred = args[0]
@@ -710,7 +710,7 @@ Returns NIL if pred returns NIL for every element-wise group."""
       return L_NIL
 
    @primitive( 'mapc', '(fn seq &rest more-seqs)' )
-   def LP_mapc( ctx: LispContext, env: Environment, *args ) -> Any:
+   def LP_mapc( ctx: Context, env: Environment, *args ) -> Any:
       """Applies fn element-wise across one or more sequences for side effects.
 Returns the first sequence."""
       fn       = args[0]

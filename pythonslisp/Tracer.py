@@ -1,6 +1,6 @@
 from typing import Any
 
-from pythonslisp.LispAST import LCallable, LFunction, prettyPrintSExpr
+from pythonslisp.AST import LCallable, LFunction, prettyPrintSExpr
 
 
 class Tracer:

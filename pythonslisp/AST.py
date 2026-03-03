@@ -2,7 +2,7 @@ from fractions import Fraction
 from io import IOBase
 from typing import Any, Callable
 
-from pythonslisp.ltk.Environment import Environment
+from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 
 # #################
 # Lisp Function API
@@ -64,10 +64,10 @@ class LCallable:
 class LPrimitive( LCallable ):
    __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'lambdaListAST')
 
-   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', preEvalArgs: bool=True,
+   def __init__( self, fn: Callable[[EnvironmentBase], Any], name: str, paramsString: str, docString: str = '', preEvalArgs: bool=True,
                  min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '',
                  lambdaListAST: (list|None) = None ) -> None:
-      self.pythonFn:Callable[[Environment], Any] = fn
+      self.pythonFn:Callable[[EnvironmentBase], Any] = fn
       self.paramsString:str = paramsString
       self.min_args:int       = min_args
       self.max_args:(int|None) = max_args
@@ -87,10 +87,10 @@ class LPrimitive( LCallable ):
 class LFunction( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST', 'capturedEnvironment')
 
-   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: Environment ) -> None:
+   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: EnvironmentBase ) -> None:
       self.lambdaListAST: list = lambdaListAST
       self.bodyAST: list   = bodyAST
-      self.capturedEnvironment: Environment = capturedEnvironment
+      self.capturedEnvironment: EnvironmentBase = capturedEnvironment
       super().__init__( name, docString, preEvalArgs=True )
 
    def usageString( self ):
@@ -241,10 +241,10 @@ def equalp( a: Any, b: Any ) -> bool:
 
 
 class LNil(list):
-   """The canonical NIL singleton.  Immutable — mutation methods raise LispRuntimeError."""
+   """The canonical NIL singleton.  Immutable — mutation methods raise LRuntimeError."""
    def _immutable(self, *a, **kw):
-      from pythonslisp.LispExceptions import LispRuntimeError
-      raise LispRuntimeError("NIL is immutable.")
+      from pythonslisp.Exceptions import LRuntimeError
+      raise LRuntimeError("NIL is immutable.")
    
    append      = _immutable
    insert      = _immutable
@@ -259,6 +259,6 @@ class LNil(list):
    __iadd__    = _immutable
    __imul__    = _immutable
 
-# Canonical Lisp constants — defined here so LispAST has no upstream deps
+# Canonical Lisp constants — defined here so AST has no upstream deps
 L_T: LSymbol = LSymbol('T')
 L_NIL: LNil = LNil()

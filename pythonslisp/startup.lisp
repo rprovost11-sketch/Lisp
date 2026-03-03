@@ -1,5 +1,5 @@
 ;;; Python's Lisp — system startup script
-;;; Loaded automatically by LispInterpreter.reboot() after the standard library.
+;;; Loaded automatically by Interpreter.reboot() after the standard library.
 ;;; Contains system-level initialization that is not part of the reusable library.
 
 ;;; Adjust Python's recursion limit for deep Lisp recursion

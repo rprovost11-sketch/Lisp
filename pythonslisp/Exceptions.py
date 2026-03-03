@@ -1,9 +1,9 @@
 
-class LispRuntimeError( Exception ):
+class LRuntimeError( Exception ):
    pass
 
 
-class LispRuntimeFuncError( LispRuntimeError ):
+class LRuntimePrimError( LRuntimeError ):
    def __init__( self, lispCallable, errorMsg: str ) -> None:
       prim   = getattr( lispCallable, 'primitive', lispCallable )
       fnName = prim.name
@@ -12,11 +12,11 @@ class LispRuntimeFuncError( LispRuntimeError ):
       super().__init__( errStr )
 
 
-class LispArgBindingError( LispRuntimeError ):
+class LArgBindingError( LRuntimeError ):
    pass
 
 
-class LispAnalysisError( LispRuntimeError ):
+class LAnalysisError( LRuntimeError ):
    pass
 
 

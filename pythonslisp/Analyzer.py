@@ -1,5 +1,5 @@
 """
-LispAnalyzer - Semantic analysis as a separate phase
+Analyzer - Semantic analysis as a separate phase
 
 This module performs semantic analysis on a fully-expanded, normalized AST.
 It walks the AST and raises errors for structural / semantic problems,
@@ -11,18 +11,18 @@ Phase 3: arity / type checks migrated out of primitives.
 
 from typing import Any
 
-from pythonslisp.ltk.Environment import Environment
-from pythonslisp.LispAST import LSymbol, LPrimitive
-from pythonslisp.LispExceptions import ( LispAnalysisError,      # noqa: F401 (re-exported)
-                                         LispRuntimeError,
-                                         LispRuntimeFuncError )
+from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.AST import LSymbol, LPrimitive
+from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
+                                         LRuntimeError,
+                                         LRuntimePrimError )
 
 
-class LispAnalyzer:
+class Analyzer:
    """Performs semantic analysis on a fully-expanded, normalized AST."""
 
    @staticmethod
-   def analyze( env: Environment, sexpr: Any ) -> None:
+   def analyze( env: EnvironmentBase, sexpr: Any ) -> None:
       """
       Recursively walk sexpr, raising on structural / semantic problems.
 
@@ -38,7 +38,7 @@ class LispAnalyzer:
       if not isinstance(head, LSymbol):
          # Compound head — recurse into all elements
          for elt in sexpr:
-            LispAnalyzer.analyze(env, elt)
+            Analyzer.analyze(env, elt)
          return
 
       name = head.strval
@@ -46,101 +46,101 @@ class LispAnalyzer:
       # ---------- QUOTE --------------------------------------------------
       if name == 'QUOTE':
          if len(args) != 1:
-            raise LispRuntimeFuncError(env.lookup('QUOTE'), '1 argument expected.')
+            raise LRuntimePrimError(env.lookup('QUOTE'), '1 argument expected.')
          return  # Don't recurse into quoted data
 
       # ---------- BACKQUOTE -----------------------------------------------
       if name == 'BACKQUOTE':
          if len(args) != 1:
-            raise LispRuntimeFuncError(env.lookup('BACKQUOTE'), '1 argument expected.')
+            raise LRuntimePrimError(env.lookup('BACKQUOTE'), '1 argument expected.')
          return  # Don't recurse into backquote templates
 
       # ---------- IF -------------------------------------------------------
       if name == 'IF':
          numArgs = len(args)
          if not (2 <= numArgs <= 3):
-            raise LispRuntimeFuncError(env.lookup('IF'), '2 or 3 arguments expected.')
+            raise LRuntimePrimError(env.lookup('IF'), '2 or 3 arguments expected.')
          for elt in args:
-            LispAnalyzer.analyze(env, elt)
+            Analyzer.analyze(env, elt)
          return
 
       # ---------- LET / LET* ----------------------------------------------
       if name in ('LET', 'LET*'):
-         LispAnalyzer._analyzeLet(env, name, args)
+         Analyzer._analyzeLet(env, name, args)
          return
 
       # ---------- PROGN ---------------------------------------------------
       if name == 'PROGN':
          for elt in args:
-            LispAnalyzer.analyze(env, elt)
+            Analyzer.analyze(env, elt)
          return
 
       # ---------- SETQ ----------------------------------------------------
       if name == 'SETQ':
-         LispAnalyzer._analyzeSetq(env, args)
+         Analyzer._analyzeSetq(env, args)
          return
 
       # ---------- BLOCK ----------------------------------------------------
       if name == 'BLOCK':
-         LispAnalyzer._analyzeBlock(env, args)
+         Analyzer._analyzeBlock(env, args)
          return
 
       # ---------- RETURN-FROM ----------------------------------------------
       if name == 'RETURN-FROM':
-         LispAnalyzer._analyzeReturnFrom(env, args)
+         Analyzer._analyzeReturnFrom(env, args)
          return
 
       # ---------- RETURN ---------------------------------------------------
       if name == 'RETURN':
          if len(args) > 1:
-            raise LispRuntimeError('return: 0 or 1 arguments expected.')
+            raise LRuntimeError('return: 0 or 1 arguments expected.')
          if len(args) == 1:
-            LispAnalyzer.analyze(env, args[0])
+            Analyzer.analyze(env, args[0])
          return
 
       # ---------- CATCH ----------------------------------------------------
       if name == 'CATCH':
          if len(args) < 1:
-            raise LispRuntimeError('catch: at least 1 argument (tag) expected.')
+            raise LRuntimeError('catch: at least 1 argument (tag) expected.')
          for elt in args:
-            LispAnalyzer.analyze(env, elt)
+            Analyzer.analyze(env, elt)
          return
 
       # ---------- COND -----------------------------------------------------
       if name == 'COND':
-         LispAnalyzer._analyzeCond(env, args)
+         Analyzer._analyzeCond(env, args)
          return
 
       # ---------- CASE -----------------------------------------------------
       if name == 'CASE':
-         LispAnalyzer._analyzeCase(env, args)
+         Analyzer._analyzeCase(env, args)
          return
 
       # ---------- LAMBDA --------------------------------------------------
       if name == 'LAMBDA':
          if len(args) < 1:
-            raise LispRuntimeFuncError(env.lookup('LAMBDA'), '1 or more arguments expected.')
+            raise LRuntimePrimError(env.lookup('LAMBDA'), '1 or more arguments expected.')
          if not isinstance(args[0], list):
-            raise LispRuntimeFuncError(env.lookup('LAMBDA'), 'First argument expected to be a list of params.')
+            raise LRuntimePrimError(env.lookup('LAMBDA'), 'First argument expected to be a list of params.')
          for bodyForm in args[1:]:
-            LispAnalyzer.analyze(env, bodyForm)
+            Analyzer.analyze(env, bodyForm)
          return
 
       # ---------- DEFMACRO ------------------------------------------------
       if name == 'DEFMACRO':
          if len(args) < 2:
-            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), '3 or more arguments expected.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), '3 or more arguments expected.')
          if not isinstance(args[0], LSymbol):
-            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'Argument 1 expected to be a symbol.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Argument 1 expected to be a symbol.')
          if not isinstance(args[1], list):
-            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'Argument 2 expected to be a list of params.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Argument 2 expected to be a list of params.')
          funcBody = list(args[2:])
          if len(funcBody) < 1:
-            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
          if isinstance(funcBody[0], str):
             funcBody = funcBody[1:]
          if len(funcBody) < 1:
-            raise LispRuntimeFuncError(env.lookup('DEFMACRO'), 'At least one body expression expected after docstring.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected after docstring.')
          return
 
       # ---------- Everything else (regular calls, unknown special forms) ---
@@ -154,7 +154,7 @@ class LispAnalyzer:
                   tooFew  = numArgs < callableObj.min_args
                   tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
                   if tooFew or tooMany:
-                     raise LispRuntimeFuncError(callableObj, callableObj.arity_msg)
+                     raise LRuntimePrimError(callableObj, callableObj.arity_msg)
                if not callableObj.preEvalArgs:
                   # Special-form primitives receive un-evaluated args whose
                   # structure is defined by the form itself (e.g. make-dict's
@@ -164,21 +164,21 @@ class LispAnalyzer:
          except KeyError:
             pass
       for elt in sexpr:
-         LispAnalyzer.analyze(env, elt)
+         Analyzer.analyze(env, elt)
 
    # -----------------------------------------------------------------------
 
    @staticmethod
-   def _analyzeLet( env: Environment, name: str, args: list ) -> None:
+   def _analyzeLet( env: EnvironmentBase, name: str, args: list ) -> None:
       """Structural checks for (let ...) and (let* ...) forms."""
       if len(args) < 1:
-         raise LispRuntimeFuncError(env.lookup(name), '2 or more arguments expected.')
+         raise LRuntimePrimError(env.lookup(name), '2 or more arguments expected.')
 
       vardefs = args[0]
       body    = args[1:]
 
       if not isinstance(vardefs, list):
-         raise LispRuntimeFuncError(env.lookup(name),
+         raise LRuntimePrimError(env.lookup(name),
                'The first argument to let expected to be a list of variable initializations.')
 
       for varSpec in vardefs:
@@ -188,39 +188,39 @@ class LispAnalyzer:
             varSpecLen = len(varSpec)
             if varSpecLen == 1:
                if not isinstance(varSpec[0], LSymbol):
-                  raise LispRuntimeFuncError(env.lookup(name),
+                  raise LRuntimePrimError(env.lookup(name),
                         'First element of a variable initializer pair expected to be a symbol.')
             elif varSpecLen == 2:
                varName, initForm = varSpec
                if not isinstance(varName, LSymbol):
-                  raise LispRuntimeFuncError(env.lookup(name),
+                  raise LRuntimePrimError(env.lookup(name),
                         'First element of a variable initializer pair expected to be a symbol.')
-               LispAnalyzer.analyze(env, initForm)
+               Analyzer.analyze(env, initForm)
             else:
-               raise LispRuntimeFuncError(env.lookup(name),
+               raise LRuntimePrimError(env.lookup(name),
                      'Variable initializer spec expected to be 1 or 2 elements long.')
          else:
-            raise LispRuntimeFuncError(env.lookup(name),
+            raise LRuntimePrimError(env.lookup(name),
                   'Variable initializer spec expected to be a symbol or a list.')
 
       for bodyForm in body:
-         LispAnalyzer.analyze(env, bodyForm)
+         Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeSetq( env: Environment, args: list ) -> None:
+   def _analyzeSetq( env: EnvironmentBase, args: list ) -> None:
       """Structural checks for (setq ...) forms."""
       numArgs = len(args)
       if numArgs == 0:
-         raise LispRuntimeFuncError(env.lookup('SETQ'), 'At least 2 arguments expected.')
+         raise LRuntimePrimError(env.lookup('SETQ'), 'At least 2 arguments expected.')
       if (numArgs % 2) != 0:
-         raise LispRuntimeFuncError(env.lookup('SETQ'),
+         raise LRuntimePrimError(env.lookup('SETQ'),
                f'An even number of arguments is expected.  Received {numArgs}.')
       for i in range(0, numArgs, 2):
          lval = args[i]
          rval = args[i + 1]
          if not isinstance(lval, LSymbol):
-            raise LispRuntimeFuncError(env.lookup('SETQ'), 'First of setf pair must be a symbol.')
-         LispAnalyzer.analyze(env, rval)
+            raise LRuntimePrimError(env.lookup('SETQ'), 'First of setf pair must be a symbol.')
+         Analyzer.analyze(env, rval)
 
    @staticmethod
    def _is_nil_val( val ) -> bool:
@@ -228,48 +228,48 @@ class LispAnalyzer:
       return isinstance(val, list) and not val
 
    @staticmethod
-   def _analyzeBlock( env: Environment, args: list ) -> None:
+   def _analyzeBlock( env: EnvironmentBase, args: list ) -> None:
       """Structural checks for (block ...) forms."""
       if len(args) < 1:
-         raise LispRuntimeError('block: at least 1 argument (name) expected.')
-      if not (isinstance(args[0], LSymbol) or LispAnalyzer._is_nil_val(args[0])):
-         raise LispRuntimeError('block: name must be a symbol.')
+         raise LRuntimeError('block: at least 1 argument (name) expected.')
+      if not (isinstance(args[0], LSymbol) or Analyzer._is_nil_val(args[0])):
+         raise LRuntimeError('block: name must be a symbol.')
       for bodyForm in args[1:]:
-         LispAnalyzer.analyze(env, bodyForm)
+         Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeReturnFrom( env: Environment, args: list ) -> None:
+   def _analyzeReturnFrom( env: EnvironmentBase, args: list ) -> None:
       """Structural checks for (return-from ...) forms."""
       if len(args) < 1 or len(args) > 2:
-         raise LispRuntimeError('return-from: 1 or 2 arguments expected.')
-      if not (isinstance(args[0], LSymbol) or LispAnalyzer._is_nil_val(args[0])):
-         raise LispRuntimeError('return-from: name must be a symbol.')
+         raise LRuntimeError('return-from: 1 or 2 arguments expected.')
+      if not (isinstance(args[0], LSymbol) or Analyzer._is_nil_val(args[0])):
+         raise LRuntimeError('return-from: name must be a symbol.')
       if len(args) == 2:
-         LispAnalyzer.analyze(env, args[1])
+         Analyzer.analyze(env, args[1])
 
    @staticmethod
-   def _analyzeCond( env: Environment, args: list ) -> None:
+   def _analyzeCond( env: EnvironmentBase, args: list ) -> None:
       """Structural checks for (cond ...) forms."""
       if len(args) < 1:
-         raise LispRuntimeFuncError(env.lookup('COND'), '1 or more arguments expected.')
+         raise LRuntimePrimError(env.lookup('COND'), '1 or more arguments expected.')
       for i, clause in enumerate(args):
          if not isinstance(clause, list) or len(clause) == 0:
-            raise LispRuntimeFuncError(env.lookup('COND'),
+            raise LRuntimePrimError(env.lookup('COND'),
                   f'Entry {i+1} must be a non-empty list.')
-         LispAnalyzer.analyze(env, clause[0])
+         Analyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
-            LispAnalyzer.analyze(env, bodyForm)
+            Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeCase( env: Environment, args: list ) -> None:
+   def _analyzeCase( env: EnvironmentBase, args: list ) -> None:
       """Structural checks for (case ...) forms."""
       if len(args) < 2:
-         raise LispRuntimeFuncError(env.lookup('CASE'), '2 or more arguments expected.')
-      LispAnalyzer.analyze(env, args[0])
+         raise LRuntimePrimError(env.lookup('CASE'), '2 or more arguments expected.')
+      Analyzer.analyze(env, args[0])
       for i, clause in enumerate(args[1:]):
          if not isinstance(clause, list) or len(clause) == 0:
-            raise LispRuntimeFuncError(env.lookup('CASE'),
+            raise LRuntimePrimError(env.lookup('CASE'),
                   f'Entry {i+1} must be a non-empty list.')
-         LispAnalyzer.analyze(env, clause[0])
+         Analyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
-            LispAnalyzer.analyze(env, bodyForm)
+            Analyzer.analyze(env, bodyForm)

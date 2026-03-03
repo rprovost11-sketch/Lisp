@@ -3,7 +3,7 @@ import sys
 
 from pythonslisp import __version__
 from pythonslisp.ltk.Listener import Listener
-from pythonslisp.LispInterpreter import LispInterpreter
+from pythonslisp.Interpreter import Interpreter
 
 LANGUAGE     = 'Python\'s Lisp'
 VERSION      = __version__
@@ -51,7 +51,7 @@ def main( ) -> None:
             sys.exit(1)
          source_file = arg
 
-   interp = LispInterpreter()
+   interp = Interpreter()
 
    if source_file is None:
       # Enter the repl
@@ -64,7 +64,7 @@ def main( ) -> None:
                                          testdir=TEST_DIR
                                          )
       except FileNotFoundError as ex:
-         print( f'Runtime library directory not found: "{LispInterpreter.DEFAULT_LIB_DIR}"' )
+         print( f'Runtime library directory not found: "{Interpreter.DEFAULT_LIB_DIR}"' )
          sys.exit(1)
 
       theListener.readEvalPrintLoop( )

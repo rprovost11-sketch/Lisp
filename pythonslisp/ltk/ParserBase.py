@@ -45,7 +45,7 @@ class LexerBuffer( object ):
       self._point     = 0
       self._mark      = 0
       self._lineNum   = 1
-      
+
    def peekNextChar( self ) -> str:
       '''Return the next character in the buffer or an empty string if eof.'''
       return self._nextChar
@@ -178,7 +178,7 @@ class LexerBuffer( object ):
          theLinePos = self._source.rfind( '\n', 0, self._point ) + 1
       return 0 if theLinePos < 0 else theLinePos
 
-class Lexer( ABC ):
+class LexerBase( ABC ):
    def __init__( self ) -> None:
       '''Initialize a Scanner instance.'''
       self.buffer:LexerBuffer  = LexerBuffer( )
@@ -193,7 +193,7 @@ class Lexer( ABC ):
       '''Re-initialize the instance over the contents of a source file.'''
       self.buffer.resetFromFile( filename )
       self.consume( )
-   
+
    def peekToken( self ) -> int:
       '''Return the next (look ahead) token, but do not consume it.'''
       return self._tok
@@ -212,7 +212,7 @@ class Lexer( ABC ):
       state of the scanner is preserved under aStateName.'''
       stateInst = self.buffer.saveState( )
       stateInst.lexer_tok = self._tok
-      return stateInst 
+      return stateInst
 
    def restoreState( self, stateInst: LexerState ) -> None:
       '''Restore a saved state (backtrack to the point where the restore point was made).'''
@@ -228,9 +228,9 @@ class Lexer( ABC ):
       return value,         the int value of the next token in the buffer
       """
       pass
- 
+
 class ParseError( Exception ):
-   def __init__( self, aScanner: Lexer, errorMessage: str ) -> None:
+   def __init__( self, aScanner: LexerBase, errorMessage: str ) -> None:
       super().__init__( self._generateVerboseErrorString(srcfilename=aScanner.buffer.scanFilename(),
                                                          lineNum=aScanner.buffer.scanLineNum(),
                                                          colNum=aScanner.buffer.scanColNum(),
@@ -242,7 +242,7 @@ class ParseError( Exception ):
       return f'Syntax Error: "{srcfilename}" ({lineNum},{colNum})\n{sourceLine}\n{indentStr}^\n{errorMsg}'
 
 
-class Parser( ABC ):
+class ParserBase( ABC ):
    @abstractmethod
    def parse( self, source: str ) -> Any:  # Returns an AST of inputString
       pass
@@ -250,4 +250,3 @@ class Parser( ABC ):
    @abstractmethod
    def parseFile( self, filename: str ) -> Any:  # Returns an AST of inputString
       pass
-

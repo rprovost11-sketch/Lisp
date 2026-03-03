@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import Callable, Any
 
-from pythonslisp.LispAST import LPrimitive, LSymbol, L_T, L_NIL
+from pythonslisp.AST import LPrimitive, LSymbol, L_T, L_NIL
 
 
 class LambdaListMode(Enum):
