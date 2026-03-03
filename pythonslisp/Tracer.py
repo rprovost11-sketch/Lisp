@@ -10,26 +10,31 @@ class Tracer:
       self._fnsToTrace:    set[str] = set()
       self._global:        bool     = False
       self._maxTraceDepth: int      = 0
+      self._active:        bool     = False
 
    def reset( self ) -> None:
       """Clear all tracing state.  Called on interpreter reboot."""
       self._fnsToTrace    = set()
       self._global        = False
       self._maxTraceDepth = 0
+      self._active        = False
 
    # --- Named function tracing ---
 
    def addFnTrace( self, name: str ) -> None:
       """Register a function name for tracing.  Called by (trace fn)."""
       self._fnsToTrace.add( name )
+      self._active = True
 
    def removeFnTrace( self, name: str ) -> None:
       """Remove a function name from tracing.  Called by (untrace fn)."""
       self._fnsToTrace.discard( name )
+      self._active = self._global or bool( self._fnsToTrace )
 
    def removeAll( self ) -> None:
       """Remove all named functions.  Called by (untrace) with no args."""
       self._fnsToTrace.clear()
+      self._active = self._global
 
    def getFnsToTrace( self ) -> frozenset:
       """Read-only view of currently traced function names."""
@@ -42,10 +47,12 @@ class Tracer:
 
    def setGlobalEnabled( self, value: bool ) -> None:
       self._global = value
+      self._active = value or bool( self._fnsToTrace )
 
    def toggle_global( self ) -> bool:
       """Toggle global tracing on/off.  Returns new state.  Called by ]trace."""
       self._global = not self._global
+      self._active = self._global or bool( self._fnsToTrace )
       return self._global
 
    # --- Depth ---
@@ -60,7 +67,7 @@ class Tracer:
 
    def isActive( self ) -> bool:
       """True when any tracing is enabled.  Cheap check in the eval hot path."""
-      return bool( self._global or self._fnsToTrace )
+      return self._active
 
    # --- Hook ---
 

@@ -547,7 +547,7 @@ class Listener( object ):
       if len(args) != 0:
          raise ListenerCommandError( self._cmd_trace.__doc__ )
 
-      state = self._interp.tracer.toggle_global()
+      state = self._interp._tracer.toggle_global()
 
       useColor   = sys.stdout.isatty()
       GREEN      = '\033[92m' if useColor else ''

@@ -6,7 +6,6 @@ from typing import Any, Sequence
 from pythonslisp.Parser import Parser
 from pythonslisp.ltk.Listener import InterpreterBase
 from pythonslisp.ltk.Utils import retrieveFileList
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.AST import ( LSymbol, L_T, L_NIL,
                                   LCallable, LFunction, LPrimitive, LMacro, LContinuation,
                                   prettyPrintSExpr )
@@ -27,13 +26,13 @@ class Interpreter( InterpreterBase ):
    def __init__( self, runtimeLibraryDir: (Path|str) = DEFAULT_LIB_DIR ) -> None:
       self._libDir = runtimeLibraryDir
       self._parser: Parser = Parser( )
-      self.tracer: Tracer = Tracer()
+      self._tracer: Tracer = Tracer()
       self._setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
       self._ctx: Context = None               # initialized in reboot()
 
    def reboot( self, outStrm=None ) -> None:
       # Reset tracing state so stale traced-function names don't linger
-      self.tracer.reset()
+      self._tracer.reset()
       self._setf_registry.clear()
 
       # Create the GLOBAL environment and load in the primitives
@@ -132,7 +131,7 @@ class Interpreter( InterpreterBase ):
       return returnVal
 
    def _makeContext( self, outStrm ) -> Context:
-      ctx = Context( outStrm, self.tracer, self._setf_registry )
+      ctx = Context( outStrm, self._tracer, self._setf_registry )
       ctx.lEval            = lambda env, sexpr: Interpreter._lEval( ctx, env, sexpr )
       ctx.lApply           = lambda env, fn, a: Interpreter._lApply( ctx, env, fn, a )
       ctx.lBackquoteExpand = lambda env, expr, depth=1: Interpreter._lbackquoteExpand( ctx, env, expr, depth )
@@ -149,8 +148,11 @@ class Interpreter( InterpreterBase ):
       '''This is a recursive tree-walk evaluator.  It's the interpreter's main
       evaluation function.  Pass it any s-expression in the form of an AST;
       eval will return the result.'''
+      _eval  = Interpreter._lEval
+      _true  = Interpreter._lTrue
+      tracer = ctx.tracer
       while True:
-         if isinstance(sExprAST, LSymbol):
+         if type(sExprAST) is LSymbol:
             try:
                return env.lookup( sExprAST.strval )
             except KeyError:
@@ -166,20 +168,28 @@ class Interpreter( InterpreterBase ):
             return L_NIL  # An empty list always evaluates to an empty list
 
          # Primary ought to evaluate to a callable (LPrimitive, LFunction or LMacro)
-         primary, *args = sExprAST
-         function        = None    # set by FUNCALL, APPLY, or the else-branch
-         args_pre_evaled = False   # True when FUNCALL/APPLY have already evaluated args
-         if primary == 'IF':
-            condValue = Interpreter._lEval( ctx, env, args[0] )
-            sExprAST = args[1] if Interpreter._lTrue(condValue) else args[2]
+         primary = sExprAST[0]
+         headStr = primary.strval if type(primary) is LSymbol else None
+         argsPreEvaled = False
 
-         elif primary == 'LET':
+         # Fast-exit special forms: skip args list creation
+         if headStr == 'IF':
+            condValue = _eval( ctx, env, sExprAST[1] )
+            sExprAST = sExprAST[2] if _true(condValue) else sExprAST[3]
+            continue
+         elif headStr == 'QUOTE':
+            return sExprAST[1]
+
+         # All remaining forms need the args list
+         args = sExprAST[1:]
+
+         if headStr == 'LET':
             vardefs, *body = args
 
             # Evaluate the var def initial value exprs in the outer scope.
             initDict = { }
             for varSpec in vardefs:
-               if isinstance(varSpec, LSymbol):
+               if type(varSpec) is LSymbol:
                   varName  = varSpec
                   initForm = list()
                else:  # list — structure guaranteed valid by analyzer
@@ -188,7 +198,7 @@ class Interpreter( InterpreterBase ):
                      initForm = list()
                   else:
                      varName, initForm = varSpec
-               initDict[varName.strval] = Interpreter._lEval(ctx, env, initForm)
+               initDict[varName.strval] = _eval(ctx, env, initForm)
 
             # Open the new scope
             env = Environment( env, initialBindings=initDict )
@@ -198,17 +208,18 @@ class Interpreter( InterpreterBase ):
                return L_NIL
             else:
                for i in range(len(body) - 1):
-                  Interpreter._lEval( ctx, env, body[i] )
+                  _eval( ctx, env, body[i] )
                sExprAST = body[-1]
+            continue
 
-         elif primary == 'LET*':
+         elif headStr == 'LET*':
             vardefs, *body = args
 
             # Open the new scope
             env = Environment( env )
 
             for varSpec in vardefs:
-               if isinstance(varSpec, LSymbol):
+               if type(varSpec) is LSymbol:
                   varName  = varSpec
                   initForm = list()
                else:  # list — structure guaranteed valid by analyzer
@@ -217,30 +228,32 @@ class Interpreter( InterpreterBase ):
                      initForm = list()
                   else:
                      varName, initForm = varSpec
-               env.bindLocal( varName.strval, Interpreter._lEval(ctx, env, initForm) )
+               env.bindLocal( varName.strval, _eval(ctx, env, initForm) )
 
             # Evaluate each body sexpr in the new env/scope.
             if len(body) == 0:
                return L_NIL
             else:
                for i in range(len(body) - 1):
-                  Interpreter._lEval( ctx, env, body[i] )
+                  _eval( ctx, env, body[i] )
                sExprAST = body[-1]
+            continue
 
-         elif primary == 'PROGN':
+         elif headStr == 'PROGN':
             if len(args) == 0:
                return L_NIL
             else:
                for i in range(len(args) - 1):
-                  Interpreter._lEval( ctx, env, args[i] )
+                  _eval( ctx, env, args[i] )
                sExprAST = args[-1]
+            continue
 
-         elif primary == 'SETQ':
+         elif headStr == 'SETQ':
             rval = L_NIL
             while len(args) > 0:
                lval,rval,*args = args
-               rval = Interpreter._lEval(ctx, env, rval)
-               if isinstance(rval, (LMacro, LFunction)) and (rval.name == ''):
+               rval = _eval(ctx, env, rval)
+               if (type(rval) is LMacro or type(rval) is LFunction) and (rval.name == ''):
                   rval.name = lval.strval
                sym = lval.strval   # lval is a LSymbol — guaranteed by analyzer
                theSymTab = env.findDef( sym )
@@ -250,27 +263,28 @@ class Interpreter( InterpreterBase ):
                   env.bindGlobal( sym, rval )
             return rval
 
-         elif primary == 'COND':
+         elif headStr == 'COND':
             sExprAST = L_NIL
             for clause in args:
                testExpr = clause[0]      # analyzer guarantees: list, len >= 2
-               if Interpreter._lTrue( Interpreter._lEval(ctx, env, testExpr) ):
+               if _true( _eval(ctx, env, testExpr) ):
                   body     = clause[1:]
                   if len(body) == 0:
                      return L_NIL
                   else:
                      for i in range(len(body) - 1):
-                        Interpreter._lEval( ctx, env, body[i] )
+                        _eval( ctx, env, body[i] )
                      sExprAST = body[-1]
                   break
+            continue
 
-         elif primary == 'CASE':
-            keyVal   = Interpreter._lEval( ctx, env, args[0] )
+         elif headStr == 'CASE':
+            keyVal   = _eval( ctx, env, args[0] )
             sExprAST = L_NIL
             for i in range(1, len(args)):
                clause  = args[i]
                caseVal = clause[0]       # analyzer guarantees: list, len >= 2; key is NOT evaluated (CL)
-               if isinstance(caseVal, LSymbol) and caseVal.strval in ('T', 'OTHERWISE'):
+               if type(caseVal) is LSymbol and caseVal.strval in ('T', 'OTHERWISE'):
                   matched = True
                elif isinstance(caseVal, list):
                   matched = keyVal in caseVal    # list of atoms: match any
@@ -282,34 +296,35 @@ class Interpreter( InterpreterBase ):
                      return L_NIL
                   else:
                      for j in range(len(body) - 1):
-                        Interpreter._lEval( ctx, env, body[j] )
+                        _eval( ctx, env, body[j] )
                      sExprAST = body[-1]
                   break
+            continue
 
-         elif primary == 'FUNCALL':
+         elif headStr == 'FUNCALL':
             if len(args) < 1:
                raise LRuntimeError( 'Error binding arguments in call to function "FUNCALL".\nToo few positional arguments.' )
-            function = Interpreter._lEval( ctx, env, args[0] )
+            function = _eval( ctx, env, args[0] )
             if not isinstance( function, LCallable ):
                raise LRuntimeError( 'FUNCALL: first argument must evaluate to a callable.' )
-            if isinstance( function, LContinuation ):
+            if type( function ) is LContinuation:
                if len(args) != 2:
                   raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args) - 1}.' )
-               raise ContinuationInvoked( function.token, Interpreter._lEval(ctx, env, args[1]) )
-            if isinstance( function, LMacro ):
+               raise ContinuationInvoked( function.token, _eval(ctx, env, args[1]) )
+            if type( function ) is LMacro:
                raise LRuntimeError( f'FUNCALL: cannot call macro "{function.name}".' )
             if not function.preEvalArgs:
                raise LRuntimeError( 'FUNCALL: first argument may not be a special form.' )
-            args            = [ Interpreter._lEval( ctx, env, a ) for a in args[1:] ]
-            args_pre_evaled = True
+            args            = [ _eval( ctx, env, a ) for a in args[1:] ]
+            argsPreEvaled = True
 
-         elif primary == 'APPLY':
+         elif headStr == 'APPLY':
             if len(args) < 2:
                raise LRuntimeError( 'Error binding arguments in call to function "APPLY".\nToo few positional arguments.' )
-            fn_val = Interpreter._lEval( ctx, env, args[0] )
+            fn_val = _eval( ctx, env, args[0] )
             if isinstance( fn_val, LCallable ):
                function = fn_val
-            elif isinstance( fn_val, LSymbol ):
+            elif type( fn_val ) is LSymbol:
                try:
                   function = env.lookup( fn_val.strval )
                except KeyError:
@@ -318,97 +333,96 @@ class Interpreter( InterpreterBase ):
                   raise LRuntimeError( f'APPLY: "{fn_val}" is not bound to a callable.' )
             else:
                raise LRuntimeError( 'APPLY: first argument must evaluate to a callable or symbol.' )
-            evaled   = [ Interpreter._lEval( ctx, env, a ) for a in args[1:] ]
+            evaled   = [ _eval( ctx, env, a ) for a in args[1:] ]
             list_arg = evaled[-1]
             if not isinstance( list_arg, list ):
                raise LRuntimeError( 'APPLY: last argument must be a list.' )
-            if isinstance( function, LContinuation ):
+            if type( function ) is LContinuation:
                spread = list( evaled[:-1] ) + list( list_arg )
                if len(spread) != 1:
                   raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(spread)}.' )
                raise ContinuationInvoked( function.token, spread[0] )
-            if isinstance( function, LMacro ):
+            if type( function ) is LMacro:
                raise LRuntimeError( f'APPLY: cannot apply macro "{function.name}".' )
             if not function.preEvalArgs:
                raise LRuntimeError( 'APPLY: first argument may not be a special form.' )
             args            = list( evaled[:-1] ) + list( list_arg )
-            args_pre_evaled = True
+            argsPreEvaled = True
 
          else:
-            function = Interpreter._lEval( ctx, env, primary )
+            function = _eval( ctx, env, primary )
             if not isinstance( function, LCallable ):
                raise LRuntimeError( f'Badly formed list expression \'{primary}\'.  The first element should evaluate to a callable.' )
 
             # Continuation invocation: bypass tracing, raise immediately
-            if isinstance( function, LContinuation ):
+            if type( function ) is LContinuation:
                if len(args) != 1:
                   raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
-               value = Interpreter._lEval( ctx, env, args[0] )
+               value = _eval( ctx, env, args[0] )
                raise ContinuationInvoked( function.token, value )
 
             # Inline macro expansion: handles macros called directly inside _lEval
             # (e.g. from within another macro's body, which bypasses the top-level expander)
-            if isinstance( function, LMacro ):
+            if type( function ) is LMacro:
                sExprAST = Expander._expandMacroCall( ctx, env, function, args )
                continue
 
          # Shared function dispatch: reached from FUNCALL, APPLY, and the else-branch.
-         if function is not None:
-            # Tracing
-            tracer  = ctx.tracer
-            printed = False
-            if tracer.isActive():
-               depth   = tracer.getMaxTraceDepth()
-               printed = tracer.trace( 'enter', function, args, depth, ctx.outStrm )
-               if printed:
-                  tracer.setMaxTraceDepth( depth + 1 )
+         # Tracing
+         printed = False
+         if tracer.isActive():
+            depth   = tracer.getMaxTraceDepth()
+            printed = tracer.trace( 'enter', function, args, depth, ctx.outStrm )
+            if printed:
+               tracer.setMaxTraceDepth( depth + 1 )
 
-            # Pre-evaluate args unless FUNCALL/APPLY already did so.
-            if not args_pre_evaled and function.preEvalArgs:
-               args = [ Interpreter._lEval(ctx, env, arg) for arg in args ]
+         # Pre-evaluate args unless FUNCALL/APPLY already did so.
+         if not argsPreEvaled and function.preEvalArgs:
+            args = [ _eval(ctx, env, arg) for arg in args ]
 
-            try:
-               if isinstance( function, LPrimitive ):
-                  if function.lambdaListAST is not None:
-                     kw_env = Environment( env, evalFn=ctx.lEval )
-                     kw_env.bindArguments( function.lambdaListAST, args )
-                     result = function.pythonFn( ctx, kw_env, *args )
-                  else:
-                     result = function.pythonFn( ctx, env, *args )
+         try:
+            if type( function ) is LPrimitive:
+               if function.lambdaListAST:
+                  kw_env = Environment( env, evalFn=ctx.lEval )
+                  kw_env.bindArguments( function.lambdaListAST, args )
+                  result = function.pythonFn( ctx, kw_env, *args )
                else:
-                  env = Environment( function.capturedEnvironment, evalFn=ctx.lEval )
-                  env.bindArguments( function.lambdaListAST, args )
-                  if printed:
-                     # Traced: evaluate recursively so the exit trace fires at the right time.
-                     result = L_NIL
-                     for sexpr in function.bodyAST:
-                        result = Interpreter._lEval( ctx, env, sexpr )
-                     # Fall through to the traced-exit block below.
-                  else:
-                     # Untraced: TCO — update env/sExprAST and continue the loop.
-                     body = function.bodyAST
-                     if len(body) == 0:
-                        sExprAST = L_NIL
-                     else:
-                        for i in range(len(body) - 1):
-                           Interpreter._lEval( ctx, env, body[i] )
-                        sExprAST = body[-1]
-                     continue   # TCO: next iteration of the while loop
-            except LArgBindingError as ex:
+                  result = function.pythonFn( ctx, env, *args )
+            else:
+               env = Environment( function.capturedEnvironment, evalFn=ctx.lEval )
+               env.bindArguments( function.lambdaListAST, args )
                if printed:
-                  tracer.setMaxTraceDepth( depth )
-               errorMsg = ex.args[-1]
-               fnName = function.name
-               if fnName == '':
-                  raise LRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
+                  # Traced: evaluate recursively so the exit trace fires at the right time.
+                  result = L_NIL
+                  for sexpr in function.bodyAST:
+                     result = _eval( ctx, env, sexpr )
+                  # Fall through to the traced-exit block below.
                else:
-                  raise LRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
-
-            # Reached for LPrimitive and traced LFunction (not the TCO path).
+                  # Untraced: TCO — update env/sExprAST and continue the loop.
+                  body = function.bodyAST
+                  bodyLen = len(body)
+                  if bodyLen == 0:
+                     sExprAST = L_NIL
+                  else:
+                     for i in range(bodyLen - 1):
+                        _eval( ctx, env, body[i] )
+                     sExprAST = body[-1]
+                  continue   # TCO: next iteration of the while loop
+         except LArgBindingError as ex:
             if printed:
                tracer.setMaxTraceDepth( depth )
-               tracer.trace( 'exit', function, result, depth, ctx.outStrm )
-            return result
+            errorMsg = ex.args[-1]
+            fnName = function.name
+            if fnName == '':
+               raise LRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
+            else:
+               raise LRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
+
+         # Reached for LPrimitive and traced LFunction (not the TCO path).
+         if printed:
+            tracer.setMaxTraceDepth( depth )
+            tracer.trace( 'exit', function, result, depth, ctx.outStrm )
+         return result
 
    @staticmethod
    def _lApply( ctx: Context, env: Environment, function: LCallable, args: Sequence ) -> Any:
