@@ -75,6 +75,14 @@ class LPrimitive( LCallable ):
       self.lambdaListAST:(list|None) = lambdaListAST
       super().__init__( name, docString, preEvalArgs )
    
+   def typeLabel( self ):
+      return 'Built-in Special Operator' if not self.preEvalArgs else 'Built-in Function'
+
+   def callForm( self ):
+      if self.paramsString:
+         return f'({self.name} {self.paramsString})'
+      return f'({self.name})'
+
    def usageString( self ):
       if self.paramsString:
          return f'PRIMITIVE USAGE: ({self.name} {self.paramsString})'
@@ -92,6 +100,15 @@ class LFunction( LCallable ):
       self.bodyAST: list   = bodyAST
       self.capturedEnvironment: EnvironmentBase = capturedEnvironment
       super().__init__( name, docString, preEvalArgs=True )
+
+   def typeLabel( self ):
+      return 'Function'
+
+   def callForm( self ):
+      if len(self.lambdaListAST) == 0:
+         return f'({self.name})'
+      inner = prettyPrintSExpr(self.lambdaListAST)[1:-1]
+      return f'({self.name} {inner})'
 
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
@@ -113,6 +130,15 @@ class LMacro( LCallable ):
       self.bodyAST: list    = bodyAST
       super().__init__( name.strval, docString, preEvalArgs=False )
 
+   def typeLabel( self ):
+      return 'Macro'
+
+   def callForm( self ):
+      if len(self.lambdaListAST) == 0:
+         return f'({self.name})'
+      inner = prettyPrintSExpr(self.lambdaListAST)[1:-1]
+      return f'({self.name} {inner})'
+
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
          return f'MACRO USAGE: ({self.name})'
@@ -132,6 +158,12 @@ class LContinuation( LCallable ):
    def __init__( self, token: object ) -> None:
       self.token = token
       super().__init__( 'continuation', '', preEvalArgs=True )
+
+   def typeLabel( self ) -> str:
+      return 'Continuation'
+
+   def callForm( self ) -> str:
+      return '#<CONTINUATION>'
 
    def usageString( self ) -> str:
       return '#<CONTINUATION>'

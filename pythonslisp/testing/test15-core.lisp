@@ -1547,14 +1547,18 @@
 
 >>> ;;; help with primitive shows usage and returns T
 ... (help +)
-PRIMITIVE USAGE: (+ &rest numbers)
+Built-in Function  |  args: pre-evaluated
+
+   Usage: (+ &rest numbers)
 
 Returns the sum of numbers.
 ==> T
 
 >>> ;;; help with another primitive
 ... (help car)
-PRIMITIVE USAGE: (CAR list)
+Built-in Function  |  args: pre-evaluated
+
+   Usage: (CAR list)
 
 Returns the first item in a list.
 ==> T

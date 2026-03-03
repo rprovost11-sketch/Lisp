@@ -673,7 +673,10 @@ Type '(help "topic")' for available documentation on the named topic."""
       CYAN       = '\033[96m'   if useColor else ''
       RESET      = '\033[0m'    if useColor else ''
 
-      print( f'   {CYAN}{callableObj.usageString()}{RESET}', file=outStrm )
+      evalLabel = 'args: pre-evaluated' if callableObj.preEvalArgs else 'args: not pre-evaluated'
+      print( f'{callableObj.typeLabel()}  |  {evalLabel}', file=outStrm )
+      print( file=outStrm )
+      print( f'   {CYAN}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
       print( file=outStrm )
       if callableObj.docString != '':
          valueStr = prettyPrint( callableObj.docString )
