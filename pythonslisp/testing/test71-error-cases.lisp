@@ -134,28 +134,28 @@
 ... (< "a" 1)
 
 %%% ERROR '<': Invalid argument.  Arguments are not comparable.
-%%% PRIMITIVE USAGE: (< expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (< expr1 expr2 &rest exprs)
 ==>
 
 >>> ;;; greater-than with incomparable types
 ... (> "a" 1)
 
 %%% ERROR '>': Invalid argument.  Arguments are not comparable.
-%%% PRIMITIVE USAGE: (> expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (> expr1 expr2 &rest exprs)
 ==>
 
 >>> ;;; less-equal with incomparable types
 ... (<= "a" 1)
 
 %%% ERROR '<=': Invalid argument.  Arguments are not comparable.
-%%% PRIMITIVE USAGE: (<= expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (<= expr1 expr2 &rest exprs)
 ==>
 
 >>> ;;; greater-equal with incomparable types
 ... (>= "a" 1)
 
 %%% ERROR '>=': Invalid argument.  Arguments are not comparable.
-%%% PRIMITIVE USAGE: (>= expr1 expr2 ...)
+%%% PRIMITIVE USAGE: (>= expr1 expr2 &rest exprs)
 ==>
 
 ; --- List operation errors ---

@@ -188,11 +188,8 @@ class LispInterpreter( Interpreter ):
             env = LispEnvironment( env, initialBindings=initDict )
 
             # Evaluate each body sexpr in the new env/scope
-            bodyLen = len(body)
-            if bodyLen == 0:
-               sExprAST = L_NIL
-            elif bodyLen == 1:
-               sExprAST = body[0]
+            if len(body) == 0:
+               return L_NIL
             else:
                for sexpr in body[:-1]:
                   LispInterpreter._lEval( ctx, env, sexpr )
@@ -217,22 +214,16 @@ class LispInterpreter( Interpreter ):
                env.bindLocal( varName.strval, LispInterpreter._lEval(ctx, env, initForm) )
 
             # Evaluate each body sexpr in the new env/scope.
-            bodyLen = len(body)
-            if bodyLen == 0:
-               sExprAST = L_NIL
-            elif bodyLen == 1:
-               sExprAST = body[0]
+            if len(body) == 0:
+               return L_NIL
             else:
                for sexpr in body[:-1]:
                   LispInterpreter._lEval( ctx, env, sexpr )
                sExprAST = body[-1]
 
          elif primary == 'PROGN':
-            argsLen = len(args)
-            if argsLen == 0:
-               sExprAST = L_NIL
-            elif argsLen == 1:
-               sExprAST = args[0]
+            if len(args) == 0:
+               return L_NIL
             else:
                for expr in args[:-1]:
                   LispInterpreter._lEval( ctx, env, expr )
@@ -259,11 +250,8 @@ class LispInterpreter( Interpreter ):
                testExpr = clause[0]      # analyzer guarantees: list, len >= 2
                if LispInterpreter._lTrue( LispInterpreter._lEval(ctx, env, testExpr) ):
                   body     = clause[1:]
-                  bodyLen = len(body)
-                  if bodyLen == 0:
-                     sExprAST = L_NIL
-                  elif bodyLen == 1:
-                     sExprAST = body[0]
+                  if len(body) == 0:
+                     return L_NIL
                   else:
                      for sexpr in body[:-1]:
                         LispInterpreter._lEval( ctx, env, sexpr )
@@ -277,11 +265,8 @@ class LispInterpreter( Interpreter ):
                caseVal = clause[0]       # analyzer guarantees: list, len >= 2
                if LispInterpreter._lEval(ctx, env, caseVal) == keyVal:
                   body    = clause[1:]
-                  bodyLen = len(body)
-                  if bodyLen == 0:
-                     sExprAST = L_NIL
-                  elif bodyLen == 1:
-                     sExprAST = body[0]
+                  if len(body) == 0:
+                     return L_NIL
                   else:
                      for sexpr in body[:-1]:
                         LispInterpreter._lEval( ctx, env, sexpr )
@@ -309,14 +294,14 @@ class LispInterpreter( Interpreter ):
             # Tracing
             tracer  = ctx.tracer
             printed = False
-            depth   = tracer.getMaxTraceDepth()
             if tracer.isActive():
+               depth   = tracer.getMaxTraceDepth()
                printed = tracer.trace( 'enter', function, args, depth, ctx.outStrm )
                if printed:
                   tracer.setMaxTraceDepth( depth + 1 )
 
-            # Call the function with its arguments
-            if not function.specialForm:
+            # Call the function with its arguments pre-evaluated
+            if function.preEvalArgs:
                args = [ LispInterpreter._lEval(ctx, env, arg) for arg in args ]
 
             try:
@@ -338,15 +323,13 @@ class LispInterpreter( Interpreter ):
                      # Fall through to the traced-exit block below.
                   else:
                      # Untraced: TCO — update env/sExprAST and continue the loop.
-                     bodyLen = len( function.bodyAST )
-                     if bodyLen == 0:
+                     body = function.bodyAST
+                     if len(body) == 0:
                         sExprAST = L_NIL
-                     elif bodyLen == 1:
-                        sExprAST = function.bodyAST[0]
                      else:
-                        for sexpr in function.bodyAST[:-1]:
+                        for sexpr in body[:-1]:
                            LispInterpreter._lEval( ctx, env, sexpr )
-                        sExprAST = function.bodyAST[-1]
+                        sExprAST = body[-1]
                      continue   # TCO: next iteration of the while loop
             except LispArgBindingError as ex:
                if printed:

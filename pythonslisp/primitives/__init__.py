@@ -68,11 +68,11 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
       return f'{min_args} to {max_args} arguments expected.'
 
    class primitive:
-      def __init__( self, primitiveSymbolString: str, params: str = '', specialForm: bool = False,
+      def __init__( self, primitiveSymbolString: str, params: str = '', preEvalArgs: bool = True,
                     mode: LambdaListMode = LambdaListMode.ARITY_ONLY,
                     min_args = _UNSET, max_args = _UNSET ) -> None:
          self._name        = primitiveSymbolString.upper()
-         self._specialForm = specialForm
+         self._preEvalArgs = preEvalArgs
          if mode is LambdaListMode.FULL_BINDING:
             # params must be a full lambda list with outer (...)
             ll_ast = parseLispString( params )[1]
@@ -108,7 +108,7 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
       def __call__( self, pythonFn ):
          docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
          lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
-                                    specialForm=self._specialForm,
+                                    preEvalArgs=self._preEvalArgs,
                                     min_args=self._min_args, max_args=self._max_args,
                                     arity_msg=self._arity_msg,
                                     lambdaListAST=self._lambdaListAST )

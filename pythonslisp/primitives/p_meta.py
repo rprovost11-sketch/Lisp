@@ -11,7 +11,7 @@ from pythonslisp.primitives import LambdaListMode
 
 def register(primitive) -> None:
 
-   @primitive( 'defmacro', '(symbol lambda-list &rest body)', specialForm=True )
+   @primitive( 'defmacro', '(symbol lambda-list &rest body)', preEvalArgs=False )
    def LP_defmacro( ctx: LispContext, env: Environment, *args ) -> Any:
       """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
@@ -90,7 +90,7 @@ not a macro call."""
       return newval
 
    @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
-               mode=LambdaListMode.DOC_ONLY, specialForm=True )
+               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_setq( ctx: LispContext, env: Environment, *args ) -> Any:
       """Updates one or more variables' values', returns value.  The search for
 the variable begins locally and proceeds to search ever less local scopes until
@@ -126,7 +126,7 @@ is last."""
 
       return L_NIL
 
-   @primitive( 'trace', '(&rest fn-names)', specialForm=True )
+   @primitive( 'trace', '(&rest fn-names)', preEvalArgs=False )
    def LP_trace( ctx: LispContext, env: Environment, *args ) -> Any:
       """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
@@ -139,7 +139,7 @@ trace list.  With no arguments, returns the list of currently traced functions."
          tracer.addFnTrace( sym.strval )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
-   @primitive( 'untrace', '(&rest fn-names)', specialForm=True )
+   @primitive( 'untrace', '(&rest fn-names)', preEvalArgs=False )
    def LP_untrace( ctx: LispContext, env: Environment, *args ) -> Any:
       """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
@@ -162,7 +162,7 @@ continuations are supported; invoking a stale continuation is an error."""
       proc = args[0]
       if not isinstance( proc, LCallable ):
          raise LispRuntimeFuncError( LP_callcc, 'Argument must be a callable.' )
-      if proc.specialForm:
+      if not proc.preEvalArgs:
          raise LispRuntimeFuncError( LP_callcc, 'Argument may not be a special form.' )
 
       token = object()          # unique identity token for this continuation

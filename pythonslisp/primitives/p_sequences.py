@@ -63,7 +63,7 @@ def register( primitive ) -> None:
    # ── Existing non-keyword primitives ────────────────────────────────────────
 
    @primitive( 'make-dict', '((key1 val1) (key2 val2) ...)',
-               mode=LambdaListMode.DOC_ONLY, specialForm=True )
+               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_make_dict( ctx: LispContext, env: Environment, *args ) -> Any:
       """Constructs and returns a dict of key-value pairs."""
       theMapping = dict()

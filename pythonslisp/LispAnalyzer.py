@@ -155,7 +155,7 @@ class LispAnalyzer:
                   tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
                   if tooFew or tooMany:
                      raise LispRuntimeFuncError(callableObj, callableObj.arity_msg)
-               if callableObj.specialForm:
+               if not callableObj.preEvalArgs:
                   # Special-form primitives receive un-evaluated args whose
                   # structure is defined by the form itself (e.g. make-dict's
                   # (key val) pairs).  The analyzer cannot safely recurse into

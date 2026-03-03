@@ -54,17 +54,17 @@ class LSymbol:
 # A map type will be introduced to Lisp represented by python dict.
 
 class LCallable:
-   __slots__ = ('name', 'docString', 'specialForm')
-   
-   def __init__( self, name: str, docString: str = '', specialForm: bool = False ) -> None:
+   __slots__ = ('name', 'docString', 'preEvalArgs')
+
+   def __init__( self, name: str, docString: str = '', preEvalArgs: bool = True ) -> None:
       self.name:str = name
       self.docString:str = docString
-      self.specialForm:bool = specialForm
+      self.preEvalArgs:bool = preEvalArgs
 
 class LPrimitive( LCallable ):
    __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'lambdaListAST')
 
-   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', specialForm: bool=False,
+   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '', preEvalArgs: bool=True,
                  min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '',
                  lambdaListAST: (list|None) = None ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
@@ -73,7 +73,7 @@ class LPrimitive( LCallable ):
       self.max_args:(int|None) = max_args
       self.arity_msg:str      = arity_msg
       self.lambdaListAST:(list|None) = lambdaListAST
-      super().__init__( name, docString, specialForm )
+      super().__init__( name, docString, preEvalArgs )
    
    def usageString( self ):
       if self.paramsString:
@@ -91,7 +91,7 @@ class LFunction( LCallable ):
       self.lambdaListAST: list = lambdaListAST
       self.bodyAST: list   = bodyAST
       self.capturedEnvironment: Environment = capturedEnvironment
-      super().__init__( name, docString, specialForm=False )
+      super().__init__( name, docString, preEvalArgs=True )
 
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
@@ -111,7 +111,7 @@ class LMacro( LCallable ):
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
-      super().__init__( name.strval, docString, specialForm=True )
+      super().__init__( name.strval, docString, preEvalArgs=False )
 
    def usageString( self ):
       if len(self.lambdaListAST) == 0:
@@ -131,7 +131,7 @@ class LContinuation( LCallable ):
 
    def __init__( self, token: object ) -> None:
       self.token = token
-      super().__init__( 'continuation', '', specialForm=False )
+      super().__init__( 'continuation', '', preEvalArgs=True )
 
    def usageString( self ) -> str:
       return '#<CONTINUATION>'
