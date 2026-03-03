@@ -98,31 +98,6 @@ Backquotes may be nested; each level of comma belongs to the nearest enclosing b
       """Must occur within a backquote expr or it's an error."""
       raise LispRuntimeFuncError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
 
-   @primitive( 'while', '(cond &rest body)', preEvalArgs=False )
-   def LP_while( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Perform a loop over the body of sexprs.  Before each iteration conditionExpr
-is evaluated.  If it evaluates as truthy (non-nil) the body exprs are evaluated
-in sequence.  However if conditionExpr evaluates to nil, the loop terminates
-and returns the result of the last body expr evaluated."""
-      raise LispRuntimeFuncError( LP_while, 'Evaluation handled by macro.' )
-
-   @primitive( 'dotimes', '((var countExpr &optional result) &rest body)',
-               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
-   def LP_dotimes( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Performs a loop over a body of sexprs countExpr times.  Before each
-iteration the loop variable is set to the next loop count number (starting with
-0 for the first loop).  Returns result (default NIL) after the loop completes.
-Supports (return value) for early exit."""
-      raise LispRuntimeFuncError( LP_dotimes, 'Evaluation handled by macro.' )
-
-   @primitive( 'dolist', '((variable list &optional result) &rest body)',
-               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
-   def LP_dolist( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Iterate over a body of sexprs, binding variable to each element of list
-before each iteration.  Returns result (default NIL) after the loop completes.
-Supports (return value) for early exit."""
-      raise LispRuntimeFuncError( LP_dolist, 'Evaluation handled by macro.' )
-
    def _block_name( obj ):
       """Extract the block name string from a BLOCK or RETURN-FROM name argument.
 Accepts a symbol or NIL (the empty list) as the name."""
@@ -183,20 +158,6 @@ Returns value (default NIL) from that block.  Equivalent to (return-from nil val
 elements are appended to any preceding individual args.  Returns the result of
 that function application.  function is any callable that is not a special form."""
       raise LispRuntimeFuncError( LP_apply, 'Evaluation handled by main eval loop.' )
-
-   @primitive( 'and', '(&rest forms)', preEvalArgs=False )
-   def LP_and( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Evaluates forms left to right.  Returns nil at the first nil form.
-Returns the value of the last form if all are truthy.  (and) returns t.
-Short-circuits: stops evaluating upon encountering the first nil."""
-      raise LispRuntimeFuncError( LP_and, 'Evaluation handled by macro.' )
-
-   @primitive( 'or', '(&rest forms)', preEvalArgs=False )
-   def LP_or( ctx: LispContext, env: Environment, *args ) -> Any:
-      """Evaluates forms left to right.  Returns the first truthy value found.
-Returns nil if all forms are nil.  (or) returns nil.
-Short-circuits: stops evaluating upon encountering the first truthy value."""
-      raise LispRuntimeFuncError( LP_or, 'Evaluation handled by macro.' )
 
    @primitive( 'throw', '(tag result)' )
    def LP_throw( ctx: LispContext, env: Environment, *args ) -> Any:
