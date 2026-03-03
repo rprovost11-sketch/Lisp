@@ -1210,15 +1210,13 @@
 >>> ;;; apply with unbound symbol
 ... (apply 'nonexistent-fn-xyz '(1 2))
 
-%%% ERROR 'APPLY': First argument "NONEXISTENT-FN-XYZ" expected to be the name of a callable.
-%%% PRIMITIVE USAGE: (APPLY function &rest args)
+%%% APPLY: "NONEXISTENT-FN-XYZ" is not bound to a callable.
 ==>
 
 >>> ;;; apply with non-symbol non-callable first arg
 ... (apply 42 '(1 2))
 
-%%% ERROR 'APPLY': First argument expected to be a symbol.
-%%% PRIMITIVE USAGE: (APPLY function &rest args)
+%%% APPLY: first argument must evaluate to a callable or symbol.
 ==>
 
 ; --- ASIN/ACOS: too many arguments ---

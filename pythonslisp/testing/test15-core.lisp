@@ -112,15 +112,13 @@
 >>> ;;; Error: apply last arg not a list
 ... (apply + 1)
 
-%%% ERROR 'APPLY': Last argument expected to be a list.
-%%% PRIMITIVE USAGE: (APPLY function &rest args)
+%%% APPLY: last argument must be a list.
 ==>
 
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
-%%% ERROR 'APPLY': First argument may not be a special form.
-%%% PRIMITIVE USAGE: (APPLY function &rest args)
+%%% APPLY: first argument may not be a special form.
 ==>
 
 ; --- python errors ---
@@ -214,6 +212,30 @@
 ...
 
 ==> 20
+
+>>> ;;; case with T catch-all
+... (case 99 (1 "one") (t "other"))
+...
+
+==> "other"
+
+>>> ;;; case with OTHERWISE catch-all
+... (case 99 (1 "one") (otherwise "other"))
+...
+
+==> "other"
+
+>>> ;;; case with list of keys
+... (case 2 ((1 2 3) "found") (t "not found"))
+...
+
+==> "found"
+
+>>> ;;; case with list of keys, no match falls to otherwise
+... (case 9 ((1 2 3) "found") (otherwise "not found"))
+...
+
+==> "not found"
 
 >>> ;;; cond with first match
 ... (cond (t 1) (t 2))
@@ -532,11 +554,11 @@
 ...          ((isSymbol? expr) 1)
 ...          ((isList? expr)
 ...           (case (first expr)
-...              ('+    (list '+ (d (at 1 expr)) (d (at 2 expr))))
-...              ('*    (list '+ (list '* (at 2 expr) (d (at 1 expr))) (list '* (at 1 expr) (d (at 2 expr)))))
-...              ('sin  (list '* (list 'cos (at 1 expr)) (d (at 1 expr))))
-...              ('cos  (list '* (list '- (list 'sin (at 1 expr))) (d (at 1 expr))))
-...              ('expt (list '* (list '* (at 2 expr) (list 'expt (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))))))
+...              (+    (list '+ (d (at 1 expr)) (d (at 2 expr))))
+...              (*    (list '+ (list '* (at 2 expr) (d (at 1 expr))) (list '* (at 1 expr) (d (at 2 expr)))))
+...              (sin  (list '* (list 'cos (at 1 expr)) (d (at 1 expr))))
+...              (cos  (list '* (list '- (list 'sin (at 1 expr))) (d (at 1 expr))))
+...              (expt (list '* (list '* (at 2 expr) (list 'expt (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))))))
 ...
 
 ==> (FUNCTION D (EXPR) ...)

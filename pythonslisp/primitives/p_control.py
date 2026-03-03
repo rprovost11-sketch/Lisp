@@ -166,10 +166,10 @@ Returns value (default NIL) from that block.  Equivalent to (return-from nil val
       value = ctx.lEval( env, args[0] ) if len(args) == 1 else L_NIL
       raise ReturnFrom( 'NIL', value )
 
-   @primitive( 'funcall', '(callable &rest args)' )
+   @primitive( 'funcall', '(callable &rest args)', mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=1 )
    def LP_funcall( ctx: LispContext, env: Environment, *args ) -> Any:
       """Calls a function with the args listed."""
-      return ctx.lApply( env, args[0], args[1:] )
+      raise LispRuntimeFuncError( LP_funcall, 'Evaluation handled by main eval loop.' )
 
    @primitive( 'eval', '(sexpr)' )
    def LP_eval( ctx: LispContext, env: Environment, *args ) -> Any:
@@ -177,36 +177,12 @@ Returns value (default NIL) from that block.  Equivalent to (return-from nil val
       return ctx.lEval( env, args[0] )
 
    @primitive( 'apply', '(function &rest args)',
-               mode=LambdaListMode.DOC_ONLY, min_args=2 )
+               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=2 )
    def LP_apply( ctx: LispContext, env: Environment, *args ) -> Any:
-      """The last argument must be a list of args.  Inserts arg1,arg2,... into
-the front of the list of args, then applies the function to the the whole list
-of args.  Returns the result of that function application.
-
-function is any callable that is not a special form."""
-
-      listArg = args[-1]
-      if not isinstance(listArg, list):
-         raise LispRuntimeFuncError( LP_apply, "Last argument expected to be a list." )
-
-      primary = args[0]
-      if isinstance(primary, LCallable):
-         fnObj = primary
-      elif isinstance(primary, LSymbol):
-         try:
-            fnObj = env.lookup( primary.strval )
-         except KeyError:
-            raise LispRuntimeFuncError( LP_apply, f'First argument "{primary}" expected to be the name of a callable.')
-      else:
-         raise LispRuntimeFuncError( LP_apply, "First argument expected to be a symbol.")
-
-      if not fnObj.preEvalArgs:
-         raise LispRuntimeFuncError( LP_apply, "First argument may not be a special form." )
-
-      fnArgs = list( args[1:-1] )
-      fnArgs.extend( listArg )
-
-      return ctx.lApply( env, fnObj, fnArgs )
+      """Applies function to the args.  The last argument must be a list whose
+elements are appended to any preceding individual args.  Returns the result of
+that function application.  function is any callable that is not a special form."""
+      raise LispRuntimeFuncError( LP_apply, 'Evaluation handled by main eval loop.' )
 
    @primitive( 'and', '(&rest forms)', preEvalArgs=False )
    def LP_and( ctx: LispContext, env: Environment, *args ) -> Any:
