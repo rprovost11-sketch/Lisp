@@ -31,6 +31,50 @@ class Environment(EnvironmentBase):
       else:
          self._evalFn = None
 
+   def bind( self, key: str, value: Any ) -> Any:
+      '''Bind using lisp semantics.'''
+      scope = self
+      while scope:
+         if key in scope._bindings:
+            scope._bindings[key] = value
+            return value
+         scope = scope._parent
+      self._GLOBAL_ENV._bindings[key] = value
+      return value
+
+   def lookup( self,  key: str) -> Any:
+      '''Lookup using lisp semantics.'''
+      scope: (EnvironmentBase | None) = self
+      while scope:
+         if key in scope._bindings:
+            return scope._bindings[key]
+         scope = scope._parent
+      raise KeyError
+
+   def lookup2( self, key: str) -> Any:
+      '''This is slower than lookup() even though lookup2() seems more
+      elegant.  While the lookup is fast, the exception handling (which is
+      needed to traverse the parent list) is exceedingly slow.  Here's the
+      code I tested these functions on:
+         (defun test ()
+            (let ()
+               (let ()
+                  (dotimes (i 1000000)
+                     pi))))
+      Looking up pi and e 1,000,000 times.  pi is defined globally, but the
+      search for pi is started three scope levels in.
+         lookup()  eval time between 0.44 and 0.74 seconds.
+         lookup2() eval time between 4.52 and 6.28 seconds.
+      by calling the versions of lookup() from Interpreter._lEval()
+      '''
+      scope: (EnvironmentBase | None) = self
+      while scope:
+         try:
+            return scope._bindings[key]
+         except KeyError:
+            scope = scope._parent
+      raise KeyError
+
    def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any] ) -> None:
       self._validateNoDuplicateParams( lambdaListAST )
       paramListLength = len(lambdaListAST)
@@ -84,7 +128,7 @@ class Environment(EnvironmentBase):
          paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
       elif nextParam.startswith('&'):
          _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
-         if nextParam.strval in _KNOWN_KEYWORDS:
+         if nextParam.name in _KNOWN_KEYWORDS:
             raise LArgBindingError( f'{nextParam} is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.' )
          else:
             raise LArgBindingError( f'Unknown lambda list keyword: {nextParam}.' )
@@ -103,9 +147,9 @@ class Environment(EnvironmentBase):
             return     # other validation will catch non-symbols
          if name.startswith('&'):
             return     # &-keywords are not parameter names
-         if name.strval in seen:
-            raise LArgBindingError( f'Duplicate parameter name {name.strval} in {context}.' )
-         seen.add( name.strval )
+         if name.name in seen:
+            raise LArgBindingError( f'Duplicate parameter name {name.name} in {context}.' )
+         seen.add( name.name )
 
       index = 0
       lambdaListLen = len( lambdaListAST )
@@ -147,7 +191,7 @@ class Environment(EnvironmentBase):
          except IndexError:
             raise LArgBindingError( "Too few positional arguments." )
 
-         self.bindLocal( paramName.strval, argVal )
+         self.bindLocal( paramName.name, argVal )
 
          paramNum += 1
          argNum   += 1
@@ -206,10 +250,10 @@ class Environment(EnvironmentBase):
             argNum  += 1
             svarVal  = self.lookupGlobal('T')   # T, True
 
-         self.bindLocal( varName.strval, initForm )
+         self.bindLocal( varName.name, initForm )
 
          if svarName:
-            self.bindLocal( svarName.strval, svarVal )
+            self.bindLocal( svarName.name, svarVal )
 
       return paramNum, argNum
 
@@ -225,7 +269,7 @@ class Environment(EnvironmentBase):
          raise LArgBindingError( 'Symbol expected after &rest.' )
 
       theRestArgs = argList[argNum:]
-      self.bindLocal( paramName.strval, list(theRestArgs) )
+      self.bindLocal( paramName.name, list(theRestArgs) )
 
       return paramNum + 1, argNum
 
@@ -288,7 +332,7 @@ class Environment(EnvironmentBase):
          else:
             raise LArgBindingError( f'Parameter spec following &KEY must be a symbol or a list.' )
 
-         keyStr = keyName.strval[1:] if keyName.startswith(':') else keyName.strval
+         keyStr = keyName.name[1:] if keyName.startswith(':') else keyName.name
          keysDict[keyStr]   = (varName, svarName, initForm)
          keyParamOrder.append( keyStr )
          paramNum += 1
@@ -306,7 +350,7 @@ class Environment(EnvironmentBase):
       scanIdx = argNum
       while scanIdx + 1 < argListLength:
          scanArg = argList[scanIdx]
-         if isinstance(scanArg, LSymbol) and scanArg.strval == ':ALLOW-OTHER-KEYS':
+         if isinstance(scanArg, LSymbol) and scanArg.name == ':ALLOW-OTHER-KEYS':
             if argList[scanIdx + 1] != list():   # non-NIL value enables it
                allowOtherKeys = True
             break
@@ -318,7 +362,7 @@ class Environment(EnvironmentBase):
          keyArg = argList[argNum]
          if (not isinstance(keyArg, LSymbol)) or (not keyArg.startswith(':')):
             raise LArgBindingError( f'Keyword expected, found {keyArg}.' )
-         keyArgStr = keyArg.strval[1:]  # Strip the leading colon
+         keyArgStr = keyArg.name[1:]  # Strip the leading colon
          argNum += 1
 
          try:
@@ -344,13 +388,13 @@ class Environment(EnvironmentBase):
       for keyStr in keyParamOrder:
          varName, svarName, initForm = keysDict[keyStr]
          if keyStr in suppliedArgs:
-            self.bindLocal( varName.strval, suppliedArgs[keyStr] )
+            self.bindLocal( varName.name, suppliedArgs[keyStr] )
             if svarName:
-               self.bindLocal( svarName.strval, tVal )
+               self.bindLocal( svarName.name, tVal )
          else:
-            self.bindLocal( varName.strval, self._evalFn( self, initForm ) )
+            self.bindLocal( varName.name, self._evalFn( self, initForm ) )
             if svarName:
-               self.bindLocal( svarName.strval, nilVal )
+               self.bindLocal( svarName.name, nilVal )
 
       return paramNum, argNum
 
@@ -386,7 +430,7 @@ class Environment(EnvironmentBase):
          else:
             raise LArgBindingError( 'Parameter spec following &AUX must be a <variable> or a list of (<variable> [<defaultvalue>]).' )
 
-         self.bindLocal( varName.strval, initForm )
+         self.bindLocal( varName.name, initForm )
 
          paramNum += 1
 

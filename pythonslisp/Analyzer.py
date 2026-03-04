@@ -41,7 +41,7 @@ class Analyzer:
             Analyzer.analyze(env, elt)
          return
 
-      name = head.strval
+      name = head.name
 
       # ---------- QUOTE --------------------------------------------------
       if name == 'QUOTE':
@@ -143,11 +143,16 @@ class Analyzer:
             raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected after docstring.')
          return
 
+      # ---------- MAKE-DICT ------------------------------------------------
+      if name == 'MAKE-DICT':
+         Analyzer._analyzeMakeDict(env, args)
+         return
+
       # ---------- Everything else (regular calls, unknown special forms) ---
       # Generic arity check for primitives that carry arity metadata.
       if isinstance(head, LSymbol):
          try:
-            callableObj = env.lookup(head.strval)
+            callableObj = env.lookup(head.name)
             if isinstance(callableObj, LPrimitive):
                if callableObj.arity_msg:
                   numArgs = len(args)
@@ -273,3 +278,28 @@ class Analyzer:
          Analyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
             Analyzer.analyze(env, bodyForm)
+
+   @staticmethod
+   def _analyzeMakeDict( env: EnvironmentBase, args: list ) -> None:
+      """Structural checks for (make-dict ...) forms."""
+      requiredKeyType = None
+      for entryNum, pair in enumerate(args):
+         if not isinstance(pair, list) or len(pair) != 2:
+            raise LRuntimePrimError(env.lookup('MAKE-DICT'),
+                  f'Entry {entryNum + 1} does not contain a (key value) pair.')
+         key, expr = pair
+         if isinstance(key, LSymbol):
+            effectiveType = str
+         elif isinstance(key, (int, float, str)):
+            effectiveType = type(key)
+         else:
+            raise LRuntimePrimError(env.lookup('MAKE-DICT'),
+                  f'Entry {entryNum + 1} has an invalid key type.')
+         if requiredKeyType is None:
+            requiredKeyType = effectiveType
+         elif effectiveType != requiredKeyType:
+            raise LRuntimePrimError(env.lookup('MAKE-DICT'),
+                  f'All keys in a map must be the same type. '
+                  f'Entry {entryNum + 1} is {effectiveType.__name__}, '
+                  f'expected {requiredKeyType.__name__}.')
+         Analyzer.analyze(env, expr)

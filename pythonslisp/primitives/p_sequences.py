@@ -20,12 +20,12 @@ def _extract_key( ctx: Any, env: Environment, key_fn: Any, item: Any ) -> Any:
    """Apply the :key function to item, or return item unchanged if key_fn is NIL."""
    if _is_nil_val( key_fn ):
       return item
-   return ctx.lApply( env, key_fn, [item] )
+   return ctx.lApply( ctx, env, key_fn, [item] )
 
 
 def _apply_test( ctx: Any, env: Environment, test_fn: Any, item: Any, cell_key: Any ) -> bool:
    """Call test_fn(item, cell_key); return True iff the result is truthy (non-NIL)."""
-   return ctx.lApply( env, test_fn, [item, cell_key] ) != L_NIL
+   return ctx.lApply( ctx, env, test_fn, [item, cell_key] ) != L_NIL
 
 
 def _validate_bounds( start: Any, end: Any, seqlen: int, fn: Any ) -> tuple[int, int]:
@@ -67,27 +67,10 @@ def register( primitive ) -> None:
    def LP_make_dict( ctx: Context, env: Environment, *args ) -> Any:
       """Constructs and returns a dict of key-value pairs."""
       theMapping = dict()
-      requiredKeyType = None
-      for entryNum,key_expr_pair in enumerate(args):
-         try:
-            key,expr = key_expr_pair
-         except (ValueError, TypeError):
-            raise LRuntimePrimError( LP_make_dict, f'Entry {entryNum + 1} does not contain a (key value) pair.' )
-
-         if isinstance( key, LSymbol ):
-            key = key.strval
-
-         if isinstance( key, (int,float,str) ):
-            if requiredKeyType is None:
-               requiredKeyType = type(key)
-            elif type(key) != requiredKeyType:
-               raise LRuntimePrimError( LP_make_dict,
-                  f'All keys in a map must be the same type. '
-                  f'Entry {entryNum + 1} is {type(key).__name__}'
-                  f', expected {requiredKeyType.__name__}.' )
-            theMapping[ key ] = ctx.lEval( env, expr )
-         else:
-            raise LRuntimePrimError( LP_make_dict, f'Entry {entryNum+1} has an invalid key type.' )
+      for key, expr in args:
+         if isinstance(key, LSymbol):
+            key = key.name
+         theMapping[key] = ctx.lEval(env, expr)
       return theMapping
 
    @primitive( 'car', '(list)' )
@@ -157,7 +140,7 @@ def register( primitive ) -> None:
          raise LRuntimePrimError( LP_at, 'Invalid argument.  List, Dict, or String expected.' )
 
       if isinstance( key, LSymbol ):
-         key = key.strval
+         key = key.name
 
       try:
          return keyed[ key ]
@@ -174,7 +157,7 @@ def register( primitive ) -> None:
          raise LRuntimePrimError( LP_atSet, 'Invalid argument.  List or Dict expected.' )
 
       if isinstance( key, LSymbol ):
-         key = key.strval
+         key = key.name
 
       try:
          keyed[ key ] = newValue
@@ -264,7 +247,7 @@ def register( primitive ) -> None:
          raise LRuntimePrimError( LP_hasKey, 'Invalid argument 2.  Dict expected.')
 
       if isinstance( aKey, LSymbol ):
-         aKey = aKey.strval
+         aKey = aKey.name
 
       return L_T if aKey in aMap else L_NIL
 
@@ -282,9 +265,9 @@ The optional :key function extracts the comparison key from each element."""
       def _cmp( a, b ):
          ka = _extract_key( ctx, env, key_fn, a )
          kb = _extract_key( ctx, env, key_fn, b )
-         if ctx.lApply( env, pred, [ka, kb] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [ka, kb] ) != L_NIL:
             return -1
-         if ctx.lApply( env, pred, [kb, ka] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [kb, ka] ) != L_NIL:
             return 1
          return 0
 
@@ -413,7 +396,7 @@ returns the rightmost such element.  Returns NIL if none found."""
          indices = reversed( range( start_n, end_n ) )
       for i in indices:
          cell_key = _extract_key( ctx, env, key_fn, seq[i] )
-         if ctx.lApply( env, pred, [cell_key] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [cell_key] ) != L_NIL:
             return seq[i]
       return L_NIL
 
@@ -461,7 +444,7 @@ index of the rightmost such element.  Returns NIL if none found."""
          indices = reversed( range( start_n, end_n ) )
       for i in indices:
          cell_key = _extract_key( ctx, env, key_fn, seq[i] )
-         if ctx.lApply( env, pred, [cell_key] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [cell_key] ) != L_NIL:
             return i
       return L_NIL
 
@@ -501,7 +484,7 @@ which pred returns true when applied to the element's :key."""
       n = 0
       for i in range( start_n, end_n ):
          cell_key = _extract_key( ctx, env, key_fn, seq[i] )
-         if ctx.lApply( env, pred, [cell_key] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [cell_key] ) != L_NIL:
             n += 1
       return n
 
@@ -565,7 +548,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
          if count_n is not None and n_removed >= count_n:
             break
          cell_key = _extract_key( ctx, env, key_fn, seq[idx] )
-         if ctx.lApply( env, pred, [cell_key] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [cell_key] ) != L_NIL:
             to_remove.add( idx )
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
@@ -597,7 +580,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
          if count_n is not None and n_removed >= count_n:
             break
          cell_key = _extract_key( ctx, env, key_fn, seq[idx] )
-         if ctx.lApply( env, pred, [cell_key] ) == L_NIL:   # remove where pred is FALSE
+         if ctx.lApply( ctx, env, pred, [cell_key] ) == L_NIL:   # remove where pred is FALSE
             to_remove.add( idx )
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
@@ -664,7 +647,7 @@ considered.  :count limits replacements; :from-end replaces from the right."""
          if count_n is not None and n_done >= count_n:
             break
          cell_key = _extract_key( ctx, env, key_fn, seq[idx] )
-         if ctx.lApply( env, pred, [cell_key] ) != L_NIL:
+         if ctx.lApply( ctx, env, pred, [cell_key] ) != L_NIL:
             result[idx] = new
             n_done += 1
       return result
@@ -682,7 +665,7 @@ a list of the results.  Stops at the shortest sequence."""
             raise LRuntimePrimError( LP_mapcar, f'Argument {i + 2} must be a list.' )
       result = []
       for elts in zip( *seqs ):
-         result.append( ctx.lApply( env, fn, list(elts) ) )
+         result.append( ctx.lApply( ctx, env, fn, list(elts) ) )
       return result
 
    @primitive( 'every', '(pred seq &rest more-seqs)' )
@@ -692,7 +675,7 @@ Returns NIL at the first false result.  Returns T for empty sequences."""
       pred = args[0]
       seqs = args[1:]
       for elts in zip( *seqs ):
-         result = ctx.lApply( env, pred, list(elts) )
+         result = ctx.lApply( ctx, env, pred, list(elts) )
          if _is_nil_val( result ):
             return L_NIL
       return L_T
@@ -704,7 +687,7 @@ Returns NIL if pred returns NIL for every element-wise group."""
       pred = args[0]
       seqs = args[1:]
       for elts in zip( *seqs ):
-         result = ctx.lApply( env, pred, list(elts) )
+         result = ctx.lApply( ctx, env, pred, list(elts) )
          if not _is_nil_val( result ):
             return result
       return L_NIL
@@ -717,5 +700,5 @@ Returns the first sequence."""
       seqs     = args[1:]
       first_seq = seqs[0]
       for elts in zip( *seqs ):
-         ctx.lApply( env, fn, list(elts) )
+         ctx.lApply( ctx, env, fn, list(elts) )
       return first_seq

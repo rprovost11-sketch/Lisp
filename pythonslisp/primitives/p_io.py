@@ -53,13 +53,17 @@ def register(primitive, parseLispString: Callable) -> None:
          print( end=end, file=outStrm )
       return values[-1]
 
-   def printHelpListings( outStrm, env: Environment ) -> None:
+   def printHelpListings( outStrm, env: Environment, find: str | None = None ) -> None:
       # Create bins to sort symbols into
       variablesList = []
       primitivesList = []
       functionsList  = []
       macrosList     = []
-      topicsList     = [ f'"{f.stem}"' for f in sorted(HELP_DIR.glob('*.txt')) ] if HELP_DIR.exists() else []
+      findUpper = find.upper() if find is not None else None
+      rawTopics = sorted(HELP_DIR.glob('*.txt')) if HELP_DIR.exists() else []
+      if findUpper is not None:
+         rawTopics = [f for f in rawTopics if findUpper in f.stem.upper()]
+      topicsList = [f'"{f.stem}"' for f in rawTopics]
       outFile  = outStrm or sys.stdout
       useColor = hasattr(outFile, 'isatty') and outFile.isatty()
 
@@ -77,9 +81,11 @@ def register(primitive, parseLispString: Callable) -> None:
          print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
          print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
 
-      # Bin the global symbols into the various lists
+      # Bin the global symbols into the various lists, filtering by substring if requested
       for symbolStr in env.getGlobalEnv().localSymbols():
          if symbolStr.startswith('%') or symbolStr.endswith('-INTERNAL'):
+            continue
+         if findUpper is not None and findUpper not in symbolStr:
             continue
          obj = env.lookupGlobal(symbolStr)
          if isinstance(obj, LPrimitive):
@@ -109,6 +115,7 @@ def register(primitive, parseLispString: Callable) -> None:
       print( file=outStrm )
       print( "Type '(help callable)' for available documentation on a callable.", file=outStrm )
       print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )
+      print( "Type '(help :find \"substring\")' to search all names by substring.", file=outStrm )
 
    # -----------------------------------------------------------------------
 
@@ -635,26 +642,43 @@ returns newLimit upon success."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_recursionlimit, 'Argument must be an integer.' )
 
-   @primitive( 'help', '(&optional callableOrString)' )
+   @primitive( 'help', '(&optional callable-or-string &key find)',
+               mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
    def LP_help( ctx: Context, env: Environment, *args ) -> Any:
       """Prints a set of tables for all the globally defined symbols and
 topics currently available in Python's Lisp. Or prints the usage and
 documentation for a specific callable (primitive, function or macro) or topic.
 
 Type '(help callable)' for available documentation on a callable.
-Type '(help "topic")' for available documentation on the named topic."""
-      numArgs = len(args)
-      if numArgs > 1:
-         raise LRuntimePrimError( LP_help, f'Too many arguments.  Received {numArgs}' )
+Type '(help "topic")' for available documentation on the named topic.
+Type '(help :find "substring")' to search all names by substring."""
+      numArgs  = len(args)
+      find_val = None
+      pos_arg  = None
 
-      elif numArgs == 0:
+      if numArgs == 2:
+         if isinstance(args[0], LSymbol) and args[0].name == ':FIND':
+            if not isinstance(args[1], str):
+               raise LRuntimePrimError( LP_help, ':find argument must be a string.' )
+            find_val = args[1]
+         else:
+            raise LRuntimePrimError( LP_help, '0 or 1 arguments expected, or :find "substring".' )
+      elif numArgs == 1:
+         pos_arg = args[0]
+      elif numArgs > 2:
+         raise LRuntimePrimError( LP_help, '0 or 1 arguments expected, or :find "substring".' )
+
+      if find_val is not None:
+         printHelpListings( ctx.outStrm, env, find=find_val )
+         return L_T
+
+      if pos_arg is None:
          printHelpListings( ctx.outStrm, env )
          return L_T
 
-      # numArgs == 1
-      arg = args[0]
-      if isinstance(arg, str):
-         topicName = arg.upper()
+      # Positional arg: show specific callable or topic
+      if isinstance(pos_arg, str):
+         topicName = pos_arg.upper()
          topicFile = HELP_DIR / f'{topicName}.txt'
          if topicFile.exists():
             print( topicFile.read_text( encoding='utf-8' ), file=ctx.outStrm )
@@ -662,16 +686,15 @@ Type '(help "topic")' for available documentation on the named topic."""
             print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
          return L_T
 
-      if not isinstance(arg, LCallable):
+      if not isinstance(pos_arg, LCallable):
          raise LRuntimePrimError( LP_help, 'First argument expected to be a callable.' )
-      callableObj = arg
+      callableObj = pos_arg
 
       outStrm  = ctx.outStrm
       outFile  = outStrm or sys.stdout
       useColor = hasattr(outFile, 'isatty') and outFile.isatty()
-      BOLD_WHITE = '\033[1;97m' if useColor else ''
-      CYAN       = '\033[96m'   if useColor else ''
-      RESET      = '\033[0m'    if useColor else ''
+      CYAN  = '\033[96m' if useColor else ''
+      RESET = '\033[0m'  if useColor else ''
 
       evalLabel = 'args: pre-evaluated' if callableObj.preEvalArgs else 'args: not pre-evaluated'
       print( f'{callableObj.typeLabel()}  |  {evalLabel}', file=outStrm )

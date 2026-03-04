@@ -1,8 +1,10 @@
+import time
 from typing import Any
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+#from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LMacro, LContinuation, LCallable
-from pythonslisp.AST import L_T, L_NIL
+from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError, ContinuationInvoked
 from pythonslisp.Expander import Expander
@@ -22,7 +24,7 @@ can be an optional documentation string."""
       else:
          docString = ''
       theFunc = LMacro( fnName, funcParams, docString, funcBody )
-      return env.bindGlobal( fnName.strval, theFunc )
+      return env.bindGlobal( fnName.name, theFunc )
 
    @primitive( 'macroexpand', '(\'form)',
                mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
@@ -32,11 +34,11 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
 
       form = args[0]
       while isinstance(form, list) and len(form) >= 1:
-         primary = form[0]
-         if not isinstance(primary, LSymbol):
+         head = form[0]
+         if not isinstance(head, LSymbol):
             break
          try:
-            macroDef = env.lookup( primary.strval )
+            macroDef = env.lookup( head.name )
          except KeyError:
             break
          if not isinstance( macroDef, LMacro ):
@@ -53,11 +55,11 @@ not a macro call."""
       form = args[0]
       if not isinstance(form, list) or len(form) < 1:
          return form
-      primary = form[0]
-      if not isinstance(primary, LSymbol):
+      head = form[0]
+      if not isinstance(head, LSymbol):
          return form
       try:
-         macroDef = env.lookup( primary.strval )
+         macroDef = env.lookup( head.name )
       except KeyError:
          return form
       if not isinstance( macroDef, LMacro ):
@@ -71,7 +73,7 @@ not a macro call."""
       accessor_sym, field_sym = args
       if not isinstance(accessor_sym, LSymbol) or not isinstance(field_sym, LSymbol):
          raise LRuntimePrimError( LP_defsetf_internal, 'Both arguments must be symbols.' )
-      ctx.setfRegistry[accessor_sym.strval] = field_sym.strval
+      ctx.setfRegistry[accessor_sym.name] = field_sym.name
       return accessor_sym
 
    @primitive( 'set-accessor!', '(accessor-symbol instance newValue)' )
@@ -80,10 +82,10 @@ not a macro call."""
       accessor, instance, newval = args
       if not isinstance( accessor, LSymbol ):
          raise LRuntimePrimError( LP_set_accessor, 'Argument 1 must be a symbol.' )
-      field_key = ctx.setfRegistry.get( accessor.strval )
+      field_key = ctx.setfRegistry.get( accessor.name )
       if field_key is None:
          raise LRuntimePrimError( LP_set_accessor,
-                                     f'No setf expander registered for {accessor.strval}.' )
+                                     f'No setf expander registered for {accessor.name}.' )
       if not isinstance( instance, dict ):
          raise LRuntimePrimError( LP_set_accessor, 'Argument 2 must be a struct instance.' )
       instance[ field_key ] = newval
@@ -108,7 +110,7 @@ The argument is evaluated: (makunbound 'x) unbinds X."""
       key = args[0]
       if not isinstance(key, LSymbol):
          raise LRuntimePrimError( LP_makunbound, 'Argument expected to be a symbol.' )
-      env.getGlobalEnv().unbind( key.strval )
+      env.getGlobalEnv().unbind( key.name )
       return L_NIL
 
    @primitive( 'symtab!', '()', max_args=0 )
@@ -121,9 +123,8 @@ is last."""
       scope: (Environment | None) = env
       while scope:
          symList = scope.localSymbols()
-         print( symList )
+         print( '   ', prettyPrint( symList ) )
          scope = scope.parentEnv( )
-
       return L_NIL
 
    @primitive( 'trace', '(&rest fn-names)', preEvalArgs=False )
@@ -136,7 +137,7 @@ trace list.  With no arguments, returns the list of currently traced functions."
       for sym in args:
          if not isinstance(sym, LSymbol):
             raise LRuntimePrimError( LP_trace, 'Arguments must be symbols.' )
-         tracer.addFnTrace( sym.strval )
+         tracer.addFnTrace( sym.name )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'untrace', '(&rest fn-names)', preEvalArgs=False )
@@ -150,7 +151,7 @@ trace list.  With no arguments, clears all named function tracing."""
          for sym in args:
             if not isinstance(sym, LSymbol):
                raise LRuntimePrimError( LP_untrace, 'Arguments must be symbols.' )
-            tracer.removeFnTrace( sym.strval )
+            tracer.removeFnTrace( sym.name )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'call/cc', '(procedure)' )
@@ -169,7 +170,7 @@ continuations are supported; invoking a stale continuation is an error."""
       cont  = LContinuation( token )
 
       try:
-         return ctx.lApply( env, proc, [cont] )
+         return ctx.lApply( ctx, env, proc, [cont] )
       except ContinuationInvoked as ci:
          if ci.token is token:
             return ci.value
@@ -182,23 +183,39 @@ continuations are supported; invoking a stale continuation is an error."""
       if not isinstance( sym, LSymbol ):
          raise LRuntimePrimError( LP_boundp, 'Argument 1 must be a Symbol.' )
       try:
-         env.lookup( sym.strval )
+         env.lookup( sym.name )
          return L_T
       except KeyError:
          return L_NIL
 
-   _gensym_counter = 0
-
-   @primitive( 'gensym', '(&optional prefix)' )
+   @primitive( 'gensym', '(&optional x)' )
    def LP_gensym( ctx: Context, env: Environment, *args ) -> Any:
-      """Generate and return a new, unique symbol.  The optional prefix
-string (default "G") is prepended to an ever-increasing counter.  Each
-call is guaranteed to return a symbol not returned by any previous call."""
-      nonlocal _gensym_counter
-      prefix = 'G'
-      if args:
-         if not isinstance( args[0], str ):
-            raise LRuntimePrimError( LP_gensym, 'Argument must be a string prefix.' )
-         prefix = args[0]
-      _gensym_counter += 1
-      return LSymbol( f'{prefix}{_gensym_counter}' )
+      """Generate and return a new, unique symbol.
+If x is a string it is used as the prefix (default \"G\").  The current
+value of *gensym-counter* is appended and then *gensym-counter* is
+incremented.  If x is a non-negative integer it is used directly as the
+numeric suffix and *gensym-counter* is left unchanged."""
+      counter = env.lookupGlobalWithDefault( '*GENSYM-COUNTER*', 0 )
+      if not args:
+         env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
+         return LSymbol( f'G{counter}' )
+      x = args[0]
+      if isinstance( x, str ):
+         env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
+         return LSymbol( f'{x}{counter}' )
+      if isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
+         return LSymbol( f'G{x}' )
+      raise LRuntimePrimError( LP_gensym, 'Argument must be a string prefix or non-negative integer.' )
+
+   _ITUPS = 1_000_000
+
+   @primitive( 'internal-time-units-per-second', '()' )
+   def LP_itups( ctx: Context, env: Environment, *args ) -> Any:
+      """Returns the number of internal time units per second (1,000,000)."""
+      return _ITUPS
+
+   @primitive( 'get-internal-real-time', '()' )
+   def LP_get_internal_real_time( ctx: Context, env: Environment, *args ) -> Any:
+      """Returns a high-resolution timestamp as an integer in units of
+internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
+      return int( time.perf_counter() * _ITUPS )

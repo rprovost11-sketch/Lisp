@@ -12,41 +12,41 @@ LNUMBER = (int,float,Fraction)
 LATOM   = (int,float,Fraction,str)
 
 class LSymbol:
-   __slots__ = ('strval', )
+   __slots__ = ('name', )
    
    def __init__( self, val: str ) -> None:
-      self.strval = val.upper()
+      self.name = val.upper()
 
    def __str__( self ) -> str:
-      return self.strval
+      return self.name
 
    def __repr__( self ) -> str:
-      return self.strval
+      return self.name
 
    def __eq__( self, other: Any ) -> bool:
       if isinstance(other, LSymbol):
-         return self.strval == other.strval
+         return self.name == other.name
       elif isinstance(other, str):
-         return self.strval == other
+         return self.name == other
       else:
          return False
 
    def __hash__( self ) -> int:
-      return hash(self.strval)
+      return hash(self.name)
 
    def __ne__( self, other: Any ) -> bool:
       if isinstance(other, LSymbol):
-         return self.strval != other.strval
+         return self.name != other.name
       elif isinstance(other, str):
-         return self.strval != other
+         return self.name != other
       else:
          return True
    
    def startswith( self, asubstr:str ) -> bool:
-      return self.strval.startswith(asubstr)
+      return self.name.startswith(asubstr)
    
    def isKeyArg( self ):
-      return self.strval.startswith(':')
+      return self.name.startswith(':')
 
 
 # Lisp lists will be represented by python list.
@@ -128,7 +128,7 @@ class LMacro( LCallable ):
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
-      super().__init__( name.strval, docString, preEvalArgs=False )
+      super().__init__( name.name, docString, preEvalArgs=False )
 
    def typeLabel( self ):
       return 'Macro'
@@ -242,7 +242,7 @@ def prettyPrint( sExpr: Any ) -> str:
 def eql( a: Any, b: Any ) -> bool:
    """CL eql: symbols by name, numbers by type+value, everything else by identity."""
    if isinstance(a, LSymbol) and isinstance(b, LSymbol):
-      return a.strval == b.strval
+      return a.name == b.name
    if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
       return a == b
    return a is b

@@ -1490,6 +1490,24 @@
 
 ==> T
 
+; --- internal-time-units-per-second / get-internal-real-time ---
+
+>>> (= (internal-time-units-per-second) 1000000)
+==> T
+
+>>> (integerp (get-internal-real-time))
+==> T
+
+; elapsed time is non-negative
+>>> (>= (get-internal-real-time) 0)
+==> T
+
+; two successive calls are non-decreasing
+>>> (let ((t1 (get-internal-real-time))
+...       (t2 (get-internal-real-time)))
+...   (>= t2 t1))
+==> T
+
 ; --- boundp ---
 
 >>> (setf bptest 42)
@@ -1506,18 +1524,6 @@
 ...
 
 ==> NIL
-
-; --- symbol-name ---
-
->>> (symbol-name 'hello)
-...
-
-==> "HELLO"
-
->>> (symbol-name 'car)
-...
-
-==> "CAR"
 
 ; --- error ---
 
@@ -1996,10 +2002,24 @@ Unknown topic: "UNKNOWN-TOPIC"
 
 ; prefix is upper-cased like all symbols
 >>> (let ((g (gensym "test")))
-...   (string= (symbol-name g) (string-upcase (symbol-name g))))
+...   (string= (ustring g) (string-upcase (ustring g))))
 ==> T
 
-; error: non-string prefix
->>> (gensym 42)
-%%% ERROR 'GENSYM': Argument must be a string prefix.
-%%% PRIMITIVE USAGE: (GENSYM &optional prefix)
+; integer arg: uses n as suffix, does not increment *gensym-counter*
+>>> (let ((before *gensym-counter*))
+...   (gensym 99)
+...   (= *gensym-counter* before))
+==> T
+
+; *gensym-counter* is settable; counter is used-then-incremented
+>>> (let ((saved *gensym-counter*))
+...   (setq *gensym-counter* 0)
+...   (let ((g (gensym "X")))
+...     (setq *gensym-counter* saved)
+...     g))
+==> X0
+
+; error: invalid arg type
+>>> (gensym 3.14)
+%%% ERROR 'GENSYM': Argument must be a string prefix or non-negative integer.
+%%% PRIMITIVE USAGE: (GENSYM &optional x)

@@ -26,8 +26,8 @@ def constructPrimitives( parseLispString: Callable[[str], Any] ) -> dict[str, An
       in_section = 'required'
       unbounded  = False
       for item in ll_ast:
-         if isinstance( item, LSymbol ) and item.strval in _KW_MARKERS:
-            marker = item.strval
+         if isinstance( item, LSymbol ) and item.name in _KW_MARKERS:
+            marker = item.name
             if marker in ('&REST', '&BODY'):
                in_section = 'rest'
                unbounded  = True

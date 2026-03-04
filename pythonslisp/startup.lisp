@@ -10,6 +10,9 @@
            (uwriteln! "- Failed to increase recursion limit."))
        nil))
 
+;;; Standard CL special variables
+(setq *gensym-counter* 0)
+
 ;;; Standard CL stream variables
 (setf *standard-input*  (stdin))
 (setf *standard-output* (stdout))

@@ -19,40 +19,17 @@ class EnvironmentBase:
       self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
-   def lookup( self,  key: str) -> Any:
-      scope: (EnvironmentBase | None) = self
-      while scope:
-         if key in scope._bindings:
-            return scope._bindings[key]
-         scope = scope._parent
-      raise KeyError
-
-   def lookup2( self, key: str) -> Any:
-      '''This is slover than lookup() even though lookup2() seems more
-      elegant.  While the lookup is fast, the exception handling (which is
-      needed to traverse the parent list) is exceedingly slow.  Here's the
-      code I tested these functions on:
-         (defun test ()
-            (let ()
-               (let ()
-                  (dotimes (i 1000000)
-                     pi))))
-      Looking up pi and e 1,000,000 times.  pi is defined globally, but the
-      search for pi is started three scope levels in.
-         lookup()  eval time between 0.44 and 0.74 seconds.
-         lookup2() eval time between 4.52 and 6.28 seconds.
-      by calling the versions of lookup() from Interpreter._lEval()
-      '''
-      scope: (EnvironmentBase | None) = self
-      while scope:
-         try:
-            return scope._bindings[key]
-         except KeyError:
-            scope = scope._parent
-      raise KeyError
-
+   def lookupLocal( self, key: str ) -> Any:
+      return self._bindings[key]
+   
    def lookupGlobal(self, key: str ) -> Any:
       return self._GLOBAL_ENV._bindings[ key ]
+
+   def lookupLocalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
+      return self._bindings.get( key, dfltVal )
+
+   def lookupGlobalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
+      return self._GLOBAL_ENV._bindings.get(key, dfltVal)
 
    def unbind( self, key: str ) -> None:
       scope: (EnvironmentBase | None) = self

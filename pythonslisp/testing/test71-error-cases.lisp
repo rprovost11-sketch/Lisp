@@ -1299,15 +1299,15 @@
 >>> ;;; help with too many arguments
 ... (help 1 2)
 
-%%% ERROR 'HELP': 0 or 1 arguments expected.
-%%% PRIMITIVE USAGE: (HELP &optional callableOrString)
+%%% ERROR 'HELP': 0 or 1 arguments expected, or :find "substring".
+%%% PRIMITIVE USAGE: (HELP &optional callable-or-string &key find)
 ==>
 
 >>> ;;; help with non-callable argument
 ... (help 42)
 
 %%% ERROR 'HELP': First argument expected to be a callable.
-%%% PRIMITIVE USAGE: (HELP &optional callableOrString)
+%%% PRIMITIVE USAGE: (HELP &optional callable-or-string &key find)
 ==>
 
 ; --- SORT: non-list argument ---

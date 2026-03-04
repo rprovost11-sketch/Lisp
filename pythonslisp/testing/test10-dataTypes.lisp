@@ -790,10 +790,74 @@
 >>> (typep 42 'nil)
 ==> NIL
 
+; --- typep: compound specifiers ---
+
+>>> (typep 42 '(or integer string))
+==> T
+
+>>> (typep "hi" '(or integer string))
+==> T
+
+>>> (typep 3.14 '(or integer string))
+==> NIL
+
+>>> (typep 42 '(and number (not float)))
+==> T
+
+>>> (typep 3.14 '(and number (not float)))
+==> NIL
+
+>>> (typep 42 '(not string))
+==> T
+
+>>> (typep 42 '(member 1 2 42 99))
+==> T
+
+>>> (typep 7 '(member 1 2 42 99))
+==> NIL
+
+; satisfies
+>>> (typep 4 '(satisfies evenp))
+==> T
+
+>>> (typep 3 '(satisfies evenp))
+==> NIL
+
+; ranged integer
+>>> (typep 5 '(integer 1 10))
+==> T
+
+>>> (typep 0 '(integer 1 10))
+==> NIL
+
+>>> (typep 10 '(integer 1 10))
+==> T
+
+; exclusive bounds
+>>> (typep 1 '(integer (0) (10)))
+==> T
+
+>>> (typep 0 '(integer (0) (10)))
+==> NIL
+
+; unbounded
+>>> (typep -99 '(integer * 0))
+==> T
+
+>>> (typep 1 '(integer * 0))
+==> NIL
+
+; ranged float
+>>> (typep 0.5 '(float 0.0 1.0))
+==> T
+
+>>> (typep 1.5 '(float 0.0 1.0))
+==> NIL
+
 ; --- typep: error ---
 
 >>> (typep 42 "not-a-symbol")
-%%% ERROR 'TYPEP': Argument 2 must be a type symbol.
+%%% ERROR 'TYPEP': Argument 2 must be a type symbol or compound type specifier.
 %%% PRIMITIVE USAGE: (TYPEP object type-specifier)
 
 ; --- typecase ---

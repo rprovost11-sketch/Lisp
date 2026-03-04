@@ -9,13 +9,13 @@ from pythonslisp.AST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LP
                                    eql, equal, equalp )
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimePrimError
+from pythonslisp.Exceptions import LRuntimePrimError, LRuntimeError
 from pythonslisp.Parser import ParseError
 from pythonslisp.primitives import LambdaListMode
 
 
-def _typep( obj, tname: str ) -> bool:
-   """Return True if obj belongs to the named CL type specifier."""
+def _typep_atom( obj, tname: str ) -> bool:
+   """Return True if obj belongs to the named atomic CL type specifier."""
    if tname == 'T':              return True
    if tname == 'NIL':            return False
    if tname == 'NULL':           return isinstance(obj, list) and len(obj) == 0
@@ -23,8 +23,10 @@ def _typep( obj, tname: str ) -> bool:
    if tname == 'LIST':           return isinstance(obj, list)
    if tname == 'ATOM':           return not (isinstance(obj, list) and len(obj) > 0)
    if tname == 'BOOLEAN':
-      if isinstance(obj, list) and len(obj) == 0: return True
-      if isinstance(obj, LSymbol) and obj.strval == 'T': return True
+      if isinstance(obj, list) and len(obj) == 0:
+         return True
+      if isinstance(obj, LSymbol) and obj.name == 'T':
+         return True
       return False
    if tname in ('NUMBER', 'REAL'): return isinstance(obj, LNUMBER)
    if tname == 'INTEGER':        return isinstance(obj, int)
@@ -41,9 +43,70 @@ def _typep( obj, tname: str ) -> bool:
    if tname == 'DICT':           return isinstance(obj, dict)
    if isinstance(obj, dict):
       struct_type = obj.get('STRUCT-TYPE')
-      if isinstance(struct_type, LSymbol) and struct_type.strval == tname:
+      if isinstance(struct_type, LSymbol) and struct_type.name == tname:
          return True
    return False
+
+
+def _check_numeric_bounds( val, bounds: list ) -> bool:
+   """Check CL-style numeric bounds.
+Each bound is * (unbounded), a number (inclusive), or a 1-element list (exclusive)."""
+   low  = bounds[0] if len(bounds) >= 1 else LSymbol('*')
+   high = bounds[1] if len(bounds) >= 2 else LSymbol('*')
+   if not (isinstance(low, LSymbol) and low.name == '*'):
+      if isinstance(low, list) and len(low) == 1:
+         if not (val > low[0]):
+            return False
+      else:
+         if not (val >= low):
+            return False
+   if not (isinstance(high, LSymbol) and high.name == '*'):
+      if isinstance(high, list) and len(high) == 1:
+         if not (val < high[0]):
+            return False
+      else:
+         if not (val <= high):
+            return False
+   return True
+
+
+def _typep( obj, spec, ctx=None, env=None ) -> bool:
+   """Return True if obj matches the type specifier.
+spec may be an LSymbol (atomic) or a list (compound)."""
+   if isinstance(spec, LSymbol):
+      return _typep_atom(obj, spec.name)
+   if not (isinstance(spec, list) and len(spec) > 0):
+      raise LRuntimeError('typep: type specifier must be a symbol or non-empty list.')
+   head = spec[0]
+   if not isinstance(head, LSymbol):
+      raise LRuntimeError('typep: compound type specifier head must be a symbol.')
+   op   = head.name
+   rest = spec[1:]
+   if op == 'OR':
+      return any( _typep(obj, s, ctx, env) for s in rest )
+   if op == 'AND':
+      return all( _typep(obj, s, ctx, env) for s in rest )
+   if op == 'NOT':
+      if len(rest) != 1:
+         raise LRuntimeError('typep: NOT requires exactly one type argument.')
+      return not _typep(obj, rest[0], ctx, env)
+   if op == 'MEMBER':
+      return any( eql(obj, v) for v in rest )
+   if op == 'SATISFIES':
+      if len(rest) != 1 or not isinstance(rest[0], LSymbol):
+         raise LRuntimeError('typep: SATISFIES requires a function-name symbol.')
+      fn     = env.lookup(rest[0].name)
+      result = ctx.lApply(ctx, env, fn, [obj])
+      return result is not L_NIL
+   if op == 'INTEGER':
+      return isinstance(obj, int) and _check_numeric_bounds(obj, rest)
+   if op == 'FLOAT':
+      return isinstance(obj, float) and _check_numeric_bounds(obj, rest)
+   if op == 'RATIONAL':
+      return isinstance(obj, (int, Fraction)) and _check_numeric_bounds(obj, rest)
+   if op in ('REAL', 'NUMBER'):
+      return isinstance(obj, LNUMBER) and _check_numeric_bounds(obj, rest)
+   raise LRuntimeError(f'typep: unknown compound type operator {op}.')
 
 
 def register(primitive, parseLispString: Callable) -> None:
@@ -72,13 +135,6 @@ def register(primitive, parseLispString: Callable) -> None:
    def LP_symbolp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a symbol otherwise nil."""
       return L_T if isinstance( args[0], LSymbol ) else L_NIL
-
-   @primitive( 'symbol-name', '(symbol)' )
-   def LP_symbol_name( ctx: Context, env: Environment, *args ) -> Any:
-      """Returns the name of a symbol as a string."""
-      if not isinstance( args[0], LSymbol ):
-         raise LRuntimePrimError( LP_symbol_name, 'Argument 1 must be a Symbol.' )
-      return args[0].strval
 
    @primitive( 'atom', '(sexpr)' )
    def LP_atom( ctx: Context, env: Environment, *args ) -> Any:
@@ -172,15 +228,18 @@ or open-string), nil otherwise."""
 
    @primitive( 'typep', '(object type-specifier)' )
    def LP_typep( ctx: Context, env: Environment, *args ) -> Any:
-      """Returns T if object is of the type named by type-specifier (a symbol),
-NIL otherwise.  Recognised type specifiers: T, NIL, ATOM, LIST, NULL, CONS,
-BOOLEAN, NUMBER, REAL, INTEGER, FLOAT, RATIO, RATIONAL, STRING, SYMBOL,
-FUNCTION, MACRO, STREAM, FILE-STREAM, STRING-STREAM, DICT, and any struct
-type name created with defstruct."""
-      obj, type_sym = args
-      if not isinstance(type_sym, LSymbol):
-         raise LRuntimePrimError( LP_typep, 'Argument 2 must be a type symbol.' )
-      return L_T if _typep(obj, type_sym.strval) else L_NIL
+      """Returns T if object matches the type specifier, NIL otherwise.
+type-specifier may be an atomic symbol or a compound list form.
+Atomic specifiers: T NIL ATOM LIST NULL CONS BOOLEAN NUMBER REAL INTEGER
+  FLOAT RATIO RATIONAL STRING SYMBOL FUNCTION MACRO STREAM FILE-STREAM
+  STRING-STREAM DICT, and any struct type name.
+Compound specifiers: (OR ...) (AND ...) (NOT t) (MEMBER v...) (SATISFIES fn)
+  (INTEGER low high) (FLOAT low high) (RATIONAL low high) (REAL low high)
+  (NUMBER low high).  Bounds are * (unbounded), n (inclusive), or (n) (exclusive)."""
+      obj, spec = args
+      if not isinstance(spec, (LSymbol, list)):
+         raise LRuntimePrimError( LP_typep, 'Argument 2 must be a type symbol or compound type specifier.' )
+      return L_T if _typep(obj, spec, ctx, env) else L_NIL
 
    @primitive( 'not', '(object)' )
    def LP_not( ctx: Context, env: Environment, *args ) -> Any:
@@ -196,7 +255,7 @@ identity.  Note: small integers and interned strings may be identical
 in CPython due to implementation-level caching."""
       arg1, arg2 = args
       if isinstance(arg1, LSymbol) and isinstance(arg2, LSymbol):
-         return L_T if (arg1.strval == arg2.strval) else L_NIL
+         return L_T if (arg1.name == arg2.name) else L_NIL
       return L_T if (arg1 is arg2) else L_NIL
 
    @primitive( 'eql', '(a b)' )

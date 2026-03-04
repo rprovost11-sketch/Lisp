@@ -81,7 +81,7 @@ evaluated.  All remaining cases are skipped."""
    def LP_backquote( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-      result = ctx.lBackquoteExpand( env, args[0] )
+      result = ctx.lBackquoteExpand( ctx, env, args[0] )
       if ( isinstance(result, list) and
            len(result) > 0 and
            result[0] == LSymbol('COMMA-AT') ):
@@ -102,7 +102,7 @@ Backquotes may be nested; each level of comma belongs to the nearest enclosing b
       """Extract the block name string from a BLOCK or RETURN-FROM name argument.
 Accepts a symbol or NIL (the empty list) as the name."""
       if isinstance(obj, LSymbol):
-         return obj.strval
+         return obj.name
       if isinstance(obj, list) and not obj:   # L_NIL / empty list
          return 'NIL'
       raise LRuntimeError('block: name must be a symbol.')

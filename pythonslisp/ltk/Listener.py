@@ -233,9 +233,7 @@ class Listener( object ):
       return resultMessage, numTests
 
    def _runListenerCommand( self, listenerCommand: str ) -> None:
-      cmdParts  = listenerCommand[1:].split( ' ' )
-      cmd,*args = cmdParts
-
+      cmd,*args = listenerCommand[1:].split( ' ' )
       func = getattr(self, f'_cmd_{cmd}', None)
       if func is None:
          raise ListenerCommandError( f'Unknown listener command "{cmd}"' )
