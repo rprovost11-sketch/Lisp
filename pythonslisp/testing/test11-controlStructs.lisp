@@ -26,6 +26,51 @@
 
 ==> "three"
 
+; case: list of keys — matches first key in group
+>>> (case 1
+...    ((1 2 3) "low")
+...    ((4 5 6) "high")
+...    (t       "other"))
+...
+
+==> "low"
+
+; case: list of keys — matches second key in group
+>>> (case 5
+...    ((1 2 3) "low")
+...    ((4 5 6) "high")
+...    (t       "other"))
+...
+
+==> "high"
+
+; case: list of keys — falls through to t
+>>> (case 9
+...    ((1 2 3) "low")
+...    ((4 5 6) "high")
+...    (t       "other"))
+...
+
+==> "other"
+
+; case: list of symbol keys
+>>> (case 'b
+...    ((a b)   "ab")
+...    ((c d)   "cd")
+...    (otherwise "other"))
+...
+
+==> "ab"
+
+; case: list of symbol keys — no match, otherwise clause
+>>> (case 'z
+...    ((a b)   "ab")
+...    ((c d)   "cd")
+...    (otherwise "other"))
+...
+
+==> "other"
+
 >>> (defun countdown1 (num)
 ...    (while (> num 0)
 ...       (let ()

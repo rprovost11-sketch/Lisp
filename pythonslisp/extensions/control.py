@@ -4,12 +4,12 @@ from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.AST import LSymbol, LCallable, LFunction, L_NIL, eql
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, Thrown, ReturnFrom
-from pythonslisp.primitives import LambdaListMode
+from pythonslisp.extensions import LambdaListMode
 
 
-def register(primitive) -> None:
+def register(lispFunction) -> None:
 
-   @primitive( 'lambda', '(lambda-list &rest body)', preEvalArgs=False )
+   @lispFunction( 'lambda', '(lambda-list &rest body)', preEvalArgs=False )
    def LP_lambda( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Creates and returns an unnamed lambda function.  When evaluating such a
 function the body exprs are evaluated within a nested scope.  This primitive
@@ -22,7 +22,7 @@ expression can be a documentation string."""
          docString = ''
       return LFunction( LSymbol(""), funcParams, docString, funcBody, capturedEnvironment=env )
 
-   @primitive( 'let', '(( (var1 sexpr1) (var2 sexpr2) ...) &rest body)',
+   @lispFunction( 'let', '(( (var1 sexpr1) (var2 sexpr2) ...) &rest body)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_let( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Executes a list of expressions (body) in sequence in a nested scope and
@@ -31,7 +31,7 @@ results of expressions.  Variable initializations are not evaluated in
 sequence and are not evaluated in let's nested scope."""
       raise LRuntimePrimError( LP_let, 'Evaluation handled by main eval loop.' )
 
-   @primitive( 'let*', '(( (var1 sexpr1) (var2 sexpr2) ...) &rest body)',
+   @lispFunction( 'let*', '(( (var1 sexpr1) (var2 sexpr2) ...) &rest body)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_letstar( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Executes a list of expressions (body) in sequence in a nested scope and
@@ -41,20 +41,20 @@ and are evaluated in let's nested scope.  So later initializer expressions may
 refer to variables already initialized."""
       raise LRuntimePrimError( LP_letstar, 'Evaluation handled by main eval loop.' )
 
-   @primitive( 'progn', '(&rest body)', preEvalArgs=False )
+   @lispFunction( 'progn', '(&rest body)', preEvalArgs=False )
    def LP_progn( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Evaluates each expression in body in sequence.  Returns the result of
 the last evaluation."""
       raise LRuntimePrimError( LP_progn, 'Evaluation handled by main eval loop.')
 
-   @primitive( 'if', '(cond conseq &optional alt)', preEvalArgs=False )
+   @lispFunction( 'if', '(cond conseq &optional alt)', preEvalArgs=False )
    def LP_if( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Evaluates the condition.  If truthy (non-nil) then conseq is
 evaluated and its result returned, otherwise alt is evaluated and its result
 is returned.  Or nil is returned if there is no alt."""
       raise LRuntimePrimError( LP_if, 'Expression evaluated in main eval loop.' )
 
-   @primitive( 'cond', '((cond1 body1) (cond2 body2) ...)',
+   @lispFunction( 'cond', '((cond1 body1) (cond2 body2) ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=1 )
    def LP_cond( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Evaluates each cond in order until one evaluates to truthy (non-nil).
@@ -64,7 +64,7 @@ sequence with '(t bodyn)' to have code evaluated if no other condition
 is satisfied."""
       raise LRuntimePrimError( LP_cond, 'Handled by main eval loop.' )
 
-   @primitive( 'case', '(sexpr (val1 body1) (val2 body2) ...)',
+   @lispFunction( 'case', '(sexpr (val1 body1) (val2 body2) ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=2 )
    def LP_case( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Evaluates expr.  Finds the first val that equals expr's val.  Then
@@ -72,12 +72,12 @@ evaluates each expr in the paired body and returns the result of the last expr
 evaluated.  All remaining cases are skipped."""
       raise LRuntimePrimError( LP_case, 'Handled by main eval loop.' )
 
-   @primitive( 'quote', '(sexpr)', preEvalArgs=False )
+   @lispFunction( 'quote', '(sexpr)', preEvalArgs=False )
    def LP_quote( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Returns expr without evaluating it."""
       return args[0]
 
-   @primitive( 'backquote', '(sexpr)', preEvalArgs=False )
+   @lispFunction( 'backquote', '(sexpr)', preEvalArgs=False )
    def LP_backquote( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Similar to quote but allows comma and comma-at expressions within expr.
 Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
@@ -88,12 +88,12 @@ Backquotes may be nested; each level of comma belongs to the nearest enclosing b
          raise LRuntimeError( "Ill-placed ,@ (COMMA-AT): splice requires a list context." )
       return result
 
-   @primitive( 'comma', '(sexpr)', preEvalArgs=False )
+   @lispFunction( 'comma', '(sexpr)', preEvalArgs=False )
    def LP_comma( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Must occur within a backquote expr or it's an error."""
       raise LRuntimePrimError( LP_comma, 'COMMA can only occur inside a BACKQUOTE.')
 
-   @primitive( 'comma-at', '(sexpr)', preEvalArgs=False )
+   @lispFunction( 'comma-at', '(sexpr)', preEvalArgs=False )
    def LP_comma_at( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Must occur within a backquote expr or it's an error."""
       raise LRuntimePrimError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
@@ -107,7 +107,7 @@ Accepts a symbol or NIL (the empty list) as the name."""
          return 'NIL'
       raise LRuntimeError('block: name must be a symbol.')
 
-   @primitive( 'block', '(name &rest body)', preEvalArgs=False )
+   @lispFunction( 'block', '(name &rest body)', preEvalArgs=False )
    def LP_block( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Establishes a named lexical block.  Evaluates body forms in sequence and
 returns the value of the last one.  A (return-from name value) anywhere in the
@@ -126,7 +126,7 @@ value.  The name may be a symbol or NIL."""
             return e.value
          raise
 
-   @primitive( 'return-from', '(name &optional value)', preEvalArgs=False )
+   @lispFunction( 'return-from', '(name &optional value)', preEvalArgs=False )
    def LP_return_from( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Performs a non-local exit from the nearest enclosing (block name ...).
 Returns value (default NIL) from that block.  name is not evaluated."""
@@ -134,24 +134,24 @@ Returns value (default NIL) from that block.  name is not evaluated."""
       value = ctx.lEval( env, args[1] ) if len(args) == 2 else L_NIL
       raise ReturnFrom( blockNameStr, value )
 
-   @primitive( 'return', '(&optional value)', preEvalArgs=False )
+   @lispFunction( 'return', '(&optional value)', preEvalArgs=False )
    def LP_return( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Performs a non-local exit from the nearest enclosing (block nil ...).
 Returns value (default NIL) from that block.  Equivalent to (return-from nil value)."""
       value = ctx.lEval( env, args[0] ) if len(args) == 1 else L_NIL
       raise ReturnFrom( 'NIL', value )
 
-   @primitive( 'funcall', '(callable &rest args)', mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=1 )
+   @lispFunction( 'funcall', '(callable &rest args)', mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=1 )
    def LP_funcall( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Calls a function with the args listed."""
       raise LRuntimePrimError( LP_funcall, 'Evaluation handled by main eval loop.' )
 
-   @primitive( 'eval', '(sexpr)' )
+   @lispFunction( 'eval', '(sexpr)' )
    def LP_eval( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Evaluates expr in the current scope."""
       return ctx.lEval( env, args[0] )
 
-   @primitive( 'apply', '(function &rest args)',
+   @lispFunction( 'apply', '(function &rest args)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=2 )
    def LP_apply( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Applies function to the args.  The last argument must be a list whose
@@ -159,7 +159,7 @@ elements are appended to any preceding individual args.  Returns the result of
 that function application.  function is any callable that is not a special form."""
       raise LRuntimePrimError( LP_apply, 'Evaluation handled by main eval loop.' )
 
-   @primitive( 'throw', '(tag result)' )
+   @lispFunction( 'throw', '(tag result)' )
    def LP_throw( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Performs a non-local exit to the nearest enclosing (catch tag ...) whose
 tag is eql to this tag.  Both tag and result are evaluated before throw is
@@ -167,7 +167,7 @@ invoked.  If no matching catch exists, an error is signaled."""
       tag, value = args
       raise Thrown( tag, value )
 
-   @primitive( 'catch', '(tag sexpr1 sexpr2 ...)',
+   @lispFunction( 'catch', '(tag sexpr1 sexpr2 ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_catch( ctx: Context, env: EnvironmentBase, *args ) -> Any:
       """Establishes a dynamic catch point tagged with tag (evaluated).  Evaluates

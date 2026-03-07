@@ -3,7 +3,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from io import IOBase, StringIO
 
 from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
@@ -12,16 +12,16 @@ from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError
 from pythonslisp.Parser import Parser, ParseError
-from pythonslisp.ltk.Utils import columnize
-from pythonslisp.primitives import LambdaListMode
 
 _LISP_PARSER = Parser()
+from pythonslisp.ltk.Utils import columnize
+from pythonslisp.extensions import LambdaListMode
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
 
 
-def register(primitive, parseLispString: Callable) -> None:
+def register(lispFunction) -> None:
 
    def _decode_escapes( s: str ) -> str:
       """Interpret standard escape sequences without corrupting non-ASCII text."""
@@ -119,7 +119,7 @@ def register(primitive, parseLispString: Callable) -> None:
 
    # -----------------------------------------------------------------------
 
-   @primitive( 'open',
+   @lispFunction( 'open',
                '(filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_open( ctx: Context, env: Environment, *args ) -> Any:
@@ -171,13 +171,13 @@ def register(primitive, parseLispString: Callable) -> None:
       else:
          raise LRuntimePrimError( LP_open, ':direction must be :input or :output.' )
 
-   @primitive( 'make-string-output-stream', '()' )
+   @lispFunction( 'make-string-output-stream', '()' )
    def LP_make_string_output_stream( ctx: Context, env: Environment, *args ) -> Any:
       """Creates and returns a new string output stream for writing.  Use
 get-output-stream-string to retrieve and clear the accumulated content."""
       return StringIO()
 
-   @primitive( 'make-string-input-stream', '(string &optional (start 0) end)',
+   @lispFunction( 'make-string-input-stream', '(string &optional (start 0) end)',
                mode=LambdaListMode.FULL_BINDING )
    def LP_make_string_input_stream( ctx: Context, env: Environment, *args ) -> Any:
       """Creates and returns a readable string stream backed by string.
@@ -193,7 +193,7 @@ but not including end (default: entire string)."""
       end_py   = end   if isinstance( end, int )   else None
       return StringIO( s[start_py:end_py] )
 
-   @primitive( 'get-output-stream-string', '(string-stream)' )
+   @lispFunction( 'get-output-stream-string', '(string-stream)' )
    def LP_get_output_stream_string( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the string accumulated in string-stream since it was created or
 since the last call to get-output-stream-string, then clears the buffer.
@@ -210,7 +210,7 @@ The stream remains open and writable.  (CL semantics.)"""
       stream.truncate( 0 )
       return content
 
-   @primitive( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
+   @lispFunction( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
    def LP_close( ctx: Context, env: Environment, *args ) -> Any:
       """Closes a stream and returns T.
 The :abort keyword argument is accepted for CL compatibility but is ignored
@@ -221,7 +221,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       stream.close()
       return L_T
 
-   @primitive( 'flush', '(&optional stream)' )
+   @lispFunction( 'flush', '(&optional stream)' )
    def LP_flush( ctx: Context, env: Environment, *args ) -> Any:
       """Flushes a stream and returns t."""
       if len(args) == 1:
@@ -233,7 +233,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          sys.stdout.flush()
       return L_T
 
-   @primitive( 'open-stream-p', '(stream)' )
+   @lispFunction( 'open-stream-p', '(stream)' )
    def LP_open_stream_p( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if the stream is open, NIL if it is closed."""
       stream = args[0]
@@ -241,7 +241,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          raise LRuntimePrimError( LP_open_stream_p, 'Argument expected to be a stream.' )
       return L_NIL if stream.closed else L_T
 
-   @primitive( 'interactive-stream-p', '(stream)' )
+   @lispFunction( 'interactive-stream-p', '(stream)' )
    def LP_interactive_stream_p( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
       stream = args[0]
@@ -249,7 +249,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          raise LRuntimePrimError( LP_interactive_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.isatty() else L_NIL
 
-   @primitive( 'input-stream-p', '(stream)' )
+   @lispFunction( 'input-stream-p', '(stream)' )
    def LP_input_stream_p( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if the stream can be read from, NIL otherwise."""
       stream = args[0]
@@ -257,7 +257,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          raise LRuntimePrimError( LP_input_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.readable() else L_NIL
 
-   @primitive( 'output-stream-p', '(stream)' )
+   @lispFunction( 'output-stream-p', '(stream)' )
    def LP_output_stream_p( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if the stream can be written to, NIL otherwise."""
       stream = args[0]
@@ -265,7 +265,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          raise LRuntimePrimError( LP_output_stream_p, 'Argument expected to be a stream.' )
       return L_T if stream.writable() else L_NIL
 
-   @primitive( 'stdin', '()' )
+   @lispFunction( 'stdin', '()' )
    def LP_stdin( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the standard input stream (sys.stdin)."""
       if isinstance( sys.stdin, IOBase ):
@@ -274,7 +274,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          return sys.__stdin__
       return sys.stdin
 
-   @primitive( 'stdout', '()' )
+   @lispFunction( 'stdout', '()' )
    def LP_stdout( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the standard output stream (sys.stdout)."""
       if isinstance( sys.stdout, IOBase ):
@@ -283,7 +283,7 @@ in this implementation (flushing on close cannot be suppressed)."""
          return sys.__stdout__
       return sys.stdout
 
-   @primitive( 'stderr', '()' )
+   @lispFunction( 'stderr', '()' )
    def LP_stderr( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the standard error stream (sys.stderr)."""
       if isinstance( sys.stderr, IOBase ):
@@ -292,12 +292,12 @@ in this implementation (flushing on close cannot be suppressed)."""
          return sys.__stderr__
       return sys.stderr
 
-   @primitive( 'tmpdir', '()' )
+   @lispFunction( 'tmpdir', '()' )
    def LP_tmpdir( ctx: Context, env: Environment, *args ) -> str:
       """Returns the system temporary directory as a string."""
       return tempfile.gettempdir()
 
-   @primitive( 'path-join', '(path-segment &rest more-segments)' )
+   @lispFunction( 'path-join', '(path-segment &rest more-segments)' )
    def LP_path_join( ctx: Context, env: Environment, *args ) -> str:
       """Joins path-segments using the OS path separator.  Returns the result as a string."""
       for i, arg in enumerate(args):
@@ -305,7 +305,7 @@ in this implementation (flushing on close cannot be suppressed)."""
             raise LRuntimePrimError( LP_path_join, f'Argument {i+1} expected to be a string.' )
       return os.path.join(*args)
 
-   @primitive( 'writef', '(formatString &optional dictOrList stream)' )
+   @lispFunction( 'writef', '(formatString &optional dictOrList stream)' )
    def LP_writef( ctx: Context, env: Environment, *args ) -> str:
       """Writes formatted text.  Returns the string that is written.
 Takes a Python format string and an optional map or list of values.
@@ -357,7 +357,7 @@ Returns the output string."""
       print( outputStr, end='', file=stream )
       return outputStr
 
-   @primitive( 'write!', '(&optional stream &rest objects)' )
+   @lispFunction( 'write!', '(&optional stream &rest objects)' )
    def LP_write( ctx: Context, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
@@ -371,7 +371,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
          stream = ctx.outStrm
       return lwrite( stream, *args, end='' )
 
-   @primitive( 'writeLn!', '(&optional stream &rest objects)' )
+   @lispFunction( 'writeLn!', '(&optional stream &rest objects)' )
    def LP_writeln( ctx: Context, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
@@ -386,7 +386,7 @@ Returns the last value printed."""
          stream = ctx.outStrm
       return lwrite( stream, *args, end='\n' )
 
-   @primitive( 'uwrite!', '(&optional stream &rest objects)' )
+   @lispFunction( 'uwrite!', '(&optional stream &rest objects)' )
    def LP_uwrite( ctx: Context, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
@@ -400,7 +400,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
          stream = ctx.outStrm
       return luwrite( stream, *args, end='' )
 
-   @primitive( 'uwriteLn!', '(&optional stream &rest objects)' )
+   @lispFunction( 'uwriteLn!', '(&optional stream &rest objects)' )
    def LP_uwriteln( ctx: Context, env: Environment, *args ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
@@ -415,7 +415,7 @@ Returns the last value printed."""
          stream = ctx.outStrm
       return luwrite( stream, *args, end='\n' )
 
-   @primitive( 'terpri', '(&optional stream)' )
+   @lispFunction( 'terpri', '(&optional stream)' )
    def LP_terpri( ctx: Context, env: Environment, *args ) -> Any:
       """Outputs a newline character.  Returns NIL."""
       if len(args) == 0:
@@ -429,7 +429,7 @@ Returns the last value printed."""
       print( end='\n', file=stream )
       return L_NIL
 
-   @primitive( 'readall', '(stream)' )
+   @lispFunction( 'readall', '(stream)' )
    def LP_readall( ctx: Context, env: Environment, *args ) -> Any:
       """Reads and returns the entire contents of a readable stream as a single string."""
       stream = args[0]
@@ -439,7 +439,7 @@ Returns the last value printed."""
          raise LRuntimePrimError( LP_readall, 'Stream is not readable.' )
       return stream.read()
 
-   @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+   @lispFunction( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
    def LP_read_line( ctx: Context, env: Environment, *args ) -> Any:
       """Reads one line of text from stream (default: standard input) and
 returns it as a string, without the trailing newline character.
@@ -472,7 +472,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
          return eof_value
       return line[:-1] if line.endswith( '\n' ) else line
 
-   @primitive( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+   @lispFunction( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
    def LP_read_char( ctx: Context, env: Environment, *args ) -> Any:
       """Reads and returns the next character from stream (default: standard input)
 as a one-character string.
@@ -505,7 +505,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
          return eof_value
       return ch
 
-   @primitive( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+   @lispFunction( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
    def LP_read( ctx: Context, env: Environment, *args ) -> Any:
       """Reads and returns one s-expression from stream (default: standard input),
 without evaluating it.  At end of file, signals an error if eof-error-p is T
@@ -564,7 +564,7 @@ is accumulated."""
          except ParseError as exc:
             raise LRuntimeError( f'read: {exc}' )
 
-   @primitive( 'save', '(filename &rest objects)' )
+   @lispFunction( 'save', '(filename &rest objects)' )
    def LP_save( ctx: Context, env: Environment, *args ) -> Any:
       """Saves python object to a text file."""
       filename, *objs = args
@@ -575,7 +575,7 @@ is accumulated."""
          st.writelines( lines )
       return L_NIL
 
-   @primitive( 'load', '(fileName)' )
+   @lispFunction( 'load', '(fileName)' )
    def LP_load( ctx: Context, env: Environment, *args ) -> Any:
       """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
       filename = args[0]
@@ -586,9 +586,9 @@ is accumulated."""
             content = f.read()
       except FileNotFoundError:
          raise LRuntimePrimError( LP_load, f'File not found "{filename}".' )
-      return parseLispString( content )   # (progn form1 form2 ...)
+      return ctx.parse( content )   # (progn form1 form2 ...)
 
-   @primitive( 'error', '(formatString &optional dictOrList)' )
+   @lispFunction( 'error', '(formatString &optional dictOrList)' )
    def LP_error( ctx: Context, env: Environment, *args ) -> Any:
       """Signals a runtime error with the given message string.
 The format string may optionally be followed by a list or map of values,
@@ -611,15 +611,15 @@ being raised.  With no second argument the format string is used as-is."""
          raise LRuntimePrimError( LP_error, f'Format error: {e}' )
       raise LRuntimeError( message )
 
-   @primitive( 'parse', '(string)' )
+   @lispFunction( 'parse', '(string)' )
    def LP_parse( ctx: Context, env: Environment, *args ) -> Any:
       """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
       theExprStr = args[0]
       if not isinstance(theExprStr, str):
          raise LRuntimePrimError( LP_parse, 'Argument expected to be a string.' )
-      return parseLispString( theExprStr )
+      return ctx.parse( theExprStr )
 
-   @primitive( 'python', '(string)' )
+   @lispFunction( 'python', '(string)' )
    def LP_python( ctx: Context, env: Environment, *args ) -> Any:
       """Executes some python code from Lisp."""
       thePythonCode = args[0]
@@ -628,7 +628,7 @@ being raised.  With no second argument the format string is used as-is."""
       theReturnVal = eval( thePythonCode, globals(), locals() )
       return theReturnVal
 
-   @primitive( 'recursion-limit', '(&optional newLimit)' )
+   @lispFunction( 'recursion-limit', '(&optional newLimit)' )
    def LP_recursionlimit( ctx: Context, env: Environment, *args ) -> Any:
       """Returns or sets the system recursion limit.  The higher the integer
 argument the deeper the recursion will be allowed to go.  If setting,
@@ -642,7 +642,7 @@ returns newLimit upon success."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_recursionlimit, 'Argument must be an integer.' )
 
-   @primitive( 'help', '(&optional callable-or-string &key find)',
+   @lispFunction( 'help', '(&optional callable-or-string &key find)',
                mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
    def LP_help( ctx: Context, env: Environment, *args ) -> Any:
       """Prints a set of tables for all the globally defined symbols and
@@ -708,7 +708,7 @@ Type '(help :find "substring")' to search all names by substring."""
 
       return L_T
 
-   @primitive( 'define-help-topic', '(name-string text-string)' )
+   @lispFunction( 'define-help-topic', '(name-string text-string)' )
    def LP_define_help_topic( ctx: Context, env: Environment, *args ) -> Any:
       """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
@@ -723,7 +723,7 @@ as a symbol.  An existing topic with the same name is overwritten."""
       topicFile.write_text( text, encoding='utf-8' )
       return LSymbol( name )
 
-   @primitive( 'undefine-help-topic', '(name-string)' )
+   @lispFunction( 'undefine-help-topic', '(name-string)' )
    def LP_undefine_help_topic( ctx: Context, env: Environment, *args ) -> Any:
       """Removes a help topic by deleting its file from the help directory.
 Returns T if the topic existed and was removed, NIL if the topic was not found."""

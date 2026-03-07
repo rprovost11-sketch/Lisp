@@ -1,3 +1,6 @@
+(setq PI 3.141592653589793)
+(setq E  2.718281828459045)
+
 (defun signum (num)
    "Returns 0 if the argument is zero, 1 if the argument is positive, or -1 if the argument is negative."
    (cond ((zerop num)   0)

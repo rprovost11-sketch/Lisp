@@ -191,7 +191,7 @@ class Environment(EnvironmentBase):
          except IndexError:
             raise LArgBindingError( "Too few positional arguments." )
 
-         self.bindLocal( paramName.name, argVal )
+         self._bindings[paramName.name] = argVal
 
          paramNum += 1
          argNum   += 1
@@ -250,10 +250,10 @@ class Environment(EnvironmentBase):
             argNum  += 1
             svarVal  = self.lookupGlobal('T')   # T, True
 
-         self.bindLocal( varName.name, initForm )
+         self._bindings[varName.name] = initForm
 
          if svarName:
-            self.bindLocal( svarName.name, svarVal )
+            self._bindings[svarName.name] = svarVal
 
       return paramNum, argNum
 
@@ -269,7 +269,7 @@ class Environment(EnvironmentBase):
          raise LArgBindingError( 'Symbol expected after &rest.' )
 
       theRestArgs = argList[argNum:]
-      self.bindLocal( paramName.name, list(theRestArgs) )
+      self._bindings[paramName.name] = list(theRestArgs)
 
       return paramNum + 1, argNum
 
@@ -388,13 +388,13 @@ class Environment(EnvironmentBase):
       for keyStr in keyParamOrder:
          varName, svarName, initForm = keysDict[keyStr]
          if keyStr in suppliedArgs:
-            self.bindLocal( varName.name, suppliedArgs[keyStr] )
+            self._bindings[varName.name] = suppliedArgs[keyStr]
             if svarName:
-               self.bindLocal( svarName.name, tVal )
+               self._bindings[svarName.name] = tVal
          else:
-            self.bindLocal( varName.name, self._evalFn( self, initForm ) )
+            self._bindings[varName.name] = self._evalFn(self, initForm)
             if svarName:
-               self.bindLocal( svarName.name, nilVal )
+               self._bindings[svarName.name] = nilVal
 
       return paramNum, argNum
 
@@ -430,7 +430,7 @@ class Environment(EnvironmentBase):
          else:
             raise LArgBindingError( 'Parameter spec following &AUX must be a <variable> or a list of (<variable> [<defaultvalue>]).' )
 
-         self.bindLocal( varName.name, initForm )
+         self._bindings[varName.name] = initForm
 
          paramNum += 1
 

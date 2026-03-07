@@ -8,12 +8,12 @@ from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError, ContinuationInvoked
 from pythonslisp.Expander import Expander
-from pythonslisp.primitives import LambdaListMode
+from pythonslisp.extensions import LambdaListMode
 
 
-def register(primitive) -> None:
+def register(lispFunction) -> None:
 
-   @primitive( 'defmacro', '(symbol lambda-list &rest body)', preEvalArgs=False )
+   @lispFunction( 'defmacro', '(symbol lambda-list &rest body)', preEvalArgs=False )
    def LP_defmacro( ctx: Context, env: Environment, *args ) -> Any:
       """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
@@ -26,7 +26,7 @@ can be an optional documentation string."""
       theFunc = LMacro( fnName, funcParams, docString, funcBody )
       return env.bindGlobal( fnName.name, theFunc )
 
-   @primitive( 'macroexpand', '(\'form)',
+   @lispFunction( 'macroexpand', '(\'form)',
                mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
    def LP_macroexpand( ctx: Context, env: Environment, *args ) -> Any:
       """Fully expands a macro call at the top level, looping until the form is no
@@ -46,7 +46,7 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
          form = Expander._expandMacroCall( ctx, env, macroDef, form[1:] )
       return form
 
-   @primitive( 'macroexpand-1', '(\'form)',
+   @lispFunction( 'macroexpand-1', '(\'form)',
                mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
    def LP_macroexpand_1( ctx: Context, env: Environment, *args ) -> Any:
       """Expands a macro call exactly once.  Returns the form unchanged if it is
@@ -67,7 +67,7 @@ not a macro call."""
 
       return Expander._expandMacroCall( ctx, env, macroDef, form[1:] )
 
-   @primitive( 'defsetf-internal', '(accessor-symbol field-symbol)' )
+   @lispFunction( 'defsetf-internal', '(accessor-symbol field-symbol)' )
    def LP_defsetf_internal( ctx: Context, env: Environment, *args ) -> Any:
       """Register a struct field accessor as a valid setf target."""
       accessor_sym, field_sym = args
@@ -76,7 +76,7 @@ not a macro call."""
       ctx.setfRegistry[accessor_sym.name] = field_sym.name
       return accessor_sym
 
-   @primitive( 'set-accessor!', '(accessor-symbol instance newValue)' )
+   @lispFunction( 'set-accessor!', '(accessor-symbol instance newValue)' )
    def LP_set_accessor( ctx: Context, env: Environment, *args ) -> Any:
       """Internal: write a struct field value via the defsetf registry."""
       accessor, instance, newval = args
@@ -91,7 +91,7 @@ not a macro call."""
       instance[ field_key ] = newval
       return newval
 
-   @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
+   @lispFunction( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_setq( ctx: Context, env: Environment, *args ) -> Any:
       """Updates one or more variables' values', returns value.  The search for
@@ -103,7 +103,7 @@ value.
 Alternate usage: (setf (at keyOrIndex dictOrList) newValue)"""
       raise LRuntimePrimError( LP_setq, 'Handled by main eval loop.' )
 
-   @primitive( 'makunbound', '(symbol)' )
+   @lispFunction( 'makunbound', '(symbol)' )
    def LP_makunbound( ctx: Context, env: Environment, *args ) -> Any:
       """Undefines the global definition for a symbol and returns nil.
 The argument is evaluated: (makunbound 'x) unbinds X."""
@@ -113,7 +113,7 @@ The argument is evaluated: (makunbound 'x) unbinds X."""
       env.getGlobalEnv().unbind( key.name )
       return L_NIL
 
-   @primitive( 'symtab!', '()', max_args=0 )
+   @lispFunction( 'symtab!', '()', max_args=0 )
    def LP_symtab( ctx: Context, env: Environment, *args ) -> Any:
       """Prints the entire environment stack and returns nil.  Each scope is printed
 in a separate list and begins on a new line.  The local scope is first; global
@@ -127,7 +127,7 @@ is last."""
          scope = scope.parentEnv( )
       return L_NIL
 
-   @primitive( 'trace', '(&rest fn-names)', preEvalArgs=False )
+   @lispFunction( 'trace', '(&rest fn-names)', preEvalArgs=False )
    def LP_trace( ctx: Context, env: Environment, *args ) -> Any:
       """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
@@ -140,7 +140,7 @@ trace list.  With no arguments, returns the list of currently traced functions."
          tracer.addFnTrace( sym.name )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
-   @primitive( 'untrace', '(&rest fn-names)', preEvalArgs=False )
+   @lispFunction( 'untrace', '(&rest fn-names)', preEvalArgs=False )
    def LP_untrace( ctx: Context, env: Environment, *args ) -> Any:
       """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
@@ -154,7 +154,7 @@ trace list.  With no arguments, clears all named function tracing."""
             tracer.removeFnTrace( sym.name )
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
-   @primitive( 'call/cc', '(procedure)' )
+   @lispFunction( 'call/cc', '(procedure)' )
    def LP_callcc( ctx: Context, env: Environment, *args ) -> Any:
       """Calls procedure with one argument: an escape continuation object.
 Invoking the continuation with a value causes call/cc to immediately return
@@ -176,7 +176,7 @@ continuations are supported; invoking a stale continuation is an error."""
             return ci.value
          raise   # re-raise so an outer call/cc can catch it
 
-   @primitive( 'boundp', '(symbol)' )
+   @lispFunction( 'boundp', '(symbol)' )
    def LP_boundp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
       sym = args[0]
@@ -188,7 +188,7 @@ continuations are supported; invoking a stale continuation is an error."""
       except KeyError:
          return L_NIL
 
-   @primitive( 'gensym', '(&optional x)' )
+   @lispFunction( 'gensym', '(&optional x)' )
    def LP_gensym( ctx: Context, env: Environment, *args ) -> Any:
       """Generate and return a new, unique symbol.
 If x is a string it is used as the prefix (default \"G\").  The current
@@ -209,13 +209,45 @@ numeric suffix and *gensym-counter* is left unchanged."""
 
    _ITUPS = 1_000_000
 
-   @primitive( 'internal-time-units-per-second', '()' )
+   @lispFunction( 'internal-time-units-per-second', '()' )
    def LP_itups( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of internal time units per second (1,000,000)."""
       return _ITUPS
 
-   @primitive( 'get-internal-real-time', '()' )
+   @lispFunction( 'get-internal-real-time', '()' )
    def LP_get_internal_real_time( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a high-resolution timestamp as an integer in units of
 internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
       return int( time.perf_counter() * _ITUPS )
+
+   @lispFunction( 'set-extension-dirs', '(&rest paths)',
+                  mode=LambdaListMode.DOC_ONLY, min_args=0 )
+   def LP_set_extension_dirs( ctx: Context, env: Environment, *args ) -> Any:
+      """Sets the list of user extension directories to be scanned on reboot.
+Each argument must be a string path.  Directories are scanned in order."""
+      for arg in args:
+         if not isinstance( arg, str ):
+            raise LRuntimePrimError( LP_set_extension_dirs, 'Each argument must be a string path.' )
+      ctx.setExtDirs( *args )
+      return L_T
+
+   @lispFunction( 'load-extension', '(path)' )
+   def LP_load_extension( ctx: Context, env: Environment, *args ) -> Any:
+      """Loads a single extension file.  A .lisp file is parsed and evaluated;
+a .py file must export register(lispFunction) which is called to register primitives.
+Returns T on success."""
+      path = args[0]
+      if not isinstance( path, str ):
+         raise LRuntimePrimError( LP_load_extension, 'Argument must be a string path.' )
+      ctx.loadExt( path )
+      return L_T
+
+   @lispFunction( 'load-dir', '(path)' )
+   def LP_load_dir( ctx: Context, env: Environment, *args ) -> Any:
+      """Loads all extension files in a directory: all .py files alphabetically,
+then all .lisp files alphabetically.  Returns T on success."""
+      path = args[0]
+      if not isinstance( path, str ):
+         raise LRuntimePrimError( LP_load_dir, 'Argument must be a string path.' )
+      ctx.loadExtDir( path )
+      return L_T

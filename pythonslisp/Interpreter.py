@@ -1,3 +1,4 @@
+import importlib.util
 import time
 from fractions import Fraction
 from pathlib import Path
@@ -5,10 +6,9 @@ from typing import Any, Sequence
 
 from pythonslisp.Parser import Parser
 from pythonslisp.ltk.Listener import InterpreterBase
-from pythonslisp.ltk.Utils import retrieveFileList
 from pythonslisp.AST import ( LSymbol, L_T, L_NIL,
-                                  LCallable, LFunction, LPrimitive, LMacro, LContinuation,
-                                  prettyPrintSExpr )
+                              LCallable, LFunction, LPrimitive, LMacro, LContinuation,
+                              prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError,
                                          LArgBindingError, ContinuationInvoked,
                                          ReturnFrom, Thrown )
@@ -17,37 +17,43 @@ from pythonslisp.Expander import Expander
 from pythonslisp.Analyzer import Analyzer
 from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
-from pythonslisp.primitives import constructPrimitives
+from pythonslisp.extensions import LambdaListMode
 
 
 class Interpreter( InterpreterBase ):
-   DEFAULT_LIB_DIR        = Path(__file__).parent / 'lib'
-   _SPECIAL_OPERATOR_SET  = frozenset({'LET', 'LET*', 'PROGN', 'SETQ',
-                                       'COND', 'CASE', 'FUNCALL', 'APPLY'})
+   BUILTIN_EXT_DIR       = Path(__file__).parent / 'extensions'
+   _SPECIAL_OPERATOR_SET = frozenset({'LET', 'LET*', 'PROGN', 'SETQ',
+                                      'COND', 'CASE', 'FUNCALL', 'APPLY'})
 
-   def __init__( self, runtimeLibraryDir: (Path|str) = DEFAULT_LIB_DIR ) -> None:
-      self._libDir = runtimeLibraryDir
-      self._parser: Parser = Parser( )
-      self._tracer: Tracer = Tracer()
-      self._setf_registry: dict[str, str] = {}   # accessor-name → field-dict-key
-      self._ctx: Context = None               # initialized in reboot()
+   def __init__( self ) -> None:
+      self._parser:       Parser           = Parser()
+      self._tracer:       Tracer           = Tracer()
+      self._setf_registry: dict[str, str]  = {}        # accessor-name → field-dict-key
+      self._ext_dirs:     list[Path]       = []        # set by set-extension-dirs primitive
+      self._ctx:          Context          = None      # initialized in reboot()
+      self._env:          Environment      = None      # initialized in reboot()
 
-   def reboot( self, outStrm=None ) -> None:
+   def reboot( self, ext_dir=None, outStrm=None ) -> None:
       # Reset tracing state so stale traced-function names don't linger
       self._tracer.reset()
       self._setf_registry.clear()
 
-      # Create the GLOBAL environment and load in the primitives
-      primitiveDict: dict[str, Any] = constructPrimitives( self._parser.parse )
+      # Bootstrap: create env with only T and NIL; extensions bind into it
+      primitiveDict: dict[str, Any] = {'T': L_T, 'NIL': L_NIL}
       self._ctx = self._makeContext( outStrm )
-      self._env: Environment = Environment( parent=None, initialBindings=primitiveDict,
-                                                    evalFn=self._ctx.lEval )
+      self._env = Environment( parent=None, initialBindings=primitiveDict,
+                               evalFn=self._ctx.lEval )
 
-      # Load in the runtime library
-      if self._libDir:
-         filenameList = retrieveFileList( self._libDir )
-         for filename in filenameList:
-            self.evalFile( filename, outStrm )
+      # Load built-in extensions (pythonslisp/extensions/)
+      self._loadExtDir( self.BUILTIN_EXT_DIR, outStrm )
+
+      # Load configured extension dirs (set via set-extension-dirs)
+      for ext_path in self._ext_dirs:
+         self._loadExtDir( ext_path, outStrm )
+
+      # Load caller-specified extension dir
+      if ext_dir is not None:
+         self._loadExtDir( Path(ext_dir), outStrm )
 
       # Load system startup script (always, from package directory)
       startup_path = Path(__file__).parent / 'startup.lisp'
@@ -137,7 +143,138 @@ class Interpreter( InterpreterBase ):
       ctx.lEval            = lambda env, sexpr: Interpreter._lEval( ctx, env, sexpr )
       ctx.lApply           = Interpreter._lApply
       ctx.lBackquoteExpand = Interpreter._lbackquoteExpand
+      ctx.parse            = self._parser.parse
+      ctx.expand           = lambda env, ast: Expander.expand( ctx, env, ast )
+      ctx.analyze          = lambda env, ast: Analyzer.analyze( env, ast )
+      ctx.loadExt          = lambda path: self._loadExtFile( Path(path), ctx.outStrm )
+      ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
+      ctx.setExtDirs       = self._setExtDirs
       return ctx
+
+   def _makeLispFunction( self ):
+      """Returns the lispFunction decorator class used by extension .py files."""
+      _UNSET      = object()
+      _KW_MARKERS = frozenset({'&OPTIONAL', '&REST', '&BODY', '&KEY',
+                               '&AUX', '&ALLOW-OTHER-KEYS'})
+      interpreter = self
+
+      def _derive_arity( ll_ast: list ) -> tuple[int, int|None]:
+         min_args   = 0
+         max_args   = 0
+         in_section = 'required'
+         unbounded  = False
+         for item in ll_ast:
+            if isinstance( item, LSymbol ) and item.name in _KW_MARKERS:
+               marker = item.name
+               if marker in ('&REST', '&BODY'):
+                  in_section = 'rest'
+                  unbounded  = True
+               elif marker == '&OPTIONAL':
+                  in_section = 'optional'
+               elif marker in ('&KEY', '&ALLOW-OTHER-KEYS'):
+                  in_section = 'key'
+                  unbounded  = True
+               elif marker == '&AUX':
+                  in_section = 'aux'
+            else:
+               if in_section == 'required':
+                  min_args += 1
+                  max_args += 1
+               elif in_section == 'optional':
+                  max_args += 1
+         if unbounded:
+            return min_args, None
+         return min_args, max_args
+
+      def _make_arity_msg( min_args: int, max_args: int|None ) -> str:
+         if max_args is None:
+            if min_args == 0:
+               return ''
+            if min_args == 1:
+               return 'At least 1 argument expected.'
+            return f'At least {min_args} arguments expected.'
+         if min_args == max_args:
+            if min_args == 0:
+               return '0 arguments expected.'
+            if min_args == 1:
+               return '1 argument expected.'
+            return f'{min_args} arguments expected.'
+         if max_args == min_args + 1:
+            return f'{min_args} or {max_args} arguments expected.'
+         return f'{min_args} to {max_args} arguments expected.'
+
+      class lispFunction:
+         def __init__( self, primitiveSymbolString: str, params: str = '',
+                       preEvalArgs: bool = True,
+                       mode: LambdaListMode = LambdaListMode.ARITY_ONLY,
+                       min_args=_UNSET, max_args=_UNSET ) -> None:
+            self._name        = primitiveSymbolString.upper()
+            self._preEvalArgs = preEvalArgs
+            if mode is LambdaListMode.FULL_BINDING:
+               ll_ast = interpreter._parser.parse( params )[1]
+               self._lambdaListAST = ll_ast
+               stripped = params.strip()
+               if stripped.startswith('(') and stripped.endswith(')'):
+                  stripped = stripped[1:-1].strip()
+               self._paramsString = stripped
+               derived_min, derived_max = _derive_arity( ll_ast )
+               self._min_args = derived_min if min_args is _UNSET else min_args
+               self._max_args = derived_max if max_args is _UNSET else max_args
+            elif mode is LambdaListMode.ARITY_ONLY:
+               ll_ast = interpreter._parser.parse( params )[1]
+               self._lambdaListAST = None
+               stripped = params.strip()
+               if stripped.startswith('(') and stripped.endswith(')'):
+                  stripped = stripped[1:-1].strip()
+               self._paramsString = stripped
+               derived_min, derived_max = _derive_arity( ll_ast )
+               self._min_args = derived_min if min_args is _UNSET else min_args
+               self._max_args = derived_max if max_args is _UNSET else max_args
+            else:  # DOC_ONLY
+               self._lambdaListAST = None
+               stripped = params.strip()
+               if stripped.startswith('(') and stripped.endswith(')'):
+                  stripped = stripped[1:-1].strip()
+               self._paramsString  = stripped
+               self._min_args = 0    if min_args is _UNSET else min_args
+               self._max_args = None if max_args is _UNSET else max_args
+            self._arity_msg = _make_arity_msg( self._min_args, self._max_args )
+
+         def __call__( self, pythonFn ):
+            docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
+            lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
+                                       preEvalArgs=self._preEvalArgs,
+                                       min_args=self._min_args, max_args=self._max_args,
+                                       arity_msg=self._arity_msg,
+                                       lambdaListAST=self._lambdaListAST )
+            interpreter._env.bindGlobal( self._name, lPrimitivObj )
+            pythonFn.primitive = lPrimitivObj
+            return pythonFn
+
+      return lispFunction
+
+   def _loadExtDir( self, ext_dir: Path, outStrm=None ) -> None:
+      ext_dir = Path(ext_dir)
+      if not ext_dir.is_dir():
+         return
+      for py_file in sorted( ext_dir.glob('*.py') ):
+         self._loadExtFile( py_file, outStrm )
+      for lisp_file in sorted( ext_dir.glob('*.lisp') ):
+         self._loadExtFile( lisp_file, outStrm )
+
+   def _loadExtFile( self, path: Path, outStrm=None ) -> None:
+      path = Path(path)
+      if path.suffix == '.py':
+         spec   = importlib.util.spec_from_file_location( path.stem, path )
+         module = importlib.util.module_from_spec( spec )
+         spec.loader.exec_module( module )
+         if hasattr( module, 'register' ):
+            module.register( self._makeLispFunction() )
+      elif path.suffix == '.lisp':
+         self.evalFile( str(path), outStrm )
+
+   def _setExtDirs( self, *paths ) -> None:
+      self._ext_dirs = [Path(p) for p in paths]
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
