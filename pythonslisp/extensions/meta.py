@@ -242,12 +242,12 @@ Returns T on success."""
       ctx.loadExt( path )
       return L_T
 
-   @lispFunction( 'load-dir', '(path)' )
-   def LP_load_dir( ctx: Context, env: Environment, *args ) -> Any:
+   @lispFunction( 'load-extension-dir', '(path)' )
+   def LP_load_extension_dir( ctx: Context, env: Environment, *args ) -> Any:
       """Loads all extension files in a directory: all .py files alphabetically,
 then all .lisp files alphabetically.  Returns T on success."""
       path = args[0]
       if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_dir, 'Argument must be a string path.' )
+         raise LRuntimePrimError( LP_load_extension_dir, 'Argument must be a string path.' )
       ctx.loadExtDir( path )
       return L_T
