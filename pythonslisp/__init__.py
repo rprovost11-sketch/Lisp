@@ -1,8 +1,12 @@
 
-__version__ = '0.33.1'
+__version__ = '0.33.2'
 
-__all__ = [ 'Lisp',
+__all__ = [ 'Analyzer',
             'AST',
+            'Context',
+            'Environment',
+            'Exceptions',
+            'Expander', 
             'Interpreter',
             'Parser',
             'ParserBase',

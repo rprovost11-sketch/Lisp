@@ -106,7 +106,7 @@ class Expander:
    def _expandMacroCall(ctx: Context, env: Environment, macro: LMacro, argsList: list) -> Any:
       """Expand a single macro call and return the unevaluated expansion."""
       expansionEnv = Environment(env, evalFn=ctx.lEval)
-      expansionEnv.bindArguments(macro.lambdaListAST, argsList)
+      expansionEnv.bindArguments(macro.lambdaListAST, argsList, destructuring=True)
 
       result = L_NIL
       for bodySExpr in macro.bodyAST:

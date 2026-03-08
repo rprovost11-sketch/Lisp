@@ -158,3 +158,62 @@
 %%% PRIMITIVE USAGE: (MACROEXPAND-1 'form)
 ==>
 
+; ============================================================
+; Macro lambda list destructuring
+; ============================================================
+
+>>> ;;; basic required destructuring
+... (defmacro test-destruct1 ((a b) c)
+...    `(list ,a ,b ,c))
+
+==> (MACRO TEST-DESTRUCT1 ((A B) C) ...)
+
+>>> (test-destruct1 (10 20) 30)
+
+==> (10 20 30)
+
+>>> ;;; nested destructuring
+... (defmacro test-destruct2 ((a (b c)) d)
+...    `(list ,a ,b ,c ,d))
+
+==> (MACRO TEST-DESTRUCT2 ((A (B C)) D) ...)
+
+>>> (test-destruct2 (1 (2 3)) 4)
+
+==> (1 2 3 4)
+
+>>> ;;; &optional inside nested pattern — arg supplied
+... (defmacro test-destruct3 ((a &optional b) c)
+...    `(list ,a ,b ,c))
+
+==> (MACRO TEST-DESTRUCT3 ((A &OPTIONAL B) C) ...)
+
+>>> (test-destruct3 (1 2) 3)
+
+==> (1 2 3)
+
+>>> ;;; &optional inside nested pattern — arg defaulted
+... (test-destruct3 (1) 3)
+
+==> (1 NIL 3)
+
+>>> ;;; &rest inside nested pattern
+... (defmacro test-destruct4 ((a &rest bs) c)
+...    `(list ,a ',bs ,c))
+
+==> (MACRO TEST-DESTRUCT4 ((A &REST BS) C) ...)
+
+>>> (test-destruct4 (1 2 3) 4)
+
+==> (1 (2 3) 4)
+
+>>> ;;; destructuring with remaining required params
+... (defmacro test-destruct5 (x (a b) y)
+...    `(list ,x ,a ,b ,y))
+
+==> (MACRO TEST-DESTRUCT5 (X (A B) Y) ...)
+
+>>> (test-destruct5 0 (1 2) 3)
+
+==> (0 1 2 3)
+

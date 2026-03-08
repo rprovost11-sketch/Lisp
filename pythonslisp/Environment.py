@@ -75,12 +75,14 @@ class Environment(EnvironmentBase):
             scope = scope._parent
       raise KeyError
 
-   def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any] ) -> None:
-      self._validateNoDuplicateParams( lambdaListAST )
+   def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any],
+                      destructuring: bool = False, _validate: bool = True ) -> None:
+      if _validate:
+         self._validateNoDuplicateParams( lambdaListAST, destructuring )
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
 
-      paramNum, argNum = self._bindPositionalArgs( lambdaListAST, 0, argList, 0 )
+      paramNum, argNum = self._bindPositionalArgs( lambdaListAST, 0, argList, 0, destructuring )
 
       # Retrieve the next param which should be a symbol
       try:
@@ -138,7 +140,8 @@ class Environment(EnvironmentBase):
 
    # -----------------------------------------------------------------------
 
-   def _validateNoDuplicateParams( self, lambdaListAST: list[Any] ) -> None:
+   def _validateNoDuplicateParams( self, lambdaListAST: list[Any],
+                                    destructuring: bool = False ) -> None:
       '''Pre-pass: verify no variable name appears more than once in a lambda list.'''
       seen: set[str] = set()
 
@@ -151,52 +154,97 @@ class Environment(EnvironmentBase):
             raise LArgBindingError( f'Duplicate parameter name {name.name} in {context}.' )
          seen.add( name.name )
 
-      index = 0
+      def _check_pattern( pattern: Any, context: str ) -> None:
+         '''Recursively check all variable names within a destructuring pattern.'''
+         if isinstance( pattern, LSymbol ):
+            _check( pattern, context )
+         elif isinstance( pattern, list ):
+            in_req = True
+            i = 0
+            while i < len(pattern):
+               item = pattern[i]
+               if isinstance( item, LSymbol ) and item.startswith('&'):
+                  in_req = False
+                  if item.name in ('&REST', '&BODY'):
+                     i += 1
+                     if i < len(pattern):
+                        _check( pattern[i], '&REST in ' + context )
+               elif in_req:
+                  _check_pattern( item, context )
+               else:
+                  if isinstance( item, list ) and item:
+                     _check( item[0], context )
+                     if len(item) >= 3:
+                        _check( item[2], context )   # supplied-p var
+               i += 1
+
+      in_required = True
+      index       = 0
       lambdaListLen = len( lambdaListAST )
       while index < lambdaListLen:
          spec = lambdaListAST[index]
 
          if isinstance( spec, LSymbol ):
-            if spec == '&REST':
+            if spec.name in ('&REST', '&BODY'):
+               in_required = False
                index += 1
                if index < lambdaListLen:
                   _check( lambdaListAST[index], '&REST' )
-            elif not spec.startswith('&'):
+            elif spec.startswith('&'):
+               in_required = False
+            else:
                _check( spec, 'positional parameters' )
 
          elif isinstance( spec, list ) and len(spec) > 0:
-            keyVarSpec = spec[0]
-            if isinstance( keyVarSpec, LSymbol ):
-               _check( keyVarSpec, 'lambda list' )
-            elif isinstance( keyVarSpec, list ) and len(keyVarSpec) >= 2:
-               _check( keyVarSpec[1], '&KEY (keyword var) pair' )
-            if len(spec) >= 3:
-               _check( spec[2], 'supplied-p variable' )
+            if in_required and destructuring:
+               _check_pattern( spec, 'destructuring pattern' )
+            else:
+               keyVarSpec = spec[0]
+               if isinstance( keyVarSpec, LSymbol ):
+                  _check( keyVarSpec, 'lambda list' )
+               elif isinstance( keyVarSpec, list ) and len(keyVarSpec) >= 2:
+                  _check( keyVarSpec[1], '&KEY (keyword var) pair' )
+               if len(spec) >= 3:
+                  _check( spec[2], 'supplied-p variable' )
 
          index += 1
 
    def _bindPositionalArgs( self, lambdaListAST: list[Any], paramNum: int,
-                            argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
+                            argList: Sequence[Any], argNum: int,
+                            destructuring: bool = False ) -> tuple[int, int]:
       paramListLength = len(lambdaListAST)
 
       while paramNum < paramListLength:
          paramName = lambdaListAST[paramNum]
-         if not isinstance(paramName, LSymbol):
+         if isinstance( paramName, LSymbol ):
+            if paramName.startswith('&'):
+               break
+         elif isinstance( paramName, list ) and destructuring:
+            pass   # destructuring pattern — handled below
+         else:
             raise LArgBindingError( f"Positional param {paramNum} expected to be a symbol." )
-         if paramName.startswith('&'):
-            break
 
          try:
             argVal = argList[argNum]
          except IndexError:
             raise LArgBindingError( "Too few positional arguments." )
 
-         self._bindings[paramName.name] = argVal
+         if isinstance( paramName, LSymbol ):
+            self._bindings[paramName.name] = argVal
+         else:
+            self._destructuringBind( paramName, argVal )
 
          paramNum += 1
          argNum   += 1
 
       return paramNum, argNum
+
+   def _destructuringBind( self, pattern: list[Any], value: Any ) -> None:
+      '''Bind value against a nested destructuring lambda list pattern.'''
+      if not isinstance( value, list ):
+         raise LArgBindingError(
+            f'Destructuring pattern expects a list argument, got {type(value).__name__}.' )
+      self.bindArguments( pattern, value, destructuring=True, _validate=False )
 
    def _bindOptionalArgs( self, lambdaListAST: list[Any], paramNum: int,
                           argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
