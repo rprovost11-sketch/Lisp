@@ -379,22 +379,16 @@
 %%% Too few positional arguments.
 ==>
 
->>> ;;; dotimes with no body
-... (dotimes (i 3))
-
-%%% dotimes: at least one body expression is required
-==>
-
 >>> ;;; dotimes control list must be a list
 ... (dotimes i 1)
 
-%%% dotimes: first argument must be a (var count) list
+%%% Destructuring pattern expects a list argument, got LSymbol.
 ==>
 
 >>> ;;; dotimes control list must have at most 3 elements
 ... (dotimes (i 3 4 5) 1)
 
-%%% dotimes: first argument must have at most 3 elements
+%%% Too many arguments.  Received 4.
 ==>
 
 >>> ;;; dotimes variable must be a symbol
@@ -417,7 +411,7 @@
 >>> ;;; dolist with bad control spec
 ... (dolist x (write! x))
 
-%%% dolist: first argument must be a (variable list) control spec
+%%% Destructuring pattern expects a list argument, got LSymbol.
 ==>
 
 >>> ;;; dolist variable must be a symbol

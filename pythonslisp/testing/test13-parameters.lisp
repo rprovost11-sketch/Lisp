@@ -362,11 +362,11 @@
 %%% &OPTIONAL is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.
 ==>
 
->>> ;;; NC1: truly unknown &-keyword
+>>> ;;; NC1: &body is macro-only; invalid in function lambda lists
 ... ((lambda (&body x) x) 1 2)
 
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Unknown lambda list keyword: &BODY.
+%%% &BODY is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.
 ==>
 
 >>> ;;; Bug 5: svar bound to NIL when key not supplied

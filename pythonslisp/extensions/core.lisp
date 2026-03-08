@@ -288,29 +288,16 @@ Returns the last body value from the last iteration, or NIL if the loop never ru
                                 ,res)))
                (,fn)))))
 
-(defmacro dotimes (control &rest body)
+(defmacro dotimes ((var count &optional (result nil)) &body body)
    "Executes body count times with the loop variable bound to 0, 1, ..., count-1.
 Returns result (default NIL) after the loop; var = count when result is evaluated.
 Supports (return value) for early exit."
-   (cond
-      ((not (listp control))
-       (error "dotimes: first argument must be a (var count) list"))
-      ((< (length control) 2)
-       (error "dotimes: first argument must have at least 2 elements"))
-      ((> (length control) 3)
-       (error "dotimes: first argument must have at most 3 elements"))
-      ((not (symbolp (car control)))
-       (error "dotimes: loop variable must be a symbol"))
-      ((not body)
-       (error "dotimes: at least one body expression is required"))
-      (t
-       (let ((fn          (gensym "DOTIMES"))
-             (cnt         (gensym "COUNT"))
-             (var         (car control))
-             (count-expr  (car (cdr control)))
-             (result-form (if (cdr (cdr control)) (car (cdr (cdr control))) 'nil)))
+   (if (not (symbolp var))
+       (error "dotimes: loop variable must be a symbol")
+       (let ((fn  (gensym "DOTIMES"))
+             (cnt (gensym "COUNT")))
           `(block nil
-               (let ((,cnt ,count-expr) (,fn nil) (,var 0))
+               (let ((,cnt ,count) (,fn nil) (,var 0))
                    (if (not (integerp ,cnt))
                        (error "dotimes: count must be an integer")
                        (progn
@@ -321,54 +308,38 @@ Supports (return value) for early exit."
                                                   (,fn))
                                            nil)))
                           (,fn)))
-                   ,result-form))))))
+                   ,result)))))
 
-(defmacro dolist (control &rest body)
+(defmacro dolist ((var list-expr &optional (result nil)) &body body)
    "Iterates over each element of a list, binding the control variable to each element.
 Returns result (default NIL) after the loop; var = NIL when result is evaluated.
 Supports (return value) for early exit."
-   (cond
-      ((not (listp control))
-       (error "dolist: first argument must be a (variable list) control spec"))
-      ((< (length control) 2)
-       (error "dolist: control spec must have at least 2 elements"))
-      ((> (length control) 3)
-       (error "dolist: control spec must have at most 3 elements"))
-      ((not (symbolp (car control)))
-       (error "dolist: control spec variable must be a symbol"))
-      (t
-       (let ((fn          (gensym "DOLIST"))
-             (rem         (gensym "REM"))
-             (var         (car control))
-             (list-expr   (car (cdr control)))
-             (result-form (if (cdr (cdr control)) (car (cdr (cdr control))) 'nil)))
-          (if body
-              `(block nil
-                   (let ((,rem ,list-expr) (,fn nil) (,var nil))
-                       (if (not (listp ,rem))
-                           (error "dolist: list must evaluate to a list")
-                           (progn
-                              (setq ,fn (lambda ()
-                                           (if ,rem
-                                               (progn (setq ,var (car ,rem))
-                                                      (setq ,rem (cdr ,rem))
-                                                      ,@body
-                                                      (,fn))
-                                               nil)))
-                              (,fn)))
-                       (setq ,var nil)
-                       ,result-form))
-              `(block nil
-                   (if (not (listp ,list-expr))
+   (if (not (symbolp var))
+       (error "dolist: control spec variable must be a symbol")
+       (let ((fn  (gensym "DOLIST"))
+             (rem (gensym "REM")))
+          `(block nil
+               (let ((,rem ,list-expr) (,fn nil) (,var nil))
+                   (if (not (listp ,rem))
                        (error "dolist: list must evaluate to a list")
-                       nil)))))))
+                       (progn
+                          (setq ,fn (lambda ()
+                                       (if ,rem
+                                           (progn (setq ,var (car ,rem))
+                                                  (setq ,rem (cdr ,rem))
+                                                  ,@body
+                                                  (,fn))
+                                           nil)))
+                          (,fn)))
+                   (setq ,var nil)
+                   ,result)))))
 
-(defmacro for (initSpec cond nextForm &rest body)
+(defmacro for ((var init) cond nextForm &body body)
    "General-purpose for loop.
 Syntax: (for (variable initForm) cond nextForm body+)
 
-  initSpec -- a two-element list (variable initForm).  variable is bound to
-              the result of evaluating initForm before the first iteration.
+  variable -- loop variable, bound to initForm before the first iteration.
+  initForm -- evaluated once to produce the initial value of variable.
   cond     -- evaluated before each iteration; the body runs while non-NIL.
   nextForm -- evaluated at the end of each iteration; its value replaces
               variable for the next iteration.  nextForm may reference variable.
@@ -384,18 +355,12 @@ Examples:
     (for (line (read-line f nil nil)) line (read-line f nil nil)
       (process-line line))"
    (cond
-      ((not (listp initSpec))
-       (error "for: initSpec must be a (variable initForm) list"))
-      ((/= (length initSpec) 2)
-       (error "for: initSpec must have exactly 2 elements"))
-      ((not (symbolp (car initSpec)))
+      ((not (symbolp var))
        (error "for: loop variable must be a symbol"))
       ((not body)
        (error "for: at least one body expression is required"))
       (t
-       (let ((var  (car initSpec))
-             (init (cadr initSpec))
-             (fn   (gensym "FOR")))
+       (let ((fn (gensym "FOR")))
           `(block nil
                (let ((,var ,init) (,fn nil))
                    (setq ,fn (lambda ()

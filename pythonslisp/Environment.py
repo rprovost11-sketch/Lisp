@@ -106,7 +106,7 @@ class Environment(EnvironmentBase):
          if not isinstance(nextParam, LSymbol):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
-      if nextParam == '&REST':
+      if nextParam == '&REST' or (nextParam == '&BODY' and destructuring):
          paramNum, argNum = self._bindRestArgs( lambdaListAST, paramNum+1, argList, argNum )
 
          try:
@@ -129,7 +129,7 @@ class Environment(EnvironmentBase):
       if nextParam == '&AUX':
          paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
       elif nextParam.startswith('&'):
-         _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
+         _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&BODY', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
          if nextParam.name in _KNOWN_KEYWORDS:
             raise LArgBindingError( f'{nextParam} is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.' )
          else:

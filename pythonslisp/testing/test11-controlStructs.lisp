@@ -378,11 +378,11 @@ ABC
 
 ; Error: initSpec not a list
 >>> (for x (< x 5) (+ x 1) nil)
-%%% for: initSpec must be a (variable initForm) list
+%%% Destructuring pattern expects a list argument, got LSymbol.
 
 ; Error: initSpec wrong number of elements
 >>> (for (x) (< x 5) (+ x 1) nil)
-%%% for: initSpec must have exactly 2 elements
+%%% Too few positional arguments.
 
 ; Error: loop variable not a symbol
 >>> (for (42 0) (< 42 5) (+ 42 1) nil)

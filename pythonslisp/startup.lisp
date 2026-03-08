@@ -1,4 +1,4 @@
-;;; Python's Lisp — system startup script
+;;; Python's Lisp system startup script
 ;;; Loaded automatically by Interpreter.reboot() after the standard library.
 ;;; Contains system-level initialization that is not part of the reusable library.
 
