@@ -15,9 +15,9 @@ def _frac_or_int( frac: Fraction ):
    return int(frac) if frac.denominator == 1 else frac
 
 
-def register(lispFunction) -> None:
+def register(primitive) -> None:
 
-   @lispFunction( '+', '(&rest numbers)' )
+   @primitive( '+', '(&rest numbers)' )
    def LP_add( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the sum of numbers."""
       try:
@@ -25,7 +25,7 @@ def register(lispFunction) -> None:
       except TypeError:
          raise LRuntimePrimError( LP_add, 'Invalid argument.' )
 
-   @lispFunction( '-', '(&rest numbers)' )
+   @primitive( '-', '(&rest numbers)' )
    def LP_sub( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the difference of numbers."""
       try:
@@ -39,7 +39,7 @@ def register(lispFunction) -> None:
       except TypeError:
          raise LRuntimePrimError( LP_sub, 'Invalid argument.' )
 
-   @lispFunction( '*', '(&rest numbers)' )
+   @primitive( '*', '(&rest numbers)' )
    def LP_mul( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the product of numbers."""
       try:
@@ -47,7 +47,7 @@ def register(lispFunction) -> None:
       except TypeError:
          raise LRuntimePrimError( LP_mul, 'Invalid argument.' )
 
-   @lispFunction( '/', '(number &rest more-numbers)', min_args=1 )
+   @primitive( '/', '(number &rest more-numbers)', min_args=1 )
    def LP_div( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the quotient of numbers.  With one argument returns the reciprocal.
 Integer and Fraction inputs produce exact Fraction results (simplified to int
@@ -68,7 +68,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except ZeroDivisionError:
          raise LRuntimePrimError( LP_div, 'division by zero' )
 
-   @lispFunction( '//', '(dividend divisor)' )
+   @primitive( '//', '(dividend divisor)' )
    def LP_intdiv( ctx: Context, env: Environment, *args ) -> Any:
       """Return the integer division of two numbers."""
       try:
@@ -78,7 +78,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except ZeroDivisionError:
          raise LRuntimePrimError( LP_intdiv, 'division by zero' )
 
-   @lispFunction( 'mod', '(number divisor)' )
+   @primitive( 'mod', '(number divisor)' )
    def LP_moddiv( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the integer remainder of division of two numbers."""
       try:
@@ -88,7 +88,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except ZeroDivisionError:
          raise LRuntimePrimError( LP_moddiv, 'division by zero' )
 
-   @lispFunction( 'gcd', '(&rest integers)' )
+   @primitive( 'gcd', '(&rest integers)' )
    def LP_gcd( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the greatest common divisor of some integers."""
       try:
@@ -96,7 +96,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except TypeError:
          raise LRuntimePrimError( LP_gcd, 'Invalid argument.' )
 
-   @lispFunction( 'lcm', '(&rest integers)' )
+   @primitive( 'lcm', '(&rest integers)' )
    def LP_lcm( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the least common multiple of some integers."""
       try:
@@ -104,7 +104,7 @@ when the denominator is 1).  Any float input yields a float result."""
       except TypeError:
          raise LRuntimePrimError( LP_lcm, 'Invalid argument.' )
 
-   @lispFunction( 'log', '(number &optional (base e))' )
+   @primitive( 'log', '(number &optional (base e))' )
    def LP_log( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the logarithm of a number.  With one argument, returns the natural
 logarithm (base e).  An optional second argument specifies the base."""
@@ -115,7 +115,7 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (ValueError, TypeError):
          raise LRuntimePrimError( LP_log, 'Invalid argument.' )
 
-   @lispFunction( 'expt', '(base power)' )
+   @primitive( 'expt', '(base power)' )
    def LP_expt( ctx: Context, env: Environment, *args ) -> Any:
       """Returns base raised to a power."""
       base, power = args
@@ -126,7 +126,7 @@ logarithm (base e).  An optional second argument specifies the base."""
 
       return result.real if isinstance(result, complex) else result
 
-   @lispFunction( 'sin', '(radians)' )
+   @primitive( 'sin', '(radians)' )
    def LP_sin( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the sine of radians."""
       try:
@@ -134,7 +134,7 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_sin, 'Invalid argument.' )
 
-   @lispFunction( 'cos', '(radians)' )
+   @primitive( 'cos', '(radians)' )
    def LP_cos( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the cosine of radians."""
       try:
@@ -142,7 +142,7 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_cos, 'Invalid argument.' )
 
-   @lispFunction( 'asin', '(number)' )
+   @primitive( 'asin', '(number)' )
    def LP_asin( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the arcsine of a number in radians."""
       try:
@@ -150,7 +150,7 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_asin, 'Invalid argument.' )
 
-   @lispFunction( 'acos', '(number)' )
+   @primitive( 'acos', '(number)' )
    def LP_acos( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the arccosine of a number in radians."""
       try:
@@ -158,7 +158,7 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_acos, 'Invalid argument.' )
 
-   @lispFunction( 'atan', '(number1 &optional number2)' )
+   @primitive( 'atan', '(number1 &optional number2)' )
    def LP_atan( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the arctangent of one or two numbers in radians."""
       try:
@@ -169,7 +169,7 @@ logarithm (base e).  An optional second argument specifies the base."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_atan, 'Invalid argument.' )
 
-   @lispFunction( 'floor', '(number &optional divisor)' )
+   @primitive( 'floor', '(number &optional divisor)' )
    def LP_floor( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the largest integer = number (or <= number/divisor).
 Returns only the primary value; remainder is discarded."""
@@ -181,7 +181,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LRuntimePrimError( LP_floor, f'Invalid argument: {e}' )
 
-   @lispFunction( 'ceiling', '(number &optional divisor)' )
+   @primitive( 'ceiling', '(number &optional divisor)' )
    def LP_ceiling( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the smallest integer >= number (or >= number/divisor).
 Returns only the primary value; remainder is discarded."""
@@ -193,7 +193,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LRuntimePrimError( LP_ceiling, f'Invalid argument: {e}' )
 
-   @lispFunction( 'round', '(number &optional divisor)' )
+   @primitive( 'round', '(number &optional divisor)' )
    def LP_round( ctx: Context, env: Environment, *args ) -> Any:
       """Rounds number to the nearest integer (ties go to even, per CL).
 Returns only the primary value; remainder is discarded."""
@@ -205,7 +205,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LRuntimePrimError( LP_round, f'Invalid argument: {e}' )
 
-   @lispFunction( 'min', '(&rest numbers)' )
+   @primitive( 'min', '(&rest numbers)' )
    def LP_min( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the smallest of a set of numbers."""
       try:
@@ -213,7 +213,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_min, 'Invalid argument.' )
 
-   @lispFunction( 'max', '(&rest numbers)' )
+   @primitive( 'max', '(&rest numbers)' )
    def LP_max( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the largest of a set of numbers."""
       try:
@@ -221,7 +221,7 @@ Returns only the primary value; remainder is discarded."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_max, 'Invalid argument.' )
 
-   @lispFunction( 'random', '(integerOrFloat)' )
+   @primitive( 'random', '(integerOrFloat)' )
    def LP_random( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a random number in [0, n).  n must be positive.
 For integer n returns a random integer in [0, n).

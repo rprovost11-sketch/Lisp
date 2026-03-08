@@ -373,6 +373,7 @@ class Listener( object ):
          raise ListenerCommandError( self._cmd_log.__doc__ )
 
       filename = args[0]
+
       if self._logFile is not None:
          raise ListenerCommandError( 'Already logging.  Can\'t open more than one log file at a time.\n' )
 

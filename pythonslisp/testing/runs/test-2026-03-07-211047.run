@@ -1,0 +1,9400 @@
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test01-constants.lisp... 
+       1> nil
+
+         PASSED!
+
+       2> NIL
+
+         PASSED!
+
+       3> Pi
+
+         PASSED!
+
+       4> E
+
+         PASSED!
+
+       5> xyz
+
+         PASSED!
+
+       6> someSymbol
+
+         PASSED!
+
+       7> 0
+
+         PASSED!
+
+       8> 1
+
+         PASSED!
+
+       9> 2
+
+         PASSED!
+
+      10> 3
+
+         PASSED!
+
+      11> 4
+
+         PASSED!
+
+      12> 5
+
+         PASSED!
+
+      13> -15
+
+         PASSED!
+
+      14> 5.25
+
+         PASSED!
+
+      15> 6.1
+
+         PASSED!
+
+      16> 6.02e23
+
+         PASSED!
+
+      17> 1/32
+
+         PASSED!
+
+      18> 5/16
+
+         PASSED!
+
+      19> "Hello world"
+
+         PASSED!
+
+      20> "another test string"
+
+         PASSED!
+
+      21> ()
+
+         PASSED!
+
+      22> (    )
+
+         PASSED!
+
+  22 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test02-calculations.lisp... 
+       1> (+ 3 4)
+
+         PASSED!
+
+       2> (+ 5 -1)
+
+         PASSED!
+
+       3> (+ 2 3.1)
+
+         PASSED!
+
+       4> (+ 2.1 3)
+
+         PASSED!
+
+       5> (+ 3 1/2)
+
+         PASSED!
+
+       6> (+ 1/2 3)
+
+         PASSED!
+
+       7> (+ 1 2)
+
+         PASSED!
+
+       8> (+ 9 2 5 6)
+
+         PASSED!
+
+       9> (+ 1/2 1/3)
+
+         PASSED!
+
+      10> (+ 2 0.5 1/2)
+
+         PASSED!
+
+      11> (+ 4)
+
+         PASSED!
+
+      12> (+ 1 2 3 4 5)
+
+         PASSED!
+
+      13> ( - 1067 60)
+
+         PASSED!
+
+      14> (- 5 2.5
+)
+
+         PASSED!
+
+      15> (- 15 8)
+
+         PASSED!
+
+      16> (- 10 2 3)
+
+         PASSED!
+
+      17> (- 4)
+
+         PASSED!
+
+      18> (* 9 6)
+
+         PASSED!
+
+      19> (* 2 5 3 4)
+
+         PASSED!
+
+      20> (* 2 5 4 3)
+
+         PASSED!
+
+      21> (* 1/2 1/3 1/10)
+
+         PASSED!
+
+      22> (* 2 3 4)
+
+         PASSED!
+
+      23> (/ 16 1/2)
+
+         PASSED!
+
+      24> (// 29 7)
+
+         PASSED!
+
+      25> (mod 29 7)
+
+         PASSED!
+
+      26> (integer 5.893072)
+
+         PASSED!
+
+      27> (integer pi)
+
+         PASSED!
+
+      28> (integer e)
+
+         PASSED!
+
+      29> (abs 3)
+
+         PASSED!
+
+      30> (abs -1/2)
+
+         PASSED!
+
+      31> (log 5/32 10)
+
+         PASSED!
+
+      32> (expt 2 8)
+
+         PASSED!
+
+      33> (expt 3 2)
+
+         PASSED!
+
+      34> (expt 2 4)
+
+         PASSED!
+
+      35> (expt 10 3)
+
+         PASSED!
+
+      36> (expt 10 -2)
+
+         PASSED!
+
+      37> (expt 9 1/2)
+
+         PASSED!
+
+      38> (expt 16 1/2)
+
+         PASSED!
+
+      39> (expt 1/4 1/2)
+
+         PASSED!
+
+      40> (sin 3)
+
+         PASSED!
+
+      41> (cos -52.1)
+
+         PASSED!
+
+      42> (tan 32/35)
+
+         PASSED!
+
+      43> (float 1/4)
+
+         PASSED!
+
+      44> (float 1/100)
+
+         PASSED!
+
+      45> (* 2 1000 1000 1000)
+
+         PASSED!
+
+      46> (float (* 2 1000 1000 1000))
+
+         PASSED!
+
+      47> (* 2 1/1000 1/1000)
+
+         PASSED!
+
+      48> (float (* 2 1/1000 1/1000))
+
+         PASSED!
+
+      49> (min 0 -1/2 3.69)
+
+         PASSED!
+
+      50> (max -1/2 3.69 0)
+
+         PASSED!
+
+      51> (+ 3 (- 7 4))
+
+         PASSED!
+
+      52> (/ 12 2 3)
+
+         PASSED!
+
+      53> (/ 10 4)
+
+         PASSED!
+
+      54> (log 100)
+
+         PASSED!
+
+      55> (asin 0)
+
+         PASSED!
+
+      56> (asin 1)
+
+         PASSED!
+
+      57> (acos 0)
+
+         PASSED!
+
+      58> (acos 1)
+
+         PASSED!
+
+      59> (atan 0)
+
+         PASSED!
+
+      60> (atan 1)
+
+         PASSED!
+
+      61> (atan 0 1)
+
+         PASSED!
+
+      62> ;;; Error: non-numeric argument to +
+(+ "a" 1)
+
+         PASSED!
+
+      63> ;;; reciprocal: (/ n) = 1/n
+(/ 4)
+
+         PASSED!
+
+      64> ;;; (/ 1) = 1
+(/ 1)
+
+         PASSED!
+
+      65> ;;; (/ 2.0) = float reciprocal
+(/ 2.0)
+
+         PASSED!
+
+      66> ;;; Error: division by zero
+(/ 1 0)
+
+         PASSED!
+
+      67> ;;; Error: expt requires exactly two arguments
+(expt 2)
+
+         PASSED!
+
+      68> ;;; Error: log requires at least one argument
+(log)
+
+         PASSED!
+
+      69> ;;; Error: non-numeric argument to log
+(log "a")
+
+         PASSED!
+
+      70> ;;; Error: non-numeric argument to sin
+(sin "a")
+
+         PASSED!
+
+      71> ;;; Error: atan with no arguments
+(atan)
+
+         PASSED!
+
+      72> ;;; (+) with no arguments returns 0
+(+)
+
+         PASSED!
+
+      73> ;;; expt with power 0 returns 1
+(expt 2 0)
+
+         PASSED!
+
+      74> ;;; expt 0^0 returns 1
+(expt 0 0)
+
+         PASSED!
+
+      75> ;;; abs of zero
+(abs 0)
+
+         PASSED!
+
+      76> ;;; abs of negative rational
+(abs -3/4)
+
+         PASSED!
+
+      77> ;;; gcd with no args returns 0
+(gcd)
+
+         PASSED!
+
+      78> ;;; lcm with no args returns 1
+(lcm)
+
+         PASSED!
+
+  78 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test03-predicates.lisp... 
+       1> (null 1)
+
+         PASSED!
+
+       2> (null 6.7)
+
+         PASSED!
+
+       3> (null nil)
+
+         PASSED!
+
+       4> (numberp 15)
+
+         PASSED!
+
+       5> (numberp -3.8)
+
+         PASSED!
+
+       6> (numberp pi)
+
+         PASSED!
+
+       7> (numberp 2/3)
+
+         PASSED!
+
+       8> (numberp "hello")
+
+         PASSED!
+
+       9> (symbolp 'x)
+
+         PASSED!
+
+      10> (symbolp 13)
+
+         PASSED!
+
+      11> (symbolp nil)
+
+         PASSED!
+
+      12> (symbolp e)
+
+         PASSED!
+
+      13> (symbolp 'xy)
+
+         PASSED!
+
+      14> (atom nil)
+
+         PASSED!
+
+      15> (atom 0)
+
+         PASSED!
+
+      16> (atom 3/4)
+
+         PASSED!
+
+      17> (numberp nil)
+
+         PASSED!
+
+      18> (numberp pi)
+
+         PASSED!
+
+      19> (numberp e)
+
+         PASSED!
+
+      20> (numberp -2/3)
+
+         PASSED!
+
+      21> (numberp 5.8)
+
+         PASSED!
+
+      22> (numberp "junky string")
+
+         PASSED!
+
+      23> (numberp 'randomSymbol)
+
+         PASSED!
+
+      24> (numberp '())
+
+         PASSED!
+
+      25> (atom nil)
+
+         PASSED!
+
+      26> (atom e)
+
+         PASSED!
+
+      27> (atom pi)
+
+         PASSED!
+
+      28> (atom 1/2)
+
+         PASSED!
+
+      29> (atom 2.8)
+
+         PASSED!
+
+      30> (atom 'aSymbol)
+
+         PASSED!
+
+      31> (atom "hello")
+
+         PASSED!
+
+      32> (atom '())
+
+         PASSED!
+
+      33> (listp nil)
+
+         PASSED!
+
+      34> (listp 0)
+
+         PASSED!
+
+      35> (listp pi)
+
+         PASSED!
+
+      36> (listp -5/7)
+
+         PASSED!
+
+      37> (listp 62.3)
+
+         PASSED!
+
+      38> (listp '())
+
+         PASSED!
+
+      39> (isDict? nil)
+
+         PASSED!
+
+      40> (isDict? 0)
+
+         PASSED!
+
+      41> (isDict? 0)
+
+         PASSED!
+
+      42> (isDict? pi)
+
+         PASSED!
+
+      43> (isDict? 7)
+
+         PASSED!
+
+      44> (isDict? 52/3)
+
+         PASSED!
+
+      45> (isDict? '())
+
+         PASSED!
+
+      46> (isDict? "something")
+
+         PASSED!
+
+      47> (stringp nil)
+
+         PASSED!
+
+      48> (stringp 1)
+
+         PASSED!
+
+      49> (stringp pi)
+
+         PASSED!
+
+      50> (stringp 3)
+
+         PASSED!
+
+      51> (stringp 4.7)
+
+         PASSED!
+
+      52> (stringp 8/9)
+
+         PASSED!
+
+      53> (stringp 'someSymbol)
+
+         PASSED!
+
+      54> (stringp "some string")
+
+         PASSED!
+
+      55> (stringp '())
+
+         PASSED!
+
+      56> (functionp nil)
+
+         PASSED!
+
+      57> (functionp 0)
+
+         PASSED!
+
+      58> (functionp e)
+
+         PASSED!
+
+      59> (functionp 2)
+
+         PASSED!
+
+      60> (functionp -8.49)
+
+         PASSED!
+
+      61> (functionp 7/8)
+
+         PASSED!
+
+      62> (functionp 'aSymbol)
+
+         PASSED!
+
+      63> (functionp "a string")
+
+         PASSED!
+
+      64> (functionp '())
+
+         PASSED!
+
+      65> (functionp (lambda (x) x))
+
+         PASSED!
+
+      66> (functionp list)
+
+         PASSED!
+
+      67> (functionp reverse)
+
+         PASSED!
+
+      68> (integerp 42)
+
+         PASSED!
+
+      69> (integerp 3.14)
+
+         PASSED!
+
+      70> (integerp 1/2)
+
+         PASSED!
+
+      71> (rationalp 1/3)
+
+         PASSED!
+
+      72> (rationalp 42)
+
+         PASSED!
+
+      73> (rationalp 3.14)
+
+         PASSED!
+
+      74> (floatp 3.14)
+
+         PASSED!
+
+      75> (floatp 42)
+
+         PASSED!
+
+      76> (floatp 1/2)
+
+         PASSED!
+
+      77> (macrop when)
+
+         PASSED!
+
+      78> (macrop incf)
+
+         PASSED!
+
+      79> (macrop defstruct)
+
+         PASSED!
+
+      80> (macrop car)
+
+         PASSED!
+
+      81> (macrop +)
+
+         PASSED!
+
+      82> (isInteger? 5)
+
+         PASSED!
+
+      83> (isRational? 1/4)
+
+         PASSED!
+
+      84> (isFloat? 2.5)
+
+         PASSED!
+
+      85> (isNil? nil)
+
+         PASSED!
+
+      86> (isNil? t)
+
+         PASSED!
+
+      87> (isNumber? 42)
+
+         PASSED!
+
+      88> (isNumber? "hello")
+
+         PASSED!
+
+      89> (isString? "abc")
+
+         PASSED!
+
+      90> (isSymbol? 'foo)
+
+         PASSED!
+
+      91> ;;; Error: predicates require exactly one argument
+(numberp)
+
+         PASSED!
+
+      92> (numberp 1 2)
+
+         PASSED!
+
+      93> (integerp)
+
+         PASSED!
+
+      94> (floatp)
+
+         PASSED!
+
+      95> (rationalp)
+
+         PASSED!
+
+      96> (symbolp)
+
+         PASSED!
+
+      97> (listp)
+
+         PASSED!
+
+      98> (stringp)
+
+         PASSED!
+
+      99> (functionp)
+
+         PASSED!
+
+     100> (macrop)
+
+         PASSED!
+
+     101> (consp '(1 2 3))
+
+         PASSED!
+
+     102> (consp '(1))
+
+         PASSED!
+
+     103> (consp nil)
+
+         PASSED!
+
+     104> (consp '())
+
+         PASSED!
+
+     105> (consp 42)
+
+         PASSED!
+
+     106> (consp "hello")
+
+         PASSED!
+
+     107> (consp 'foo)
+
+         PASSED!
+
+     108> (consp (cons 1 '(2)))
+
+         PASSED!
+
+     109> ;;; consp error: no args
+(consp)
+
+         PASSED!
+
+     110> ;;; consp error: too many args
+(consp 1 2)
+
+         PASSED!
+
+     111> (notany oddp '(2 4 6))
+
+         PASSED!
+
+     112> (notany oddp '(1 2 3))
+
+         PASSED!
+
+     113> (notany oddp '())
+
+         PASSED!
+
+     114> (notevery oddp '(1 3 5))
+
+         PASSED!
+
+     115> (notevery oddp '(1 2 3))
+
+         PASSED!
+
+     116> (notevery oddp '())
+
+         PASSED!
+
+ 116 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test04-relationals.lisp... 
+       1> (is? nil nil)
+
+         PASSED!
+
+       2> (is? 1 0)
+
+         PASSED!
+
+       3> (is? 1 1)
+
+         PASSED!
+
+       4> (is? 3 3)
+
+         PASSED!
+
+       5> (is? 3 3/1)
+
+         PASSED!
+
+       6> (is? 3.0 3)
+
+         PASSED!
+
+       7> (is? 5 6)
+
+         PASSED!
+
+       8> (is? "one" "one")
+
+         PASSED!
+
+       9> (is? "a string" 'aSymbol)
+
+         PASSED!
+
+      10> (= 1 1)
+
+         PASSED!
+
+      11> (= 1 0)
+
+         PASSED!
+
+      12> (= 1 3/2)
+
+         PASSED!
+
+      13> (= 1 nil)
+
+         PASSED!
+
+      14> (= 1 make-symbol)
+
+         PASSED!
+
+      15> (= 1 "string")
+
+         PASSED!
+
+      16> (= "string" "string")
+
+         PASSED!
+
+      17> (= "string1" "string2")
+
+         PASSED!
+
+      18> (/= 1 1)
+
+         PASSED!
+
+      19> (/= 0 6)
+
+         PASSED!
+
+      20> (/= "string" "string")
+
+         PASSED!
+
+      21> (/= "string1" "string2")
+
+         PASSED!
+
+      22> (< 6 2)
+
+         PASSED!
+
+      23> (< 4 4)
+
+         PASSED!
+
+      24> (< 2 3)
+
+         PASSED!
+
+      25> (< 2 4 6 8)
+
+         PASSED!
+
+      26> (< 2 4 8 5)
+
+         PASSED!
+
+      27> (= 4 4)
+
+         PASSED!
+
+      28> (= 2 3)
+
+         PASSED!
+
+      29> (= 4 4 4 4)
+
+         PASSED!
+
+      30> (= 2 2 3 2)
+
+         PASSED!
+
+      31> (<= 5 3)
+
+         PASSED!
+
+      32> (<= 2 2)
+
+         PASSED!
+
+      33> (<= 3 8)
+
+         PASSED!
+
+      34> (<= 2 2 3 2 4)
+
+         PASSED!
+
+      35> (<= 2 2 3 3 4)
+
+         PASSED!
+
+      36> (/= 2 4)
+
+         PASSED!
+
+      37> (/= 2 2)
+
+         PASSED!
+
+      38> (/= 2 5 8 4)
+
+         PASSED!
+
+      39> (/= 4 6 4 4)
+
+         PASSED!
+
+      40> ;;; /= non-adjacent duplicate: 1st and 3rd are equal
+(/= 1 2 1)
+
+         PASSED!
+
+      41> ;;; /= three all-distinct values
+(/= 1 2 3)
+
+         PASSED!
+
+      42> (> 5 3)
+
+         PASSED!
+
+      43> (> 3 5)
+
+         PASSED!
+
+      44> (> 5 5)
+
+         PASSED!
+
+      45> (> 5 3 2)
+
+         PASSED!
+
+      46> (> 5 3 3)
+
+         PASSED!
+
+      47> (>= 5 3)
+
+         PASSED!
+
+      48> (>= 5 5)
+
+         PASSED!
+
+      49> (>= 3 5)
+
+         PASSED!
+
+      50> (>= 5 5 4)
+
+         PASSED!
+
+      51> (>= 5 5 6)
+
+         PASSED!
+
+      52> ;;; Error: relational operators need at least 2 arguments
+(= 1)
+
+         PASSED!
+
+      53> (/= 1)
+
+         PASSED!
+
+      54> (< 1)
+
+         PASSED!
+
+      55> (<= 1)
+
+         PASSED!
+
+      56> (> 1)
+
+         PASSED!
+
+      57> (>= 1)
+
+         PASSED!
+
+      58> (= "abc" "abc")
+
+         PASSED!
+
+      59> (= "abc" "ABC")
+
+         PASSED!
+
+      60> (< "abc" "abd")
+
+         PASSED!
+
+      61> (> "z" "a")
+
+         PASSED!
+
+      62> (string= "hello" "hello")
+
+         PASSED!
+
+      63> (string< "apple" "banana")
+
+         PASSED!
+
+      64> (string> "zebra" "apple")
+
+         PASSED!
+
+      65> (string<= "abc" "abc")
+
+         PASSED!
+
+      66> (string>= "b" "a")
+; --- eq (identity) ---
+
+         PASSED!
+
+      67> (eq 'foo 'foo)
+
+         PASSED!
+
+      68> (eq 'foo 'bar)
+
+         PASSED!
+
+      69> (eq nil nil)
+
+         PASSED!
+
+      70> (eq t t)
+; same object is eq to itself
+
+         PASSED!
+
+      71> (let ((x '(1 2))) (eq x x))
+; two separately constructed lists are not eq
+
+         PASSED!
+
+      72> (eq '(1 2) '(1 2))
+; is? is an alias for eq
+
+         PASSED!
+
+      73> (is? nil nil)
+
+         PASSED!
+
+      74> (is? '(1 2) '(1 2))
+; --- eql ---
+
+         PASSED!
+
+      75> (eql 'foo 'foo)
+
+         PASSED!
+
+      76> (eql 1 1)
+; different numeric types are not eql
+
+         PASSED!
+
+      77> (eql 1 1.0)
+
+         PASSED!
+
+      78> (eql 1/3 1/3)
+; strings: eql is identity, not content
+
+         PASSED!
+
+      79> (eql "hello" "hello")
+; --- equal ---
+; lists compared structurally
+
+         PASSED!
+
+      80> (equal '(1 2 3) '(1 2 3))
+
+         PASSED!
+
+      81> (equal '(1 (2 3)) '(1 (2 3)))
+
+         PASSED!
+
+      82> (equal '(1 2) '(1 2 3))
+; strings compared by content
+
+         PASSED!
+
+      83> (equal "hello" "hello")
+
+         PASSED!
+
+      84> (equal "Hello" "hello")
+; numbers: equal uses eql at leaves same type required
+
+         PASSED!
+
+      85> (equal 1 1)
+
+         PASSED!
+
+      86> (equal 1 1.0)
+; nil and empty list
+
+         PASSED!
+
+      87> (equal nil nil)
+
+         PASSED!
+
+      88> (equal nil '())
+; symbols
+
+         PASSED!
+
+      89> (equal 'foo 'foo)
+
+         PASSED!
+
+      90> (equal 'foo 'bar)
+; --- equalp ---
+; lists
+
+         PASSED!
+
+      91> (equalp '(1 2 3) '(1 2 3))
+; case-insensitive strings
+
+         PASSED!
+
+      92> (equalp "hello" "HELLO")
+
+         PASSED!
+
+      93> (equalp "hello" "world")
+; cross-type numeric comparison
+
+         PASSED!
+
+      94> (equalp 1 1.0)
+
+         PASSED!
+
+      95> (equalp 1 1)
+
+         PASSED!
+
+      96> (equalp 1 2)
+
+         PASSED!
+
+      97> (equalp nil nil)
+; nested list with mixed string case
+
+         PASSED!
+
+      98> (equalp '("a" "b") '("A" "B"))
+
+         PASSED!
+
+  98 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test05-logical.lisp... 
+       1> (not 1)
+
+         PASSED!
+
+       2> (not make-symbol)
+
+         PASSED!
+
+       3> (not "string")
+
+         PASSED!
+
+       4> (not "")
+
+         PASSED!
+
+       5> (not nil)
+
+         PASSED!
+
+       6> (not 1)
+
+         PASSED!
+
+       7> (and t t t )
+
+         PASSED!
+
+       8> (and t NIL t t t)
+
+         PASSED!
+
+       9> (or nil nil nil nil)
+
+         PASSED!
+
+      10> (or t nil nil nil)
+
+         PASSED!
+
+      11> (not (and t t))
+
+         PASSED!
+
+      12> (not (and t nil))
+
+         PASSED!
+
+      13> (and 1 2 3)
+
+         PASSED!
+
+      14> (and 1 nil 3)
+
+         PASSED!
+
+      15> (or nil 2)
+
+         PASSED!
+
+      16> (or nil nil)
+
+         PASSED!
+
+      17> (or nil nil 3)
+
+         PASSED!
+
+      18> (if nil 42)
+
+         PASSED!
+
+      19> (if nil 42 99)
+
+         PASSED!
+
+      20> (if t 1)
+
+         PASSED!
+
+      21> (and nil (writeLn! "should not print"))
+
+         PASSED!
+
+      22> (and t (writeLn! "should print"))
+
+         PASSED!
+
+      23> (or t (writeLn! "should not print"))
+
+         PASSED!
+
+      24> (or nil (writeLn! "should print"))
+
+         PASSED!
+
+      25> (and (writeLn! "first") nil (writeLn! "third"))
+
+         PASSED!
+
+      26> (or (writeLn! "first") t (writeLn! "third"))
+
+         PASSED!
+
+      27> ;;; Error: not requires exactly one argument
+(not)
+
+         PASSED!
+
+      28> (not 1 2)
+
+         PASSED!
+
+      29> (and 42)
+
+         PASSED!
+
+      30> (or 42)
+; Zero-arg: (and) = T, (or) = NIL
+
+         PASSED!
+
+      31> (and)
+
+         PASSED!
+
+      32> (or)
+; and returns value of last form (not just T)
+
+         PASSED!
+
+      33> (and 1 2)
+; or returns value of first truthy form (not just T)
+
+         PASSED!
+
+      34> (or nil 99)
+
+         PASSED!
+
+  34 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test06-conversions.lisp... 
+       1> (float 3)
+
+         PASSED!
+
+       2> (float 1/3)
+
+         PASSED!
+
+       3> (float "0.9")
+
+         PASSED!
+
+       4> (float -1/4)
+
+         PASSED!
+
+       5> (integer 6.982)
+
+         PASSED!
+
+       6> (integer "24")
+
+         PASSED!
+
+       7> (string 3.5 "Hello" 1/2 )
+
+         PASSED!
+
+       8> (list pi 3/4 'asymbol "a string")
+
+         PASSED!
+
+       9> (rational 0.5)
+
+         PASSED!
+
+      10> (rational 3)
+
+         PASSED!
+
+      11> (rational 3/4)
+
+         PASSED!
+
+      12> (rational 1.5)
+
+         PASSED!
+
+      13> (ustring 42)
+
+         PASSED!
+
+      14> (ustring "hello")
+
+         PASSED!
+
+      15> (ustring 'foo)
+
+         PASSED!
+
+      16> (string "hello")
+; string of a string wraps with quotes — length of "hello" is 7
+
+         PASSED!
+
+      17> (= (length (string "hello")) 7)
+
+         PASSED!
+
+      18> (make-symbol "hello")
+
+         PASSED!
+
+      19> (make-symbol "MAKE-POINT")
+
+         PASSED!
+
+      20> ;;; Error: float rejects non-numeric strings
+(float "hello")
+
+         PASSED!
+
+      21> ;;; Error: rational requires exactly one argument
+(rational)
+
+         PASSED!
+
+      22> (rational 1 2)
+
+         PASSED!
+
+      23> ;;; Error: string requires at least one argument
+(string)
+
+         PASSED!
+
+      24> ;;; Error: make-symbol requires exactly one argument
+(make-symbol)
+
+         PASSED!
+
+      25> (make-symbol "foo")
+
+         PASSED!
+
+      26> (make-symbol "hello-world")
+
+         PASSED!
+
+      27> (make-symbol "x")
+
+         PASSED!
+
+      28> (make-symbol "abc123")
+
+         PASSED!
+
+      29> (make-symbol "+")
+
+         PASSED!
+
+      30> (make-symbol "nil")
+
+         PASSED!
+
+      31> (make-symbol "FOO")
+
+         PASSED!
+
+      32> (make-symbol "foo-bar-baz")
+; --- string-upcase / string-downcase ---
+
+         PASSED!
+
+      33> (string-upcase "hello")
+
+         PASSED!
+
+      34> (string-downcase "WORLD")
+
+         PASSED!
+
+      35> (string-upcase "already UP")
+
+         PASSED!
+
+      36> (string-downcase "mixed Case 123")
+; --- string-trim / string-left-trim / string-right-trim ---
+
+         PASSED!
+
+      37> (string-trim " " "  hello  ")
+
+         PASSED!
+
+      38> (string-left-trim " " "  hello  ")
+
+         PASSED!
+
+      39> (string-right-trim " " "  hello  ")
+
+         PASSED!
+
+      40> (string-trim "xy" "xyhelloyx")
+; --- char-code / code-char ---
+
+         PASSED!
+
+      41> (char-code "a")
+
+         PASSED!
+
+      42> (char-code "A")
+
+         PASSED!
+
+      43> (code-char 97)
+
+         PASSED!
+
+      44> (code-char 65)
+
+         PASSED!
+
+      45> ;;; round-trip
+(code-char (char-code "z"))
+
+         PASSED!
+
+  45 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test07-listops.lisp... 
+       1> (first '(a b c))
+
+         PASSED!
+
+       2> (car '())
+
+         PASSED!
+
+       3> (rest '(a b c))
+
+         PASSED!
+
+       4> (rest '())
+
+         PASSED!
+
+       5> (cons "yes" '(a b c))
+
+         PASSED!
+
+       6> (cons 3 '())
+
+         PASSED!
+
+       7> (first '(fast computers are nice))
+
+         PASSED!
+
+       8> (first '(a b c))
+
+         PASSED!
+
+       9> (rest '(fast computers are nice))
+
+         PASSED!
+
+      10> (rest '(a b c))
+
+         PASSED!
+
+      11> (rest '(c))
+
+         PASSED!
+
+      12> (first '((a b) (c d)))
+
+         PASSED!
+
+      13> (first (rest '(a b c)))
+
+         PASSED!
+
+      14> (first '(rest (a b c)))
+
+         PASSED!
+
+      15> (cons 'a '(b c))
+
+         PASSED!
+
+      16> (car (list 10 20 30))
+
+         PASSED!
+
+      17> (cdr (list 10 20 30))
+
+         PASSED!
+
+      18> (setf mylist (list 10 20 30))
+
+         PASSED!
+
+      19> (at-delete 1 mylist)
+
+         PASSED!
+
+      20> mylist
+
+         PASSED!
+
+      21> (setf mylist2 (list 10 30))
+
+         PASSED!
+
+      22> (at-insert 1 mylist2 20)
+
+         PASSED!
+
+      23> mylist2
+
+         PASSED!
+
+      24> (sort (list 3 1 2) <)
+
+         PASSED!
+
+      25> (sort (list "b" "a" "c") string<)
+
+         PASSED!
+
+      26> ;;; Error: car/cdr require a list argument
+(car 1)
+
+         PASSED!
+
+      27> (cdr "str")
+
+         PASSED!
+
+      28> ;;; Error: cons requires exactly two arguments
+(cons 1)
+
+         PASSED!
+
+      29> ;;; append with no arguments returns NIL
+(append)
+
+         PASSED!
+
+      30> ;;; append with one argument returns it unchanged
+(append '(1 2 3))
+
+         PASSED!
+
+      31> ;;; Error: append requires list arguments
+(append 1 '(2 3))
+
+         PASSED!
+
+      32> ;;; Error: at with out-of-range index
+(at 5 '(1 2 3))
+
+         PASSED!
+
+      33> ;;; Error: sort requires a list argument (predicate now required)
+(sort 1 <)
+
+         PASSED!
+
+      34> (subseq '(a b c d e) 1 3)
+
+         PASSED!
+
+      35> (subseq '(a b c d e) 0 3)
+
+         PASSED!
+
+      36> (subseq '(a b c d e) 2)
+
+         PASSED!
+
+      37> (subseq '(a b c d e) 0)
+
+         PASSED!
+
+      38> (subseq '(a b c d e) 5)
+
+         PASSED!
+
+      39> (subseq '(a b c d e) 1 1)
+
+         PASSED!
+
+      40> (subseq "hello" 1 3)
+
+         PASSED!
+
+      41> (subseq "hello" 0)
+
+         PASSED!
+
+      42> (subseq "hello" 2)
+
+         PASSED!
+
+      43> (subseq "hello" 0 0)
+
+         PASSED!
+
+      44> (subseq '() 0)
+; --- subseq errors ---
+
+         PASSED!
+
+      45> ;;; not a list or string
+(subseq 42 0)
+
+         PASSED!
+
+      46> ;;; start not integer
+(subseq '(1 2 3) 1.0)
+
+         PASSED!
+
+      47> ;;; negative start
+(subseq '(1 2 3) -1)
+
+         PASSED!
+
+      48> ;;; start out of bounds
+(subseq '(1 2 3) 4)
+
+         PASSED!
+
+      49> ;;; end < start
+(subseq '(1 2 3) 2 1)
+
+         PASSED!
+
+      50> ;;; too few args
+(subseq '(1 2 3))
+
+         PASSED!
+
+      51> ;;; too many args
+(subseq '(1 2 3) 0 2 99)
+
+         PASSED!
+
+      52> (remove-if oddp '(1 2 3 4 5))
+
+         PASSED!
+
+      53> (remove-if evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      54> (remove-if oddp '())
+
+         PASSED!
+
+      55> (remove-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+
+         PASSED!
+
+      56> (remove-if-not oddp '(1 2 3 4 5))
+
+         PASSED!
+
+      57> (remove-if-not evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      58> (remove-if-not oddp '())
+; --- find / find-if ---
+
+         PASSED!
+
+      59> (find 3 '(1 2 3 4 5))
+
+         PASSED!
+
+      60> (find 9 '(1 2 3 4 5))
+
+         PASSED!
+
+      61> (find 3 '())
+
+         PASSED!
+
+      62> (find-if evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      63> (find-if oddp '(2 4 6))
+
+         PASSED!
+
+      64> (find-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+; --- position / position-if ---
+
+         PASSED!
+
+      65> (position 3 '(1 2 3 4 5))
+
+         PASSED!
+
+      66> (position 9 '(1 2 3 4 5))
+
+         PASSED!
+
+      67> (position 3 '())
+
+         PASSED!
+
+      68> (position-if evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      69> (position-if oddp '(2 4 6))
+
+         PASSED!
+
+      70> (position-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+; --- count / count-if ---
+
+         PASSED!
+
+      71> (count 2 '(1 2 3 2 4 2))
+
+         PASSED!
+
+      72> (count 9 '(1 2 3))
+
+         PASSED!
+
+      73> (count 2 '())
+
+         PASSED!
+
+      74> (count-if evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      75> (count-if oddp '(2 4 6))
+; --- substitute / substitute-if ---
+
+         PASSED!
+
+      76> (substitute 99 2 '(1 2 3 2 4))
+
+         PASSED!
+
+      77> (substitute 99 9 '(1 2 3))
+
+         PASSED!
+
+      78> (substitute 99 2 '())
+
+         PASSED!
+
+      79> (substitute-if 99 evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      80> (substitute-if 99 oddp '(2 4 6))
+; --- char ---
+
+         PASSED!
+
+      81> (char "hello" 0)
+
+         PASSED!
+
+      82> (char "hello" 4)
+
+         PASSED!
+
+      83> (char "hello" 2)
+
+         PASSED!
+
+  83 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test08-variables.lisp... 
+       1> (setf var1 35)
+
+         PASSED!
+
+       2> var1
+
+         PASSED!
+
+       3> (+ var1 5)
+
+         PASSED!
+
+       4> (+ 5 var1)
+
+         PASSED!
+
+       5> (setf var2 6.2)
+
+         PASSED!
+
+       6> var2
+
+         PASSED!
+
+       7> (- var2 var1)
+
+         PASSED!
+
+       8> var1
+
+         PASSED!
+
+       9> (setf myList '(apple banana orange cherry))
+
+         PASSED!
+
+      10> myList
+
+         PASSED!
+
+      11> (first myList)
+
+         PASSED!
+
+      12> (rest myList)
+
+         PASSED!
+
+      13> (if (= (first myList) 'apple)
+"It's true!")
+
+         PASSED!
+
+      14> (setf var1 "some string value")
+
+         PASSED!
+
+      15> var1
+
+         PASSED!
+
+      16> (setf var1 "some string value")
+
+         PASSED!
+
+      17> var1
+
+         PASSED!
+
+      18> (setf var1 "some string value")
+
+         PASSED!
+
+      19> var1
+
+         PASSED!
+
+      20> (let ()
+   (- var2)
+   (if (= var1 "my value")
+       (* 7 3)
+       (writeLn! var1)
+       )
+   var1
+   )
+
+         PASSED!
+
+      21> (let ( (var1 -22/7) )
+   (writeLn! var1)
+   )
+
+         PASSED!
+
+      22> var1
+
+         PASSED!
+
+      23> var3
+
+         PASSED!
+
+      24> (let ( (var3 "true") )
+   (writeLn! var3)
+   )
+
+         PASSED!
+
+      25> var3
+
+         PASSED!
+
+      26> (setf var1 15)
+
+         PASSED!
+
+      27> (setf var2 2)
+
+         PASSED!
+
+      28> (makunbound 'var3)
+
+         PASSED!
+
+      29> (let ( (var3 'var3) )
+   (writeLn! var1)
+   (writeLn! var2)
+   (writeLn! var3)
+   (setf var2 -22/7)
+   (setf var3 "a value")
+   (writeLn! var1)
+   (writeLn! var2)
+   (writeLn! var3)
+   (let ( (var3 T) )
+      (writeLn! var1)
+      (writeLn! var2)
+      (writeLn! var3)
+      (symTab!)
+      )
+   )
+
+Symbol Table Dump:  Inner-Most Scope First
+------------------------------------------
+    (VAR3)
+    (VAR3)
+    (%STRUCT-FIELD-DEFAULT %STRUCT-FIELD-NAME * *DEBUG-IO* *ERROR-OUTPUT* *GENSYM-COUNTER* *QUERY-IO* *STANDARD-INPUT* *STANDARD-OUTPUT* *TERMINAL-IO* *TRACE-OUTPUT* + - / // /= < <= = > >= ABS ACOS ALIAS AND APPEND APPLY ASIN ASSOC AT AT-DELETE AT-INSERT AT-SET ATAN ATOM AVERAGE BACKQUOTE BLOCK BOUNDP BUTLAST CAAAAR CAAADR CAAAR CAADAR CAADDR CAADR CAAR CADAAR CADADR CADAR CADDAR CADDDR CADDR CADR CALL/CC CAR CASE CATCH CDAAAR CDAADR CDAAR CDADAR CDADDR CDADR CDAR CDDAAR CDDADR CDDAR CDDDAR CDDDDR CDDDR CDDR CDR CEILING CHAR CHAR-CODE CLOSE CLOSED CODE-CHAR COMMA COMMA-AT COND CONS CONSP COPY-LIST COPY-TREE COS COUNT COUNT-IF D DECF DEFINE-HELP-TOPIC DEFMACRO DEFPARAMETER DEFSETF-INTERNAL DEFSTRUCT DEFUN DEFVAR DICTP DIG DOLIST DOTIMES E EIGHTH ENDP EQ EQL EQUAL EQUALP ERROR ETYPECASE EVAL EVENP EVERY EXP EXPT FACT FACT-TCO FIB FIB-TCO FIFTH FILE-STREAM-P FIND FIND-IF FIRST FLOAT FLOATP FLOOR FLUSH FOR FOURTH FUNCALL FUNCTIONP GCD GENSYM GET-INTERNAL-REAL-TIME GET-OUTPUT-STREAM-STRING HASKEY? HASVALUE? HELP IF INCF INPUT-STREAM-P INTEGER INTEGERP INTERACTIVE-STREAM-P INTERNAL-TIME-UNITS-PER-SECOND IS? ISATOM? ISATTY ISDICT? ISEVEN? ISFLOAT? ISFUNCTION? ISINTEGER? ISLIST? ISNEGATIVE? ISNIL? ISNUMBER? ISODD? ISPOSITIVE? ISQRT ISRATIONAL? ISSTRING? ISSYMBOL? ISZERO? LAMBDA LAST LCM LENGTH LET LET* LIST LIST-LENGTH LISTP LN LOAD LOAD-EXTENSION LOAD-EXTENSION-DIR LOG MACROEXPAND MACROEXPAND-1 MACROP MAKE-DICT MAKE-STRING-INPUT-STREAM MAKE-STRING-OUTPUT-STREAM MAKE-SYMBOL MAKUNBOUND MAPC MAPCAR MAX MEMBER MIN MINUSP MOD MYLIST NIL NINTH NOT NOTANY NOTEVERY NTH NTHCDR NULL NUMBERP ODDP OPEN OPEN-STREAM-P OR OUTPUT-STREAM-P PARSE PATH-JOIN PI PLUSP POP! POSITION POSITION-IF PRIN1 PRIN1-TO-STRING PRINC PRINC-TO-STRING PROGN PUSH! PYTHON QUOTE RANDOM RATIONAL RATIONALP READ READ-CHAR READ-LINE READ-PROMPT READABLE READALL RECURSION-LIMIT REDUCE REMOVE REMOVE-IF REMOVE-IF-NOT REST RETURN RETURN-FROM REVERSE REVERSE-AUX ROUND RUN-ME SAVE SECOND SET-ACCESSOR! SET-EXTENSION-DIRS SETF SETQ SEVENTH SIGNUM SIN SIXTH SOME SORT SQRT STDERR STDIN STDOUT STREAMP STRING STRING-CAPITALIZE STRING-DOWNCASE STRING-LEFT-TRIM STRING-RIGHT-TRIM STRING-STREAM-P STRING-TRIM STRING-UPCASE STRING/= STRING< STRING<= STRING= STRING> STRING>= STRINGP SUBSEQ SUBSTITUTE SUBSTITUTE-IF SYMBOLP SYMTAB! T TAN TENTH TERPRI TESTRD THIRD THROW TMPDIR TRACE TREE-EQUAL TRUNCATE TYPE-OF TYPECASE TYPEP UNDEF! UNDEFINE-HELP-TOPIC UNLESS UNTRACE UPDATE! USTRING UWRITE! UWRITELN! VAR1 VAR2 WHEN WHILE WITH-INPUT-FROM-STRING WITH-OPEN-FILE WITH-OUTPUT-TO-STRING WRITABLE WRITE! WRITE-LINE WRITEF WRITELN! ZEROP)
+         PASSED!
+
+      30> var1
+
+         PASSED!
+
+      31> var2
+
+         PASSED!
+
+      32> var3
+
+         PASSED!
+
+      33> ;;; Error: makunbound requires exactly one symbol argument
+(makunbound 1 2)
+
+         PASSED!
+
+      34> (makunbound 1)
+
+         PASSED!
+
+      35> ;;; undef! is an alias for makunbound
+(setf _tmp_var_ 99)
+
+         PASSED!
+
+      36> (undef! '_tmp_var_)
+
+         PASSED!
+
+      37> ;;; Error: setf requires an even number of arguments
+(setf myvar1 10 myvar2)
+
+         PASSED!
+
+      38> (defparameter dp-x 42)
+
+         PASSED!
+
+      39> dp-x
+
+         PASSED!
+
+      40> ;;; defparameter always rebinds
+(defparameter dp-x 99)
+
+         PASSED!
+
+      41> dp-x
+; --- defvar ---
+
+         PASSED!
+
+      42> (defvar dv-x 10)
+
+         PASSED!
+
+      43> dv-x
+
+         PASSED!
+
+      44> ;;; defvar does NOT rebind if already bound
+(defvar dv-x 999)
+
+         PASSED!
+
+      45> dv-x
+
+         PASSED!
+
+      46> ;;; defvar with no value initializes to nil
+(defvar dv-y)
+
+         PASSED!
+
+      47> dv-y
+
+         PASSED!
+
+  47 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test09-functions.lisp... 
+       1> ((lambda (x) (* 2 x)) 16)
+
+         PASSED!
+
+       2> ;;; Test Closures
+(defun adder (x)
+   (lambda (y) (+ x y)))
+
+
+         PASSED!
+
+       3> (setf add5 (adder 5))
+
+
+         PASSED!
+
+       4> (add5 8)
+
+
+         PASSED!
+
+       5> (defun int-seq ()
+   (let ((i 0))
+      (lambda ()
+         (incf i))))
+
+
+         PASSED!
+
+       6> (defun main ()
+   (let ((next-int (int-seq)))
+      (writeln! (next-int))
+      (writeln! (next-int))
+      (writeln! (next-int))))
+
+
+         PASSED!
+
+       7> (main)
+
+
+         PASSED!
+
+       8> (defun make-counter ()
+   (let ((n 0))
+      (lambda () (incf n))))
+
+
+         PASSED!
+
+       9> (setf c1 (make-counter))
+
+
+         PASSED!
+
+      10> (setf c2 (make-counter))
+
+
+         PASSED!
+
+      11> (c1)
+
+
+         PASSED!
+
+      12> (c1)
+
+
+         PASSED!
+
+      13> (c1)
+
+
+         PASSED!
+
+      14> (c2)
+
+
+         PASSED!
+
+      15> (c2)
+
+
+         PASSED!
+
+      16> (defun make-account (balance)
+   (let ((bal balance))
+      (list (lambda (amt) (setf bal (- bal amt)) bal)
+            (lambda () bal))))
+
+
+         PASSED!
+
+      17> (setf acct (make-account 100))
+
+
+         PASSED!
+
+      18> (setf withdraw (at 0 acct))
+
+
+         PASSED!
+
+      19> (setf get-bal (at 1 acct))
+
+
+         PASSED!
+
+      20> (get-bal)
+
+
+         PASSED!
+
+      21> (withdraw 30)
+
+
+         PASSED!
+
+      22> (get-bal)
+
+
+         PASSED!
+
+      23> (withdraw 20)
+
+
+         PASSED!
+
+      24> (get-bal)
+
+
+         PASSED!
+
+      25> (setf multiplier (let ((factor 3)) (lambda (x) (* factor x))))
+
+
+         PASSED!
+
+      26> (multiplier 5)
+
+
+         PASSED!
+
+      27> (multiplier 7)
+
+
+         PASSED!
+
+      28> (defun make-adder (x) (lambda (y) (lambda (z) (+ x y z))))
+
+
+         PASSED!
+
+      29> (setf add1-2 ((make-adder 1) 2))
+
+
+         PASSED!
+
+      30> (add1-2 10)
+
+
+         PASSED!
+
+      31> (add1-2 20)
+
+
+         PASSED!
+
+      32> ;;; Error: first element of a list must be callable
+(1 2 3)
+
+         PASSED!
+
+      33> ;;; Error: eval requires exactly one argument
+(eval)
+
+         PASSED!
+
+  33 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test10-dataTypes.lisp... 
+       1> (list (+ 1 3) '(apple pear "string") 22/7 'false)
+
+         PASSED!
+
+       2> (first '(apple banana cake))
+
+         PASSED!
+
+       3> (rest '(apple banana cake donut))
+
+         PASSED!
+
+       4> (rest '(donkey))
+
+         PASSED!
+
+       5> (cons 'apple '(banana orange pear))
+
+         PASSED!
+
+       6> (remove 'orange '(apple banana orange pear))
+
+         PASSED!
+
+       7> (push! '(1 2 3 4) 6)
+
+         PASSED!
+
+       8> (setf a '(1 2 3 4))
+
+         PASSED!
+
+       9> a
+
+         PASSED!
+
+      10> (pop! a)
+
+         PASSED!
+
+      11> a
+
+         PASSED!
+
+      12> (setf mylist '("a" "b" "c" "d"))
+
+         PASSED!
+
+      13> mylist
+
+         PASSED!
+
+      14> (at 2 mylist)
+
+         PASSED!
+
+      15> (setf (at 1 mylist) 1)
+
+         PASSED!
+
+      16> mylist
+
+         PASSED!
+
+      17> (append mylist '(pi e))
+
+         PASSED!
+
+      18> (hasvalue? pi '(a b c d))
+
+         PASSED!
+
+      19> (hasvalue? 'c '(a b c d))
+
+         PASSED!
+
+      20> (length nil)
+
+         PASSED!
+
+      21> (length '(a b c d))
+
+         PASSED!
+
+      22> (length "hello")
+
+         PASSED!
+
+      23> (reverse '(1 2 3 4 5))
+
+         PASSED!
+
+      24> (setf mymap (make-dict ("a" 1) ("b" 2) ("c" 3) ) )
+
+         PASSED!
+
+      25> mymap
+
+         PASSED!
+
+      26> (at "b" mymap)
+
+         PASSED!
+
+      27> (setf (at "b" mymap) e)
+
+         PASSED!
+
+      28> mymap
+
+         PASSED!
+
+      29> (hasValue? 1 mymap)
+
+         PASSED!
+
+      30> (hasValue? 10 mymap)
+
+         PASSED!
+
+      31> (update! mymap (make-dict ("b" 5) ("d" 10)))
+
+         PASSED!
+
+      32> mymap
+
+         PASSED!
+
+      33> (hasKey? "a" mymap)
+
+         PASSED!
+
+      34> (hasKey? 3 mymap)
+
+         PASSED!
+
+      35> ;;; Error: hasKey? requires a map as second argument
+(hasKey? "a" 1)
+
+         PASSED!
+
+      36> ;;; Error: hasValue? requires a list or map as second argument
+(hasValue? 2 1)
+
+         PASSED!
+
+      37> ;;; Error: update! requires map arguments
+(update! 1 (make-dict))
+
+         PASSED!
+
+      38> (update! (make-dict) 1)
+
+         PASSED!
+
+      39> (update!)
+
+         PASSED!
+
+      40> (type-of nil)
+; positive integer
+
+         PASSED!
+
+      41> (type-of 42)
+; negative integer
+
+         PASSED!
+
+      42> (type-of -7)
+; float
+
+         PASSED!
+
+      43> (type-of 3.14)
+; ratio (Fraction)
+
+         PASSED!
+
+      44> (type-of (/ (rational 3) 4))
+; string
+
+         PASSED!
+
+      45> (type-of "hello")
+; symbol
+
+         PASSED!
+
+      46> (type-of 'foo)
+; non-empty list
+
+         PASSED!
+
+      47> (type-of '(1 2 3))
+; plain dict no STRUCT-TYPE key DICT
+
+         PASSED!
+
+      48> (type-of (make-dict (x 1) (y 2)))
+; named function define it first, then query
+
+         PASSED!
+
+      49> (defun fn14 (x) (* x x))
+
+         PASSED!
+
+      50> (type-of fn14)
+; built-in macro
+
+         PASSED!
+
+      51> (type-of when)
+; built-in primitive
+
+         PASSED!
+
+      52> (type-of car)
+; ==================
+; type-of edge cases
+; ------------------
+; T is a symbol, not a boolean
+
+         PASSED!
+
+      53> (type-of t)
+; zero is still an integer
+
+         PASSED!
+
+      54> (type-of 0)
+; negative float
+
+         PASSED!
+
+      55> (type-of -1.5)
+; empty string
+
+         PASSED!
+
+      56> (type-of "")
+; quoted empty list is NIL → NULL type
+
+         PASSED!
+
+      57> (type-of '())
+; single-element list is still CONS
+
+         PASSED!
+
+      58> (type-of (list 1))
+; (rational 1) is 1/1 a Fraction, not an integer
+
+         PASSED!
+
+      59> (type-of (rational 1))
+; anonymous lambda → FUNCTION
+
+         PASSED!
+
+      60> (type-of (lambda (x) x))
+; result of type-of is always a symbol
+
+         PASSED!
+
+      61> (symbolp (type-of 42))
+; type-of on a type symbol → SYMBOL
+
+         PASSED!
+
+      62> (type-of (type-of 42))
+; ===================
+; type-of error cases
+; -------------------
+; zero arguments
+
+         PASSED!
+
+      63> (type-of)
+
+         PASSED!
+
+      64> (type-of 1 2)
+
+         PASSED!
+
+      65> (defstruct point (x 0) (y 0))
+
+         PASSED!
+
+      66> (setf p0 (make-point))
+
+         PASSED!
+
+      67> (point-x p0)
+
+         PASSED!
+
+      68> (point-y p0)
+
+         PASSED!
+
+      69> (setf p1 (make-point :x 3 :y 4))
+
+         PASSED!
+
+      70> (point-x p1)
+
+         PASSED!
+
+      71> (point-y p1)
+
+         PASSED!
+
+      72> (setf p-partial (make-point :x 5))
+
+         PASSED!
+
+      73> (point-x p-partial)
+
+         PASSED!
+
+      74> (point-y p-partial)
+
+         PASSED!
+
+      75> (point-p p0)
+
+         PASSED!
+
+      76> (point-p p1)
+
+         PASSED!
+
+      77> (point-p 42)
+
+         PASSED!
+
+      78> (point-p "hello")
+
+         PASSED!
+
+      79> (point-p nil)
+
+         PASSED!
+
+      80> (point-p '(1 2 3))
+
+         PASSED!
+
+      81> (setf (point-x p1) 10)
+
+         PASSED!
+
+      82> (point-x p1)
+
+         PASSED!
+
+      83> (setf (point-y p1) 99)
+
+         PASSED!
+
+      84> (point-y p1)
+
+         PASSED!
+
+      85> (setf p2 (copy-point p1))
+
+         PASSED!
+
+      86> (setf (point-x p1) 0)
+
+         PASSED!
+
+      87> (point-x p1)
+
+         PASSED!
+
+      88> (point-x p2)
+
+         PASSED!
+
+      89> (setf (point-y p2) 1000)
+
+         PASSED!
+
+      90> (point-y p2)
+
+         PASSED!
+
+      91> (point-y p1)
+
+         PASSED!
+
+      92> (defstruct node value next)
+
+         PASSED!
+
+      93> (setf n1 (make-node :value 42))
+
+         PASSED!
+
+      94> (node-value n1)
+
+         PASSED!
+
+      95> (node-next n1)
+
+         PASSED!
+
+      96> (setf (node-next n1) 'done)
+
+         PASSED!
+
+      97> (node-next n1)
+
+         PASSED!
+
+      98> (defstruct person name age)
+
+         PASSED!
+
+      99> (setf bob (make-person :name "Bob" :age 30))
+
+         PASSED!
+
+     100> (person-name bob)
+
+         PASSED!
+
+     101> (person-age bob)
+
+         PASSED!
+
+     102> (person-p bob)
+
+         PASSED!
+
+     103> (point-p bob)
+
+         PASSED!
+
+     104> (person-p p1)
+
+         PASSED!
+
+     105> (person-p p0)
+
+         PASSED!
+
+     106> (defstruct labeled (tag "none") (count 0))
+
+         PASSED!
+
+     107> (setf lbl (make-labeled))
+
+         PASSED!
+
+     108> (labeled-tag lbl)
+
+         PASSED!
+
+     109> (setf (labeled-tag lbl) "active")
+
+         PASSED!
+
+     110> (labeled-tag lbl)
+; type-of for struct instances
+
+         PASSED!
+
+     111> (type-of p0)
+
+         PASSED!
+
+     112> (type-of p1)
+
+         PASSED!
+
+     113> (type-of bob)
+
+         PASSED!
+
+     114> (type-of n1)
+
+         PASSED!
+
+     115> (type-of lbl)
+
+         PASSED!
+
+     116> (point-x 42)
+
+         PASSED!
+
+     117> (setf (point-x 42) 5)
+
+         PASSED!
+
+     118> (setf (point-x p1 p1) 5)
+
+         PASSED!
+
+     119> (make-point :z 99)
+
+         PASSED!
+
+     120> (type-of (make-string-output-stream))
+
+         PASSED!
+
+     121> (type-of (make-string-input-stream "hello"))
+; --- file-stream-p / string-stream-p ---
+
+         PASSED!
+
+     122> (string-stream-p (make-string-output-stream))
+
+         PASSED!
+
+     123> (file-stream-p (make-string-output-stream))
+
+         PASSED!
+
+     124> (string-stream-p (make-string-input-stream "hi"))
+
+         PASSED!
+
+     125> (string-stream-p 42)
+
+         PASSED!
+
+     126> (file-stream-p 42)
+; --- typep: basic types ---
+
+         PASSED!
+
+     127> (typep 42 'integer)
+
+         PASSED!
+
+     128> (typep 3.14 'float)
+
+         PASSED!
+
+     129> (typep 1/3 'ratio)
+
+         PASSED!
+
+     130> (typep 42 'rational)
+
+         PASSED!
+
+     131> (typep 1/3 'rational)
+
+         PASSED!
+
+     132> (typep 42 'number)
+
+         PASSED!
+
+     133> (typep 3.14 'real)
+
+         PASSED!
+
+     134> (typep "hello" 'string)
+
+         PASSED!
+
+     135> (typep 'foo 'symbol)
+
+         PASSED!
+
+     136> (typep nil 'null)
+
+         PASSED!
+
+     137> (typep nil 'list)
+
+         PASSED!
+
+     138> (typep (list 1 2) 'cons)
+
+         PASSED!
+
+     139> (typep nil 'atom)
+
+         PASSED!
+
+     140> (typep t 'boolean)
+
+         PASSED!
+
+     141> (typep nil 'boolean)
+
+         PASSED!
+
+     142> (typep 42 'boolean)
+
+         PASSED!
+
+     143> (typep (make-string-output-stream) 'stream)
+
+         PASSED!
+
+     144> (typep (make-string-output-stream) 'string-stream)
+
+         PASSED!
+
+     145> (typep (make-string-output-stream) 'file-stream)
+
+         PASSED!
+
+     146> (typep 42 't)
+
+         PASSED!
+
+     147> (typep 42 'nil)
+; --- typep: compound specifiers ---
+
+         PASSED!
+
+     148> (typep 42 '(or integer string))
+
+         PASSED!
+
+     149> (typep "hi" '(or integer string))
+
+         PASSED!
+
+     150> (typep 3.14 '(or integer string))
+
+         PASSED!
+
+     151> (typep 42 '(and number (not float)))
+
+         PASSED!
+
+     152> (typep 3.14 '(and number (not float)))
+
+         PASSED!
+
+     153> (typep 42 '(not string))
+
+         PASSED!
+
+     154> (typep 42 '(member 1 2 42 99))
+
+         PASSED!
+
+     155> (typep 7 '(member 1 2 42 99))
+; satisfies
+
+         PASSED!
+
+     156> (typep 4 '(satisfies evenp))
+
+         PASSED!
+
+     157> (typep 3 '(satisfies evenp))
+; ranged integer
+
+         PASSED!
+
+     158> (typep 5 '(integer 1 10))
+
+         PASSED!
+
+     159> (typep 0 '(integer 1 10))
+
+         PASSED!
+
+     160> (typep 10 '(integer 1 10))
+; exclusive bounds
+
+         PASSED!
+
+     161> (typep 1 '(integer (0) (10)))
+
+         PASSED!
+
+     162> (typep 0 '(integer (0) (10)))
+; unbounded
+
+         PASSED!
+
+     163> (typep -99 '(integer * 0))
+
+         PASSED!
+
+     164> (typep 1 '(integer * 0))
+; ranged float
+
+         PASSED!
+
+     165> (typep 0.5 '(float 0.0 1.0))
+
+         PASSED!
+
+     166> (typep 1.5 '(float 0.0 1.0))
+; --- typep: error ---
+
+         PASSED!
+
+     167> (typep 42 "not-a-symbol")
+
+         PASSED!
+
+     168> (typecase 42
+  (string "str")
+  (integer "int")
+  (otherwise "other"))
+
+         PASSED!
+
+     169> (typecase "hi"
+  (integer "int")
+  (string "str"))
+
+         PASSED!
+
+     170> (typecase nil
+  (integer "int")
+  (null "null"))
+; no matching clause returns nil
+
+         PASSED!
+
+     171> (typecase 3.14
+  (integer "int")
+  (string "str"))
+; t as catch-all
+
+         PASSED!
+
+     172> (typecase 'foo
+  (integer "int")
+  (t "other"))
+; --- etypecase ---
+
+         PASSED!
+
+     173> (etypecase 42
+  (integer "int")
+  (string "str"))
+
+         PASSED!
+
+     174> (etypecase "hello"
+  (integer "int")
+  (string "str"))
+
+         PASSED!
+
+     175> (etypecase 3.14
+  (integer "int")
+  (string "str"))
+
+         PASSED!
+
+ 175 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test11-controlStructs.lisp... 
+       1> (setf val1 3)
+
+         PASSED!
+
+       2> (cond
+   ((= val1 1)
+                "one")
+   ((= val1 2)
+                "two")
+   ((= val1 3)
+                "three"))
+
+         PASSED!
+
+       3> (case val1
+   (1
+       "one")
+   (2
+       "two")
+   (3
+       "three")
+   )
+; case: list of keys — matches first key in group
+
+         PASSED!
+
+       4> (case 1
+   ((1 2 3) "low")
+   ((4 5 6) "high")
+   (t       "other"))
+; case: list of keys — matches second key in group
+
+         PASSED!
+
+       5> (case 5
+   ((1 2 3) "low")
+   ((4 5 6) "high")
+   (t       "other"))
+; case: list of keys — falls through to t
+
+         PASSED!
+
+       6> (case 9
+   ((1 2 3) "low")
+   ((4 5 6) "high")
+   (t       "other"))
+; case: list of symbol keys
+
+         PASSED!
+
+       7> (case 'b
+   ((a b)   "ab")
+   ((c d)   "cd")
+   (otherwise "other"))
+; case: list of symbol keys — no match, otherwise clause
+
+         PASSED!
+
+       8> (case 'z
+   ((a b)   "ab")
+   ((c d)   "cd")
+   (otherwise "other"))
+
+         PASSED!
+
+       9> (defun countdown1 (num)
+   (while (> num 0)
+      (let ()
+         (writeLn! num)
+         (setf num (- num 1))
+         )
+      )
+   )
+
+         PASSED!
+
+      10> (countdown1 5)
+
+         PASSED!
+
+      11> (defun countdown2 (num)
+   (while (> num 0)
+      (let ()
+         (writeLn! num)
+         (setf num (- num 1))
+         )
+   )
+)
+
+         PASSED!
+
+      12> (countdown2 3)
+
+         PASSED!
+
+      13> (dolist (item '(0 1 2 3 4 5))
+   (writeLn! item))
+; --- dolist with result form ---
+; result form evaluated after loop; var = NIL
+
+         PASSED!
+
+      14> (let ((total 0)) (dolist (x '(1 2 3) total) (setf total (+ total x))))
+; result form can be any expr (evaluated with var = NIL)
+
+         PASSED!
+
+      15> (dolist (x '(a b c) 'done) (write! x))
+
+         PASSED!
+
+      16> (dotimes (i 3) (writeLn! i))
+
+         PASSED!
+
+      17> (let ((sum 0)) (dotimes (i 5) (setf sum (+ sum i))) sum)
+
+         PASSED!
+
+      18> (progn 1 2 3)
+
+         PASSED!
+
+      19> (let ((n 5)) (progn (setf n (* n n)) n))
+
+         PASSED!
+
+      20> (let* ((a 2) (b (* a 3))) b)
+
+         PASSED!
+
+      21> (let* ((x 10) (y (+ x 5))) y)
+
+         PASSED!
+
+      22> (eval '(+ 1 2))
+
+         PASSED!
+
+      23> (eval '(list 1 2 3))
+
+         PASSED!
+
+      24> (parse "(+ 1 2)")
+
+         PASSED!
+
+      25> (parse "42")
+
+         PASSED!
+
+      26> ;;; Error: cond requires at least one clause
+(cond)
+
+         PASSED!
+
+      27> ;;; Error: let requires at least 2 arguments
+(let)
+
+         PASSED!
+
+      28> (block myblock 1 2 3)
+; block with no body returns NIL
+
+         PASSED!
+
+      29> (block myblock)
+; return-from exits the block immediately, skipping remaining forms
+
+         PASSED!
+
+      30> (block myblock
+   (return-from myblock 42)
+   99)
+; return-from with no value returns NIL
+
+         PASSED!
+
+      31> (block myblock
+   (return-from myblock)
+   99)
+; return-from from inside a nested expression
+
+         PASSED!
+
+      32> (+ 1 (block escape
+        (+ 10 (return-from escape 5))))
+; nested blocks with same name innermost is exited
+
+         PASSED!
+
+      33> (block foo
+   (block foo
+      (return-from foo 1))
+   2)
+; return-from to outer block bypasses the inner block entirely
+
+         PASSED!
+
+      34> (block outer
+   (block inner
+      (return-from outer 99))
+   42)
+; block used as early-exit in a search loop
+
+         PASSED!
+
+      35> (defun find-even (lst)
+   (block found
+      (dolist (x lst)
+         (if (evenp x) (return-from found x)))
+      nil))
+
+         PASSED!
+
+      36> (find-even '(1 3 5 4 7))
+
+         PASSED!
+
+      37> (find-even '(1 3 5 7))
+; --- block nil and return ---
+; (block nil ...) acts like a named block
+
+         PASSED!
+
+      38> (block nil 1 2 3)
+; (return value) exits (block nil ...)
+
+         PASSED!
+
+      39> (block nil
+   (return 42)
+   99)
+; (return) with no value returns NIL
+
+         PASSED!
+
+      40> (block nil
+   (return)
+   99)
+; dotimes with early (return ...)
+
+         PASSED!
+
+      41> (let ((sum 0))
+   (dotimes (i 10)
+      (if (= i 5) (return sum))
+      (setf sum (+ sum i)))
+   sum)
+; dotimes with result form
+
+         PASSED!
+
+      42> (let ((total 0)) (dotimes (i 5 total) (setf total (+ total i))))
+; dotimes result form - var = count when evaluated
+
+         PASSED!
+
+      43> (dotimes (i 5 i) nil)
+; dolist with early (return ...)
+
+         PASSED!
+
+      44> (dolist (x '(1 2 3 4 5))
+   (if (= x 3) (return x)))
+; Error: stale return-from (no matching block active)
+
+         PASSED!
+
+      45> (return-from nowhere 42)
+
+         PASSED!
+
+      46> (return 42)
+
+         PASSED!
+
+      47> (block 42 1 2 3)
+
+         PASSED!
+
+      48> (return-from 42 99)
+
+         PASSED!
+
+      49> (let ((acc 0)) (for (i 0) (< i 5) (+ i 1) (setf acc (+ acc i))) acc)
+; nextForm references var: double each step (1+2+4+8+16 = 31)
+
+         PASSED!
+
+      50> (let ((acc 0)) (for (i 1) (<= i 16) (* i 2) (setf acc (+ acc i))) acc)
+; never-run loop (condition false from start) returns NIL
+
+         PASSED!
+
+      51> (for (i 0) (< i 0) (+ i 1) (setf i 99))
+; collect into a list
+
+         PASSED!
+
+      52> (let ((lst nil))
+   (for (i 0) (< i 4) (+ i 1) (setf lst (cons i lst)))
+   (reverse lst))
+; early exit with (return ...)
+
+         PASSED!
+
+      53> (for (i 0) (< i 10) (+ i 1)
+   (if (= i 3) (return i)))
+; loop variable is local — does not leak into outer scope
+
+         PASSED!
+
+      54> (let ((i 99)) (for (i 0) (< i 3) (+ i 1) nil) i)
+; string walking via index
+
+         PASSED!
+
+      55> (let ((s "hello") (acc ""))
+   (for (i 0) (< i (length s)) (+ i 1)
+      (setf acc (ustring acc (char s i))))
+   acc)
+; Error: initSpec not a list
+
+         PASSED!
+
+      56> (for x (< x 5) (+ x 1) nil)
+
+         PASSED!
+
+      57> (for (x) (< x 5) (+ x 1) nil)
+
+         PASSED!
+
+      58> (for (42 0) (< 42 5) (+ 42 1) nil)
+
+         PASSED!
+
+      59> (for (i 0) (< i 5) (+ i 1))
+
+         PASSED!
+
+  59 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test12-macros.lisp... 
+       1> (setf name 'john)
+
+         PASSED!
+
+       2> `(go ,name go)
+
+         PASSED!
+
+       3> `( name ,name age ,(+ 3 7))
+
+         PASSED!
+
+       4> `,name
+
+         PASSED!
+
+       5> (setf full '(r h l))
+
+         PASSED!
+
+       6> `( ,@full )
+; --- nested backquotes ---
+
+         PASSED!
+
+       7> ;;; inner backquote preserved as data no commas
+`(a `b)
+
+         PASSED!
+
+       8> ;;; inner comma preserved as form (belongs to inner backquote)
+`(a `(b ,name))
+
+         PASSED!
+
+       9> ;;; double-comma: outer comma evaluated now, inner comma preserved
+`(a `(b ,,name))
+
+         PASSED!
+
+      10> ;;; macro-generating-macro using nested backquote
+(defmacro make-adder-macro (name amount)
+   `(defmacro ,name (x)
+      `(+ ,x ,,amount)))
+
+         PASSED!
+
+      11> (make-adder-macro add10 10)
+
+         PASSED!
+
+      12> (add10 5)
+
+         PASSED!
+
+      13> (defmacro zero (var) `(setf ,var 0))
+
+         PASSED!
+
+      14> x
+
+         PASSED!
+
+      15> (zero x)
+
+         PASSED!
+
+      16> x
+
+         PASSED!
+
+      17> (defmacro foo (a &rest b) `(a ,a ,@b))
+
+         PASSED!
+
+      18> (macroexpand '(foo 1 (a b c) (x y z)))
+
+         PASSED!
+
+      19> (macroexpand '(foo 1 "a" "b" "c"))
+
+         PASSED!
+
+      20> ;;; macroexpand fully expands through multiple macro layers
+(macroexpand '(unless t 42))
+
+         PASSED!
+
+      21> ;;; macroexpand-1 stops after one expansion step
+(macroexpand-1 '(unless t 42))
+
+         PASSED!
+
+      22> ;;; macroexpand-1 on a non-macro returns form unchanged
+(macroexpand-1 '(if t 42))
+
+         PASSED!
+
+      23> ;;; macroexpand on a non-macro returns form unchanged
+(macroexpand '(if t 42))
+
+         PASSED!
+
+      24> ;;; macroexpand on non-list returns unchanged
+(macroexpand 1)
+
+         PASSED!
+
+      25> ;;; macroexpand on empty list returns NIL
+(macroexpand '())
+
+         PASSED!
+
+      26> ;;; macroexpand on non-macro head returns form unchanged
+(macroexpand '(1))
+
+         PASSED!
+
+      27> ;;; Error: macroexpand requires exactly one argument
+(macroexpand)
+
+         PASSED!
+
+      28> ;;; Error: macroexpand-1 requires exactly one argument
+(macroexpand-1)
+
+         PASSED!
+
+      29> ;;; basic required destructuring
+(defmacro test-destruct1 ((a b) c)
+   `(list ,a ,b ,c))
+
+         PASSED!
+
+      30> (test-destruct1 (10 20) 30)
+
+         PASSED!
+
+      31> ;;; nested destructuring
+(defmacro test-destruct2 ((a (b c)) d)
+   `(list ,a ,b ,c ,d))
+
+         PASSED!
+
+      32> (test-destruct2 (1 (2 3)) 4)
+
+         PASSED!
+
+      33> ;;; &optional inside nested pattern — arg supplied
+(defmacro test-destruct3 ((a &optional b) c)
+   `(list ,a ,b ,c))
+
+         PASSED!
+
+      34> (test-destruct3 (1 2) 3)
+
+         PASSED!
+
+      35> ;;; &optional inside nested pattern — arg defaulted
+(test-destruct3 (1) 3)
+
+         PASSED!
+
+      36> ;;; &rest inside nested pattern
+(defmacro test-destruct4 ((a &rest bs) c)
+   `(list ,a ',bs ,c))
+
+         PASSED!
+
+      37> (test-destruct4 (1 2 3) 4)
+
+         PASSED!
+
+      38> ;;; destructuring with remaining required params
+(defmacro test-destruct5 (x (a b) y)
+   `(list ,x ,a ,b ,y))
+
+         PASSED!
+
+      39> (test-destruct5 0 (1 2) 3)
+
+         PASSED!
+
+  39 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test13-parameters.lisp... 
+       1> (list)
+
+         PASSED!
+
+       2> (list 1)
+
+         PASSED!
+
+       3> (list 1 2 3)
+
+         PASSED!
+
+       4> ((lambda (a b) (+ a (* b 3))) 4 5)
+
+         PASSED!
+
+       5> ((lambda (a &optional (b 2)) (+ a (* b 3))) 4 5)
+
+         PASSED!
+
+       6> ((lambda (a &optional (b 2)) (+ a (* b 3))) 4)
+
+         PASSED!
+
+       7> ((lambda (&optional (a 2 b) (c 3 d) &rest x) (list a b c d x)))
+
+         PASSED!
+
+       8> ((lambda (&optional (a 2 b) (c 3 d) &rest x) (list a b c d x)) 6)
+
+         PASSED!
+
+       9> ((lambda (&optional (a 2 b) (c 3 d) &rest x) (list a b c d x)) 6 3)
+
+         PASSED!
+
+      10> ((lambda (&optional (a 2 b) (c 3 d) &rest x) (list a b c d x)) 6 3 8)
+
+         PASSED!
+
+      11> ((lambda (&optional (a 2 b) (c 3 d) &rest x) (list a b c d x)) 6 3 8 9 10 11)
+
+         PASSED!
+
+      12> ((lambda (a b &key c d) (list a b c d)) 1 2)
+
+         PASSED!
+
+      13> ((lambda (a b &key c d) (list a b c d)) 1 2 :c 6)
+
+         PASSED!
+
+      14> ((lambda (a b &key c d) (list a b c d)) 1 2 :d 8)
+
+         PASSED!
+
+      15> ((lambda (a b &key c d) (list a b c d)) 1 2 :c 6 :d 8)
+
+         PASSED!
+
+      16> ((lambda (a b &key c d) (list a b c d)) 1 2 :d 8 :c 6)
+
+         PASSED!
+
+      17> ((lambda (a b &key c d) (list a b c d)) :a 1 :d 8 :c 6)
+
+         PASSED!
+
+      18> ((lambda (a b &key c d) (list a b c d)) :a :b :c :d)
+
+         PASSED!
+
+      19> ((lambda (a &optional (b 3) &rest x &key c (d a)) (list a b c d x)) 1)
+
+         PASSED!
+
+      20> ((lambda (a &optional (b 3) &rest x &key c (d a)) ( list a b c d x)) 1 2)
+
+         PASSED!
+
+      21> ((lambda (a &optional (b 3) &rest x &key c (d a)) (list a b c d x)) :c 7)
+
+         PASSED!
+
+      22> ((lambda (a &optional (b 3) &rest x &key c (d a)) (list a b c d x)) 1 6 :c 7)
+
+         PASSED!
+
+      23> ((lambda (a &optional (b 3) &rest x &key c (d a)) (list a b c d x)) 1 6 :d 8)
+
+         PASSED!
+
+      24> ;;; Duplicate keyword: first occurrence wins (CL 3.4.1.4.1)
+((lambda (a &optional (b 3) &rest x &key c (d a)) (list a b c d x)) 1 6 :d 8 :c 9 :d 10)
+
+         PASSED!
+
+      25> ;;; Edge case: bare &optional symbol (no default, no svar) - not supplied
+((lambda (&optional a) a))
+
+         PASSED!
+
+      26> ;;; bare &optional symbol - supplied
+((lambda (&optional a) a) 7)
+
+         PASSED!
+
+      27> ;;; &aux bare symbol - gets NIL default
+((lambda (&aux a) a))
+
+         PASSED!
+
+      28> ;;; &aux with initform
+((lambda (&aux (a 42)) a))
+
+         PASSED!
+
+      29> ;;; &aux with computed initform using positional arg
+((lambda (x &aux (a (* x 2))) (list x a)) 5)
+
+         PASSED!
+
+      30> ;;; Error: too few positional arguments (lambda)
+((lambda (a b) (+ a b)) 1)
+
+         PASSED!
+
+      31> ;;; Error: too many arguments, no &rest (lambda)
+((lambda (a) a) 1 2 3)
+
+         PASSED!
+
+      32> ;;; Error: too many arguments after &optional exhausted (lambda)
+((lambda (&optional a b) (list a b)) 1 2 3)
+
+         PASSED!
+
+      33> ;;; Error: unexpected keyword (lambda)
+((lambda (&key a) a) :b 2)
+
+         PASSED!
+
+      34> ;;; Error: keyword not followed by value (lambda)
+((lambda (&key a b) (list a b)) :a 1 :b)
+
+         PASSED!
+
+      35> ;;; Named function: error message shows function name
+(defun param-test-posit (a b) (+ a b))
+
+         PASSED!
+
+      36> (param-test-posit 3 4)
+
+         PASSED!
+
+      37> (param-test-posit 1)
+
+         PASSED!
+
+      38> (param-test-posit 1 2 3)
+
+         PASSED!
+
+      39> ;;; Fix 1: bare (var) spec with no default in &key
+((lambda (&key (a)) a))
+
+         PASSED!
+
+      40> ((lambda (&key (a)) a) :a 7)
+
+         PASSED!
+
+      41> ;;; Fix 2: &aux is not swallowed as a key parameter name
+((lambda (&key a &aux b) (list a b)) :a 5)
+
+         PASSED!
+
+      42> ;;; &allow-other-keys: unknown keys accepted, known key bound
+((lambda (&key a &allow-other-keys) a) :a 1 :b 99)
+
+         PASSED!
+
+      43> ;;; &allow-other-keys: no args supplied at all
+((lambda (&key a &allow-other-keys) a))
+
+         PASSED!
+
+      44> ;;; &allow-other-keys: only unknown keys supplied
+((lambda (&key a &allow-other-keys) a) :z 42)
+
+         PASSED!
+
+      45> ;;; &allow-other-keys: multiple unknown keys
+((lambda (&key a &allow-other-keys) a) :a 1 :b 2 :c 3 :d 4)
+
+         PASSED!
+
+      46> ;;; &allow-other-keys: with svar key supplied
+((lambda (&key (a 0 ap) &allow-other-keys) (list a ap)) :a 7 :x 99)
+
+         PASSED!
+
+      47> ;;; &allow-other-keys: with svar key NOT supplied, only unknown keys
+((lambda (&key (a 0 ap) &allow-other-keys) (list a ap)) :x 99)
+
+         PASSED!
+
+      48> ;;; &allow-other-keys: with &rest rest captures all key/val pairs
+((lambda (&rest r &key a &allow-other-keys) (list a r)) :a 1 :b 2)
+
+         PASSED!
+
+      49> ;;; &allow-other-keys: with default initform
+((lambda (&key (a 42) &allow-other-keys) a) :z 0)
+
+         PASSED!
+
+      50> ;;; &allow-other-keys: duplicate known key first wins
+((lambda (&key a &allow-other-keys) a) :a 1 :a 2 :b 3)
+
+         PASSED!
+
+      51> ;;; :allow-other-keys t in arg list permits unknown keys (CL 3.4.1.4.1)
+((lambda (&key a) a) :a 1 :b 99 :allow-other-keys t)
+
+         PASSED!
+
+      52> ;;; :allow-other-keys t before any other keys
+((lambda (&key a) a) :allow-other-keys t :a 5 :z 99)
+
+         PASSED!
+
+      53> ;;; :allow-other-keys nil does NOT permit unknown keys
+((lambda (&key a) a) :a 1 :b 99 :allow-other-keys nil)
+
+         PASSED!
+
+      54> ;;; :allow-other-keys t with no declared keys unknown keys silently ignored
+((lambda (&key) nil) :x 1 :y 2 :allow-other-keys t)
+
+         PASSED!
+
+      55> ;;; :allow-other-keys t without &allow-other-keys in lambda list
+((lambda (&key a b) (list a b)) :a 1 :b 2 :c 3 :allow-other-keys t)
+
+         PASSED!
+
+      56> ;;; :allow-other-keys t with svar supplied key gets T, unsupplied gets NIL
+((lambda (&key (a 0 ap) (b 0 bp)) (list a ap b bp)) :a 5 :z 99 :allow-other-keys t)
+
+         PASSED!
+
+      57> ;;; Fix 1: &optional default (not the keyword) is used when next arg is a keyword
+((lambda (&optional (x 99) &key y) (list x y)) :y 5)
+
+         PASSED!
+
+      58> ;;; Fix 1: &optional with no &key heuristic fires, :foo not consumed, extra-arg error
+((lambda (&optional x) x) :foo)
+
+         PASSED!
+
+      59> ;;; Fix 1: non-NIL explicit default used when keyword heuristic fires
+((lambda (&optional (x (+ 40 2)) &key y) (list x y)) :y 7)
+
+         PASSED!
+
+      60> ;;; Fix 4: simple duplicate key first wins
+((lambda (&key a) a) :a 1 :a 2)
+
+         PASSED!
+
+      61> ;;; Fix 4: svar is still T when key appears twice; value is from first occurrence
+((lambda (&key (a 0 a-p)) (list a a-p)) :a 10 :a 20)
+
+         PASSED!
+
+      62> ;;; Fix 7: single-element (&aux (x)) binds x to NIL
+((lambda (&aux (x)) x))
+
+         PASSED!
+
+      63> ;;; Fix 7: (&aux (x) (y 7)) single and two-element forms together
+((lambda (&aux (x) (y 7)) (list x y)))
+
+         PASSED!
+
+      64> ;;; NC6: (&optional) with no optional params is legal
+((lambda (a &optional) a) 5)
+
+         PASSED!
+
+      65> ;;; NC6: (&key) with no key params is legal
+((lambda (a &key) a) 10)
+
+         PASSED!
+
+      66> ;;; NC6: (&aux) with no aux vars is legal
+((lambda (a &aux) a) 3)
+
+         PASSED!
+
+      67> ;;; NC6: (&key) with empty section any keyword passed is an error
+((lambda (&key) nil) :x 1)
+
+         PASSED!
+
+      68> ;;; NC5: duplicate positional parameter names
+((lambda (a a) a) 1 2)
+
+         PASSED!
+
+      69> ;;; NC5: duplicate across positional and optional (both are plain symbols)
+((lambda (a &optional a) a) 1)
+
+         PASSED!
+
+      70> ;;; NC5: duplicate positional and &rest name
+((lambda (a &rest a) a) 1)
+
+         PASSED!
+
+      71> ;;; NC5: duplicate key variable and its own svar
+((lambda (&key (a 0 a)) a) :a 5)
+
+         PASSED!
+
+      72> ;;; NC1: known keyword appearing out of order gives specific message
+((lambda (&rest x &optional y) (list x y)) 1 2)
+
+         PASSED!
+
+      73> ;;; NC1: &body is macro-only; invalid in function lambda lists
+((lambda (&body x) x) 1 2)
+
+         PASSED!
+
+      74> ;;; Bug 5: svar bound to NIL when key not supplied
+((lambda (&key (a 0 ap)) (list a ap)) :a 10)
+
+         PASSED!
+
+      75> ((lambda (&key (a 0 ap)) (list a ap)))
+
+         PASSED!
+
+      76> ;;; Bug 5: multiple key params, some supplied, some not svars correct
+((lambda (&key (a 0 ap) (b 1 bp)) (list a ap b bp)) :b 99)
+
+         PASSED!
+
+      77> ;;; NC1: key default can reference preceding key variable
+((lambda (&key (a 10) (b a)) (list a b)))
+
+         PASSED!
+
+      78> ;;; NC1: key default references preceding key with supplied value
+((lambda (&key (a 10) (b a)) (list a b)) :a 42)
+
+         PASSED!
+
+      79> ;;; NC1: key default references preceding key second key supplied overrides
+((lambda (&key (a 10) (b a)) (list a b)) :a 42 :b 7)
+
+         PASSED!
+
+      80> ;;; Bug 4: &-symbol rejected as &rest variable name
+((lambda (&rest &foo) &foo) 1 2)
+
+         PASSED!
+
+      81> ;;; Bug 6: &-symbol rejected as variable name in &key list spec
+((lambda (&key (&aux)) &aux))
+
+         PASSED!
+
+      82> ;;; Bug 7: &-symbol rejected as variable name in &aux list spec
+((lambda (&aux (&key 5)) &key))
+
+         PASSED!
+
+      83> ;;; &-symbol rejected as svar in &optional spec
+((lambda (&optional (a 0 &rest)) a))
+
+         PASSED!
+
+      84> ;;; &-symbol rejected as svar in &key spec
+((lambda (&key (a 0 &aux)) a))
+
+         PASSED!
+
+  84 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test14-io.lisp... 
+       1> (write! 42)
+
+         PASSED!
+
+       2> (write! "hello")
+
+         PASSED!
+
+       3> (writeLn! 42)
+
+         PASSED!
+
+       4> (writeLn! "hello")
+
+         PASSED!
+
+       5> (uwrite! 42)
+
+         PASSED!
+
+       6> (uwrite! "hello")
+
+         PASSED!
+
+       7> (uwriteLn! 42)
+
+         PASSED!
+
+       8> (uwriteLn! "hello")
+
+         PASSED!
+
+       9> (writef "{0} {1}" (list 42 "hello"))
+
+         PASSED!
+
+      10> (writef "x={0:d}" (list 99))
+
+         PASSED!
+
+      11> (writef "{0} + {1} = {2}" (list 1 2 3))
+
+         PASSED!
+
+      12> ;;; writef with no second arg outputs the format string unchanged
+(writef "no substitution needed")
+
+         PASSED!
+
+      13> ;;; write!/writeLn! with no arguments are valid no-ops returning NIL
+(write!)
+
+         PASSED!
+
+      14> (writeLn!)
+
+         PASSED!
+
+      15> (uwrite!)
+
+         PASSED!
+
+      16> (uwriteLn!)
+
+         PASSED!
+
+      17> ;;; Error: writef requires at least one argument
+(writef)
+
+         PASSED!
+
+      18> ;;; Error: writef first argument must be a format string
+(writef 1 '(a b))
+
+         PASSED!
+
+      19> ;;; Error: writef second argument must be a list or map
+(writef "hello" 1)
+
+         PASSED!
+
+      20> ;;; write! with NIL
+(write! NIL)
+
+         PASSED!
+
+      21> ;;; write! with T
+(write! T)
+
+         PASSED!
+
+      22> ;;; write! with float
+(write! 3.14)
+
+         PASSED!
+
+      23> ;;; write! with fraction
+(write! 1/3)
+
+         PASSED!
+
+      24> ;;; write! with symbol
+(write! 'foo)
+
+         PASSED!
+
+      25> ;;; write! with list
+(write! '(1 2 3))
+
+         PASSED!
+
+      26> ;;; write! with nested list
+(write! '(a (b c) d))
+
+         PASSED!
+
+      27> ;;; write! with empty list
+(write! '())
+; --- uwrite! with various types ---
+
+         PASSED!
+
+      28> ;;; uwrite! with NIL
+(uwrite! NIL)
+
+         PASSED!
+
+      29> ;;; uwrite! with T
+(uwrite! T)
+
+         PASSED!
+
+      30> ;;; uwrite! with float
+(uwrite! 3.14)
+
+         PASSED!
+
+      31> ;;; uwrite! with fraction
+(uwrite! 1/3)
+
+         PASSED!
+
+      32> ;;; uwrite! with symbol
+(uwrite! 'foo)
+
+         PASSED!
+
+      33> ;;; uwrite! with list
+(uwrite! '(1 2 3))
+; --- uwrite!/uwriteLn! with multiple arguments ---
+
+         PASSED!
+
+      34> ;;; uwrite! with multiple args concatenates
+(uwrite! 1 2 3)
+
+         PASSED!
+
+      35> ;;; uwriteLn! with multiple args
+(uwriteLn! 4 5 6)
+; --- write! vs uwrite! string quoting ---
+
+         PASSED!
+
+      36> ;;; write! with multiple strings keeps quotes
+(write! "a" "b" "c")
+
+         PASSED!
+
+      37> ;;; uwrite! with multiple strings omits quotes
+(uwrite! "a" "b" "c")
+; --- mixed types in multi-arg ---
+
+         PASSED!
+
+      38> ;;; write! with mixed types (string + int)
+(write! "x=" 42)
+
+         PASSED!
+
+      39> ;;; uwrite! with mixed types (string + int)
+(uwrite! "x=" 42)
+; --- return value is last argument ---
+
+         PASSED!
+
+      40> ;;; write! returns last of multiple int args
+(write! 10 20 30)
+
+         PASSED!
+
+      41> ;;; write! returns last arg when string
+(write! 1 "end")
+
+         PASSED!
+
+      42> ;;; uwrite! returns last arg when string
+(uwrite! 1 "end")
+; --- writeLn!/uwriteLn! multi-arg ---
+
+         PASSED!
+
+      43> ;;; writeLn! with multiple string args
+(writeLn! "a" "b")
+
+         PASSED!
+
+      44> ;;; uwriteLn! with multiple string args
+(uwriteLn! "a" "b")
+; --- terpri ---
+
+         PASSED!
+
+      45> (terpri)
+; ============================================================
+; flush with no argument (flushes stdout)
+; ============================================================
+
+         PASSED!
+
+      46> (flush)
+; ============================================================
+; tmpdir and path-join
+; ============================================================
+
+         PASSED!
+
+      47> ;;; tmpdir returns a non-empty string
+(stringp (tmpdir))
+
+         PASSED!
+
+      48> (> (length (tmpdir)) 0)
+
+         PASSED!
+
+      49> ;;; path-join returns a string longer than either component
+(stringp (path-join "a" "b"))
+
+         PASSED!
+
+      50> (> (length (path-join "a" "b")) 2)
+; ============================================================
+; streamp: NIL for non-stream types
+; ============================================================
+
+         PASSED!
+
+      51> (streamp 42)
+
+         PASSED!
+
+      52> (streamp "hello")
+
+         PASSED!
+
+      53> (streamp nil)
+
+         PASSED!
+
+      54> (streamp '(a b c))
+; ============================================================
+; open :direction :output, stream predicates, write to stream, close
+; ============================================================
+
+         PASSED!
+
+      55> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
+
+         PASSED!
+
+      56> ;;; streamp: T for an open stream
+(streamp st14w)
+
+         PASSED!
+
+      57> ;;; type-of: FILE-STREAM
+(type-of st14w)
+
+         PASSED!
+
+      58> (output-stream-p st14w)
+
+         PASSED!
+
+      59> (input-stream-p st14w)
+
+         PASSED!
+
+      60> (interactive-stream-p st14w)
+
+         PASSED!
+
+      61> (open-stream-p st14w)
+
+         PASSED!
+
+      62> ;;; uwriteLn! to stream: no stdout output, returns last arg
+(uwriteLn! st14w "hi")
+
+         PASSED!
+
+      63> (uwriteLn! st14w "bye")
+
+         PASSED!
+
+      64> (flush st14w)
+
+         PASSED!
+
+      65> (close st14w)
+
+         PASSED!
+
+      66> (open-stream-p st14w)
+; ============================================================
+; open (default :direction :input), read lines, EOF detection
+; ============================================================
+
+         PASSED!
+
+      67> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
+
+         PASSED!
+
+      68> (input-stream-p st14r)
+
+         PASSED!
+
+      69> (output-stream-p st14r)
+
+         PASSED!
+
+      70> (open-stream-p st14r)
+
+         PASSED!
+
+      71> ;;; read-line returns "hi" (length 2)
+(= (length (read-line st14r)) 2)
+
+         PASSED!
+
+      72> ;;; read-line returns "bye" (length 3)
+(= (length (read-line st14r)) 3)
+
+         PASSED!
+
+      73> ;;; past EOF returns NIL when eof-error-p is NIL
+(= (read-line st14r nil nil) nil)
+
+         PASSED!
+
+      74> (close st14r)
+; ============================================================
+; terpri, write!, writeLn!, writef to stream
+; ============================================================
+
+         PASSED!
+
+      75> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
+
+         PASSED!
+
+      76> ;;; terpri to stream: writes newline, returns NIL, no stdout output
+(terpri st14w)
+
+         PASSED!
+
+      77> ;;; write! to stream: writes programmer-format, no newline
+(write! st14w 7)
+
+         PASSED!
+
+      78> ;;; writeLn! to stream: writes programmer-format with trailing newline
+(writeLn! st14w "ok")
+
+         PASSED!
+
+      79> ;;; writef 3-arg: format + list + stream
+(writef "n={0}" (list 5) st14w)
+
+         PASSED!
+
+      80> ;;; writef 2-arg: format + stream (no substitutions)
+(writef "end" st14w)
+
+         PASSED!
+
+      81> (close st14w)
+
+         PASSED!
+
+      82> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
+
+         PASSED!
+
+      83> ;;; line 1: empty line from terpri (length 0)
+(= (length (read-line st14r)) 0)
+
+         PASSED!
+
+      84> ;;; line 2: 7"ok" without trailing newline (length 5)
+(= (length (read-line st14r)) 5)
+
+         PASSED!
+
+      85> ;;; rest of file: "n=5end" (no trailing newline), length 6
+(= (length (read-line st14r)) 6)
+
+         PASSED!
+
+      86> (= (read-line st14r nil nil) nil)
+
+         PASSED!
+
+      87> (close st14r)
+; ============================================================
+; open :if-exists :append — appends to existing file
+; ============================================================
+
+         PASSED!
+
+      88> ;;; use open :direction :output to create a fresh file
+(setf st14a (open (path-join (tmpdir) "test14-append.tmp") :direction :output))
+
+         PASSED!
+
+      89> (uwriteLn! st14a "first")
+
+         PASSED!
+
+      90> (close st14a)
+
+         PASSED!
+
+      91> ;;; :if-exists :append adds to the existing content
+(setf st14a (open (path-join (tmpdir) "test14-append.tmp") :direction :output :if-exists :append))
+
+         PASSED!
+
+      92> (output-stream-p st14a)
+
+         PASSED!
+
+      93> (uwriteLn! st14a "second")
+
+         PASSED!
+
+      94> (close st14a)
+
+         PASSED!
+
+      95> (setf st14r (open (path-join (tmpdir) "test14-append.tmp")))
+
+         PASSED!
+
+      96> ;;; read-line returns "first" (length 5)
+(= (length (read-line st14r)) 5)
+
+         PASSED!
+
+      97> ;;; read-line returns "second" (length 6)
+(= (length (read-line st14r)) 6)
+
+         PASSED!
+
+      98> (= (read-line st14r nil nil) nil)
+
+         PASSED!
+
+      99> (close st14r)
+; ============================================================
+; readall: reads entire file contents as one string
+; ============================================================
+
+         PASSED!
+
+     100> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
+
+         PASSED!
+
+     101> (uwriteLn! st14w "hello")
+
+         PASSED!
+
+     102> (uwriteLn! st14w "world")
+
+         PASSED!
+
+     103> (close st14w)
+
+         PASSED!
+
+     104> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
+
+         PASSED!
+
+     105> ;;; readall returns "hello\nworld\n", length 12
+(= (length (readall st14r)) 12)
+
+         PASSED!
+
+     106> ;;; after readall, subsequent read-line returns NIL (EOF)
+(= (read-line st14r nil nil) nil)
+
+         PASSED!
+
+     107> (close st14r)
+; ============================================================
+; save and load
+; ============================================================
+
+         PASSED!
+
+     108> ;;; save returns NIL; writes prettyPrintSExpr of each object on its own line
+(save (path-join (tmpdir) "test14-save.tmp") 99)
+
+         PASSED!
+
+     109> ;;; load returns (PROGN expr1 expr2 ...)
+(setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
+
+         PASSED!
+
+     110> (first loaded14)
+
+         PASSED!
+
+     111> (length loaded14)
+
+         PASSED!
+
+     112> (at 1 loaded14)
+
+         PASSED!
+
+     113> ;;; save multiple objects
+(save (path-join (tmpdir) "test14-save.tmp") 1 2 3)
+
+         PASSED!
+
+     114> (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
+
+         PASSED!
+
+     115> (length loaded14)
+
+         PASSED!
+
+     116> ;;; save a quoted list
+(save (path-join (tmpdir) "test14-save.tmp") '(a b c))
+
+         PASSED!
+
+     117> (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
+
+         PASSED!
+
+     118> (at 1 loaded14)
+; ============================================================
+; Error cases: arity errors
+; ============================================================
+
+         PASSED!
+
+     119> (streamp)
+
+         PASSED!
+
+     120> (open)
+
+         PASSED!
+
+     121> (close)
+
+         PASSED!
+
+     122> (open-stream-p)
+
+         PASSED!
+
+     123> (input-stream-p)
+
+         PASSED!
+
+     124> (output-stream-p)
+
+         PASSED!
+
+     125> (interactive-stream-p)
+
+         PASSED!
+
+     126> (save)
+
+         PASSED!
+
+     127> (load)
+
+         PASSED!
+
+     128> ;;; non-string filename
+(open 42)
+
+         PASSED!
+
+     129> ;;; file not found
+(open "no-such-file-42.tmp")
+
+         PASSED!
+
+     130> ;;; bad :direction value
+(open (path-join (tmpdir) "test14-stream.tmp") :direction :bad)
+
+         PASSED!
+
+     131> ;;; create a local file for the :if-exists :error test
+(close (open "_wof_test_ifexists_.tmp" :direction :output))
+
+         PASSED!
+
+     132> ;;; :if-exists :error raises an error when file already exists
+(open "_wof_test_ifexists_.tmp" :direction :output :if-exists :error)
+
+         PASSED!
+
+     133> ;;; :if-exists nil returns nil when file exists
+(open (path-join (tmpdir) "test14-stream.tmp") :direction :output :if-exists nil)
+
+         PASSED!
+
+     134> ;;; :if-does-not-exist nil returns nil when file missing
+(open "no-such-file-42.tmp" :if-does-not-exist nil)
+
+         PASSED!
+
+     135> (close 42)
+
+         PASSED!
+
+     136> (open-stream-p 42)
+
+         PASSED!
+
+     137> (input-stream-p 42)
+
+         PASSED!
+
+     138> (output-stream-p 42)
+
+         PASSED!
+
+     139> (interactive-stream-p 42)
+
+         PASSED!
+
+     140> (flush 42)
+
+         PASSED!
+
+     141> (save 42)
+
+         PASSED!
+
+     142> (load 42)
+
+         PASSED!
+
+     143> (load "no-such-file-43.tmp")
+
+         PASSED!
+
+     144> (setf st14r (open (path-join (tmpdir) "test14-stream.tmp")))
+
+         PASSED!
+
+     145> (write! st14r "hello")
+
+         PASSED!
+
+     146> (writeLn! st14r "hello")
+
+         PASSED!
+
+     147> (uwrite! st14r "hello")
+
+         PASSED!
+
+     148> (uwriteLn! st14r "hello")
+
+         PASSED!
+
+     149> (terpri st14r)
+
+         PASSED!
+
+     150> (writef "hello" st14r)
+
+         PASSED!
+
+     151> (close st14r)
+
+         PASSED!
+
+     152> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
+
+         PASSED!
+
+     153> (read-line st14w)
+
+         PASSED!
+
+     154> (close st14w)
+; --- with-open-file ---
+
+         PASSED!
+
+     155> ;;; write to a file then read it back
+(with-open-file (f "_wof_test_.txt" :direction :output)
+   (uwrite! f "hello from with-open-file")
+   (terpri f))
+
+         PASSED!
+
+     156> ;;; read it back: read-line strips trailing newline, length = 25
+(with-open-file (f "_wof_test_.txt")
+   (length (read-line f)))
+
+         PASSED!
+
+     157> ;;; content starts with expected prefix
+(with-open-file (f "_wof_test_.txt")
+   (subseq (read-line f) 0 5))
+
+         PASSED!
+
+     158> ;;; append mode
+(with-open-file (f "_wof_test_.txt" :direction :output :if-exists :append)
+   (uwrite! f "second line")
+   (terpri f))
+
+         PASSED!
+
+     159> ;;; with-open-file returns last body value
+(with-open-file (f "_wof_test_.txt")
+   (read-line f)
+   42)
+; ============================================================
+; make-string-output-stream / get-output-stream-string — happy paths
+; ============================================================
+
+         PASSED!
+
+     160> ;;; make-string-output-stream returns a stream object
+(setf ss14 (make-string-output-stream))
+
+         PASSED!
+
+     161> ;;; streamp: T for a string stream
+(streamp ss14)
+
+         PASSED!
+
+     162> ;;; type-of: STRING-STREAM
+(type-of ss14)
+
+         PASSED!
+
+     163> ;;; string streams are writable
+(output-stream-p ss14)
+
+         PASSED!
+
+     164> ;;; string streams are also readable (StringIO supports both)
+(input-stream-p ss14)
+
+         PASSED!
+
+     165> ;;; string streams are not ttys
+(interactive-stream-p ss14)
+
+         PASSED!
+
+     166> ;;; not closed initially
+(open-stream-p ss14)
+
+         PASSED!
+
+     167> ;;; flush is a no-op on a string stream, returns T
+(flush ss14)
+
+         PASSED!
+
+     168> ;;; get-output-stream-string on a fresh empty stream returns ""
+(get-output-stream-string ss14)
+
+         PASSED!
+
+     169> ;;; uwrite! to string stream: no stdout output, returns last value
+(uwrite! ss14 "hello")
+
+         PASSED!
+
+     170> ;;; accumulate more content
+(uwrite! ss14 " world")
+
+         PASSED!
+
+     171> ;;; get-output-stream-string retrieves full accumulated content
+(get-output-stream-string ss14)
+
+         PASSED!
+
+     172> ;;; CL clear semantics: buffer is empty after retrieval
+(get-output-stream-string ss14)
+
+         PASSED!
+
+     173> ;;; write after clearing accumulates again
+(uwrite! ss14 "second")
+
+         PASSED!
+
+     174> (get-output-stream-string ss14)
+
+         PASSED!
+
+     175> ;;; write! uses programmer format — strings get extra surrounding quotes
+(write! ss14 "quoted")
+
+         PASSED!
+
+     176> ;;; "quoted" = 8 chars including the surrounding quote characters
+(= (length (get-output-stream-string ss14)) 8)
+
+         PASSED!
+
+     177> ;;; uwriteLn! adds a trailing newline: "line\n" = 5 chars
+(uwriteLn! ss14 "line")
+
+         PASSED!
+
+     178> (= (length (get-output-stream-string ss14)) 5)
+
+         PASSED!
+
+     179> ;;; writeLn! programmer format with newline: '"line"\n' = 7 chars
+(writeLn! ss14 "line")
+
+         PASSED!
+
+     180> (= (length (get-output-stream-string ss14)) 7)
+
+         PASSED!
+
+     181> ;;; terpri writes a single newline, returns NIL, no stdout output
+(terpri ss14)
+
+         PASSED!
+
+     182> (= (length (get-output-stream-string ss14)) 1)
+
+         PASSED!
+
+     183> ;;; writef 3-arg: format + list + string stream
+(writef "{0}+{1}" (list 1 2) ss14)
+
+         PASSED!
+
+     184> (get-output-stream-string ss14)
+
+         PASSED!
+
+     185> ;;; uwrite! with multiple args: returns last, all written
+(uwrite! ss14 1 2 3)
+
+         PASSED!
+
+     186> (get-output-stream-string ss14)
+
+         PASSED!
+
+     187> ;;; uwrite! with numbers and symbols
+(uwrite! ss14 'foo)
+
+         PASSED!
+
+     188> (get-output-stream-string ss14)
+
+         PASSED!
+
+     189> ;;; close returns T, open-stream-p then returns NIL
+(close ss14)
+
+         PASSED!
+
+     190> (open-stream-p ss14)
+
+         PASSED!
+
+     191> ;;; fresh one-liner: open, write, retrieve, all in one expression
+(let ((s (make-string-output-stream)))
+   (uwrite! s "alpha")
+   (uwrite! s "beta")
+   (get-output-stream-string s))
+
+         PASSED!
+
+     192> ;;; CL clear in a single let: two gets return first/second half
+(let ((s (make-string-output-stream)))
+   (uwrite! s "first")
+   (get-output-stream-string s)
+   (uwrite! s "second")
+   (get-output-stream-string s))
+; ============================================================
+; make-string-output-stream / get-output-stream-string — error paths
+; ============================================================
+
+         PASSED!
+
+     193> ;;; make-string-output-stream takes no arguments
+(make-string-output-stream 42)
+
+         PASSED!
+
+     194> ;;; get-output-stream-string requires exactly 1 argument
+(get-output-stream-string)
+
+         PASSED!
+
+     195> (get-output-stream-string (make-string-output-stream) (make-string-output-stream))
+
+         PASSED!
+
+     196> ;;; get-output-stream-string rejects a non-string-stream value
+(get-output-stream-string 42)
+
+         PASSED!
+
+     197> ;;; get-output-stream-string rejects a file stream
+(setf ss14f (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
+
+         PASSED!
+
+     198> (get-output-stream-string ss14f)
+
+         PASSED!
+
+     199> (close ss14f)
+
+         PASSED!
+
+     200> ;;; get-output-stream-string on a closed string stream is an error
+(setf ss14c (make-string-output-stream))
+
+         PASSED!
+
+     201> (close ss14c)
+
+         PASSED!
+
+     202> (get-output-stream-string ss14c)
+
+         PASSED!
+
+     203> ;;; make-string-input-stream returns a readable stream
+(setf si14 (make-string-input-stream "hello world"))
+
+         PASSED!
+
+     204> (streamp si14)
+
+         PASSED!
+
+     205> (input-stream-p si14)
+
+         PASSED!
+
+     206> ;;; read-line on a string with no actual newlines returns full content (length 11)
+(= (length (read-line si14)) 11)
+
+         PASSED!
+
+     207> ;;; past end returns NIL when eof-error-p is NIL
+(= (read-line si14 nil nil) nil)
+
+         PASSED!
+
+     208> (close si14)
+
+         PASSED!
+
+     209> ;;; read-line with actual newlines: read line by line, no trailing newlines
+(let* ((str (with-output-to-string (s) (uwrite! s "hello") (terpri s) (uwrite! s "world") (terpri s)))
+       (si  (make-string-input-stream str)))
+   (list (= (length (read-line si)) 5)
+         (= (length (read-line si)) 5)
+         (= (read-line si nil nil) nil)))
+
+         PASSED!
+
+     210> ;;; readall reads entire content in one call
+(readall (make-string-input-stream "abc"))
+
+         PASSED!
+
+     211> ;;; start/end optional args constrain the substring used
+(readall (make-string-input-stream "hello world" 6))
+
+         PASSED!
+
+     212> (readall (make-string-input-stream "hello world" 0 5))
+; ============================================================
+; make-string-input-stream — error paths
+; ============================================================
+
+         PASSED!
+
+     213> ;;; arity: requires at least 1 argument
+(make-string-input-stream)
+
+         PASSED!
+
+     214> ;;; too many arguments
+(make-string-input-stream "a" 0 1 2)
+
+         PASSED!
+
+     215> ;;; non-string argument
+(make-string-input-stream 42)
+
+         PASSED!
+
+     216> ;;; basic accumulation
+(with-output-to-string (s)
+   (uwrite! s "hello")
+   (uwrite! s " world"))
+
+         PASSED!
+
+     217> ;;; terpri adds newline
+(= (length (with-output-to-string (s) (terpri s))) 1)
+
+         PASSED!
+
+     218> ;;; write! uses programmer format: "quoted" with surrounding quotes is 8 chars
+(= (length (with-output-to-string (s) (write! s "quoted"))) 8)
+; ============================================================
+; close with :abort keyword (CL compatibility)
+; ============================================================
+
+         PASSED!
+
+     219> ;;; close with :abort nil (default) — same as plain close
+(let ((s (make-string-output-stream)))
+   (close s :abort nil)
+   (open-stream-p s))
+
+         PASSED!
+
+     220> ;;; close with :abort t — accepted, ignored; stream still closed
+(let ((s (make-string-output-stream)))
+   (close s :abort t)
+   (open-stream-p s))
+; ============================================================
+; backward-compatible aliases: readable, writable, isatty, closed
+; ============================================================
+
+         PASSED!
+
+     221> ;;; readable is alias for input-stream-p
+(let ((s (open (path-join (tmpdir) "test14-stream.tmp"))))
+   (let ((r (readable s)))
+      (close s)
+      r))
+
+         PASSED!
+
+     222> ;;; writable is alias for output-stream-p
+(let ((s (open (path-join (tmpdir) "test14-stream.tmp") :direction :output)))
+   (let ((r (writable s)))
+      (close s)
+      r))
+
+         PASSED!
+
+     223> ;;; isatty is alias for interactive-stream-p
+(isatty (make-string-output-stream))
+
+         PASSED!
+
+     224> ;;; closed is defun: (not (open-stream-p s))
+(let ((s (make-string-output-stream)))
+   (list (closed s)
+         (progn (close s) (closed s))))
+; ============================================================
+; standard stream variables
+; ============================================================
+
+         PASSED!
+
+     225> ;;; *standard-input* is a stream
+(streamp *standard-input*)
+
+         PASSED!
+
+     226> (streamp *standard-output*)
+
+         PASSED!
+
+     227> (streamp *error-output*)
+
+         PASSED!
+
+     228> (streamp *terminal-io*)
+
+         PASSED!
+
+     229> (streamp *debug-io*)
+
+         PASSED!
+
+     230> (streamp *query-io*)
+
+         PASSED!
+
+     231> (streamp *trace-output*)
+
+         PASSED!
+
+     232> ;;; *standard-output* is writable
+(output-stream-p *standard-output*)
+
+         PASSED!
+
+     233> ;;; *standard-input* is readable
+(input-stream-p *standard-input*)
+; ============================================================
+; with-input-from-string
+; ============================================================
+
+         PASSED!
+
+     234> ;;; basic: read from a string
+(with-input-from-string (s "hello world")
+   (read-line s))
+
+         PASSED!
+
+     235> ;;; with start offset
+(with-input-from-string (s "hello world" 6)
+   (read-line s))
+
+         PASSED!
+
+     236> ;;; with start and end
+(with-input-from-string (s "hello world" 0 5)
+   (read-line s))
+
+         PASSED!
+
+     237> ;;; returns last body form
+(with-input-from-string (s "hello")
+   (read-line s)
+   42)
+
+         PASSED!
+
+     238> ;;; stream is closed after body
+(let ((captured nil))
+   (with-input-from-string (s "test")
+      (setf captured s))
+   (open-stream-p captured))
+; ============================================================
+; read-line — CL-compatible: no trailing newline
+; ============================================================
+
+         PASSED!
+
+     239> ;;; read-line from a string stream returns line without trailing newline
+(let ((str (with-output-to-string (s) (uwrite! s "hello") (terpri s) (uwrite! s "world") (terpri s))))
+   (let ((st (make-string-input-stream str)))
+      (list (read-line st) (read-line st))))
+
+         PASSED!
+
+     240> ;;; read-line nil eof: returns NIL at end of file when eof-error-p is NIL
+(let ((s (make-string-input-stream "hi")))
+   (read-line s)
+   (read-line s nil nil))
+
+         PASSED!
+
+     241> ;;; read-line nil custom eof-value: returns given value at EOF
+(let ((s (make-string-input-stream "x")))
+   (read-line s)
+   (read-line s nil :eof))
+
+         PASSED!
+
+     242> ;;; read-line at EOF with eof-error-p T (default) signals error
+(read-line (make-string-input-stream ""))
+
+         PASSED!
+
+     243> ;;; read-line strips exactly one trailing newline: result has correct length
+(let ((str (with-output-to-string (s) (uwrite! s "abc") (terpri s))))
+   (let ((st (make-string-input-stream str)))
+      (length (read-line st nil nil))))
+
+         PASSED!
+
+     244> ;;; uwriteLn! adds a newline: result is 6 chars ("hello" + newline)
+(let ((out (make-string-output-stream)))
+   (uwriteLn! out "hello")
+   (= (length (get-output-stream-string out)) 6))
+
+         PASSED!
+
+     245> ;;; read-line: stream argument type error
+(read-line 42)
+
+         PASSED!
+
+     246> ;;; read-char returns a one-character string
+(let ((s (make-string-input-stream "abc")))
+   (list (read-char s) (read-char s) (read-char s)))
+
+         PASSED!
+
+     247> ;;; read-char at EOF with eof-error-p NIL returns eof-value
+(let ((s (make-string-input-stream "")))
+   (read-char s nil :done))
+
+         PASSED!
+
+     248> ;;; read-char at EOF with eof-error-p T signals error
+(read-char (make-string-input-stream ""))
+
+         PASSED!
+
+     249> ;;; read-char: stream argument type error
+(read-char 42)
+
+         PASSED!
+
+     250> ;;; read parses a symbol
+(let ((s (make-string-input-stream "foo")))
+   (read s))
+
+         PASSED!
+
+     251> ;;; read parses a number
+(let ((s (make-string-input-stream "42")))
+   (read s))
+
+         PASSED!
+
+     252> ;;; read parses a list
+(let ((s (make-string-input-stream "(a b c)")))
+   (read s))
+
+         PASSED!
+
+     253> ;;; read repositions stream: second read sees next expression
+(let ((s (make-string-input-stream "42 hello")))
+   (list (read s) (read s)))
+
+         PASSED!
+
+     254> ;;; read handles leading whitespace correctly
+(let ((s (make-string-input-stream "   99")))
+   (read s))
+
+         PASSED!
+
+     255> ;;; read returns nested list correctly
+(let ((s (make-string-input-stream "(1 (2 3) 4)")))
+   (read s))
+
+         PASSED!
+
+     256> ;;; read at EOF with eof-error-p NIL returns eof-value
+(let ((s (make-string-input-stream "")))
+   (read s nil :done))
+
+         PASSED!
+
+     257> ;;; read at EOF with eof-error-p T signals error
+(read (make-string-input-stream ""))
+
+         PASSED!
+
+     258> ;;; read: stream argument type error
+(read 42)
+
+         PASSED!
+
+ 258 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test15-core.lisp... 
+       1> ;;; funcall with a primitive
+(funcall + 1 2 3)
+
+         PASSED!
+
+       2> ;;; funcall with car
+(funcall car '(a b c))
+
+         PASSED!
+
+       3> ;;; funcall with a lambda
+(funcall (lambda (x) (* x x)) 5)
+
+         PASSED!
+
+       4> ;;; funcall with a named function
+(funcall list 1 2 3)
+; --- apply: basic usage ---
+
+         PASSED!
+
+       5> ;;; apply with a list of args
+(apply + '(1 2 3))
+
+         PASSED!
+
+       6> ;;; apply with extra args prepended to list
+(apply + 1 2 '(3 4))
+
+         PASSED!
+
+       7> ;;; apply with empty list
+(apply + '())
+
+         PASSED!
+
+       8> ;;; apply with a named function
+(apply list '(a b c))
+
+         PASSED!
+
+       9> ;;; apply with extra args and named function
+(apply cons 'a '((b c)))
+; --- eval ---
+
+         PASSED!
+
+      10> ;;; eval on a quoted expression
+(eval '(+ 10 20))
+; --- python ---
+
+         PASSED!
+
+      11> ;;; python evaluates a python expression
+(python "3 + 4")
+
+         PASSED!
+
+      12> ;;; python with string expression
+(python "'hello' + ' world'")
+; --- recursion-limit ---
+
+         PASSED!
+
+      13> ;;; recursion-limit returns current limit
+(integerp (recursion-limit))
+; --- funcall errors ---
+
+         PASSED!
+
+      14> ;;; Error: funcall with no arguments
+(funcall)
+
+         PASSED!
+
+      15> ;;; Error: apply with no arguments
+(apply)
+
+         PASSED!
+
+      16> ;;; Error: apply last arg not a list
+(apply + 1)
+
+         PASSED!
+
+      17> ;;; Error: apply with a special form
+(apply 'if '(t 1 2))
+
+         PASSED!
+
+      18> ;;; Error: python with no arguments
+(python)
+
+         PASSED!
+
+      19> ;;; Error: python with non-string
+(python 1)
+
+         PASSED!
+
+      20> ;;; Error: eval with no arguments
+(eval)
+
+         PASSED!
+
+      21> ;;; Error: eval with too many arguments
+(eval 1 2)
+
+         PASSED!
+
+      22> ;;; Error: recursion-limit with non-integer
+(recursion-limit "a")
+
+         PASSED!
+
+      23> ;;; Error: recursion-limit with too many args
+(recursion-limit 1 2)
+
+         PASSED!
+
+      24> ;;; while with initially false condition returns NIL
+(while nil (+ 1 2))
+
+         PASSED!
+
+      25> ;;; dolist on empty list returns NIL
+(dolist (x '()) (write! x))
+
+         PASSED!
+
+      26> ;;; dotimes with 0 iterations returns NIL
+(dotimes (i 0) (write! i))
+
+         PASSED!
+
+      27> ;;; progn with no arguments returns NIL
+(progn)
+
+         PASSED!
+
+      28> ;;; cond with no matching clause returns NIL
+(cond (nil 1) (nil 2))
+
+         PASSED!
+
+      29> ;;; case with no matching clause returns NIL
+(case 5 (1 "one") (2 "two"))
+
+         PASSED!
+
+      30> ;;; case with matching clause
+(case 2 (1 10) (2 20) (3 30))
+
+         PASSED!
+
+      31> ;;; case with T catch-all
+(case 99 (1 "one") (t "other"))
+
+         PASSED!
+
+      32> ;;; case with OTHERWISE catch-all
+(case 99 (1 "one") (otherwise "other"))
+
+         PASSED!
+
+      33> ;;; case with list of keys
+(case 2 ((1 2 3) "found") (t "not found"))
+
+         PASSED!
+
+      34> ;;; case with list of keys, no match falls to otherwise
+(case 9 ((1 2 3) "found") (otherwise "not found"))
+
+         PASSED!
+
+      35> ;;; cond with first match
+(cond (t 1) (t 2))
+
+         PASSED!
+
+      36> ;;; cond skips false, matches second
+(cond (nil 1) (t 2))
+; --- List operation edge cases ---
+
+         PASSED!
+
+      37> ;;; at with negative index (Python-style)
+(at -1 (list 10 20 30))
+
+         PASSED!
+
+      38> ;;; at on a string
+(at 0 "hello")
+
+         PASSED!
+
+      39> ;;; at on string with negative index
+(at -1 "hello")
+
+         PASSED!
+
+      40> ;;; at with symbol key on map
+(at 'a (make-dict (a 1) (b 2)))
+
+         PASSED!
+
+      41> ;;; sort on empty list
+(sort '() <)
+
+         PASSED!
+
+      42> ;;; cons 3 onto empty list
+(cons 3 '())
+
+         PASSED!
+
+      43> ;;; hasValue? on list (true)
+(hasValue? 2 '(1 2 3))
+
+         PASSED!
+
+      44> ;;; hasValue? on list (false)
+(hasValue? 5 '(1 2 3))
+
+         PASSED!
+
+      45> ;;; hasValue? on map (true)
+(hasValue? 2 (make-dict (a 1) (b 2)))
+
+         PASSED!
+
+      46> ;;; hasValue? on map (false)
+(hasValue? 3 (make-dict (a 1) (b 2)))
+
+         PASSED!
+
+      47> ;;; hasKey? on empty map
+(hasKey? 'a (make-dict))
+
+         PASSED!
+
+      48> ;;; map with integer keys
+(at 1 (make-dict (1 "a") (2 "b")))
+; --- push!/pop! edge cases ---
+
+         PASSED!
+
+      49> (setf plist (list 1 2 3))
+
+         PASSED!
+
+      50> ;;; push! mutates and returns list
+(push! plist 4)
+
+         PASSED!
+
+      51> plist
+
+         PASSED!
+
+      52> ;;; pop! removes and returns last element
+(pop! plist)
+
+         PASSED!
+
+      53> plist
+; --- at-delete on map with symbol key ---
+
+         PASSED!
+
+      54> (setf tmap (make-dict (a 10) (b 20) (c 30)))
+
+         PASSED!
+
+      55> (at-delete 'a tmap)
+
+         PASSED!
+
+      56> tmap
+; --- identity vs equality ---
+
+         PASSED!
+
+      57> (setf lst1 (list 1 2))
+
+         PASSED!
+
+      58> ;;; is? on same object returns T
+(is? lst1 lst1)
+
+         PASSED!
+
+      59> ;;; is? on equal but different objects returns NIL
+(is? (list 1 2) (list 1 2))
+; --- copy-list vs original ---
+
+         PASSED!
+
+      60> (setf orig (list 1 2 3))
+
+         PASSED!
+
+      61> (setf cop (copy-list orig))
+
+         PASSED!
+
+      62> ;;; copy-list is not identity-equal
+(is? orig cop)
+
+         PASSED!
+
+      63> ;;; copy-list is value-equal
+(= orig cop)
+; --- copy-tree ---
+
+         PASSED!
+
+      64> (copy-tree '(1 (2 3) 4))
+; --- let edge cases ---
+
+         PASSED!
+
+      65> ;;; let with bare symbol binds to NIL
+(let (x) x)
+
+         PASSED!
+
+      66> ;;; let with single-element list binds to NIL
+(let ((x)) x)
+
+         PASSED!
+
+      67> ;;; let with no body returns NIL
+(let ())
+
+         PASSED!
+
+      68> ;;; let* with no body returns NIL
+(let* ())
+; --- setf with multiple pairs ---
+
+         PASSED!
+
+      69> (setf aa 10 bb 20)
+
+         PASSED!
+
+      70> aa
+
+         PASSED!
+
+      71> bb
+; --- integer conversion with base ---
+
+         PASSED!
+
+      72> ;;; integer with base 16 (hex)
+(integer "ff" 16)
+
+         PASSED!
+
+      73> ;;; integer with base 2 (binary)
+(integer "10" 2)
+; --- string concatenation ---
+
+         PASSED!
+
+      74> (string 1 2 3)
+
+         PASSED!
+
+      75> (ustring 1 2 3)
+; --- dolist accumulation ---
+
+         PASSED!
+
+      76> (setf fsum 0)
+
+         PASSED!
+
+      77> (dolist (x '(1 2 3 4 5)) (setf fsum (+ fsum x)))
+
+         PASSED!
+
+      78> fsum
+; --- dotimes accumulation ---
+
+         PASSED!
+
+      79> (setf dsum 0)
+
+         PASSED!
+
+      80> (dotimes (i 5) (setf dsum (+ dsum i)))
+
+         PASSED!
+
+      81> dsum
+; --- while with accumulation ---
+
+         PASSED!
+
+      82> (let ((n 3) (acc 0))
+   (while (> n 0)
+      (setf acc (+ acc n))
+      (setf n (- n 1)))
+   acc)
+; --- parse ---
+
+         PASSED!
+
+      83> (parse "(+ 1 2)")
+; --- derivative function setup ---
+
+         PASSED!
+
+      84> (defun d (expr)
+   (cond ((isNumber? expr) 0)
+         ((isSymbol? expr) 1)
+         ((isList? expr)
+          (case (first expr)
+             (+    (list '+ (d (at 1 expr)) (d (at 2 expr))))
+             (*    (list '+ (list '* (at 2 expr) (d (at 1 expr))) (list '* (at 1 expr) (d (at 2 expr)))))
+             (sin  (list '* (list 'cos (at 1 expr)) (d (at 1 expr))))
+             (cos  (list '* (list '- (list 'sin (at 1 expr))) (d (at 1 expr))))
+             (expt (list '* (list '* (at 2 expr) (list 'expt (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))))))
+; --- derivative function ---
+
+         PASSED!
+
+      85> (d 5)
+
+         PASSED!
+
+      86> (d 'x)
+
+         PASSED!
+
+      87> (d '(+ x 3))
+
+         PASSED!
+
+      88> (d '(* x x))
+
+         PASSED!
+
+      89> (d '(sin x))
+
+         PASSED!
+
+      90> (d '(expt x 3))
+; --- random produces correct types ---
+
+         PASSED!
+
+      91> (integerp (random 10))
+
+         PASSED!
+
+      92> (floatp (random 10.0))
+; --- Additional arithmetic edge cases ---
+
+         PASSED!
+
+      93> ;;; single argument to multiply
+(* 5)
+
+         PASSED!
+
+      94> ;;; negation of zero
+(- 0)
+
+         PASSED!
+
+      95> ;;; division produces exact fraction
+(/ 1 2)
+; --- Additional list operation edge cases ---
+
+         PASSED!
+
+      96> ;;; append with 3+ lists
+(append '(1) '(2) '(3))
+
+         PASSED!
+
+      97> ;;; sort on single-element list
+(sort (list 3) <)
+; --- Lambda/macro with docstrings ---
+
+         PASSED!
+
+      98> ;;; lambda with docstring still works
+((lambda () "a docstring" 42))
+
+         PASSED!
+
+      99> ;;; defmacro with docstring still works
+(defmacro test-docmacro19 (x) "a docstring" `(+ ,x 1))
+
+         PASSED!
+
+     100> (test-docmacro19 5)
+; --- writef with map ---
+
+         PASSED!
+
+     101> ;;; writef using map keys (uppercased)
+(writef "{X} {Y}" (make-dict (x 10) (y 20)))
+; --- write!/writeLn! with multiple arguments ---
+
+         PASSED!
+
+     102> ;;; write! with multiple args concatenates output
+(write! 1 2 3)
+
+         PASSED!
+
+     103> ;;; writeLn! with multiple args
+(writeLn! 4 5 6)
+; ============================================================
+; test26-setq-atset.lisp
+; Tests for setq (variable assignment) and at-set (indexed/keyed
+; mutation of lists and maps).
+; ============================================================
+; --- 1. setq: basic assignment ---
+
+         PASSED!
+
+     104> (setq sq1 99)
+
+         PASSED!
+
+     105> sq1
+
+         PASSED!
+
+     106> (setq sq1 100)
+
+         PASSED!
+
+     107> sq1
+
+         PASSED!
+
+     108> (setq sq2 3.14)
+
+         PASSED!
+
+     109> (setq sq3 "hello")
+
+         PASSED!
+
+     110> (setq sq4 '(a b c))
+
+         PASSED!
+
+     111> (setq sq5 nil)
+
+         PASSED!
+
+     112> (setq sq6 t)
+; --- 2. setq: multiple pairs in one call ---
+
+         PASSED!
+
+     113> ;;; returns the value of the last assignment
+(setq ma 1 mb 2 mc 3)
+
+         PASSED!
+
+     114> ma
+
+         PASSED!
+
+     115> mb
+
+         PASSED!
+
+     116> mc
+; --- 3. setq: scope behaviour ---
+
+         PASSED!
+
+     117> ;;; setq inside let finds and updates the let-local binding
+(let ((lvar 5))
+   (setq lvar 99)
+   lvar)
+
+         PASSED!
+
+     118> ;;; the let-local did not leak into the global scope
+(boundp 'lvar)
+
+         PASSED!
+
+     119> ;;; setq creates a new global when the name is not bound anywhere
+(setq sq-new 777)
+
+         PASSED!
+
+     120> sq-new
+; --- 4. setq: auto-names a lambda ---
+
+         PASSED!
+
+     121> (setq sq-fn (lambda (x) (* x x)))
+
+         PASSED!
+
+     122> (sq-fn 7)
+; --- 5. setq: error cases ---
+
+         PASSED!
+
+     123> ;;; no arguments
+(setq)
+
+         PASSED!
+
+     124> ;;; odd number of arguments
+(setq sq1 1 sq2)
+
+         PASSED!
+
+     125> ;;; non-symbol lvalue
+(setq 42 1)
+
+         PASSED!
+
+     126> (setf asl (list 10 20 30 40 50))
+
+         PASSED!
+
+     127> ;;; set first element; returns new value
+(at-set 0 asl 99)
+
+         PASSED!
+
+     128> ;;; mutation is in-place
+asl
+
+         PASSED!
+
+     129> (at-set 2 asl 77)
+
+         PASSED!
+
+     130> asl
+
+         PASSED!
+
+     131> (at-set 4 asl 55)
+
+         PASSED!
+
+     132> asl
+
+         PASSED!
+
+     133> ;;; negative index follows Python semantics: -1 is the last element
+(at-set -1 asl 11)
+
+         PASSED!
+
+     134> asl
+; --- 7. at-set: list aliasing (shared reference) ---
+
+         PASSED!
+
+     135> (setf orig (list 1 2 3))
+
+         PASSED!
+
+     136> (setf aliased orig)
+
+         PASSED!
+
+     137> ;;; mutation through alias is visible via the original binding
+(at-set 0 aliased 99)
+
+         PASSED!
+
+     138> orig
+; --- 8. at-set: map symbol keys ---
+
+         PASSED!
+
+     139> (setf skmap (make-dict (x 10) (y 20)))
+
+         PASSED!
+
+     140> ;;; quoted symbol key is uppercased to match the stored key
+(at-set 'x skmap 99)
+
+         PASSED!
+
+     141> skmap
+
+         PASSED!
+
+     142> ;;; at-set adds a new key when the key is not already present
+(at-set 'z skmap 30)
+
+         PASSED!
+
+     143> skmap
+; --- 9. at-set: map string keys ---
+
+         PASSED!
+
+     144> (setf strmap (make-dict ("p" 1) ("q" 2)))
+
+         PASSED!
+
+     145> (at-set "p" strmap 88)
+
+         PASSED!
+
+     146> strmap
+; --- 10. at-set: error cases ---
+
+         PASSED!
+
+     147> ;;; too few arguments
+(at-set 0 (list 1 2 3))
+
+         PASSED!
+
+     148> ;;; too many arguments
+(at-set 0 (list 1 2 3) 9 9)
+
+         PASSED!
+
+     149> ;;; second argument is an integer (not a list or map)
+(at-set 0 42 9)
+
+         PASSED!
+
+     150> ;;; second argument is a string (strings are immutable)
+(at-set 0 "abc" 9)
+
+         PASSED!
+
+     151> ;;; list index out of range
+(at-set 99 (list 1 2 3) 0)
+
+         PASSED!
+
+     152> ;;; float index into a list
+(at-set 1.5 (list 1 2 3) 0)
+
+         PASSED!
+
+     153> ;;; setf with a symbol expands to setq (auto-names a lambda)
+(setf sf-fn (lambda (x) (* x 3)))
+
+         PASSED!
+
+     154> (sf-fn 5)
+
+         PASSED!
+
+     155> ;;; setf with multiple pairs (progn of setqs)
+(setf sf-a 1 sf-b 2 sf-c 3)
+
+         PASSED!
+
+     156> sf-a
+
+         PASSED!
+
+     157> sf-b
+
+         PASSED!
+
+     158> sf-c
+
+         PASSED!
+
+     159> ;;; setf (at ...) form mutates a list in place
+(setf sf-lst (list 10 20 30))
+
+         PASSED!
+
+     160> (setf (at 1 sf-lst) 99)
+
+         PASSED!
+
+     161> sf-lst
+
+         PASSED!
+
+     162> ;;; setf (at ...) form mutates a map in place
+(setf sf-map (make-dict (x 1) (y 2)))
+
+         PASSED!
+
+     163> (setf (at 'y sf-map) 77)
+
+         PASSED!
+
+     164> sf-map
+
+         PASSED!
+
+     165> ;;; setf with mixed pairs: symbol then at-form
+(setf sf-x 0 (at 0 sf-lst) 55)
+
+         PASSED!
+
+     166> sf-x
+
+         PASSED!
+
+     167> sf-lst
+; --- 12. setf macro error cases ---
+
+         PASSED!
+
+     168> ;;; NIL lvalue
+(setf () 5)
+
+         PASSED!
+
+     169> ;;; (at ...) form with wrong element count
+(setf (at 0) 5)
+
+         PASSED!
+
+     170> ;;; struct accessor with extra instance argument
+(setf (sf-fn sf-a sf-b) 5)
+
+         PASSED!
+
+     171> ;;; non-symbol non-list lvalue
+(setf 99 5)
+
+         PASSED!
+
+     172> ;;; zero args
+(setf)
+
+         PASSED!
+
+     173> ;;; one arg (missing value)
+(setf sf-a)
+
+         PASSED!
+
+     174> ;;; mapcar on empty list
+(mapcar (lambda (x) (* x 2)) '())
+
+         PASSED!
+
+     175> ;;; mapcar with lambda (double each)
+(mapcar (lambda (x) (* x 2)) '(1 2 3))
+; --- remove edge cases ---
+
+         PASSED!
+
+     176> ;;; remove non-existent element returns original
+(remove 5 '(1 2 3))
+
+         PASSED!
+
+     177> ;;; remove from empty list
+(remove 1 '())
+; --- when/unless with multiple body forms ---
+
+         PASSED!
+
+     178> ;;; when true with multiple body forms returns last
+(when t 1 2)
+
+         PASSED!
+
+     179> ;;; when false with multiple body forms returns NIL
+(when nil 1 2)
+
+         PASSED!
+
+     180> ;;; unless false with multiple body forms returns last
+(unless nil 1 2)
+
+         PASSED!
+
+     181> ;;; unless true with multiple body forms returns NIL
+(unless t 1 2)
+; --- setf with at on map ---
+
+         PASSED!
+
+     182> (setf smap22 (make-dict (a 1) (b 2)))
+
+         PASSED!
+
+     183> ;;; setf at on map mutates the value
+(setf (at 'a smap22) 99)
+
+         PASSED!
+
+     184> smap22
+; --- setf with at on list ---
+
+         PASSED!
+
+     185> (setf slist22 (list 10 20 30))
+
+         PASSED!
+
+     186> ;;; setf at on list mutates the element
+(setf (at 1 slist22) 99)
+
+         PASSED!
+
+     187> slist22
+; --- copy-tree on map ---
+
+         PASSED!
+
+     188> ;;; copy-tree preserves map structure
+(copy-tree (make-dict (a 1) (b 2)))
+; --- nth edge cases ---
+
+         PASSED!
+
+     189> ;;; nth with negative index (Python-style)
+(nth -1 '(1 2 3))
+; --- sort with strings ---
+
+         PASSED!
+
+     190> ;;; sort works on string lists
+(sort '("c" "a" "b") string<)
+; --- cons edge cases ---
+
+         PASSED!
+
+     191> ;;; cons a list onto a list
+(cons '(1 2) '(3 4))
+
+         PASSED!
+
+     192> ;;; cons NIL onto a list
+(cons nil '(1 2))
+; --- multi-body control structures ---
+
+         PASSED!
+
+     193> ;;; progn returns the last value
+(progn 1 2 3)
+
+         PASSED!
+
+     194> ;;; cond with multiple body forms returns last
+(cond (t 1 2 3))
+
+         PASSED!
+
+     195> ;;; case with multiple body forms returns last
+(case 1 (1 10 20 30))
+
+         PASSED!
+
+     196> ;;; while returns last body value
+(let ((n 1))
+   (while (> n 0)
+      (setf n (- n 1))
+      42))
+; --- defun with docstring ---
+
+         PASSED!
+
+     197> ;;; defun with docstring
+(defun square22 (x) "Returns x squared" (* x x))
+
+         PASSED!
+
+     198> (square22 7)
+; --- average edge cases ---
+
+         PASSED!
+
+     199> ;;; average of single value
+(average 5)
+
+         PASSED!
+
+     200> ;;; average with rationals
+(average 1/2 3/2)
+; --- string/ustring from symbol ---
+
+         PASSED!
+
+     201> ;;; string converts symbol to string (programmer mode)
+(string 'abc)
+
+         PASSED!
+
+     202> ;;; ustring converts symbol to string (user mode)
+(ustring 'abc)
+; --- make-symbol from string ---
+
+         PASSED!
+
+     203> ;;; make-symbol from a single string
+(make-symbol "hello-world")
+; --- nested quote ---
+
+         PASSED!
+
+     204> ;;; double-quoted symbol
+''x
+
+         PASSED!
+
+     205> ;;; quote inside a quoted list
+'(a 'b c)
+; --- isqrt boundary values ---
+
+         PASSED!
+
+     206> ;;; isqrt of 0
+(isqrt 0)
+
+         PASSED!
+
+     207> ;;; isqrt of 1
+(isqrt 1)
+
+         PASSED!
+
+     208> ;;; isqrt of 4 (perfect square)
+(isqrt 4)
+; --- signum with floats ---
+
+         PASSED!
+
+     209> ;;; signum of positive float
+(signum 3.14)
+
+         PASSED!
+
+     210> ;;; signum of negative float
+(signum -0.5)
+; --- integer truncation ---
+
+         PASSED!
+
+     211> ;;; integer truncation of negative float
+(integer -3.7)
+; --- atan2 (two-argument atan) ---
+
+         PASSED!
+
+     212> ;;; atan with two arguments (atan2)
+(atan 1 1)
+; --- length ---
+
+         PASSED!
+
+     213> ;;; length counts top-level elements only
+(length '((1 2) 3))
+
+         PASSED!
+
+     214> ;;; length of a string
+(length "abc")
+
+         PASSED!
+
+     215> ;;; list-length alias still works
+(list-length '(1 2 3))
+; --- lambda with &rest used standalone ---
+
+         PASSED!
+
+     216> ;;; lambda with &rest captures all args
+((lambda (&rest args) args) 1 2 3)
+; --- random zero edge cases ---
+
+         PASSED!
+
+     217> ;;; random of 0 is an error (must be positive)
+(random 0)
+
+         PASSED!
+
+     218> ;;; random of 0.0 is an error (must be positive)
+(random 0.0)
+
+         PASSED!
+
+     219> ;;; make-symbol from ustring of symbol
+(make-symbol (ustring 'abc))
+; --- car/cdr on empty list ---
+
+         PASSED!
+
+     220> ;;; car of empty list is NIL
+(car '())
+
+         PASSED!
+
+     221> ;;; cdr of empty list is NIL
+(cdr '())
+; --- string repetition via * ---
+
+         PASSED!
+
+     222> ;;; string times integer (Python repeat)
+(* "ab" 3)
+; --- recursion-limit returns integer ---
+
+         PASSED!
+
+     223> ;;; recursion-limit returns an integer
+(integerp (recursion-limit))
+; --- internal-time-units-per-second / get-internal-real-time ---
+
+         PASSED!
+
+     224> (= (internal-time-units-per-second) 1000000)
+
+         PASSED!
+
+     225> (integerp (get-internal-real-time))
+; elapsed time is non-negative
+
+         PASSED!
+
+     226> (>= (get-internal-real-time) 0)
+; two successive calls are non-decreasing
+
+         PASSED!
+
+     227> (let ((t1 (get-internal-real-time))
+      (t2 (get-internal-real-time)))
+  (>= t2 t1))
+; --- boundp ---
+
+         PASSED!
+
+     228> (setf bptest 42)
+
+         PASSED!
+
+     229> (boundp 'bptest)
+
+         PASSED!
+
+     230> (boundp 'no-such-var-xyz)
+; --- error ---
+
+         PASSED!
+
+     231> (error "something went wrong")
+
+         PASSED!
+
+     232> ;;; error with positional format args
+(error "bad value: {0}" (list 42))
+
+         PASSED!
+
+     233> ;;; error with map format args
+(error "expected {TYPE} but got {GOT}" (make-dict (type "integer") (got "string")))
+
+         PASSED!
+
+     234> ;;; help with primitive shows usage and returns T
+(help +)
+
+         PASSED!
+
+     235> ;;; help with another primitive
+(help car)
+
+         PASSED!
+
+     236> ;;; help with unknown topic string
+(help "unknown-topic")
+; --- alias macro tests ---
+
+         PASSED!
+
+     237> ;;; alias creates a working alias for +
+(alias myadd23 +)
+
+         PASSED!
+
+     238> ;;; alias for + works
+(myadd23 1 2)
+
+         PASSED!
+
+     239> ;;; alias creates a working alias for car
+(alias mycar23 car)
+
+         PASSED!
+
+     240> ;;; alias for car works
+(mycar23 '(1 2 3))
+; --- eval edge cases ---
+
+         PASSED!
+
+     241> ;;; eval self-evaluating integer
+(eval 42)
+
+         PASSED!
+
+     242> ;;; eval self-evaluating string
+(eval "hello")
+
+         PASSED!
+
+     243> ;;; eval T symbol
+(eval 't)
+
+         PASSED!
+
+     244> ;;; eval empty list (NIL)
+(eval '())
+
+         PASSED!
+
+     245> ;;; eval special form through eval
+(eval '(if t 1 2))
+; --- parse edge cases ---
+
+         PASSED!
+
+     246> ;;; parse quoted list
+(parse "'(1 2 3)")
+; --- backquote edge cases ---
+
+         PASSED!
+
+     247> ;;; backquote atom passthrough
+`42
+
+         PASSED!
+
+     248> ;;; backquote string passthrough
+`"hello"
+
+         PASSED!
+
+     249> ;;; backquote empty list
+`()
+
+         PASSED!
+
+     250> ;;; splice empty list into backquote
+`(a ,@'() b)
+
+         PASSED!
+
+     251> ;;; splice non-empty list into backquote
+`(a ,@'(1 2) b)
+; --- make-dict edge cases ---
+
+         PASSED!
+
+     252> ;;; empty dict
+(make-dict)
+
+         PASSED!
+
+     253> ;;; empty dict is a dict
+(dictp (make-dict))
+
+         PASSED!
+
+     254> ;;; dict values are evaluated
+(make-dict (a (+ 1 2)))
+
+         PASSED!
+
+     255> ;;; at retrieves evaluated dict value
+(at 'a (make-dict (a (+ 1 2))))
+
+         PASSED!
+
+     256> ;;; dict with duplicate keys (last wins)
+(make-dict (a 1) (a 2))
+
+         PASSED!
+
+     257> ;;; dict with integer keys
+(make-dict (1 "one") (2 "two"))
+
+         PASSED!
+
+     258> ;;; at with integer key on integer-keyed dict
+(at 1 (make-dict (1 "one") (2 "two")))
+; --- at on strings ---
+
+         PASSED!
+
+     259> ;;; at first char of string
+(at 0 "hello")
+
+         PASSED!
+
+     260> ;;; at last char of string
+(at 4 "hello")
+; --- sort edge cases ---
+
+         PASSED!
+
+     261> ;;; sort with duplicates preserved
+(sort '(3 1 2 1) <)
+
+         PASSED!
+
+     262> ;;; sort with rationals
+(sort (list 1/2 1/3 1/4) <)
+
+         PASSED!
+
+     263> ;;; sort with mixed int/float
+(sort (list 1 2.5 3) <)
+
+         PASSED!
+
+     264> ;;; sort empty list
+(sort '() <)
+; --- predicate alias tests ---
+
+         PASSED!
+
+     265> ;;; isFunction? on lambda returns T
+(isFunction? (lambda (x) x))
+
+         PASSED!
+
+     266> ;;; isFunction? on integer returns NIL
+(isFunction? 42)
+
+         PASSED!
+
+     267> ;;; isAtom? on integer returns T
+(isAtom? 42)
+
+         PASSED!
+
+     268> ;;; isAtom? on list returns NIL
+(isAtom? '(1))
+
+         PASSED!
+
+     269> ;;; isList? on list returns T
+(isList? '(1 2))
+
+         PASSED!
+
+     270> ;;; isList? on integer returns NIL
+(isList? 42)
+; --- math library edge cases ---
+
+         PASSED!
+
+     271> ;;; evenp zero is even
+(evenp 0)
+
+         PASSED!
+
+     272> ;;; oddp negative odd number
+(oddp -3)
+
+         PASSED!
+
+     273> ;;; evenp type error on float
+(evenp 2.0)
+
+         PASSED!
+
+     274> ;;; oddp type error on float
+(oddp 3.0)
+
+         PASSED!
+
+     275> ;;; zerop float zero
+(zerop 0.0)
+
+         PASSED!
+
+     276> ;;; minusp zero is not negative
+(minusp 0)
+
+         PASSED!
+
+     277> ;;; plusp zero is not positive
+(plusp 0)
+
+         PASSED!
+
+     278> ;;; minusp negative float
+(minusp -0.5)
+
+         PASSED!
+
+     279> ;;; plusp positive rational
+(plusp 1/2)
+; --- copy-list / copy-tree edge cases ---
+
+         PASSED!
+
+     280> ;;; copy-list empty list
+(copy-list '())
+
+         PASSED!
+
+     281> ;;; copy-tree empty list
+(copy-tree '())
+
+         PASSED!
+
+     282> ;;; copy-tree atom passthrough
+(copy-tree 42)
+
+         PASSED!
+
+     283> ;;; copy-tree string passthrough
+(copy-tree "hello")
+
+         PASSED!
+
+     284> ;;; copy-tree independence: mutating original does not affect copy
+(let ((orig23 (list 1 (list 2 3) 4))
+      (cp23 (copy-tree (list 1 (list 2 3) 4))))
+   (setf (at 0 (at 1 orig23)) 99)
+   (at 1 cp23))
+; --- mapcar with named functions ---
+
+         PASSED!
+
+     285> ;;; mapcar with car extracts first elements
+(mapcar car '((1 2) (3 4) (5 6)))
+
+         PASSED!
+
+     286> ;;; mapcar with cdr extracts tails
+(mapcar cdr '((1 2) (3 4)))
+; --- apply / funcall edge cases ---
+
+         PASSED!
+
+     287> ;;; apply with multiple prepended args
+(apply + 1 2 '(3 4))
+
+         PASSED!
+
+     288> ;;; apply with lambda
+(apply (lambda (a b) (+ a b)) '(3 7))
+
+         PASSED!
+
+     289> ;;; funcall with &rest lambda
+(funcall (lambda (&rest args) args) 1 2 3)
+
+         PASSED!
+
+     290> ;;; funcall with library function reverse
+(funcall reverse '(3 2 1))
+
+         PASSED!
+
+     291> ;;; funcall with library function list
+(funcall list 1 2 3)
+; --- python edge cases ---
+
+         PASSED!
+
+     292> ;;; python None returns None
+(python "None")
+
+         PASSED!
+
+     293> ;;; python list expression returns Lisp list
+(python "[1,2,3]")
+; --- equality across types ---
+
+         PASSED!
+
+     294> ;;; int equals float
+(= 1 1.0)
+
+         PASSED!
+
+     295> ;;; int equals rational
+(= 1 1/1)
+
+         PASSED!
+
+     296> ;;; rational less than float
+(< 1/2 0.6)
+; --- dotimes with negative count ---
+
+         PASSED!
+
+     297> ;;; dotimes with negative count does zero iterations
+(dotimes (i -1) (write! i))
+; --- multi-pair setf ---
+
+         PASSED!
+
+     298> ;;; setf with multiple pairs
+(progn (setf sa23 10 sb23 20) (list sa23 sb23))
+; --- struct interactions ---
+
+         PASSED!
+
+     299> ;;; define a struct for interaction tests
+(defstruct point23 x y)
+
+         PASSED!
+
+     300> ;;; create a struct instance
+(setf pt23 (make-point23 :x 10 :y 20))
+
+         PASSED!
+
+     301> ;;; read struct fields
+(point23-x pt23)
+
+         PASSED!
+
+     302> ;;; modify struct field via setf
+(setf (point23-x pt23) 99)
+
+         PASSED!
+
+     303> ;;; verify struct field was modified
+(point23-x pt23)
+
+         PASSED!
+
+     304> ;;; mapcar over struct accessor extracts field from list of structs
+(mapcar point23-x (list (make-point23 :x 1 :y 2) (make-point23 :x 3 :y 4)))
+
+         PASSED!
+
+     305> ;;; closure capturing struct: lambda reads and modifies struct fields
+(let ((p23 (make-point23 :x 0 :y 0)))
+   (setf (point23-x p23) 42)
+   (point23-x p23))
+; --- string-capitalize ---
+
+         PASSED!
+
+     306> (string-capitalize "hello world")
+
+         PASSED!
+
+     307> (string-capitalize "HELLO WORLD")
+
+         PASSED!
+
+     308> (string-capitalize "hello")
+
+         PASSED!
+
+     309> (string-capitalize "")
+
+         PASSED!
+
+     310> (string-capitalize "already Capitalized words")
+; --- gensym ---
+
+         PASSED!
+
+     311> (symbolp (gensym))
+
+         PASSED!
+
+     312> (symbolp (gensym "FOO"))
+; each call returns a distinct symbol
+
+         PASSED!
+
+     313> (let ((g1 (gensym)) (g2 (gensym)))
+  (not (eq g1 g2)))
+; prefix is upper-cased like all symbols
+
+         PASSED!
+
+     314> (let ((g (gensym "test")))
+  (string= (ustring g) (string-upcase (ustring g))))
+; integer arg: uses n as suffix, does not increment *gensym-counter*
+
+         PASSED!
+
+     315> (let ((before *gensym-counter*))
+  (gensym 99)
+  (= *gensym-counter* before))
+; *gensym-counter* is settable; counter is used-then-incremented
+
+         PASSED!
+
+     316> (let ((saved *gensym-counter*))
+  (setq *gensym-counter* 0)
+  (let ((g (gensym "X")))
+    (setq *gensym-counter* saved)
+    g))
+; error: invalid arg type
+
+         PASSED!
+
+     317> (gensym 3.14)
+
+         PASSED!
+
+ 317 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test20-core-library.lisp... 
+       1> ;;; empty dict
+(dictp (make-dict))
+
+         PASSED!
+
+       2> (caar (list (list 1 2) 3))
+
+         PASSED!
+
+       3> (cadr (list 1 2 3))
+
+         PASSED!
+
+       4> (cdar (list (list 1 2) 3))
+
+         PASSED!
+
+       5> (cddr (list 1 2 3))
+
+         PASSED!
+
+       6> (caaar (list (list (list 1)) 2))
+
+         PASSED!
+
+       7> (caddr (list 1 2 3 4))
+
+         PASSED!
+
+       8> (cdddr (list 1 2 3 4))
+
+         PASSED!
+
+       9> (cadddr (list 1 2 3 4))
+
+         PASSED!
+
+      10> (cddddr (list 1 2 3 4 5))
+
+         PASSED!
+
+      11> (second (list 10 20 30))
+
+         PASSED!
+
+      12> (third (list 10 20 30))
+
+         PASSED!
+
+      13> (fourth (list 10 20 30 40))
+
+         PASSED!
+
+      14> (fifth (list 10 20 30 40 50))
+
+         PASSED!
+
+      15> (sixth (list 10 20 30 40 50 60))
+
+         PASSED!
+
+      16> (seventh (list 10 20 30 40 50 60 70))
+
+         PASSED!
+
+      17> (eighth (list 10 20 30 40 50 60 70 80))
+
+         PASSED!
+
+      18> (ninth (list 10 20 30 40 50 60 70 80 90))
+
+         PASSED!
+
+      19> (tenth (list 10 20 30 40 50 60 70 80 90 100))
+
+         PASSED!
+
+      20> (nth 0 (list 10 20 30))
+
+         PASSED!
+
+      21> (nth 2 (list 10 20 30))
+
+         PASSED!
+
+      22> (copy-list (list 1 2 3))
+
+         PASSED!
+
+      23> (mapcar (lambda (x) (* x x)) (list 1 2 3 4))
+
+         PASSED!
+
+      24> (mapcar (lambda (x) (+ x 1)) (list 10 20 30))
+
+         PASSED!
+
+      25> (when t 42)
+
+         PASSED!
+
+      26> (when nil 42)
+
+         PASSED!
+
+      27> (unless nil 42)
+
+         PASSED!
+
+      28> (unless t 42)
+
+         PASSED!
+
+      29> (length (list 1 2 3))
+
+         PASSED!
+
+      30> (length nil)
+
+         PASSED!
+
+      31> (reverse (list 1 2 3))
+
+         PASSED!
+
+      32> (remove 'b '(a b c))
+
+         PASSED!
+
+      33> (remove 'a '(a b c))
+; --- endp ---
+
+         PASSED!
+
+      34> (endp '())
+
+         PASSED!
+
+      35> (endp '(1 2 3))
+; --- last ---
+
+         PASSED!
+
+      36> (last '(1 2 3))
+
+         PASSED!
+
+      37> (last '(1 2 3) 1)
+
+         PASSED!
+
+      38> (last '(1 2 3) 2)
+
+         PASSED!
+
+      39> (last '(1 2 3) 3)
+
+         PASSED!
+
+      40> (last '(1 2 3) 0)
+
+         PASSED!
+
+      41> (last '(1 2 3) 10)
+
+         PASSED!
+
+      42> (last '(a))
+
+         PASSED!
+
+      43> (last '())
+
+         PASSED!
+
+      44> (last nil)
+
+         PASSED!
+
+      45> (last '(42))
+; --- nthcdr ---
+
+         PASSED!
+
+      46> (nthcdr 0 '(a b c d))
+
+         PASSED!
+
+      47> (nthcdr 2 '(a b c d))
+
+         PASSED!
+
+      48> (nthcdr 4 '(a b c d))
+; --- butlast ---
+
+         PASSED!
+
+      49> (butlast '(1 2 3 4))
+
+         PASSED!
+
+      50> (butlast '(1 2 3 4) 2)
+
+         PASSED!
+
+      51> (butlast '(1 2 3) 3)
+; --- member ---
+
+         PASSED!
+
+      52> (member 2 '(1 2 3 4))
+
+         PASSED!
+
+      53> (member 'b '(a b c))
+
+         PASSED!
+
+      54> (member 9 '(1 2 3))
+; --- assoc ---
+
+         PASSED!
+
+      55> (assoc 'b '((a 1) (b 2) (c 3)))
+
+         PASSED!
+
+      56> (assoc 'z '((a 1) (b 2)))
+; --- every / some ---
+
+         PASSED!
+
+      57> (every numberp '(1 2 3))
+
+         PASSED!
+
+      58> (every numberp '(1 "a" 3))
+
+         PASSED!
+
+      59> (every numberp '())
+
+         PASSED!
+
+      60> (some numberp '(a 1 b))
+
+         PASSED!
+
+      61> (some numberp '(a b c))
+
+         PASSED!
+
+      62> (some numberp '())
+; --- reduce ---
+
+         PASSED!
+
+      63> (reduce + '(1 2 3 4))
+
+         PASSED!
+
+      64> (reduce * '(1 2 3 4))
+
+         PASSED!
+
+      65> (reduce + '(42))
+; --- mapc ---
+
+         PASSED!
+
+      66> (setf mresult '())
+
+         PASSED!
+
+      67> (mapc (lambda (x) (setf mresult (cons (* x x) mresult))) '(1 2 3))
+
+         PASSED!
+
+      68> mresult
+
+         PASSED!
+
+  68 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test22-math-library.lisp... 
+       1> (gcd 12 8)
+
+         PASSED!
+
+       2> (gcd 12 8 6)
+
+         PASSED!
+
+       3> (lcm 4 6)
+
+         PASSED!
+
+       4> (lcm 3 4 6)
+
+         PASSED!
+
+       5> (log 100)
+
+         PASSED!
+
+       6> (log 100 10)
+
+         PASSED!
+
+       7> (log 8 2)
+
+         PASSED!
+
+       8> (asin 0)
+
+         PASSED!
+
+       9> (asin 1)
+
+         PASSED!
+
+      10> (acos 0)
+
+         PASSED!
+
+      11> (acos 1)
+
+         PASSED!
+
+      12> (atan 0)
+
+         PASSED!
+
+      13> (atan 1)
+
+         PASSED!
+
+      14> (atan 0 1)
+
+         PASSED!
+
+      15> (rational 0.5)
+
+         PASSED!
+
+      16> (rational 3)
+
+         PASSED!
+
+      17> (rational 3/4)
+
+         PASSED!
+
+      18> (rational 1.5)
+
+         PASSED!
+
+      19> (signum 5)
+
+         PASSED!
+
+      20> (signum -3)
+
+         PASSED!
+
+      21> (signum 0)
+
+         PASSED!
+
+      22> (sqrt 9)
+
+         PASSED!
+
+      23> (sqrt 2)
+
+         PASSED!
+
+      24> (isqrt 9)
+
+         PASSED!
+
+      25> (isqrt 10)
+
+         PASSED!
+
+      26> (exp 0)
+
+         PASSED!
+
+      27> (exp 1)
+
+         PASSED!
+
+      28> (ln 1)
+
+         PASSED!
+
+      29> (ln e)
+
+         PASSED!
+
+      30> (evenp 4)
+
+         PASSED!
+
+      31> (evenp 5)
+
+         PASSED!
+
+      32> (oddp 5)
+
+         PASSED!
+
+      33> (oddp 4)
+
+         PASSED!
+
+      34> (minusp -3)
+
+         PASSED!
+
+      35> (minusp 3)
+
+         PASSED!
+
+      36> (plusp 5)
+
+         PASSED!
+
+      37> (plusp -5)
+
+         PASSED!
+
+      38> (zerop 0)
+
+         PASSED!
+
+      39> (zerop 1)
+
+         PASSED!
+
+      40> (isEven? 4)
+
+         PASSED!
+
+      41> (isOdd? 3)
+
+         PASSED!
+
+      42> (isPositive? 5)
+
+         PASSED!
+
+      43> (isNegative? -5)
+
+         PASSED!
+
+      44> (isZero? 0)
+
+         PASSED!
+
+      45> (let ((n 5)) (incf n) n)
+
+         PASSED!
+
+      46> (let ((n 5)) (incf n 3) n)
+
+         PASSED!
+
+      47> (let ((n 5)) (decf n) n)
+
+         PASSED!
+
+      48> (let ((n 5)) (decf n 2) n)
+
+         PASSED!
+
+      49> (average 2 4 6)
+
+         PASSED!
+
+      50> (average 1 2 3 4)
+; --- fact / fib setup ---
+
+         PASSED!
+
+      51> (defun fact (n)
+   (if (= n 0) 1 (* n (fact (- n 1)))))
+
+         PASSED!
+
+      52> (defun fib (n)
+   (if (<= n 2) 1 (+ (fib (- n 1)) (fib (- n 2)))))
+
+         PASSED!
+
+      53> (fact 5)
+
+         PASSED!
+
+      54> (fact 0)
+
+         PASSED!
+
+      55> (fib 10)
+
+         PASSED!
+
+      56> (fib 1)
+; --- floor / ceiling / round ---
+
+         PASSED!
+
+      57> (floor 3.7)
+
+         PASSED!
+
+      58> (floor -3.7)
+
+         PASSED!
+
+      59> (ceiling 3.2)
+
+         PASSED!
+
+      60> (ceiling -3.2)
+
+         PASSED!
+
+      61> (round 3.5)
+
+         PASSED!
+
+      62> (round 2.5)
+
+         PASSED!
+
+      63> ;;; floor with divisor
+(floor 7 2)
+
+         PASSED!
+
+      64> ;;; ceiling with divisor
+(ceiling 7 2)
+; --- truncate ---
+
+         PASSED!
+
+      65> (truncate 3.7)
+
+         PASSED!
+
+      66> (truncate -3.7)
+
+         PASSED!
+
+      67> (truncate 3.0)
+
+         PASSED!
+
+      68> (truncate 5)
+
+         PASSED!
+
+      69> (truncate -0.9)
+
+         PASSED!
+
+  69 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test29-sequence-keywords.lisp... 
+       1> (member 'b '(a b c))
+
+         PASSED!
+
+       2> (member 2 '(1 2 3 4))
+
+         PASSED!
+
+       3> (member 9 '(1 2 3))
+; eql default: strings are NOT eql unless same object
+
+         PASSED!
+
+       4> (member "hi" '("hi" "there"))
+; :test equal allows string matching
+
+         PASSED!
+
+       5> (member "hi" '("hi" "there") :test equal)
+; :key extracts before comparing
+
+         PASSED!
+
+       6> (member 2 '((1 a) (2 b) (3 c)) :key car)
+; ── assoc ─────────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+       7> (assoc 'b '((a 1) (b 2) (c 3)))
+
+         PASSED!
+
+       8> (assoc 'z '((a 1) (b 2)))
+; :test equal for string keys
+
+         PASSED!
+
+       9> (assoc "b" '(("a" 1) ("b" 2) ("c" 3)) :test equal)
+; :key applied to each pair's key (keys are lists so car works)
+
+         PASSED!
+
+      10> (assoc 2 '(((0 1) a) ((2 3) b) ((4 5) c)) :key car)
+; ── find ──────────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      11> (find 3 '(1 2 3 4 5))
+
+         PASSED!
+
+      12> (find 9 '(1 2 3))
+; :from-end — rightmost match
+
+         PASSED!
+
+      13> (find 2 '(1 2 3 2 1) :from-end t)
+; :start and :end bound the search
+
+         PASSED!
+
+      14> (find 1 '(1 2 3 1) :start 1)
+
+         PASSED!
+
+      15> (find 3 '(1 2 3 4) :end 2)
+; :key
+
+         PASSED!
+
+      16> (find 3 '((1 a) (2 b) (3 c)) :key car)
+; ── find-if ───────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      17> (find-if numberp '(a b 3 c))
+
+         PASSED!
+
+      18> (find-if numberp '(a b c))
+; :from-end
+
+         PASSED!
+
+      19> (find-if evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      20> (find-if evenp '(1 2 3 4 5) :from-end t)
+; :start
+
+         PASSED!
+
+      21> (find-if evenp '(2 3 4 5) :start 1)
+; :key
+
+         PASSED!
+
+      22> (find-if evenp '((1 a) (2 b) (3 c)) :key car)
+; ── position ──────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      23> (position 'b '(a b c))
+
+         PASSED!
+
+      24> (position 9 '(1 2 3))
+; :from-end — rightmost index
+
+         PASSED!
+
+      25> (position 'a '(a b a c a))
+
+         PASSED!
+
+      26> (position 'a '(a b a c a) :from-end t)
+; :start / :end
+
+         PASSED!
+
+      27> (position 'a '(a b a c a) :start 1)
+
+         PASSED!
+
+      28> (position 'a '(a b a c a) :start 1 :end 2)
+; :key
+
+         PASSED!
+
+      29> (position 3 '((1 x) (2 y) (3 z)) :key car)
+; ── position-if ───────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      30> (position-if numberp '(a b 3 c 5))
+
+         PASSED!
+
+      31> (position-if numberp '(a b c))
+; :from-end
+
+         PASSED!
+
+      32> (position-if evenp '(1 2 3 4 5) :from-end t)
+; :start
+
+         PASSED!
+
+      33> (position-if evenp '(2 3 4 5) :start 1)
+; ── count ─────────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      34> (count 'a '(a b a c a))
+
+         PASSED!
+
+      35> (count 9 '(1 2 3))
+; :start / :end
+
+         PASSED!
+
+      36> (count 'a '(a b a c a) :start 1 :end 4)
+; :key
+
+         PASSED!
+
+      37> (count 1 '((1 x) (1 y) (2 z)) :key car)
+; :test
+
+         PASSED!
+
+      38> (count "x" '("x" "y" "x") :test equal)
+; ── count-if ──────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      39> (count-if evenp '(1 2 3 4 5 6))
+
+         PASSED!
+
+      40> (count-if numberp '(a b c))
+; :start / :end
+
+         PASSED!
+
+      41> (count-if evenp '(2 3 4 5 6) :start 1 :end 4)
+; :key
+
+         PASSED!
+
+      42> (count-if evenp '((1 a) (2 b) (3 c) (4 d)) :key car)
+; ── remove ────────────────────────────────────────────────────────────────────
+; basic (backward-compatible with old Lisp version)
+
+         PASSED!
+
+      43> (remove 'b '(a b c))
+
+         PASSED!
+
+      44> (remove 'a '(a b c))
+; removes ALL matching (no :count)
+
+         PASSED!
+
+      45> (remove 'a '(a b a c a))
+; :test
+
+         PASSED!
+
+      46> (remove "x" '("x" "y" "x") :test equal)
+; :count
+
+         PASSED!
+
+      47> (remove 'a '(a b a c a) :count 2)
+; :from-end with :count — remove from right
+
+         PASSED!
+
+      48> (remove 'a '(a b a c a) :count 2 :from-end t)
+; :start / :end — only consider bounded region
+
+         PASSED!
+
+      49> (remove 'a '(a b a c a) :start 1 :end 4)
+; :key
+
+         PASSED!
+
+      50> (remove 2 '((1 x) (2 y) (3 z) (2 w)) :key car)
+; ── remove-if ─────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      51> (remove-if evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      52> (remove-if numberp '(a 1 b 2 c))
+; :count
+
+         PASSED!
+
+      53> (remove-if evenp '(1 2 3 4 5 6) :count 2)
+; :from-end with :count
+
+         PASSED!
+
+      54> (remove-if evenp '(1 2 3 4 5 6) :count 2 :from-end t)
+; :start / :end
+
+         PASSED!
+
+      55> (remove-if evenp '(2 3 4 5 6) :start 1 :end 4)
+; :key
+
+         PASSED!
+
+      56> (remove-if evenp '((1 a) (2 b) (3 c) (4 d)) :key car)
+; ── remove-if-not ─────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      57> (remove-if-not evenp '(1 2 3 4 5 6))
+
+         PASSED!
+
+      58> (remove-if-not numberp '(a 1 b 2 c))
+; :count limits removals (removes at most 2 failing elements)
+
+         PASSED!
+
+      59> (remove-if-not evenp '(1 2 3 4 5 6) :count 2)
+; ── substitute ────────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      60> (substitute 'x 'a '(a b a c a))
+
+         PASSED!
+
+      61> (substitute 0 99 '(1 2 3))
+; :count
+
+         PASSED!
+
+      62> (substitute 'x 'a '(a b a c a) :count 2)
+; :from-end with :count
+
+         PASSED!
+
+      63> (substitute 'x 'a '(a b a c a) :count 2 :from-end t)
+; :start / :end
+
+         PASSED!
+
+      64> (substitute 'x 'a '(a b a c a) :start 1 :end 4)
+; :test
+
+         PASSED!
+
+      65> (substitute 'match "hi" '("hi" "bye" "hi") :test equal)
+; :key
+
+         PASSED!
+
+      66> (substitute '(99 z) 2 '((1 x) (2 y) (3 z)) :key car)
+; ── substitute-if ─────────────────────────────────────────────────────────────
+
+         PASSED!
+
+      67> (substitute-if 0 evenp '(1 2 3 4 5))
+
+         PASSED!
+
+      68> (substitute-if 0 evenp '(1 3 5))
+; :count
+
+         PASSED!
+
+      69> (substitute-if 0 evenp '(1 2 3 4 5 6) :count 2)
+; :from-end with :count
+
+         PASSED!
+
+      70> (substitute-if 0 evenp '(1 2 3 4 5 6) :count 2 :from-end t)
+; :key
+
+         PASSED!
+
+      71> (substitute-if '(99) evenp '((1 a) (2 b) (3 c) (4 d)) :key car)
+
+         PASSED!
+
+  71 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test30-loopingEvaluator.lisp... 
+       1> (defun tco-count (n)
+   (if (= n 0)
+      'done
+      (tco-count (- n 1))))
+
+         PASSED!
+
+       2> ;;; 50000 tail calls -- would overflow without TCO
+(tco-count 50000)
+
+         PASSED!
+
+       3> (defun tco-sum (n acc)
+   (if (= n 0)
+      acc
+      (tco-sum (- n 1) (+ acc n))))
+
+         PASSED!
+
+       4> ;;; accumulator-style sum of 1..50000
+(tco-sum 50000 0)
+; --- 2. Tail call in LET body ---
+
+         PASSED!
+
+       5> (defun tco-let (n)
+   (let ((m (- n 1)))
+      (if (= m 0) 'done (tco-let m))))
+
+         PASSED!
+
+       6> (tco-let 50000)
+; --- 3. Tail call in LET* body ---
+
+         PASSED!
+
+       7> (defun tco-letstar (n)
+   (let* ((m (- n 1)))
+      (if (= m 0) 'done (tco-letstar m))))
+
+         PASSED!
+
+       8> (tco-letstar 50000)
+; --- 4. Tail call in PROGN last form ---
+
+         PASSED!
+
+       9> (defun tco-progn (n)
+   (progn
+      (if (= n 0) 'done (tco-progn (- n 1)))))
+
+         PASSED!
+
+      10> (tco-progn 50000)
+; --- 5. Tail call via WHEN (macro expands to IF) ---
+
+         PASSED!
+
+      11> (defun tco-when (n)
+   (when (> n 0) (tco-when (- n 1))))
+
+         PASSED!
+
+      12> ;;; when body is in if-tail position via macro expansion
+(tco-when 50000)
+; --- 6. Tail call via UNLESS (macro expands to IF) ---
+
+         PASSED!
+
+      13> (defun tco-unless (n)
+   (unless (= n 0) (tco-unless (- n 1))))
+
+         PASSED!
+
+      14> (tco-unless 50000)
+; --- 7. Mutual tail recursion ---
+
+         PASSED!
+
+      15> (defun tco-even (n) (if (= n 0) t   (tco-odd  (- n 1))))
+
+         PASSED!
+
+      16> (defun tco-odd  (n) (if (= n 0) nil (tco-even (- n 1))))
+
+         PASSED!
+
+      17> ;;; even number of steps -> T
+(tco-even 50000)
+
+         PASSED!
+
+      18> ;;; odd number of steps -> T  (odd 1 -> even 0 -> T)
+(tco-odd 50001)
+; --- 8. Return-type variety ---
+
+         PASSED!
+
+      19> (defun tco-str (n s)
+   (if (= n 0) s (tco-str (- n 1) s)))
+
+         PASSED!
+
+      20> (tco-str 50000 "hello")
+
+         PASSED!
+
+      21> (defun tco-lst (n)
+   (if (= n 0) '(1 2 3) (tco-lst (- n 1))))
+
+         PASSED!
+
+      22> (tco-lst 50000)
+
+         PASSED!
+
+      23> (defun tco-nil (n)
+   (if (= n 0) nil (tco-nil (- n 1))))
+
+         PASSED!
+
+      24> (tco-nil 50000)
+; --- 9. Closure that tail-calls itself through a global binding ---
+
+         PASSED!
+
+      25> (setf tco-closure
+   (let ((x 42))
+      (lambda (n)
+         (if (= n 0) x (tco-closure (- n 1))))))
+
+         PASSED!
+
+      26> (tco-closure 50000)
+; --- 10. &rest parameter in tail-called function ---
+
+         PASSED!
+
+      27> (defun tco-rest (n &rest r)
+   (if (= n 0) (length r) (tco-rest (- n 1) 1)))
+
+         PASSED!
+
+      28> ;;; each recursive call passes one rest arg; final sees (length '(1)) = 1
+(tco-rest 50000)
+; --- 11. Non-tail recursion still correct (sanity check) ---
+
+         PASSED!
+
+      29> (defun fact (n)
+   (if (= n 0) 1 (* n (fact (- n 1)))))
+
+         PASSED!
+
+      30> (fact 10)
+
+         PASSED!
+
+      31> (fact 0)
+; --- 12. Error propagates correctly from deep in a TCO chain ---
+
+         PASSED!
+
+      32> (defun tco-err (n)
+   (if (= n 0) (// 1 0) (tco-err (- n 1))))
+
+         PASSED!
+
+      33> ;;; division by zero at the bottom of 50000 tail calls
+(tco-err 50000)
+
+         PASSED!
+
+      34> (defun tco-arity (n)
+   (if (= n 0) (tco-arity) (tco-arity (- n 1))))
+
+         PASSED!
+
+      35> ;;; zero-arg call in tail position -> arg-binding error with correct name
+(tco-arity 3)
+
+         PASSED!
+
+      36> (defun tco-unbound (n)
+   (if (= n 0) no-such-var (tco-unbound (- n 1))))
+
+         PASSED!
+
+      37> ;;; unbound symbol error at the end of the chain
+(tco-unbound 5)
+
+         PASSED!
+
+      38> (call/cc (lambda (k) (k 42)))
+; Lambda returns normally without invoking the continuation
+
+         PASSED!
+
+      39> (call/cc (lambda (k) 99))
+; Continuation invoked inside nested arithmetic outer + still uses escaped value
+
+         PASSED!
+
+      40> (+ 1 (call/cc (lambda (k) (+ 10 (k 42)))))
+; type-of a continuation is CONTINUATION
+
+         PASSED!
+
+      41> (call/cc (lambda (k) (type-of k)))
+; functionp is NIL for continuations
+
+         PASSED!
+
+      42> (call/cc (lambda (k) (functionp k)))
+; macrop is NIL for continuations
+
+         PASSED!
+
+      43> (call/cc (lambda (k) (macrop k)))
+
+         PASSED!
+
+      44> (call/cc (lambda (k) (k 99)))
+; Inner call/cc escape stays within the inner scope; outer computation proceeds normally
+
+         PASSED!
+
+      45> (call/cc (lambda (k1) (+ 100 (call/cc (lambda (k2) (k2 5))))))
+; Inner call/cc escapes to the outer call/cc, bypassing the (+ 100 ...) entirely
+
+         PASSED!
+
+      46> (+ 1000 (call/cc (lambda (k1) (+ 100 (call/cc (lambda (k2) (k1 5)))))))
+; Early exit from dolist loop using call/cc
+
+         PASSED!
+
+      47> (defun find-first (pred lst)
+   (call/cc (lambda (exit)
+               (dolist (x lst)
+                  (if (pred x) (exit x) nil))
+               nil)))
+
+         PASSED!
+
+      48> (find-first evenp '(1 3 5 4 7))
+
+         PASSED!
+
+      49> (find-first evenp '(1 3 5 7))
+; Continuation object pretty-prints as #<CONTINUATION>
+
+         PASSED!
+
+      50> (string (call/cc (lambda (k) k)))
+; Stale continuation: invoking after call/cc has already returned is an error
+
+         PASSED!
+
+      51> (let ((saved nil))
+   (call/cc (lambda (k) (setq saved k)))
+   (saved 42))
+
+         PASSED!
+
+      52> (call/cc)
+
+         PASSED!
+
+      53> (call/cc 42)
+
+         PASSED!
+
+      54> (call/cc quote)
+
+         PASSED!
+
+      55> (call/cc (lambda (k) (k 1 2)))
+
+         PASSED!
+
+      56> (eql 'foo 'foo)
+
+         PASSED!
+
+      57> (eql 'foo 'bar)
+
+         PASSED!
+
+      58> (eql 1 1)
+
+         PASSED!
+
+      59> (eql 1 1.0)
+
+         PASSED!
+
+      60> (eql 1/3 1/3)
+
+         PASSED!
+
+      61> (eql nil nil)
+
+         PASSED!
+
+      62> (eql t t)
+
+         PASSED!
+
+      63> (eql "hello" "hello")
+; --- catch and throw ---
+; throw immediately returns value to catch; remaining body skipped
+
+         PASSED!
+
+      64> (catch 'done (throw 'done 42) 99)
+; normal completion no throw; returns last body form
+
+         PASSED!
+
+      65> (catch 'done 1 2 3)
+; empty body returns NIL
+
+         PASSED!
+
+      66> (catch 'tag)
+; throw crosses function-call boundary (dynamic extent)
+
+         PASSED!
+
+      67> (defun thrower () (throw 'escape 99))
+
+         PASSED!
+
+      68> (catch 'escape (thrower) 0)
+; nested catches: inner tag matches caught by inner; outer returns body after
+
+         PASSED!
+
+      69> (catch 'outer
+   (catch 'inner
+      (throw 'inner 1))
+   2)
+; nested catches: outer tag propagates past inner, caught by outer
+
+         PASSED!
+
+      70> (catch 'outer
+   (catch 'inner
+      (throw 'outer 99))
+   42)
+; tag is evaluated at runtime
+
+         PASSED!
+
+      71> (let ((tag 'my-tag)) (catch tag (throw tag 77)))
+; numeric tag uses eql (same type, same value)
+
+         PASSED!
+
+      72> (catch 1 (throw 1 "hit") "miss")
+; eql distinguishes numeric types mismatched tag is an unmatched throw
+
+         PASSED!
+
+      73> (catch 1 (throw 1.0 "hit") "miss")
+
+         PASSED!
+
+      74> (throw 'nowhere 42)
+
+         PASSED!
+
+      75> (throw 'foo)
+
+         PASSED!
+
+  75 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test70-parseErrors.lisp... 
+       1> ;;; Unmatched open paren
+(
+
+         PASSED!
+
+       2> ;;; Unmatched close paren
+)
+
+         PASSED!
+
+       3> ;;; Incomplete expression
+(+ 1
+
+         PASSED!
+
+       4> ;;; Extra close paren
+(+ 1 2))
+
+         PASSED!
+
+       5> ;;; Unterminated string
+"unterminated
+
+         PASSED!
+
+       6> ;;; Quote with nothing after it
+'
+
+         PASSED!
+
+       7> ;;; Quote before close paren
+')
+
+         PASSED!
+
+   7 TESTS PASSED!
+   Test file: D:\SWDEV\Python3\Lisp\pythonslisp\testing/test71-error-cases.lisp... 
+       1> ;;; (*) with no args
+(*)
+
+         PASSED!
+
+       2> ;;; (-) with no args
+(-)
+
+         PASSED!
+
+       3> ;;; (/) with no args
+(/)
+
+         PASSED!
+
+       4> ;;; integer division by zero
+(// 7 0)
+
+         PASSED!
+
+       5> ;;; modulo by zero
+(mod 7 0)
+
+         PASSED!
+
+       6> ;;; integer division with non-number
+(// "a" 2)
+
+         PASSED!
+
+       7> ;;; modulo with non-number
+(mod "a" 2)
+
+         PASSED!
+
+       8> ;;; negation of non-number
+(- "a")
+
+         PASSED!
+
+       9> ;;; division with non-number
+(/ "a" 2)
+
+         PASSED!
+
+      10> ;;; min with no args
+(min)
+
+         PASSED!
+
+      11> ;;; max with no args
+(max)
+
+         PASSED!
+
+      12> ;;; asin out of domain
+(asin 2)
+
+         PASSED!
+
+      13> ;;; acos out of domain
+(acos 2)
+
+         PASSED!
+
+      14> ;;; random with negative
+(random -1)
+
+         PASSED!
+
+      15> ;;; random with string
+(random "a")
+
+         PASSED!
+
+      16> ;;; random with no args
+(random)
+
+         PASSED!
+
+      17> ;;; random with too many args
+(random 1 2)
+
+         PASSED!
+
+      18> ;;; less-than with incomparable types
+(< "a" 1)
+
+         PASSED!
+
+      19> ;;; greater-than with incomparable types
+(> "a" 1)
+
+         PASSED!
+
+      20> ;;; less-equal with incomparable types
+(<= "a" 1)
+
+         PASSED!
+
+      21> ;;; greater-equal with incomparable types
+(>= "a" 1)
+
+         PASSED!
+
+      22> ;;; push! with non-list
+(push! 1 2)
+
+         PASSED!
+
+      23> ;;; pop! with non-list
+(pop! 1)
+
+         PASSED!
+
+      24> ;;; pop! on empty list
+(pop! '())
+
+         PASSED!
+
+      25> ;;; cons with non-list second arg
+(cons 1 2)
+
+         PASSED!
+
+      26> ;;; at-insert with non-integer index
+(at-insert "a" '(1 2) 3)
+
+         PASSED!
+
+      27> ;;; at-insert with non-list
+(at-insert 0 1 3)
+
+         PASSED!
+
+      28> ;;; at on non-collection
+(at 0 42)
+
+         PASSED!
+
+      29> ;;; at-delete with bad index
+(at-delete 5 '(1 2 3))
+
+         PASSED!
+
+      30> ;;; at-delete on non-collection
+(at-delete 1 1)
+
+         PASSED!
+
+      31> ;;; sort requires a predicate argument
+(sort (list 3 "a" 1))
+
+         PASSED!
+
+      32> (push!)
+
+         PASSED!
+
+      33> (push! '() 1 2)
+
+         PASSED!
+
+      34> (pop!)
+
+         PASSED!
+
+      35> (pop! '() 1)
+
+         PASSED!
+
+      36> (at)
+
+         PASSED!
+
+      37> (at 1)
+
+         PASSED!
+
+      38> (at 1 2 3)
+
+         PASSED!
+
+      39> (at-delete)
+
+         PASSED!
+
+      40> (at-delete 1)
+
+         PASSED!
+
+      41> (at-insert)
+
+         PASSED!
+
+      42> (at-insert 1)
+
+         PASSED!
+
+      43> (at-insert 1 2)
+
+         PASSED!
+
+      44> (hasValue?)
+
+         PASSED!
+
+      45> ;;; hasValue? on non-collection
+(hasValue? 2 1)
+
+         PASSED!
+
+      46> (hasKey?)
+
+         PASSED!
+
+      47> ;;; hasKey? with non-map second arg
+(hasKey? "a" 1)
+
+         PASSED!
+
+      48> (update!)
+
+         PASSED!
+
+      49> ;;; update! with non-map first arg
+(update! 1 (make-dict))
+
+         PASSED!
+
+      50> ;;; update! with non-map second arg
+(update! (make-dict) 1)
+
+         PASSED!
+
+      51> ;;; make-dict with mixed key types
+(make-dict (a 1) (2 2))
+
+         PASSED!
+
+      52> (while)
+
+         PASSED!
+
+      53> ;;; while with no body
+(while t)
+
+         PASSED!
+
+      54> (dotimes)
+
+         PASSED!
+
+      55> ;;; dotimes control list must be a list
+(dotimes i 1)
+
+         PASSED!
+
+      56> ;;; dotimes control list must have at most 3 elements
+(dotimes (i 3 4 5) 1)
+
+         PASSED!
+
+      57> ;;; dotimes variable must be a symbol
+(dotimes (1 3) 1)
+
+         PASSED!
+
+      58> ;;; dotimes count must be integer
+(dotimes (i "a") 1)
+
+         PASSED!
+
+      59> (dolist)
+
+         PASSED!
+
+      60> ;;; dolist with bad control spec
+(dolist x (write! x))
+
+         PASSED!
+
+      61> ;;; dolist variable must be a symbol
+(dolist (1 '(a b)) (write! 1))
+
+         PASSED!
+
+      62> ;;; dolist list must evaluate to a list
+(dolist (x 42) (write! x))
+
+         PASSED!
+
+      63> (case)
+
+         PASSED!
+
+      64> (let)
+
+         PASSED!
+
+      65> ;;; let first arg must be list
+(let 1 2)
+
+         PASSED!
+
+      66> ;;; let var spec first element must be symbol
+(let ((1 2)) 1)
+
+         PASSED!
+
+      67> ;;; let var spec must be 1 or 2 elements
+(let ((x 1 2)) 1)
+
+         PASSED!
+
+      68> (let*)
+
+         PASSED!
+
+      69> ;;; let* first arg must be list
+(let* 1 2)
+
+         PASSED!
+
+      70> (defmacro)
+
+         PASSED!
+
+      71> ;;; defmacro first arg must be symbol
+(defmacro 1 () 1)
+
+         PASSED!
+
+      72> ;;; defmacro second arg must be list
+(defmacro foo 1 1)
+
+         PASSED!
+
+      73> (lambda)
+
+         PASSED!
+
+      74> ;;; lambda with no body valid in CL, returns NIL when called
+(lambda ())
+; --- Quote / backquote errors ---
+
+         PASSED!
+
+      75> (quote)
+
+         PASSED!
+
+      76> (quote 1 2)
+
+         PASSED!
+
+      77> ;;; comma outside backquote
+,x
+
+         PASSED!
+
+      78> ;;; comma-at outside backquote
+,@x
+
+         PASSED!
+
+      79> ;;; comma-at result must be a list
+`(a ,@1 c)
+
+         PASSED!
+
+      80> ;;; comma-at at top level of backquote: splice requires a list context
+`,@(list 1 2)
+
+         PASSED!
+
+      81> (macroexpand)
+
+         PASSED!
+
+      82> ;;; macroexpand non-list returns unchanged
+(macroexpand 1)
+
+         PASSED!
+
+      83> ;;; macroexpand non-macro head returns form unchanged
+(macroexpand '(1))
+; --- setf / makunbound / symtab! errors ---
+
+         PASSED!
+
+      84> (setf)
+
+         PASSED!
+
+      85> ;;; setf with odd number of args
+(setf x)
+
+         PASSED!
+
+      86> ;;; setf with 3 args (odd)
+(setf x 1 y)
+
+         PASSED!
+
+      87> (makunbound)
+
+         PASSED!
+
+      88> ;;; makunbound with non-symbol
+(makunbound 1)
+
+         PASSED!
+
+      89> ;;; makunbound with too many args
+(makunbound 'a 'b)
+
+         PASSED!
+
+      90> ;;; symtab! with args
+(symtab! 1)
+
+         PASSED!
+
+      91> ;;; makunbound - happy path: undefine a variable
+(setf _mk_test_ 42)
+
+         PASSED!
+
+      92> (makunbound '_mk_test_)
+
+         PASSED!
+
+      93> ;;; the variable should now be unbound
+_mk_test_
+
+         PASSED!
+
+      94> ;;; undef! alias also works
+(setf _ud_test_ 77)
+
+         PASSED!
+
+      95> (undef! '_ud_test_)
+; --- Conversion errors ---
+
+         PASSED!
+
+      96> ;;; integer from invalid string
+(integer "hello")
+
+         PASSED!
+
+      97> (string)
+
+         PASSED!
+
+      98> (ustring)
+
+         PASSED!
+
+      99> (make-symbol)
+
+         PASSED!
+
+     100> (make-symbol "a" "b")
+
+         PASSED!
+
+     101> ;;; make-symbol with non-string argument
+(make-symbol 42)
+
+         PASSED!
+
+     102> (make-symbol '())
+
+         PASSED!
+
+     103> ;;; make-symbol from numeric string is not a valid symbol name
+(make-symbol "42")
+
+         PASSED!
+
+     104> (parse)
+
+         PASSED!
+
+     105> ;;; parse with non-string
+(parse 1)
+
+         PASSED!
+
+     106> ;;; setf with NIL lvalue
+(setf () 5)
+
+         PASSED!
+
+     107> ;;; setf (at ...) form with wrong element count
+(setf (at 1) 5)
+
+         PASSED!
+
+     108> ;;; setf with unrecognized accessor (not in defsetf registry)
+(setf (blah 42) 5)
+
+         PASSED!
+
+     109> ;;; if with no arguments
+(if)
+
+         PASSED!
+
+     110> ;;; if with too many arguments
+(if t 1 2 3)
+
+         PASSED!
+
+     111> ;;; cond entry that is not a list
+(cond 1)
+
+         PASSED!
+
+     112> ;;; cond entry with condition but no body
+(cond (t))
+; --- CASE additional error paths ---
+
+         PASSED!
+
+     113> ;;; case with no clauses
+(case 1)
+
+         PASSED!
+
+     114> ;;; case entry that is not a list
+(case 1 2)
+
+         PASSED!
+
+     115> ;;; case entry with value but no body
+(case 1 (1))
+; --- MAKE-DICT additional error path ---
+
+         PASSED!
+
+     116> ;;; make-dict entry with single element (not a pair)
+(make-dict (1))
+
+         PASSED!
+
+     117> ;;; macroexpand empty list returns NIL
+(macroexpand '())
+; --- DEFMACRO docstring-only error ---
+
+         PASSED!
+
+     118> ;;; defmacro with docstring but no body
+(defmacro foo () "docstring")
+
+         PASSED!
+
+     119> ;;; lambda with docstring but no body valid in CL, returns NIL when called
+(lambda () "docstring")
+; --- LET additional error path ---
+
+         PASSED!
+
+     120> ;;; let with non-symbol non-list initializer
+(let (1) x)
+
+         PASSED!
+
+     121> ;;; let* first element of initializer pair must be symbol
+(let* ((1 2)) 1)
+
+         PASSED!
+
+     122> ;;; let* initializer spec too long
+(let* ((x 1 2)) 1)
+
+         PASSED!
+
+     123> ;;; let* with non-symbol non-list initializer
+(let* (1) x)
+
+         PASSED!
+
+     124> ;;; dolist with no body expressions is allowed (returns NIL)
+(dolist (x '(1 2)))
+; --- Arithmetic argument count errors ---
+
+         PASSED!
+
+     125> ;;; sin with no arguments
+(sin)
+
+         PASSED!
+
+     126> ;;; sin with too many arguments
+(sin 1 2)
+
+         PASSED!
+
+     127> ;;; cos with no arguments
+(cos)
+
+         PASSED!
+
+     128> ;;; cos with too many arguments
+(cos 1 2)
+
+         PASSED!
+
+     129> ;;; asin with no arguments
+(asin)
+
+         PASSED!
+
+     130> ;;; acos with no arguments
+(acos)
+
+         PASSED!
+
+     131> ;;; integer division with too many arguments
+(// 1 2 3)
+
+         PASSED!
+
+     132> ;;; modulo with too many arguments
+(mod 1 2 3)
+
+         PASSED!
+
+     133> ;;; gcd with non-number
+(gcd "a" 2)
+
+         PASSED!
+
+     134> ;;; lcm with non-number
+(lcm "a" 2)
+
+         PASSED!
+
+     135> ;;; min with non-number
+(min "a" 1)
+
+         PASSED!
+
+     136> ;;; max with non-number
+(max "a" 1)
+
+         PASSED!
+
+     137> ;;; expt with non-number base
+(expt "a" 2)
+
+         PASSED!
+
+     138> ;;; cos with non-number
+(cos "a")
+
+         PASSED!
+
+     139> ;;; sin with non-number
+(sin "a")
+
+         PASSED!
+
+     140> ;;; expt with no arguments
+(expt)
+
+         PASSED!
+
+     141> ;;; expt with one argument
+(expt 1)
+
+         PASSED!
+
+     142> ;;; expt with three arguments
+(expt 1 2 3)
+
+         PASSED!
+
+     143> ;;; log with no arguments
+(log)
+
+         PASSED!
+
+     144> ;;; log with too many arguments
+(log 1 2 3)
+
+         PASSED!
+
+     145> ;;; log with non-number
+(log "a")
+
+         PASSED!
+
+     146> ;;; atom with no arguments
+(atom)
+
+         PASSED!
+
+     147> ;;; atom with too many arguments
+(atom 1 2)
+
+         PASSED!
+
+     148> ;;; dictp with no arguments
+(dictp)
+
+         PASSED!
+
+     149> ;;; dictp with too many arguments
+(dictp 1 2)
+
+         PASSED!
+
+     150> ;;; is? with no arguments
+(is?)
+
+         PASSED!
+
+     151> ;;; is? with one argument
+(is? 1)
+
+         PASSED!
+
+     152> ;;; is? with too many arguments
+(is? 1 2 3)
+
+         PASSED!
+
+     153> ;;; float with no arguments
+(float)
+
+         PASSED!
+
+     154> ;;; float with too many arguments
+(float 1 2)
+
+         PASSED!
+
+     155> ;;; integer with no arguments
+(integer)
+
+         PASSED!
+
+     156> ;;; integer with too many arguments
+(integer 1 2 3)
+
+         PASSED!
+
+     157> ;;; rational with non-number
+(rational "hello")
+
+         PASSED!
+
+     158> ;;; car with no arguments
+(car)
+
+         PASSED!
+
+     159> ;;; car with too many arguments
+(car 1 2)
+
+         PASSED!
+
+     160> ;;; cdr with no arguments
+(cdr)
+
+         PASSED!
+
+     161> ;;; cdr with too many arguments
+(cdr 1 2)
+
+         PASSED!
+
+     162> ;;; atan with too many arguments
+(atan 1 2 3)
+
+         PASSED!
+
+     163> ;;; atan with non-number
+(atan "a")
+
+         PASSED!
+
+     164> ;;; eval with too many arguments
+(eval 1 2)
+
+         PASSED!
+
+     165> ;;; nth with out-of-range index
+(nth 10 '(1 2 3))
+
+         PASSED!
+
+     166> ;;; writef with out-of-range format index
+(writef "{2}" (list 1))
+
+         PASSED!
+
+     167> ;;; setf at with non-list non-map container
+(setf (at 0 42) 5)
+
+         PASSED!
+
+     168> ;;; setf at with out-of-range index
+(setf (at 99 (list 1 2)) 5)
+
+         PASSED!
+
+     169> ;;; defmacro with empty body (no docstring)
+(defmacro emptyb22 ())
+
+         PASSED!
+
+     170> ;;; apply with unbound symbol
+(apply 'nonexistent-fn-xyz '(1 2))
+
+         PASSED!
+
+     171> ;;; apply with non-symbol non-callable first arg
+(apply 42 '(1 2))
+
+         PASSED!
+
+     172> ;;; asin with too many arguments
+(asin 0 1)
+
+         PASSED!
+
+     173> ;;; acos with too many arguments
+(acos 0 1)
+
+         PASSED!
+
+     174> ;;; make-dict with list as key
+(make-dict ('(1) 2))
+
+         PASSED!
+
+     175> ;;; division zero by zero
+(/ 0 0)
+
+         PASSED!
+
+     176> ;;; float with symbol argument
+(float 'abc)
+
+         PASSED!
+
+     177> ;;; integer with symbol argument
+(integer 'abc)
+
+         PASSED!
+
+     178> ;;; append with non-list in middle
+(append '(1) 2 '(3))
+
+         PASSED!
+
+     179> ;;; defsetf-internal with no arguments
+(defsetf-internal)
+
+         PASSED!
+
+     180> ;;; defsetf-internal with non-symbol arguments
+(defsetf-internal 1 2)
+
+         PASSED!
+
+     181> ;;; help with too many arguments
+(help 1 2)
+
+         PASSED!
+
+     182> ;;; help with non-callable argument
+(help 42)
+
+         PASSED!
+
+     183> ;;; sort with non-list argument
+(sort 'abc <)
+
+         PASSED!
+
+     184> ;;; dolist with non-list as collection
+(dolist (x 42) (write! x))
+
+         PASSED!
+
+     185> ;;; cond with non-list entry in second position
+(cond (nil 1) 2)
+
+         PASSED!
+
+     186> ;;; case with non-list entry in second position (non-matching first)
+(case 99 (1 "one") 2)
+
+         PASSED!
+
+     187> ;;; backquote with no arguments
+(backquote)
+
+         PASSED!
+
+     188> ;;; backquote with too many arguments
+(backquote 1 2)
+
+         PASSED!
+
+     189> ;;; log of zero is domain error
+(log 0)
+
+         PASSED!
+
+     190> ;;; log of negative is domain error
+(log -1)
+
+         PASSED!
+
+     191> ;;; eval with no arguments
+(eval)
+
+         PASSED!
+
+     192> ;;; funcall with no arguments
+(funcall)
+
+         PASSED!
+
+     193> ;;; at out of range on string
+(at 5 "hi")
+
+         PASSED!
+
+     194> ;;; at on empty string
+(at 0 "")
+
+         PASSED!
+
+     195> ;;; at with missing key on map
+(at 'missing (make-dict (a 1)))
+
+         PASSED!
+
+     196> ;;; at-delete out of range on list
+(at-delete 10 '(1 2))
+
+         PASSED!
+
+     197> ;;; at-delete missing key on map
+(at-delete 'missing (make-dict (a 1)))
+
+         PASSED!
+
+     198> ;;; float on list (non-numeric)
+(float (list 1))
+
+         PASSED!
+
+     199> ;;; rational on list (non-numeric)
+(rational (list 1))
+
+         PASSED!
+
+     200> ;;; make-symbol with empty string
+(make-symbol "")
+
+         PASSED!
+
+     201> ;;; make-symbol with string starting with a digit
+(make-symbol "123foo")
+
+         PASSED!
+
+     202> ;;; python with non-string argument
+(python 42)
+
+         PASSED!
+
+     203> ;;; recursion-limit with non-integer
+(recursion-limit "abc")
+
+         PASSED!
+
+     204> ;;; recursion-limit with too many args
+(recursion-limit 1 2)
+
+         PASSED!
+
+     205> ;;; evenp with no arguments
+(evenp)
+
+         PASSED!
+
+     206> ;;; oddp with no arguments
+(oddp)
+
+         PASSED!
+
+     207> ;;; zerop with no arguments
+(zerop)
+
+         PASSED!
+
+     208> ;;; minusp with no arguments
+(minusp)
+
+         PASSED!
+
+     209> ;;; plusp with no arguments
+(plusp)
+
+         PASSED!
+
+     210> (readall)
+
+         PASSED!
+
+     211> (readall 42)
+
+         PASSED!
+
+     212> (tmpdir 1)
+
+         PASSED!
+
+     213> (path-join)
+
+         PASSED!
+
+     214> (path-join 42)
+
+         PASSED!
+
+     215> (path-join "a" 42)
+
+         PASSED!
+
+ 215 TESTS PASSED!
+
+
+Test Report
+===========
+test01-constants.lisp                      22 TESTS PASSED!
+test02-calculations.lisp                   78 TESTS PASSED!
+test03-predicates.lisp                    116 TESTS PASSED!
+test04-relationals.lisp                    98 TESTS PASSED!
+test05-logical.lisp                        34 TESTS PASSED!
+test06-conversions.lisp                    45 TESTS PASSED!
+test07-listops.lisp                        83 TESTS PASSED!
+test08-variables.lisp                      47 TESTS PASSED!
+test09-functions.lisp                      33 TESTS PASSED!
+test10-dataTypes.lisp                     175 TESTS PASSED!
+test11-controlStructs.lisp                 59 TESTS PASSED!
+test12-macros.lisp                         39 TESTS PASSED!
+test13-parameters.lisp                     84 TESTS PASSED!
+test14-io.lisp                            258 TESTS PASSED!
+test15-core.lisp                          317 TESTS PASSED!
+test20-core-library.lisp                   68 TESTS PASSED!
+test22-math-library.lisp                   69 TESTS PASSED!
+test29-sequence-keywords.lisp              71 TESTS PASSED!
+test30-loopingEvaluator.lisp               75 TESTS PASSED!
+test70-parseErrors.lisp                     7 TESTS PASSED!
+test71-error-cases.lisp                   215 TESTS PASSED!
+
+Total test files: 21.
+Total test cases: 1993.

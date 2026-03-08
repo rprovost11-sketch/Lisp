@@ -1,0 +1,352 @@
+   Test file: pythonslisp/testing/test11-controlStructs.lisp... 
+       1> (setf val1 3)
+
+         PASSED!
+
+       2> (cond
+   ((= val1 1)
+                "one")
+   ((= val1 2)
+                "two")
+   ((= val1 3)
+                "three"))
+
+         PASSED!
+
+       3> (case val1
+   (1
+       "one")
+   (2
+       "two")
+   (3
+       "three")
+   )
+; case: list of keys — matches first key in group
+
+         PASSED!
+
+       4> (case 1
+   ((1 2 3) "low")
+   ((4 5 6) "high")
+   (t       "other"))
+; case: list of keys — matches second key in group
+
+         PASSED!
+
+       5> (case 5
+   ((1 2 3) "low")
+   ((4 5 6) "high")
+   (t       "other"))
+; case: list of keys — falls through to t
+
+         PASSED!
+
+       6> (case 9
+   ((1 2 3) "low")
+   ((4 5 6) "high")
+   (t       "other"))
+; case: list of symbol keys
+
+         PASSED!
+
+       7> (case 'b
+   ((a b)   "ab")
+   ((c d)   "cd")
+   (otherwise "other"))
+; case: list of symbol keys — no match, otherwise clause
+
+         PASSED!
+
+       8> (case 'z
+   ((a b)   "ab")
+   ((c d)   "cd")
+   (otherwise "other"))
+
+         PASSED!
+
+       9> (defun countdown1 (num)
+   (while (> num 0)
+      (let ()
+         (writeLn! num)
+         (setf num (- num 1))
+         )
+      )
+   )
+
+         PASSED!
+
+      10> (countdown1 5)
+
+         PASSED!
+
+      11> (defun countdown2 (num)
+   (while (> num 0)
+      (let ()
+         (writeLn! num)
+         (setf num (- num 1))
+         )
+   )
+)
+
+         PASSED!
+
+      12> (countdown2 3)
+
+         PASSED!
+
+      13> (dolist (item '(0 1 2 3 4 5))
+   (writeLn! item))
+; --- dolist with result form ---
+; result form evaluated after loop; var = NIL
+
+         PASSED!
+
+      14> (let ((total 0)) (dolist (x '(1 2 3) total) (setf total (+ total x))))
+; result form can be any expr (evaluated with var = NIL)
+
+         PASSED!
+
+      15> (dolist (x '(a b c) 'done) (write! x))
+
+         PASSED!
+
+      16> (dotimes (i 3) (writeLn! i))
+
+         PASSED!
+
+      17> (let ((sum 0)) (dotimes (i 5) (setf sum (+ sum i))) sum)
+
+         PASSED!
+
+      18> (progn 1 2 3)
+
+         PASSED!
+
+      19> (let ((n 5)) (progn (setf n (* n n)) n))
+
+         PASSED!
+
+      20> (let* ((a 2) (b (* a 3))) b)
+
+         PASSED!
+
+      21> (let* ((x 10) (y (+ x 5))) y)
+
+         PASSED!
+
+      22> (eval '(+ 1 2))
+
+         PASSED!
+
+      23> (eval '(list 1 2 3))
+
+         PASSED!
+
+      24> (parse "(+ 1 2)")
+
+         PASSED!
+
+      25> (parse "42")
+
+         PASSED!
+
+      26> ;;; Error: cond requires at least one clause
+(cond)
+
+         PASSED!
+
+      27> ;;; Error: let requires at least 2 arguments
+(let)
+
+         PASSED!
+
+      28> (block myblock 1 2 3)
+; block with no body returns NIL
+
+         PASSED!
+
+      29> (block myblock)
+; return-from exits the block immediately, skipping remaining forms
+
+         PASSED!
+
+      30> (block myblock
+   (return-from myblock 42)
+   99)
+; return-from with no value returns NIL
+
+         PASSED!
+
+      31> (block myblock
+   (return-from myblock)
+   99)
+; return-from from inside a nested expression
+
+         PASSED!
+
+      32> (+ 1 (block escape
+        (+ 10 (return-from escape 5))))
+; nested blocks with same name innermost is exited
+
+         PASSED!
+
+      33> (block foo
+   (block foo
+      (return-from foo 1))
+   2)
+; return-from to outer block bypasses the inner block entirely
+
+         PASSED!
+
+      34> (block outer
+   (block inner
+      (return-from outer 99))
+   42)
+; block used as early-exit in a search loop
+
+         PASSED!
+
+      35> (defun find-even (lst)
+   (block found
+      (dolist (x lst)
+         (if (evenp x) (return-from found x)))
+      nil))
+
+         PASSED!
+
+      36> (find-even '(1 3 5 4 7))
+
+         PASSED!
+
+      37> (find-even '(1 3 5 7))
+; --- block nil and return ---
+; (block nil ...) acts like a named block
+
+         PASSED!
+
+      38> (block nil 1 2 3)
+; (return value) exits (block nil ...)
+
+         PASSED!
+
+      39> (block nil
+   (return 42)
+   99)
+; (return) with no value returns NIL
+
+         PASSED!
+
+      40> (block nil
+   (return)
+   99)
+; dotimes with early (return ...)
+
+         PASSED!
+
+      41> (let ((sum 0))
+   (dotimes (i 10)
+      (if (= i 5) (return sum))
+      (setf sum (+ sum i)))
+   sum)
+; dotimes with result form
+
+         PASSED!
+
+      42> (let ((total 0)) (dotimes (i 5 total) (setf total (+ total i))))
+; dotimes result form - var = count when evaluated
+
+         PASSED!
+
+      43> (dotimes (i 5 i) nil)
+; dolist with early (return ...)
+
+         PASSED!
+
+      44> (dolist (x '(1 2 3 4 5))
+   (if (= x 3) (return x)))
+; Error: stale return-from (no matching block active)
+
+         PASSED!
+
+      45> (return-from nowhere 42)
+
+         PASSED!
+
+      46> (return 42)
+
+         PASSED!
+
+      47> (block 42 1 2 3)
+
+         PASSED!
+
+      48> (return-from 42 99)
+
+         PASSED!
+
+      49> (let ((acc 0)) (for (i 0) (< i 5) (+ i 1) (setf acc (+ acc i))) acc)
+; nextForm references var: double each step (1+2+4+8+16 = 31)
+
+         PASSED!
+
+      50> (let ((acc 0)) (for (i 1) (<= i 16) (* i 2) (setf acc (+ acc i))) acc)
+; never-run loop (condition false from start) returns NIL
+
+         PASSED!
+
+      51> (for (i 0) (< i 0) (+ i 1) (setf i 99))
+; collect into a list
+
+         PASSED!
+
+      52> (let ((lst nil))
+   (for (i 0) (< i 4) (+ i 1) (setf lst (cons i lst)))
+   (reverse lst))
+; early exit with (return ...)
+
+         PASSED!
+
+      53> (for (i 0) (< i 10) (+ i 1)
+   (if (= i 3) (return i)))
+; loop variable is local — does not leak into outer scope
+
+         PASSED!
+
+      54> (let ((i 99)) (for (i 0) (< i 3) (+ i 1) nil) i)
+; string walking via index
+
+         PASSED!
+
+      55> (let ((s "hello") (acc ""))
+   (for (i 0) (< i (length s)) (+ i 1)
+      (setf acc (ustring acc (char s i))))
+   acc)
+; Error: initSpec not a list
+
+         PASSED!
+
+      56> (for x (< x 5) (+ x 1) nil)
+
+         PASSED!
+
+      57> (for (x) (< x 5) (+ x 1) nil)
+
+         PASSED!
+
+      58> (for (42 0) (< 42 5) (+ 42 1) nil)
+
+         PASSED!
+
+      59> (for (i 0) (< i 5) (+ i 1))
+
+         PASSED!
+
+  59 TESTS PASSED!
+
+
+Test Report
+===========
+test11-controlStructs.lisp                 59 TESTS PASSED!
+
+Total test files: 1.
+Total test cases: 59.

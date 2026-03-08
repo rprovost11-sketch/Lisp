@@ -58,11 +58,11 @@ def _validate_count( count: Any, fn: Any ):
 
 # ── Primitive registration ────────────────────────────────────────────────────
 
-def register( lispFunction ) -> None:
+def register( primitive ) -> None:
 
    # ── Existing non-keyword primitives ────────────────────────────────────────
 
-   @lispFunction( 'make-dict', '((key1 val1) (key2 val2) ...)',
+   @primitive( 'make-dict', '((key1 val1) (key2 val2) ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
    def LP_make_dict( ctx: Context, env: Environment, *args ) -> Any:
       """Constructs and returns a dict of key-value pairs."""
@@ -73,7 +73,7 @@ def register( lispFunction ) -> None:
          theMapping[key] = ctx.lEval(env, expr)
       return theMapping
 
-   @lispFunction( 'car', '(list)' )
+   @primitive( 'car', '(list)' )
    def LP_car( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first item in a list."""
       theList = args[0]
@@ -86,7 +86,7 @@ def register( lispFunction ) -> None:
       except IndexError:
          return L_NIL
 
-   @lispFunction( 'cdr', '(list)' )
+   @primitive( 'cdr', '(list)' )
    def LP_cdr( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of the list minus the first element."""
       theList = args[0]
@@ -96,7 +96,7 @@ def register( lispFunction ) -> None:
 
       return theList[1:]
 
-   @lispFunction( 'cons', '(obj list)' )
+   @primitive( 'cons', '(obj list)' )
    def LP_cons( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of list with obj inserted into the front of the copy."""
       obj, consList = args
@@ -106,7 +106,7 @@ def register( lispFunction ) -> None:
 
       return [ obj, *consList ]
 
-   @lispFunction( 'push!', '(list value)' )
+   @primitive( 'push!', '(list value)' )
    def LP_push( ctx: Context, env: Environment, *args ) -> Any:
       """Pushes a value onto the back of a list."""
       alist, value = args
@@ -116,7 +116,7 @@ def register( lispFunction ) -> None:
       alist.append( value )
       return alist
 
-   @lispFunction( 'pop!', '(list)' )
+   @primitive( 'pop!', '(list)' )
    def LP_pop( ctx: Context, env: Environment, *args ) -> Any:
       """Pops and returns the last value of a list."""
       alist = args[0]
@@ -130,7 +130,7 @@ def register( lispFunction ) -> None:
          raise LRuntimePrimError( LP_pop, 'Invalid argument.' )
       return value
 
-   @lispFunction( 'at', '(keyOrIndex dictListOrStr)' )
+   @primitive( 'at', '(keyOrIndex dictListOrStr)' )
    def LP_at( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the value at a specified index of a list or string,
       or specified key of a map."""
@@ -147,7 +147,7 @@ def register( lispFunction ) -> None:
       except ( KeyError, IndexError, TypeError ):
          raise LRuntimePrimError( LP_at, 'Invalid argument key/index.' )
 
-   @lispFunction( 'at-set', '(keyOrIndex dictListOrStr newValue)' )
+   @primitive( 'at-set', '(keyOrIndex dictListOrStr newValue)' )
    def LP_atSet( ctx: Context, env: Environment, *args ) -> Any:
       """Sets the value at a specified index of a list,
       or specified key of a map.  Returns newValue."""
@@ -166,7 +166,7 @@ def register( lispFunction ) -> None:
 
       return newValue
 
-   @lispFunction( 'at-delete', '(keyOrIndex dictOrList)' )
+   @primitive( 'at-delete', '(keyOrIndex dictOrList)' )
    def LP_atDelete( ctx: Context, env: Environment, *args ) -> bool:
       """Deletes the key-value pair from a map or list specified by keyOrIndex."""
       key, keyed = args
@@ -181,7 +181,7 @@ def register( lispFunction ) -> None:
 
       return L_T
 
-   @lispFunction( 'at-insert', '(index list newItem)' )
+   @primitive( 'at-insert', '(index list newItem)' )
    def LP_atInsert( ctx: Context, env: Environment, *args ) -> bool:
       """Inserts newItem into list at the position specified by index.  Returns newItem."""
       index, lst, newItem = args
@@ -195,7 +195,7 @@ def register( lispFunction ) -> None:
       lst.insert( index, newItem )
       return newItem
 
-   @lispFunction( 'append', '(&rest lists)' )
+   @primitive( 'append', '(&rest lists)' )
    def LP_append( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a new list with the contents of the argument lists merged.  Order is retained.
 (append) = NIL; (append lst) = lst; 2+ args: all must be proper lists."""
@@ -210,7 +210,7 @@ def register( lispFunction ) -> None:
          resultList.extend( lst )
       return resultList
 
-   @lispFunction( 'hasValue?', '(value listOrDict)' )
+   @primitive( 'hasValue?', '(value listOrDict)' )
    def LP_hasValue( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the list/map contains value otherwise nil."""
       aVal, keyed = args
@@ -224,7 +224,7 @@ def register( lispFunction ) -> None:
 
       return L_T if aVal in keyed else L_NIL
 
-   @lispFunction( 'update!', '(dict1 dict2)' )
+   @primitive( 'update!', '(dict1 dict2)' )
    def LP_update( ctx: Context, env: Environment, *args ) -> Any:
       """Updates dict1's data with dict2's."""
       dict1, dict2 = args
@@ -238,7 +238,7 @@ def register( lispFunction ) -> None:
       dict1.update( dict2 )
       return dict1
 
-   @lispFunction( 'hasKey?', '(key dict)' )
+   @primitive( 'hasKey?', '(key dict)' )
    def LP_hasKey( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the key is in the map otherwise nil."""
       aKey, aMap = args
@@ -251,7 +251,7 @@ def register( lispFunction ) -> None:
 
       return L_T if aKey in aMap else L_NIL
 
-   @lispFunction( 'sort', '(sequence predicate &key (key nil))',
+   @primitive( 'sort', '(sequence predicate &key (key nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_sort( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of the list sorted by predicate (a two-arg less-than test).
@@ -276,7 +276,7 @@ The optional :key function extracts the comparison key from each element."""
       except TypeError:
          raise LRuntimePrimError( LP_sort, 'Cannot sort a list with incomparable types.' )
 
-   @lispFunction( 'length', '(sequence)' )
+   @primitive( 'length', '(sequence)' )
    def LP_length( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of elements in a list, string, or map."""
       arg = args[0]
@@ -284,7 +284,7 @@ The optional :key function extracts the comparison key from each element."""
          return len(arg)
       raise LRuntimePrimError( LP_length, 'Argument 1 must be a List, String, or Map.' )
 
-   @lispFunction( 'subseq', '(sequence start &optional end)' )
+   @primitive( 'subseq', '(sequence start &optional end)' )
    def LP_subseq( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a subsequence of a list or string from start (inclusive) to end (exclusive).
 If end is not provided, returns from start to the end of the sequence."""
@@ -317,7 +317,7 @@ If end is not provided, returns from start to the end of the sequence."""
 
    # ── CL sequence functions with full keyword-argument support ───────────────
 
-   @lispFunction( 'member', '(item list &key (test eql) (key nil))',
+   @primitive( 'member', '(item list &key (test eql) (key nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_member( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the tail of list beginning with the first element whose :key
@@ -334,7 +334,7 @@ Default :test is eql.  Default :key is identity (NIL)."""
             return lst[i:]
       return L_NIL
 
-   @lispFunction( 'assoc', '(item alist &key (test eql) (key nil))',
+   @primitive( 'assoc', '(item alist &key (test eql) (key nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_assoc( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first pair in alist whose car (optionally extracted via :key)
@@ -352,7 +352,7 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
                return pair
       return L_NIL
 
-   @lispFunction( 'find', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
+   @primitive( 'find', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_find( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) whose :key
@@ -376,7 +376,7 @@ to left and returns the rightmost match.  Returns NIL if not found."""
             return seq[i]
       return L_NIL
 
-   @lispFunction( 'find-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
+   @primitive( 'find-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_find_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first element of sequence (bounded by :start/:end) for which
@@ -400,7 +400,7 @@ returns the rightmost such element.  Returns NIL if none found."""
             return seq[i]
       return L_NIL
 
-   @lispFunction( 'position', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
+   @primitive( 'position', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_position( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element whose :key satisfies
@@ -424,7 +424,7 @@ rightmost such element.  Returns NIL if not found."""
             return i
       return L_NIL
 
-   @lispFunction( 'position-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
+   @primitive( 'position-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_position_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the index in sequence of the first element for which pred returns
@@ -448,7 +448,7 @@ index of the rightmost such element.  Returns NIL if none found."""
             return i
       return L_NIL
 
-   @lispFunction( 'count', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
+   @primitive( 'count', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_count( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) whose
@@ -468,7 +468,7 @@ index of the rightmost such element.  Returns NIL if none found."""
             n += 1
       return n
 
-   @lispFunction( 'count-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
+   @primitive( 'count-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_count_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the number of elements in sequence (bounded by :start/:end) for
@@ -488,7 +488,7 @@ which pred returns true when applied to the element's :key."""
             n += 1
       return n
 
-   @lispFunction( 'remove', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
+   @primitive( 'remove', '(item sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_remove( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements matching item removed.  An
@@ -521,7 +521,7 @@ are removed; :from-end causes removal from the right when :count is supplied."""
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
-   @lispFunction( 'remove-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
+   @primitive( 'remove-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_remove_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements removed where pred returns true
@@ -553,7 +553,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
-   @lispFunction( 'remove-if-not', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
+   @primitive( 'remove-if-not', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_remove_if_not( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence keeping only elements where pred returns true
@@ -585,7 +585,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
             n_removed += 1
       return [ seq[i] for i in range( seqlen ) if i not in to_remove ]
 
-   @lispFunction( 'substitute', '(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
+   @primitive( 'substitute', '(new old sequence &key (test eql) (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_substitute( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with occurrences of old replaced by new.  An
@@ -619,7 +619,7 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
             n_done += 1
       return result
 
-   @lispFunction( 'substitute-if', '(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
+   @primitive( 'substitute-if', '(new pred sequence &key (key nil) (from-end nil) (start 0) (end nil) (count nil))',
                mode=LambdaListMode.FULL_BINDING )
    def LP_substitute_if( ctx: Context, env: Environment, *args ) -> Any:
       """Returns a copy of sequence with elements replaced by new where pred returns
@@ -654,7 +654,7 @@ considered.  :count limits replacements; :from-end replaces from the right."""
 
    # ── Multi-sequence mapping functions ──────────────────────────────────────
 
-   @lispFunction( 'mapcar', '(fn seq &rest more-seqs)' )
+   @primitive( 'mapcar', '(fn seq &rest more-seqs)' )
    def LP_mapcar( ctx: Context, env: Environment, *args ) -> Any:
       """Applies fn element-wise across one or more sequences (lists) and returns
 a list of the results.  Stops at the shortest sequence."""
@@ -668,7 +668,7 @@ a list of the results.  Stops at the shortest sequence."""
          result.append( ctx.lApply( ctx, env, fn, list(elts) ) )
       return result
 
-   @lispFunction( 'every', '(pred seq &rest more-seqs)' )
+   @primitive( 'every', '(pred seq &rest more-seqs)' )
    def LP_every( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if pred returns true for every element-wise group across sequences.
 Returns NIL at the first false result.  Returns T for empty sequences."""
@@ -680,7 +680,7 @@ Returns NIL at the first false result.  Returns T for empty sequences."""
             return L_NIL
       return L_T
 
-   @lispFunction( 'some', '(pred seq &rest more-seqs)' )
+   @primitive( 'some', '(pred seq &rest more-seqs)' )
    def LP_some( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the first truthy value pred returns across the sequences.
 Returns NIL if pred returns NIL for every element-wise group."""
@@ -692,7 +692,7 @@ Returns NIL if pred returns NIL for every element-wise group."""
             return result
       return L_NIL
 
-   @lispFunction( 'mapc', '(fn seq &rest more-seqs)' )
+   @primitive( 'mapc', '(fn seq &rest more-seqs)' )
    def LP_mapc( ctx: Context, env: Environment, *args ) -> Any:
       """Applies fn element-wise across one or more sequences for side effects.
 Returns the first sequence."""

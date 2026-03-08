@@ -3,11 +3,12 @@ import sys
 
 
 def retrieveFileList( dirname ) -> list[str]:
-   "Returns a list of all the filenames in the specified directory."
+   "Returns a sorted list of .log filenames in the specified directory."
    testFileList = os.listdir( dirname )
    testFileList.sort()
    testFileList = [ f'{dirname}/{testFileName}' for testFileName in testFileList
-                    if os.path.isfile( f'{dirname}/{testFileName}' ) ]
+                    if os.path.isfile( f'{dirname}/{testFileName}' )
+                    and testFileName.endswith('.log') ]
    return testFileList
 
 def columnize( lst: list[str], displayWidth: int=80, file=None, itemColor=None ) -> None:

@@ -152,7 +152,7 @@ class Interpreter( InterpreterBase ):
       return ctx
 
    def _makeLispFunction( self ):
-      """Returns the lispFunction decorator class used by extension .py files."""
+      """Returns the primitive decorator class used by extension .py files."""
       _UNSET      = object()
       _KW_MARKERS = frozenset({'&OPTIONAL', '&REST', '&BODY', '&KEY',
                                '&AUX', '&ALLOW-OTHER-KEYS'})
@@ -203,7 +203,7 @@ class Interpreter( InterpreterBase ):
             return f'{min_args} or {max_args} arguments expected.'
          return f'{min_args} to {max_args} arguments expected.'
 
-      class lispFunction:
+      class primitive:
          def __init__( self, primitiveSymbolString: str, params: str = '',
                        preEvalArgs: bool = True,
                        mode: LambdaListMode = LambdaListMode.ARITY_ONLY,
@@ -251,7 +251,7 @@ class Interpreter( InterpreterBase ):
             pythonFn.primitive = lPrimitivObj
             return pythonFn
 
-      return lispFunction
+      return primitive
 
    def _loadExtDir( self, ext_dir: Path, outStrm=None ) -> None:
       ext_dir = Path(ext_dir)

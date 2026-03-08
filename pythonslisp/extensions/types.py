@@ -109,34 +109,34 @@ spec may be an LSymbol (atomic) or a list (compound)."""
    raise LRuntimeError(f'typep: unknown compound type operator {op}.')
 
 
-def register(lispFunction) -> None:
+def register(primitive) -> None:
 
-   @lispFunction( 'numberp', '(sexpr)' )
+   @primitive( 'numberp', '(sexpr)' )
    def LP_numberp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a number otherwise nil."""
       return L_T if isinstance( args[0], LNUMBER ) else L_NIL
 
-   @lispFunction( 'integerp', '(sexpr)' )
+   @primitive( 'integerp', '(sexpr)' )
    def LP_integerp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is an integer otherwise nil."""
       return L_T if isinstance( args[0], int ) else L_NIL
 
-   @lispFunction( 'rationalp', '(sexpr)' )
+   @primitive( 'rationalp', '(sexpr)' )
    def LP_rationalp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is an integer or fraction otherwise nil."""
       return L_T if isinstance( args[0], (int,Fraction) ) else L_NIL
 
-   @lispFunction( 'floatp', '(sexpr)' )
+   @primitive( 'floatp', '(sexpr)' )
    def LP_floatp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a float otherwise nil."""
       return L_T if isinstance( args[0], float ) else L_NIL
 
-   @lispFunction( 'symbolp', '(sexpr)' )
+   @primitive( 'symbolp', '(sexpr)' )
    def LP_symbolp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a symbol otherwise nil."""
       return L_T if isinstance( args[0], LSymbol ) else L_NIL
 
-   @lispFunction( 'atom', '(sexpr)' )
+   @primitive( 'atom', '(sexpr)' )
    def LP_atom( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is an atom (int,float,string,map or nil) otherwise nil."""
       arg = args[0]
@@ -144,55 +144,55 @@ def register(lispFunction) -> None:
          return L_T if len(arg) == 0 else L_NIL
       return L_T
 
-   @lispFunction( 'listp', '(sexpr)' )
+   @primitive( 'listp', '(sexpr)' )
    def LP_listp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a list otherwise nil."""
       return L_T if isinstance(args[0], list) else L_NIL
 
-   @lispFunction( 'dictp', '(sexpr)' )
+   @primitive( 'dictp', '(sexpr)' )
    def LP_dictp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a dict otherwise nil."""
       return L_T if isinstance(args[0], dict) else L_NIL
 
-   @lispFunction( 'stringp', '(sexpr)' )
+   @primitive( 'stringp', '(sexpr)' )
    def LP_stringp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a string otherwise nil."""
       return L_T if isinstance( args[0], str ) else L_NIL
 
-   @lispFunction( 'functionp', '(sexpr)' )
+   @primitive( 'functionp', '(sexpr)' )
    def LP_functionp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a function otherwise nil."""
       return L_T if isinstance( args[0], LFunction ) else L_NIL
 
-   @lispFunction( 'macrop', '(sexpr)' )
+   @primitive( 'macrop', '(sexpr)' )
    def LP_macrop( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a macro otherwise nil."""
       return L_T if isinstance( args[0], LMacro ) else L_NIL
 
-   @lispFunction( 'consp', '(sexpr)' )
+   @primitive( 'consp', '(sexpr)' )
    def LP_consp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a non-NIL list (cons cell), otherwise nil."""
       a = args[0]
       return L_T if (isinstance(a, list) and len(a) > 0) else L_NIL
 
-   @lispFunction( 'streamp', '(sexpr)' )
+   @primitive( 'streamp', '(sexpr)' )
    def LP_streamp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a stream otherwise nil."""
       return L_T if isinstance(args[0], IOBase) else L_NIL
 
-   @lispFunction( 'file-stream-p', '(sexpr)' )
+   @primitive( 'file-stream-p', '(sexpr)' )
    def LP_file_stream_p( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a file stream (opened with open), nil otherwise."""
       arg = args[0]
       return L_T if (isinstance(arg, IOBase) and not isinstance(arg, StringIO)) else L_NIL
 
-   @lispFunction( 'string-stream-p', '(sexpr)' )
+   @primitive( 'string-stream-p', '(sexpr)' )
    def LP_string_stream_p( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if expr is a string stream (opened with make-string-input-stream
 or open-string), nil otherwise."""
       return L_T if isinstance(args[0], StringIO) else L_NIL
 
-   @lispFunction( 'type-of', '(sexpr)' )
+   @primitive( 'type-of', '(sexpr)' )
    def LP_typeof( ctx: Context, env: Environment, *args ) -> Any:
       """Returns the type of its argument as a symbol (CL type-of conventions)."""
       arg = args[0]
@@ -226,7 +226,7 @@ or open-string), nil otherwise."""
       else:
          return LSymbol('T')
 
-   @lispFunction( 'typep', '(object type-specifier)' )
+   @primitive( 'typep', '(object type-specifier)' )
    def LP_typep( ctx: Context, env: Environment, *args ) -> Any:
       """Returns T if object matches the type specifier, NIL otherwise.
 type-specifier may be an atomic symbol or a compound list form.
@@ -241,13 +241,13 @@ Compound specifiers: (OR ...) (AND ...) (NOT t) (MEMBER v...) (SATISFIES fn)
          raise LRuntimePrimError( LP_typep, 'Argument 2 must be a type symbol or compound type specifier.' )
       return L_T if _typep(obj, spec, ctx, env) else L_NIL
 
-   @lispFunction( 'not', '(object)' )
+   @primitive( 'not', '(object)' )
    def LP_not( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the argument is nil otherwise returns nil."""
       arg1 = args[0]
       return L_T if (isinstance(arg1,list) and (len(arg1)==0)) else L_NIL
 
-   @lispFunction( 'eq', '(a b)' )
+   @primitive( 'eq', '(a b)' )
    def LP_eq( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the two values are the same object (CL eq semantics).
 Symbols with the same name are always eq.  All other types use object
@@ -258,28 +258,28 @@ in CPython due to implementation-level caching."""
          return L_T if (arg1.name == arg2.name) else L_NIL
       return L_T if (arg1 is arg2) else L_NIL
 
-   @lispFunction( 'eql', '(a b)' )
+   @primitive( 'eql', '(a b)' )
    def LP_eql( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if a and b are eql: symbols with the same name; numbers of the
 same type with the same value (so 1 and 1.0 are not eql); or any other objects
 that are the same (identical) object."""
       return L_T if eql(args[0], args[1]) else L_NIL
 
-   @lispFunction( 'equal', '(a b)' )
+   @primitive( 'equal', '(a b)' )
    def LP_equalCL( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if a and b are structurally equal.  Recursively compares lists
 element by element and strings by content.  Uses eql at the leaves so numbers
 must be the same type: (equal 1 1.0) is nil."""
       return L_T if equal(args[0], args[1]) else L_NIL
 
-   @lispFunction( 'equalp', '(a b)' )
+   @primitive( 'equalp', '(a b)' )
    def LP_equalp( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if a and b are equalp.  Like equal but case-insensitive for
 strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 (equalp \"ABC\" \"abc\") is t."""
       return L_T if equalp(args[0], args[1]) else L_NIL
 
-   @lispFunction( '=', '(expr1 expr2 &rest exprs)' )
+   @primitive( '=', '(expr1 expr2 &rest exprs)' )
    def LP_equal( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the two exprs are the same value otherwise nil."""
       prior = None
@@ -291,7 +291,7 @@ strings and type-insensitive for numbers: (equalp 1 1.0) is t,
 
       return L_T
 
-   @lispFunction( '/=', '(expr1 expr2 &rest exprs)' )
+   @primitive( '/=', '(expr1 expr2 &rest exprs)' )
    def LP_notEqual( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if no two arguments are numerically equal, otherwise nil.
 CL semantics: all pairwise combinations are checked, not just adjacent pairs.
@@ -303,7 +303,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @lispFunction( '<', '(expr1 expr2 &rest exprs)' )
+   @primitive( '<', '(expr1 expr2 &rest exprs)' )
    def LP_less( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in ascending order."""
       prior = None
@@ -318,7 +318,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @lispFunction( '<=', '(expr1 expr2 &rest exprs)' )
+   @primitive( '<=', '(expr1 expr2 &rest exprs)' )
    def LP_lessOrEqual( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are less-than-or-equal otherwise nil."""
       prior = None
@@ -333,7 +333,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @lispFunction( '>', '(expr1 expr2 &rest exprs)' )
+   @primitive( '>', '(expr1 expr2 &rest exprs)' )
    def LP_greater( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the arguments are in descending order otherwise nil."""
       prior = None
@@ -348,7 +348,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @lispFunction( '>=', '(expr1 expr2 &rest exprs)' )
+   @primitive( '>=', '(expr1 expr2 &rest exprs)' )
    def LP_greaterOrEqual( ctx: Context, env: Environment, *args ) -> Any:
       """Returns t if the adjacent arguments are greater-than-or-equal otherwise nil."""
       prior = None
@@ -363,7 +363,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 
       return L_T
 
-   @lispFunction( 'float', '(number)' )
+   @primitive( 'float', '(number)' )
    def LP_float( ctx: Context, env: Environment, *args ) -> Any:
       """Returns val as a float.  Val can be any number type or a string containing a valid lisp float."""
       try:
@@ -371,7 +371,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
       except (ValueError, TypeError):
          raise LRuntimePrimError( LP_float, 'Invalid argument.' )
 
-   @lispFunction( 'integer', '(number &optional (base 10))' )
+   @primitive( 'integer', '(number &optional (base 10))' )
    def LP_integer( ctx: Context, env: Environment, *args ) -> Any:
       """Returns val as an integer.  Val can be any number type or a string containing a valid lisp integer."""
       try:
@@ -379,7 +379,7 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_integer, 'Invalid argument.' )
 
-   @lispFunction( 'rational', '(number)' )
+   @primitive( 'rational', '(number)' )
    def LP_rational( ctx: Context, env: Environment, *args ) -> Any:
       """Returns its argument as a fraction.  Val can be any number or a string
 containing a valid lisp number that can be expressed as a fraction."""
@@ -388,21 +388,21 @@ containing a valid lisp number that can be expressed as a fraction."""
       except (IndexError, TypeError, ValueError):
          raise LRuntimePrimError( LP_rational, 'Invalid argument.' )
 
-   @lispFunction( 'string', '(object &rest more-objects)' )
+   @primitive( 'string', '(object &rest more-objects)' )
    def LP_string( ctx: Context, env: Environment, *args ) -> Any:
       """PrettyPrints into programmer readable strings each argument object and
 returns the concatenation of those strings."""
       resultStrs = [ prettyPrintSExpr(sExpr) for sExpr in args ]
       return ''.join(resultStrs)
 
-   @lispFunction( 'ustring', '(object &rest more-objects)' )
+   @primitive( 'ustring', '(object &rest more-objects)' )
    def LP_ustring( ctx: Context, env: Environment, *args ) -> Any:
       """PrettyPrints into user readable strings each argument object and
 returns the concatenation of those strings."""
       resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
       return ''.join(resultStrs)
 
-   @lispFunction( 'make-symbol', '(string)' )
+   @primitive( 'make-symbol', '(string)' )
    def LP_make_symbol( ctx: Context, env: Environment, *args ) -> Any:
       """Takes a string and returns a new symbol whose print string is that string."""
       arg = args[0]
