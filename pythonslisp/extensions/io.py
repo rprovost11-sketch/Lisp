@@ -61,7 +61,7 @@ def register(lispFunction) -> None:
       docstr  = descriptor.get('DOCSTRING', L_NIL)
       fields  = descriptor.get('FIELDS', [])
       nameStr = name.name if isinstance(name, LSymbol) else str(name)
-      nameLow = nameStr.lower().removesuffix('-struct')
+      nameLow = nameStr.lower()
       field_names = [ f[0].name.lower()
                       for f in fields
                       if isinstance(f, list) and f and isinstance(f[0], LSymbol) ]

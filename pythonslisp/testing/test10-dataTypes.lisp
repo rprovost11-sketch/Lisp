@@ -397,7 +397,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT-STRUCT)
+   ("STRUCT-TYPE" POINT)
    ("X" 0)
    ("Y" 0)
 )
@@ -416,7 +416,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT-STRUCT)
+   ("STRUCT-TYPE" POINT)
    ("X" 3)
    ("Y" 4)
 )
@@ -435,7 +435,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT-STRUCT)
+   ("STRUCT-TYPE" POINT)
    ("X" 5)
    ("Y" 0)
 )
@@ -504,7 +504,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT-STRUCT)
+   ("STRUCT-TYPE" POINT)
    ("X" 10)
    ("Y" 99)
 )
@@ -549,7 +549,7 @@
 
 ==> (DICT
    ("NEXT" NIL)
-   ("STRUCT-TYPE" NODE-STRUCT)
+   ("STRUCT-TYPE" NODE)
    ("VALUE" 42)
 )
 
@@ -584,7 +584,7 @@
 ==> (DICT
    ("AGE" 30)
    ("NAME" "Bob")
-   ("STRUCT-TYPE" PERSON-STRUCT)
+   ("STRUCT-TYPE" PERSON)
 )
 
 >>> (person-name bob)
@@ -627,7 +627,7 @@
 
 ==> (DICT
    ("COUNT" 0)
-   ("STRUCT-TYPE" LABELED-STRUCT)
+   ("STRUCT-TYPE" LABELED)
    ("TAG" "none")
 )
 
@@ -650,27 +650,27 @@
 >>> (type-of p0)
 ...
 
-==> POINT-STRUCT
+==> POINT
 
 >>> (type-of p1)
 ...
 
-==> POINT-STRUCT
+==> POINT
 
 >>> (type-of bob)
 ...
 
-==> PERSON-STRUCT
+==> PERSON
 
 >>> (type-of n1)
 ...
 
-==> NODE-STRUCT
+==> NODE
 
 >>> (type-of lbl)
 ...
 
-==> LABELED-STRUCT
+==> LABELED
 
 >>> (point-x 42)
 ...
@@ -700,28 +700,28 @@
 ==>
 
 ; --- struct descriptors ---
-;;; descriptor is bound to <typename>-STRUCT
->>> (dictp point-struct)
+;;; descriptor is bound to <typename>
+>>> (dictp point)
 ...
 
 ==> T
 
->>> (at 'STRUCT-TYPE point-struct)
+>>> (at 'STRUCT-TYPE point)
 ...
 
 ==> %STRUCT-DESCRIPTOR%
 
->>> (at 'NAME point-struct)
+>>> (at 'NAME point)
 ...
 
-==> POINT-STRUCT
+==> POINT
 
->>> (at 'DOCSTRING point-struct)
+>>> (at 'DOCSTRING point)
 ...
 
 ==> NIL
 
->>> (at 'FIELDS point-struct)
+>>> (at 'FIELDS point)
 ...
 
 ==> ((X 0) (Y 0))
@@ -732,12 +732,12 @@
 
 ==> COLOR
 
->>> (at 'DOCSTRING color-struct)
+>>> (at 'DOCSTRING color)
 ...
 
 ==> "An RGB color."
 
->>> (at 'FIELDS color-struct)
+>>> (at 'FIELDS color)
 ...
 
 ==> ((R 0) (G 0) (B 0))
@@ -750,7 +750,7 @@
    ("B" 0)
    ("G" 128)
    ("R" 255)
-   ("STRUCT-TYPE" COLOR-STRUCT)
+   ("STRUCT-TYPE" COLOR)
 )
 
 >>> (color-p c1)
@@ -761,7 +761,7 @@
 >>> (type-of c1)
 ...
 
-==> COLOR-STRUCT
+==> COLOR
 
 ;;; struct with unevaluated default form stored literally
 >>> (defstruct sized "A sized item." name (size (* 2 3)))
@@ -769,7 +769,7 @@
 
 ==> SIZED
 
->>> (at 'FIELDS sized-struct)
+>>> (at 'FIELDS sized)
 ...
 
 ==> ((NAME NIL) (SIZE (* 2 3)))

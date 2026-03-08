@@ -15,12 +15,11 @@
 element of field-specs. Remaining field-specs are symbols or (name default) pairs.
 Generates: make-<typename>, <typename>-p, <typename>-<field> accessors,
 setf support for accessors, and copy-<typename>.
-Binds <typename>-STRUCT in the global namespace to a struct descriptor."
+Binds <typename> in the global namespace to a struct descriptor."
    (let* ((doc-string      (if (and field-specs (stringp (car field-specs)))
                                (car field-specs)
                                nil))
           (actual-specs    (if doc-string (cdr field-specs) field-specs))
-          (struct-typename (make-symbol (ustring typename "-STRUCT")))
           (field-names     (mapcar %struct-field-name actual-specs))
           (make-name       (make-symbol (ustring "MAKE-" typename)))
           (pred-name       (make-symbol (ustring typename "-P")))
@@ -54,16 +53,16 @@ Binds <typename>-STRUCT in the global namespace to a struct descriptor."
                                     actual-specs)))
       `(progn
          (defun ,make-name (&key ,@key-params)
-            (make-dict (STRUCT-TYPE ',struct-typename) ,@map-entries))
+            (make-dict (STRUCT-TYPE ',typename) ,@map-entries))
          (defun ,pred-name (obj)
-            (and (dictp obj) (= (at 'STRUCT-TYPE obj) ',struct-typename)))
+            (and (dictp obj) (= (at 'STRUCT-TYPE obj) ',typename)))
          ,@acc-forms
          ,@setf-forms
          (defun ,copy-name (old)
-            (make-dict (STRUCT-TYPE ',struct-typename) ,@copy-entries))
-         (setq ,struct-typename
+            (make-dict (STRUCT-TYPE ',typename) ,@copy-entries))
+         (setq ,typename
                (make-dict (STRUCT-TYPE '%STRUCT-DESCRIPTOR%)
-                          (NAME ',struct-typename)
+                          (NAME ',typename)
                           (DOCSTRING ,doc-string)
                           (FIELDS (list ,@field-desc-pairs))))
          ',typename)))
