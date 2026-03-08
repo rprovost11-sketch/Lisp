@@ -53,12 +53,48 @@ def register(lispFunction) -> None:
          print( end=end, file=outStrm )
       return values[-1]
 
+   def is_struct_descriptor( obj ) -> bool:
+      return isinstance(obj, dict) and obj.get('STRUCT-TYPE') == LSymbol('%STRUCT-DESCRIPTOR%')
+
+   def print_struct_help( descriptor, outStrm ) -> None:
+      name    = descriptor.get('NAME', LSymbol('?'))
+      docstr  = descriptor.get('DOCSTRING', L_NIL)
+      fields  = descriptor.get('FIELDS', [])
+      nameStr = name.name if isinstance(name, LSymbol) else str(name)
+      nameLow = nameStr.lower().removesuffix('-struct')
+      field_names = [ f[0].name.lower()
+                      for f in fields
+                      if isinstance(f, list) and f and isinstance(f[0], LSymbol) ]
+      print( f'STRUCT  {nameStr}', file=outStrm )
+      if isinstance(docstr, str) and docstr:
+         print( file=outStrm )
+         print( f'   {docstr}', file=outStrm )
+      print( file=outStrm )
+      print( 'Fields:', file=outStrm )
+      if isinstance(fields, list) and fields:
+         for fspec in fields:
+            if isinstance(fspec, list) and fspec and isinstance(fspec[0], LSymbol):
+               fname    = fspec[0].name
+               fdefault = prettyPrintSExpr(fspec[1]) if len(fspec) > 1 else 'NIL'
+               print( f'   {fname:<20} default: {fdefault}', file=outStrm )
+      else:
+         print( '   (none)', file=outStrm )
+      print( file=outStrm )
+      key_args = ' '.join(field_names)
+      print( f'Constructor: (make-{nameLow} &key {key_args})', file=outStrm )
+      print( f'Predicate:   ({nameLow}-p obj)', file=outStrm )
+      if field_names:
+         accessors = '  '.join(f'{nameLow}-{n}' for n in field_names)
+         print( f'Accessors:   {accessors}', file=outStrm )
+      print( f'Copier:      (copy-{nameLow} inst)', file=outStrm )
+
    def printHelpListings( outStrm, env: Environment, find: str | None = None ) -> None:
       # Create bins to sort symbols into
       variablesList = []
       primitivesList = []
       functionsList  = []
       macrosList     = []
+      structsList    = []
       findUpper = find.upper() if find is not None else None
       rawTopics = sorted(HELP_DIR.glob('*.txt')) if HELP_DIR.exists() else []
       if findUpper is not None:
@@ -94,6 +130,8 @@ def register(lispFunction) -> None:
             functionsList.append(symbolStr)
          elif isinstance(obj, LMacro):
             macrosList.append(symbolStr)
+         elif is_struct_descriptor(obj):
+            structsList.append(symbolStr)
          else:
             variablesList.append(symbolStr)
 
@@ -109,6 +147,9 @@ def register(lispFunction) -> None:
       print( file=outStrm )
       hdr( "Macros" )
       columnize( macrosList, 78, file=outStrm, itemColor=MAGENTA or None )
+      print( file=outStrm )
+      hdr( "Structs" )
+      columnize( structsList, 78, file=outStrm, itemColor=YELLOW or None )
       print( file=outStrm )
       hdr( "TOPICS" )
       columnize( topicsList, 78, file=outStrm, itemColor=YELLOW or None )
@@ -686,8 +727,19 @@ Type '(help :find "substring")' to search all names by substring."""
             print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
          return L_T
 
+      # If passed a symbol, resolve it to its global value
+      if isinstance(pos_arg, LSymbol):
+         try:
+            pos_arg = env.lookupGlobal(pos_arg.name)
+         except KeyError:
+            raise LRuntimePrimError( LP_help, f'Unknown symbol: {pos_arg.name}.' )
+
+      if is_struct_descriptor(pos_arg):
+         print_struct_help( pos_arg, ctx.outStrm )
+         return L_T
+
       if not isinstance(pos_arg, LCallable):
-         raise LRuntimePrimError( LP_help, 'First argument expected to be a callable.' )
+         raise LRuntimePrimError( LP_help, 'First argument expected to be a callable or struct type.' )
       callableObj = pos_arg
 
       outStrm  = ctx.outStrm

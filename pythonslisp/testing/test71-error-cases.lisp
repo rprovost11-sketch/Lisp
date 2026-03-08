@@ -1300,7 +1300,7 @@
 >>> ;;; help with non-callable argument
 ... (help 42)
 
-%%% ERROR 'HELP': First argument expected to be a callable.
+%%% ERROR 'HELP': First argument expected to be a callable or struct type.
 %%% PRIMITIVE USAGE: (HELP &optional callable-or-string &key find)
 ==>
 

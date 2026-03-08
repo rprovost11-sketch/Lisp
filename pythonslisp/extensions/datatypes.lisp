@@ -11,43 +11,60 @@
    (if (listp spec) (car (cdr spec)) nil))
 
 (defmacro defstruct (typename &rest field-specs)
-   "Define a struct type. field-specs are symbols or (name default) pairs.
+   "Define a struct type. An optional docstring may appear as the first
+element of field-specs. Remaining field-specs are symbols or (name default) pairs.
 Generates: make-<typename>, <typename>-p, <typename>-<field> accessors,
-setf support for accessors, and copy-<typename>."
-   (let* ((field-names   (mapcar %struct-field-name field-specs))
-          (make-name     (make-symbol (ustring "MAKE-" typename)))
-          (pred-name     (make-symbol (ustring typename "-P")))
-          (copy-name     (make-symbol (ustring "COPY-" typename)))
-          (key-params    (mapcar (lambda (spec)
-                                    (list (%struct-field-name spec)
-                                          (%struct-field-default spec)))
-                                 field-specs))
-          (map-entries   (mapcar (lambda (fname)
-                                    (list fname fname))
-                                 field-names))
-          (copy-entries  (mapcar (lambda (fname)
-                                    (list fname
-                                          (list (make-symbol (ustring typename "-" fname)) 'old)))
-                                 field-names))
-          (acc-forms     (mapcar (lambda (fname)
-                                    (list 'defun
-                                          (make-symbol (ustring typename "-" fname))
-                                          '(inst)
-                                          (list 'at (list 'quote fname) 'inst)))
-                                 field-names))
-          (setf-forms    (mapcar (lambda (fname)
-                                    (list 'defsetf-internal
-                                          (list 'quote (make-symbol (ustring typename "-" fname)))
-                                          (list 'quote fname)))
-                                 field-names)))
+setf support for accessors, and copy-<typename>.
+Binds <typename>-STRUCT in the global namespace to a struct descriptor."
+   (let* ((doc-string      (if (and field-specs (stringp (car field-specs)))
+                               (car field-specs)
+                               nil))
+          (actual-specs    (if doc-string (cdr field-specs) field-specs))
+          (struct-typename (make-symbol (ustring typename "-STRUCT")))
+          (field-names     (mapcar %struct-field-name actual-specs))
+          (make-name       (make-symbol (ustring "MAKE-" typename)))
+          (pred-name       (make-symbol (ustring typename "-P")))
+          (copy-name       (make-symbol (ustring "COPY-" typename)))
+          (key-params      (mapcar (lambda (spec)
+                                      (list (%struct-field-name spec)
+                                            (%struct-field-default spec)))
+                                   actual-specs))
+          (map-entries     (mapcar (lambda (fname)
+                                      (list fname fname))
+                                   field-names))
+          (copy-entries    (mapcar (lambda (fname)
+                                      (list fname
+                                            (list (make-symbol (ustring typename "-" fname)) 'old)))
+                                   field-names))
+          (acc-forms       (mapcar (lambda (fname)
+                                      (list 'defun
+                                            (make-symbol (ustring typename "-" fname))
+                                            '(inst)
+                                            (list 'at (list 'quote fname) 'inst)))
+                                   field-names))
+          (setf-forms      (mapcar (lambda (fname)
+                                      (list 'defsetf-internal
+                                            (list 'quote (make-symbol (ustring typename "-" fname)))
+                                            (list 'quote fname)))
+                                   field-names))
+          (field-desc-pairs (mapcar (lambda (spec)
+                                       (list 'list
+                                             (list 'quote (%struct-field-name spec))
+                                             (list 'quote (%struct-field-default spec))))
+                                    actual-specs)))
       `(progn
          (defun ,make-name (&key ,@key-params)
-            (make-dict (STRUCT-TYPE ',typename) ,@map-entries))
+            (make-dict (STRUCT-TYPE ',struct-typename) ,@map-entries))
          (defun ,pred-name (obj)
-            (and (dictp obj) (= (at 'STRUCT-TYPE obj) ',typename)))
+            (and (dictp obj) (= (at 'STRUCT-TYPE obj) ',struct-typename)))
          ,@acc-forms
          ,@setf-forms
          (defun ,copy-name (old)
-            (make-dict (STRUCT-TYPE ',typename) ,@copy-entries))
+            (make-dict (STRUCT-TYPE ',struct-typename) ,@copy-entries))
+         (setq ,struct-typename
+               (make-dict (STRUCT-TYPE '%STRUCT-DESCRIPTOR%)
+                          (NAME ',struct-typename)
+                          (DOCSTRING ,doc-string)
+                          (FIELDS (list ,@field-desc-pairs))))
          ',typename)))
 

@@ -397,7 +397,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
+   ("STRUCT-TYPE" POINT-STRUCT)
    ("X" 0)
    ("Y" 0)
 )
@@ -416,7 +416,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
+   ("STRUCT-TYPE" POINT-STRUCT)
    ("X" 3)
    ("Y" 4)
 )
@@ -435,7 +435,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
+   ("STRUCT-TYPE" POINT-STRUCT)
    ("X" 5)
    ("Y" 0)
 )
@@ -504,7 +504,7 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
+   ("STRUCT-TYPE" POINT-STRUCT)
    ("X" 10)
    ("Y" 99)
 )
@@ -549,7 +549,7 @@
 
 ==> (DICT
    ("NEXT" NIL)
-   ("STRUCT-TYPE" NODE)
+   ("STRUCT-TYPE" NODE-STRUCT)
    ("VALUE" 42)
 )
 
@@ -584,7 +584,7 @@
 ==> (DICT
    ("AGE" 30)
    ("NAME" "Bob")
-   ("STRUCT-TYPE" PERSON)
+   ("STRUCT-TYPE" PERSON-STRUCT)
 )
 
 >>> (person-name bob)
@@ -627,7 +627,7 @@
 
 ==> (DICT
    ("COUNT" 0)
-   ("STRUCT-TYPE" LABELED)
+   ("STRUCT-TYPE" LABELED-STRUCT)
    ("TAG" "none")
 )
 
@@ -650,27 +650,27 @@
 >>> (type-of p0)
 ...
 
-==> POINT
+==> POINT-STRUCT
 
 >>> (type-of p1)
 ...
 
-==> POINT
+==> POINT-STRUCT
 
 >>> (type-of bob)
 ...
 
-==> PERSON
+==> PERSON-STRUCT
 
 >>> (type-of n1)
 ...
 
-==> NODE
+==> NODE-STRUCT
 
 >>> (type-of lbl)
 ...
 
-==> LABELED
+==> LABELED-STRUCT
 
 >>> (point-x 42)
 ...
@@ -699,6 +699,86 @@
 %%% Unexpected keyword found Z.
 ==>
 
+; --- struct descriptors ---
+;;; descriptor is bound to <typename>-STRUCT
+>>> (dictp point-struct)
+...
+
+==> T
+
+>>> (at 'STRUCT-TYPE point-struct)
+...
+
+==> %STRUCT-DESCRIPTOR%
+
+>>> (at 'NAME point-struct)
+...
+
+==> POINT-STRUCT
+
+>>> (at 'DOCSTRING point-struct)
+...
+
+==> NIL
+
+>>> (at 'FIELDS point-struct)
+...
+
+==> ((X 0) (Y 0))
+
+;;; struct with docstring
+>>> (defstruct color "An RGB color." (r 0) (g 0) (b 0))
+...
+
+==> COLOR
+
+>>> (at 'DOCSTRING color-struct)
+...
+
+==> "An RGB color."
+
+>>> (at 'FIELDS color-struct)
+...
+
+==> ((R 0) (G 0) (B 0))
+
+;;; struct still works normally
+>>> (setf c1 (make-color :r 255 :g 128 :b 0))
+...
+
+==> (DICT
+   ("B" 0)
+   ("G" 128)
+   ("R" 255)
+   ("STRUCT-TYPE" COLOR-STRUCT)
+)
+
+>>> (color-p c1)
+...
+
+==> T
+
+>>> (type-of c1)
+...
+
+==> COLOR-STRUCT
+
+;;; struct with unevaluated default form stored literally
+>>> (defstruct sized "A sized item." name (size (* 2 3)))
+...
+
+==> SIZED
+
+>>> (at 'FIELDS sized-struct)
+...
+
+==> ((NAME NIL) (SIZE (* 2 3)))
+
+;;; default is evaluated at construction time, not stored as value
+>>> (sized-size (make-sized))
+...
+
+==> 6
 
 ; --- type-of: stream subtypes ---
 

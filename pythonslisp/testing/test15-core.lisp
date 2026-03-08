@@ -1938,7 +1938,7 @@ Unknown topic: "UNKNOWN-TOPIC"
 ... (setf pt23 (make-point23 :x 10 :y 20))
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT23)
+   ("STRUCT-TYPE" POINT23-STRUCT)
    ("X" 10)
    ("Y" 20)
 )

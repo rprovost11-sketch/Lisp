@@ -248,7 +248,7 @@ class Environment(EnvironmentBase):
 
    def _bindOptionalArgs( self, lambdaListAST: list[Any], paramNum: int,
                           argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
-      '''Syntax:  &optional {var | (var [initform [svar]])}*'''
+      '''Syntax:  &optional {var | (var [initform [pvar]])}*'''
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
 
@@ -260,29 +260,29 @@ class Environment(EnvironmentBase):
                break
             varName  = paramSpec
             initForm = list( )
-            svarName = None
+            pvarName = None
          elif isinstance(paramSpec, list):
             paramSpecLen = len(paramSpec)
             if paramSpecLen == 1:
                varName  = paramSpec[0]
                initForm = list()
-               svarName = None
+               pvarName = None
             elif paramSpecLen == 2:
                varName, initForm = paramSpec
-               svarName = None
+               pvarName = None
             elif paramSpecLen == 3:
-               varName, initForm, svarName = paramSpec
+               varName, initForm, pvarName = paramSpec
             else:
-               raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<svar>]] ).' )
+               raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<pvar>]] ).' )
 
             if not isinstance(varName, LSymbol):
                raise LArgBindingError( 'Parameter variable in &OPTIONAL spec must be a symbol.' )
             if varName.startswith('&'):
                raise LArgBindingError( f'Lambda list keyword {varName} cannot be used as a variable name in &OPTIONAL spec.' )
-            if svarName and (not isinstance(svarName, LSymbol)):
-               raise LArgBindingError( f'Parameter svar following {varName} must be a symbol.' )
-            if isinstance(svarName, LSymbol) and svarName.startswith('&'):
-               raise LArgBindingError( f'Lambda list keyword {svarName} cannot be used as a supplied-p variable in &OPTIONAL spec.' )
+            if pvarName and (not isinstance(pvarName, LSymbol)):
+               raise LArgBindingError( f'Parameter pvar following {varName} must be a symbol.' )
+            if isinstance(pvarName, LSymbol) and pvarName.startswith('&'):
+               raise LArgBindingError( f'Lambda list keyword {pvarName} cannot be used as a supplied-p variable in &OPTIONAL spec.' )
          else:
             raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
          paramNum += 1
@@ -293,15 +293,15 @@ class Environment(EnvironmentBase):
 
          if (argNum >= argListLength) or (isinstance(initForm, LSymbol) and (initForm.startswith(':'))):
             initForm = self._evalFn( self, originalInitForm )   # evaluate the spec default
-            svarVal  = list()   # Nil, False
+            pvarVal  = list()   # Nil, False
          else:
             argNum  += 1
-            svarVal  = self.lookupGlobal('T')   # T, True
+            pvarVal  = self.lookupGlobal('T')   # T, True
 
          self._bindings[varName.name] = initForm
 
-         if svarName:
-            self._bindings[svarName.name] = svarVal
+         if pvarName:
+            self._bindings[pvarName.name] = pvarVal
 
       return paramNum, argNum
 
@@ -323,11 +323,11 @@ class Environment(EnvironmentBase):
 
    def _bindKeyArgs( self, lambdaListAST: list[Any], paramNum: int,
                      argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
-      '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [svar]])}* [&allow-other-keys]'''
+      '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [pvar]])}* [&allow-other-keys]'''
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
 
-      keysDict      = {}    # keyStr -> (varName, svarName, initForm)
+      keysDict      = {}    # keyStr -> (varName, pvarName, initForm)
       keyParamOrder = []    # ordered list of keyStr for incremental evaluation
 
       # ---- Phase 1: Parse key parameter specs (store initForms, don't evaluate yet) ----
@@ -339,7 +339,7 @@ class Environment(EnvironmentBase):
             keyName  = paramSpec
             varName  = paramSpec
             initForm = list()
-            svarName = None
+            pvarName = None
          elif isinstance(paramSpec, list):
             if len(paramSpec) == 0:
                raise LArgBindingError( f'Empty parameter spec () in &KEY lambda list.' )
@@ -365,23 +365,23 @@ class Environment(EnvironmentBase):
             initFormSpecLen = len(initFormSpec)
             if initFormSpecLen == 0:
                initForm = list()
-               svarName = None
+               pvarName = None
             elif initFormSpecLen == 1:
                initForm = initFormSpec[0]
-               svarName = None
+               pvarName = None
             elif initFormSpecLen == 2:
-               initForm, svarName = initFormSpec
-               if svarName and not isinstance(svarName, LSymbol):
-                  raise LArgBindingError( f'svar for &KEY parameter {varName} must be a symbol.' )
-               if isinstance(svarName, LSymbol) and svarName.startswith('&'):
-                  raise LArgBindingError( f'Lambda list keyword {svarName} cannot be used as a supplied-p variable in &KEY spec.' )
+               initForm, pvarName = initFormSpec
+               if pvarName and not isinstance(pvarName, LSymbol):
+                  raise LArgBindingError( f'pvar for &KEY parameter {varName} must be a symbol.' )
+               if isinstance(pvarName, LSymbol) and pvarName.startswith('&'):
+                  raise LArgBindingError( f'Lambda list keyword {pvarName} cannot be used as a supplied-p variable in &KEY spec.' )
             else:
                raise LArgBindingError( f'Too many arguments specified in a parameter keyword initialization list.' )
          else:
             raise LArgBindingError( f'Parameter spec following &KEY must be a symbol or a list.' )
 
          keyStr = keyName.name[1:] if keyName.startswith(':') else keyName.name
-         keysDict[keyStr]   = (varName, svarName, initForm)
+         keysDict[keyStr]   = (varName, pvarName, initForm)
          keyParamOrder.append( keyStr )
          paramNum += 1
 
@@ -434,15 +434,15 @@ class Environment(EnvironmentBase):
       nilVal = list()
       tVal   = self.lookupGlobal('T')
       for keyStr in keyParamOrder:
-         varName, svarName, initForm = keysDict[keyStr]
+         varName, pvarName, initForm = keysDict[keyStr]
          if keyStr in suppliedArgs:
             self._bindings[varName.name] = suppliedArgs[keyStr]
-            if svarName:
-               self._bindings[svarName.name] = tVal
+            if pvarName:
+               self._bindings[pvarName.name] = tVal
          else:
             self._bindings[varName.name] = self._evalFn(self, initForm)
-            if svarName:
-               self._bindings[svarName.name] = nilVal
+            if pvarName:
+               self._bindings[pvarName.name] = nilVal
 
       return paramNum, argNum
 

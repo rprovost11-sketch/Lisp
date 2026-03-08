@@ -95,7 +95,7 @@
 
 ==> (1 6 9 8 (:D 8 :C 9 :D 10))
 
->>> ;;; Edge case: bare &optional symbol (no default, no svar) - not supplied
+>>> ;;; Edge case: bare &optional symbol (no default, no pvar) - not supplied
 ... ((lambda (&optional a) a))
 
 ==> NIL
@@ -211,12 +211,12 @@
 
 ==> 1
 
->>> ;;; &allow-other-keys: with svar key supplied
+>>> ;;; &allow-other-keys: with pvar key supplied
 ... ((lambda (&key (a 0 ap) &allow-other-keys) (list a ap)) :a 7 :x 99)
 
 ==> (7 T)
 
->>> ;;; &allow-other-keys: with svar key NOT supplied, only unknown keys
+>>> ;;; &allow-other-keys: with pvar key NOT supplied, only unknown keys
 ... ((lambda (&key (a 0 ap) &allow-other-keys) (list a ap)) :x 99)
 
 ==> (0 NIL)
@@ -263,7 +263,7 @@
 
 ==> (1 2)
 
->>> ;;; :allow-other-keys t with svar supplied key gets T, unsupplied gets NIL
+>>> ;;; :allow-other-keys t with pvar supplied key gets T, unsupplied gets NIL
 ... ((lambda (&key (a 0 ap) (b 0 bp)) (list a ap b bp)) :a 5 :z 99 :allow-other-keys t)
 
 ==> (5 T 0 NIL)
@@ -290,7 +290,7 @@
 
 ==> 1
 
->>> ;;; Fix 4: svar is still T when key appears twice; value is from first occurrence
+>>> ;;; Fix 4: pvar is still T when key appears twice; value is from first occurrence
 ... ((lambda (&key (a 0 a-p)) (list a a-p)) :a 10 :a 20)
 
 ==> (10 T)
@@ -348,7 +348,7 @@
 %%% Duplicate parameter name A in &REST.
 ==>
 
->>> ;;; NC5: duplicate key variable and its own svar
+>>> ;;; NC5: duplicate key variable and its own pvar
 ... ((lambda (&key (a 0 a)) a) :a 5)
 
 %%% Error binding arguments in call to "(lambda ...)".
@@ -369,7 +369,7 @@
 %%% &BODY is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.
 ==>
 
->>> ;;; Bug 5: svar bound to NIL when key not supplied
+>>> ;;; Bug 5: pvar bound to NIL when key not supplied
 ... ((lambda (&key (a 0 ap)) (list a ap)) :a 10)
 
 ==> (10 T)
@@ -378,7 +378,7 @@
 
 ==> (0 NIL)
 
->>> ;;; Bug 5: multiple key params, some supplied, some not svars correct
+>>> ;;; Bug 5: multiple key params, some supplied, some not pvars correct
 ... ((lambda (&key (a 0 ap) (b 1 bp)) (list a ap b bp)) :b 99)
 
 ==> (0 NIL 99 T)
@@ -419,14 +419,14 @@
 %%% Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).
 ==>
 
->>> ;;; &-symbol rejected as svar in &optional spec
+>>> ;;; &-symbol rejected as pvar in &optional spec
 ... ((lambda (&optional (a 0 &rest)) a))
 
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Lambda list keyword &REST cannot be used as a supplied-p variable in &OPTIONAL spec.
 ==>
 
->>> ;;; &-symbol rejected as svar in &key spec
+>>> ;;; &-symbol rejected as pvar in &key spec
 ... ((lambda (&key (a 0 &aux)) a))
 
 %%% Error binding arguments in call to "(lambda ...)".
