@@ -528,9 +528,9 @@ class Interpreter( InterpreterBase ):
                if function.lambdaListAST:
                   kw_env = Environment( env, evalFn=ctx.lEval )
                   kw_env.bindArguments( function.lambdaListAST, args )
-                  result = function.pythonFn( ctx, kw_env, *args )
+                  result = function.pythonFn( ctx, kw_env, args )
                else:
-                  result = function.pythonFn( ctx, env, *args )
+                  result = function.pythonFn( ctx, env, args )
             else:
                env = Environment( function.capturedEnvironment, evalFn=ctx.lEval )
                env.bindArguments( function.lambdaListAST, args )
@@ -587,9 +587,9 @@ class Interpreter( InterpreterBase ):
             if function.lambdaListAST:
                kw_env = Environment( env, evalFn=ctx.lEval )
                kw_env.bindArguments( function.lambdaListAST, args )
-               result = function.pythonFn( ctx, kw_env, *args )
+               result = function.pythonFn( ctx, kw_env, args )
             else:
-               result = function.pythonFn( ctx, env, *args )
+               result = function.pythonFn( ctx, env, args )
          elif isinstance( function, LFunction ):
             env = Environment( function.capturedEnvironment, evalFn=ctx.lEval ) # Open a new scope on the function's captured env to support closures.
 
