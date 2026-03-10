@@ -9,6 +9,7 @@ need to carry it as a parameter.  Child environments inherit evalFn from their
 parent; the evaluator (Interpreter._lApply) passes ctx.lEval when creating
 a new scope so default-value evaluation always uses the current call context.
 """
+from __future__ import annotations
 
 from typing import Any, Callable, Sequence
 

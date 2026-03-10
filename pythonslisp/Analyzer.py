@@ -8,6 +8,7 @@ providing earlier and clearer diagnostics than the evaluator.
 Phase 2: structural checks for all inline special forms migrated out of _lEval.
 Phase 3: arity / type checks migrated out of primitives.
 """
+from __future__ import annotations
 
 from typing import Any
 

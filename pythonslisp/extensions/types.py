@@ -1,3 +1,4 @@
+from __future__ import annotations
 from fractions import Fraction
 from typing import Any
 from io import IOBase, StringIO

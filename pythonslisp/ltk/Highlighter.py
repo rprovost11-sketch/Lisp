@@ -4,6 +4,7 @@ Public API:
    highlight(code, lang)          — ANSI-color a code snippet by language
    render_markdown(text, use_color) — render a Markdown string for the terminal
 """
+from __future__ import annotations
 import re
 import os
 import sys

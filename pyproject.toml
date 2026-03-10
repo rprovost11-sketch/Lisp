@@ -6,7 +6,7 @@ authors = [
 ]
 description = "A small Common Lisp implementation.  Call lisp and python from one another."
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",

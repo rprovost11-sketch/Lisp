@@ -2,6 +2,7 @@
 # Windows readline replacement using msvcrt.
 # Module-level API mirrors the GNU readline module for drop-in compatibility.
 # This module is Windows-only; importing it on other platforms will raise ImportError.
+from __future__ import annotations
 
 import os
 import sys

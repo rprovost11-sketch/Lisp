@@ -15,9 +15,7 @@ evaluator.  It strips away all the machinery of the full interpreter and
 shows just the essential structure.
 
 ```python
-from typing import Any
-
-env: dict[str, Any] = {}      # the global environment: maps names to values
+env = {}       # the global environment: maps names to values
 
 def lEval( env, expr ):
    # A string is a variable name -- look it up in the environment.
@@ -36,7 +34,7 @@ def lEval( env, expr ):
    # 'if' must NOT evaluate both branches -- only the one that is taken.
    if head == 'if':
       condValue = lEval( env, expr[1] )
-      return lEval(env, expr[2]) if condValue else lEval(env, expr[3])
+      return lEval( env, expr[ 2 if condValue else 3 ] )
 
    # 'setq' must NOT evaluate the variable name -- only the value expression.
    elif head == 'setq':
@@ -81,6 +79,16 @@ env['='] = LP_isEqualTo
 ## Equivalent Lisp
 
 The following expressions exercise all three evaluator paths.
+
+```python
+def evalLispExpr( expr ):
+   print( f'==> {lEval( env, expr )}' )
+
+def main():
+   evalLispExpr( ['setq', 'a', ['+', 1, 1]] )           # ==> 2
+   evalLispExpr( ['+', 2, ['-', 10, 7], 'a'] )           # ==> 7
+   evalLispExpr( ['if', ['=', 'a', 2], ['+', 'a', 1], ['-', 'a', 1]] )  # ==> 3
+```
 
 ```lisp
 ; setq is a special form: the name 'a' is NOT evaluated, only the value.

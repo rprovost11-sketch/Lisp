@@ -5,6 +5,7 @@ expand() walks the AST once, interleaving top-down macro expansion with
 bottom-up structural normalization.  The result is ready for Analyzer
 and then _lEval.
 """
+from __future__ import annotations
 
 from typing import Any
 from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
