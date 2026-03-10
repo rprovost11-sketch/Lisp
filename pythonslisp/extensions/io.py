@@ -16,7 +16,7 @@ from pythonslisp.Parser import Parser, ParseError
 _LISP_PARSER = Parser()
 from pythonslisp.ltk.Utils import columnize
 from pythonslisp.extensions import LambdaListMode
-from pythonslisp.Highlighter import render_markdown
+from pythonslisp.ltk.Highlighter import render_markdown
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
