@@ -22,7 +22,7 @@ from pythonslisp.extensions import LambdaListMode
 
 class Interpreter( InterpreterBase ):
    BUILTIN_EXT_DIR       = Path(__file__).parent / 'extensions'
-   _SPECIAL_OPERATOR_SET = frozenset({'LET', 'LET*', 'PROGN', 'SETQ',
+   _SPECIAL_OPERATOR_SET = frozenset({'IF', 'QUOTE', 'LET', 'LET*', 'PROGN', 'SETQ',
                                       'COND', 'CASE', 'FUNCALL', 'APPLY'})
 
    def __init__( self ) -> None:
@@ -38,7 +38,8 @@ class Interpreter( InterpreterBase ):
       self._tracer.reset()
       self._setf_registry.clear()
 
-      # Bootstrap: create env with only T and NIL; extensions bind into it
+      # Bootstrap: create the global environment env; initialize with T and NIL;
+      #    bind extensions into it.
       primitiveDict: dict[str, Any] = {'T': L_T, 'NIL': L_NIL}
       self._ctx = self._makeContext( outStrm )
       self._env = Environment( parent=None, initialBindings=primitiveDict,
@@ -312,16 +313,180 @@ class Interpreter( InterpreterBase ):
          headStr = head.name if type(head) is LSymbol else None
          argsPreEvaled = False
 
-         if headStr == 'IF':
-            condValue = _eval( ctx, env, sExprAST[1] )
-            sExprAST = sExprAST[2] if _true(condValue) else sExprAST[3]
-            continue
+         if headStr in _SPECIAL_OPERATOR_SET:
+            if headStr == 'IF':
+               condValue = _eval( ctx, env, sExprAST[1] )
+               sExprAST = sExprAST[2] if _true(condValue) else sExprAST[3]
+               continue
 
-         elif headStr == 'QUOTE':
-            return sExprAST[1]
+            elif headStr == 'QUOTE':
+               return sExprAST[1]
 
-         # Common function-call path: frozenset guard skips special-operator comparisons
-         elif headStr not in _SPECIAL_OPERATOR_SET:
+            elif headStr == 'LET':
+               args           = sExprAST[1:]
+               vardefs, *body = args
+               # Evaluate the var def initial value exprs in the outer scope.
+               initDict = { }
+               for varSpec in vardefs:
+                  if type(varSpec) is LSymbol:
+                     varName  = varSpec
+                     initForm = L_NIL
+                  else:  # list — structure guaranteed valid by analyzer
+                     if len(varSpec) == 1:
+                        varName  = varSpec[0]
+                        initForm = L_NIL
+                     else:
+                        varName, initForm = varSpec
+                  initDict[varName.name] = _eval(ctx, env, initForm)
+               # Open the new scope
+               env = Environment( env, initialBindings=initDict )
+               # Evaluate each body sexpr in the new env/scope
+               if len(body) == 0:
+                  return L_NIL
+               for bodyIdx in range(len(body) - 1):
+                  _eval( ctx, env, body[bodyIdx] )
+               sExprAST = body[-1]
+               continue
+
+            elif headStr == 'LET*':
+               args           = sExprAST[1:]
+               vardefs, *body = args
+               # Open the new scope
+               env = Environment( env )
+               for varSpec in vardefs:
+                  if type(varSpec) is LSymbol:
+                     varName  = varSpec
+                     initForm = L_NIL
+                  else:  # list — structure guaranteed valid by analyzer
+                     if len(varSpec) == 1:
+                        varName  = varSpec[0]
+                        initForm = L_NIL
+                     else:
+                        varName, initForm = varSpec
+                  env.bindLocal( varName.name, _eval(ctx, env, initForm) )
+               # Evaluate each body sexpr in the new env/scope.
+               if len(body) == 0:
+                  return L_NIL
+               for bodyIdx in range(len(body) - 1):
+                  _eval( ctx, env, body[bodyIdx] )
+               sExprAST = body[-1]
+               continue
+
+            elif headStr == 'PROGN':
+               exprLen = len(sExprAST)
+               if exprLen == 1:
+                  return L_NIL
+               for exprIdx in range(1, exprLen - 1):
+                  _eval( ctx, env, sExprAST[exprIdx] )
+               sExprAST = sExprAST[-1]
+               continue
+
+            elif headStr == 'SETQ':
+               rval = L_NIL
+               exprIdx    = 1
+               exprLen = len(sExprAST)
+               while exprIdx < exprLen:
+                  lval = sExprAST[exprIdx]
+                  rval = _eval( ctx, env, sExprAST[exprIdx + 1] )
+                  if (type(rval) is LMacro or type(rval) is LFunction) and (rval.name == ''):
+                     rval.name = lval.name
+                  env.bind( lval.name, rval )
+                  exprIdx += 2
+               return rval
+
+            elif headStr == 'COND':
+               args = sExprAST[1:]
+               for clause in args:
+                  testExpr = clause[0]      # analyzer guarantees: list, len >= 2
+                  if _true( _eval(ctx, env, testExpr) ):
+                     body = clause[1:]
+                     if len(body) == 0:
+                        return L_NIL
+                     for bodyIdx in range(len(body) - 1):
+                        _eval( ctx, env, body[bodyIdx] )
+                     sExprAST = body[-1]
+                     break
+               else:
+                  return L_NIL
+               continue
+
+            elif headStr == 'CASE':
+               args   = sExprAST[1:]
+               keyVal = _eval( ctx, env, args[0] )
+               for argsIdx in range(1, len(args)):
+                  clause  = args[argsIdx]
+                  caseVal = clause[0]       # analyzer guarantees: list, len >= 2; key is NOT evaluated (CL)
+                  if type(caseVal) is LSymbol and caseVal.name in ('T', 'OTHERWISE'):
+                     matched = True
+                  elif isinstance(caseVal, list):
+                     matched = keyVal in caseVal    # list of atoms: match any
+                  else:
+                     matched = (caseVal == keyVal)
+                  if matched:
+                     body = clause[1:]
+                     if len(body) == 0:
+                        return L_NIL
+                     for bodyIdx in range(len(body) - 1):
+                        _eval( ctx, env, body[bodyIdx] )
+                     sExprAST = body[-1]
+                     break
+               else:
+                  return L_NIL
+               continue
+
+            elif headStr == 'FUNCALL':
+               args     = sExprAST[1:]
+               if len(args) < 1:
+                  raise LRuntimeError( 'Error binding arguments in call to function "FUNCALL".\nToo few positional arguments.' )
+               function = _eval( ctx, env, args[0] )
+               if not isinstance( function, LCallable ):
+                  raise LRuntimeError( 'FUNCALL: first argument must evaluate to a callable.' )
+               if type( function ) is LContinuation:
+                  if len(args) != 2:
+                     raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args) - 1}.' )
+                  raise ContinuationInvoked( function.token, _eval(ctx, env, args[1]) )
+               if type( function ) is LMacro:
+                  raise LRuntimeError( f'FUNCALL: cannot call macro "{function.name}".' )
+               if not function.preEvalArgs:
+                  raise LRuntimeError( 'FUNCALL: first argument may not be a special form.' )
+               args          = [ _eval( ctx, env, a ) for a in args[1:] ]
+               argsPreEvaled = True
+
+            elif headStr == 'APPLY':
+               args = sExprAST[1:]
+               if len(args) < 2:
+                  raise LRuntimeError( 'Error binding arguments in call to function "APPLY".\nToo few positional arguments.' )
+               fn_val = _eval( ctx, env, args[0] )
+               if isinstance( fn_val, LCallable ):
+                  function = fn_val
+               elif type( fn_val ) is LSymbol:
+                  try:
+                     function = env.lookup( fn_val.name )
+                  except KeyError:
+                     raise LRuntimeError( f'APPLY: "{fn_val}" is not bound to a callable.' )
+                  if not isinstance( function, LCallable ):
+                     raise LRuntimeError( f'APPLY: "{fn_val}" is not bound to a callable.' )
+               else:
+                  raise LRuntimeError( 'APPLY: first argument must evaluate to a callable or symbol.' )
+               evaled   = [ _eval( ctx, env, a ) for a in args[1:] ]
+               list_arg = evaled.pop()
+               if not isinstance( list_arg, list ):
+                  raise LRuntimeError( 'APPLY: last argument must be a list.' )
+               if type( function ) is LContinuation:
+                  spread = evaled + list_arg
+                  if len(spread) != 1:
+                     raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(spread)}.' )
+                  raise ContinuationInvoked( function.token, spread[0] )
+               if type( function ) is LMacro:
+                  raise LRuntimeError( f'APPLY: cannot apply macro "{function.name}".' )
+               if not function.preEvalArgs:
+                  raise LRuntimeError( 'APPLY: first argument may not be a special form.' )
+               evaled.extend( list_arg )
+               args          = evaled
+               argsPreEvaled = True
+
+         else:
+            # Common function-call path
             args     = sExprAST[1:]
             function = _eval( ctx, env, head )
             if not isinstance( function, LCallable ):
@@ -346,169 +511,6 @@ class Interpreter( InterpreterBase ):
             if type( function ) is LMacro:
                sExprAST = Expander._expandMacroCall( ctx, env, function, args )
                continue
-
-         elif headStr == 'LET':
-            args           = sExprAST[1:]
-            vardefs, *body = args
-            # Evaluate the var def initial value exprs in the outer scope.
-            initDict = { }
-            for varSpec in vardefs:
-               if type(varSpec) is LSymbol:
-                  varName  = varSpec
-                  initForm = L_NIL
-               else:  # list — structure guaranteed valid by analyzer
-                  if len(varSpec) == 1:
-                     varName  = varSpec[0]
-                     initForm = L_NIL
-                  else:
-                     varName, initForm = varSpec
-               initDict[varName.name] = _eval(ctx, env, initForm)
-            # Open the new scope
-            env = Environment( env, initialBindings=initDict )
-            # Evaluate each body sexpr in the new env/scope
-            if len(body) == 0:
-               return L_NIL
-            for bodyIdx in range(len(body) - 1):
-               _eval( ctx, env, body[bodyIdx] )
-            sExprAST = body[-1]
-            continue
-
-         elif headStr == 'LET*':
-            args           = sExprAST[1:]
-            vardefs, *body = args
-            # Open the new scope
-            env = Environment( env )
-            for varSpec in vardefs:
-               if type(varSpec) is LSymbol:
-                  varName  = varSpec
-                  initForm = L_NIL
-               else:  # list — structure guaranteed valid by analyzer
-                  if len(varSpec) == 1:
-                     varName  = varSpec[0]
-                     initForm = L_NIL
-                  else:
-                     varName, initForm = varSpec
-               env.bindLocal( varName.name, _eval(ctx, env, initForm) )
-            # Evaluate each body sexpr in the new env/scope.
-            if len(body) == 0:
-               return L_NIL
-            for bodyIdx in range(len(body) - 1):
-               _eval( ctx, env, body[bodyIdx] )
-            sExprAST = body[-1]
-            continue
-
-         elif headStr == 'PROGN':
-            exprLen = len(sExprAST)
-            if exprLen == 1:
-               return L_NIL
-            for exprIdx in range(1, exprLen - 1):
-               _eval( ctx, env, sExprAST[exprIdx] )
-            sExprAST = sExprAST[-1]
-            continue
-
-         elif headStr == 'SETQ':
-            rval = L_NIL
-            exprIdx    = 1
-            exprLen = len(sExprAST)
-            while exprIdx < exprLen:
-               lval = sExprAST[exprIdx]
-               rval = _eval( ctx, env, sExprAST[exprIdx + 1] )
-               if (type(rval) is LMacro or type(rval) is LFunction) and (rval.name == ''):
-                  rval.name = lval.name
-               env.bind( lval.name, rval )
-               exprIdx += 2
-            return rval
-
-         elif headStr == 'COND':
-            args = sExprAST[1:]
-            for clause in args:
-               testExpr = clause[0]      # analyzer guarantees: list, len >= 2
-               if _true( _eval(ctx, env, testExpr) ):
-                  body = clause[1:]
-                  if len(body) == 0:
-                     return L_NIL
-                  for bodyIdx in range(len(body) - 1):
-                     _eval( ctx, env, body[bodyIdx] )
-                  sExprAST = body[-1]
-                  break
-            else:
-               return L_NIL
-            continue
-
-         elif headStr == 'CASE':
-            args   = sExprAST[1:]
-            keyVal = _eval( ctx, env, args[0] )
-            for argsIdx in range(1, len(args)):
-               clause  = args[argsIdx]
-               caseVal = clause[0]       # analyzer guarantees: list, len >= 2; key is NOT evaluated (CL)
-               if type(caseVal) is LSymbol and caseVal.name in ('T', 'OTHERWISE'):
-                  matched = True
-               elif isinstance(caseVal, list):
-                  matched = keyVal in caseVal    # list of atoms: match any
-               else:
-                  matched = (caseVal == keyVal)
-               if matched:
-                  body = clause[1:]
-                  if len(body) == 0:
-                     return L_NIL
-                  for bodyIdx in range(len(body) - 1):
-                     _eval( ctx, env, body[bodyIdx] )
-                  sExprAST = body[-1]
-                  break
-            else:
-               return L_NIL
-            continue
-
-         elif headStr == 'FUNCALL':
-            args     = sExprAST[1:]
-            if len(args) < 1:
-               raise LRuntimeError( 'Error binding arguments in call to function "FUNCALL".\nToo few positional arguments.' )
-            function = _eval( ctx, env, args[0] )
-            if not isinstance( function, LCallable ):
-               raise LRuntimeError( 'FUNCALL: first argument must evaluate to a callable.' )
-            if type( function ) is LContinuation:
-               if len(args) != 2:
-                  raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args) - 1}.' )
-               raise ContinuationInvoked( function.token, _eval(ctx, env, args[1]) )
-            if type( function ) is LMacro:
-               raise LRuntimeError( f'FUNCALL: cannot call macro "{function.name}".' )
-            if not function.preEvalArgs:
-               raise LRuntimeError( 'FUNCALL: first argument may not be a special form.' )
-            args          = [ _eval( ctx, env, a ) for a in args[1:] ]
-            argsPreEvaled = True
-
-         elif headStr == 'APPLY':
-            args = sExprAST[1:]
-            if len(args) < 2:
-               raise LRuntimeError( 'Error binding arguments in call to function "APPLY".\nToo few positional arguments.' )
-            fn_val = _eval( ctx, env, args[0] )
-            if isinstance( fn_val, LCallable ):
-               function = fn_val
-            elif type( fn_val ) is LSymbol:
-               try:
-                  function = env.lookup( fn_val.name )
-               except KeyError:
-                  raise LRuntimeError( f'APPLY: "{fn_val}" is not bound to a callable.' )
-               if not isinstance( function, LCallable ):
-                  raise LRuntimeError( f'APPLY: "{fn_val}" is not bound to a callable.' )
-            else:
-               raise LRuntimeError( 'APPLY: first argument must evaluate to a callable or symbol.' )
-            evaled   = [ _eval( ctx, env, a ) for a in args[1:] ]
-            list_arg = evaled.pop()
-            if not isinstance( list_arg, list ):
-               raise LRuntimeError( 'APPLY: last argument must be a list.' )
-            if type( function ) is LContinuation:
-               spread = evaled + list_arg
-               if len(spread) != 1:
-                  raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(spread)}.' )
-               raise ContinuationInvoked( function.token, spread[0] )
-            if type( function ) is LMacro:
-               raise LRuntimeError( f'APPLY: cannot apply macro "{function.name}".' )
-            if not function.preEvalArgs:
-               raise LRuntimeError( 'APPLY: first argument may not be a special form.' )
-            evaled.extend( list_arg )
-            args          = evaled
-            argsPreEvaled = True
 
          # Shared function dispatch: reached from FUNCALL, APPLY, and the common function-call path.
          # Tracing
@@ -545,7 +547,7 @@ class Interpreter( InterpreterBase ):
                   body = function.bodyAST
                   bodyLen = len(body)
                   if bodyLen == 0:
-                     sExprAST = L_NIL
+                     return L_NIL
                   else:
                      for bodyIdx in range(bodyLen - 1):
                         _eval( ctx, env, body[bodyIdx] )

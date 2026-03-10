@@ -14,8 +14,8 @@ LATOM   = (int,float,Fraction,str)
 class LSymbol:
    __slots__ = ('name', )
    
-   def __init__( self, val: str ) -> None:
-      self.name = val.upper()
+   def __init__( self, name: str ) -> None:
+      self.name = name.upper()
 
    def __str__( self ) -> str:
       return self.name

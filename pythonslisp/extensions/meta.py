@@ -14,7 +14,7 @@ from pythonslisp.extensions import LambdaListMode
 def register(primitive) -> None:
 
    @primitive( 'defmacro', '(symbol lambda-list &rest body)', preEvalArgs=False )
-   def LP_defmacro( ctx: Context, env: Environment, args ) -> Any:
+   def LP_defmacro( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
       fnName, funcParams, *funcBody = args   # analyzer guarantees structure
@@ -28,7 +28,7 @@ can be an optional documentation string."""
 
    @primitive( 'macroexpand', '(\'form)',
                mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
-   def LP_macroexpand( ctx: Context, env: Environment, args ) -> Any:
+   def LP_macroexpand( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Fully expands a macro call at the top level, looping until the form is no
 longer headed by a macro.  Non-macro and non-list forms are returned unchanged."""
 
@@ -48,7 +48,7 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
 
    @primitive( 'macroexpand-1', '(\'form)',
                mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
-   def LP_macroexpand_1( ctx: Context, env: Environment, args ) -> Any:
+   def LP_macroexpand_1( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Expands a macro call exactly once.  Returns the form unchanged if it is
 not a macro call."""
 
@@ -68,7 +68,7 @@ not a macro call."""
       return Expander._expandMacroCall( ctx, env, macroDef, form[1:] )
 
    @primitive( 'defsetf-internal', '(accessor-symbol field-symbol)' )
-   def LP_defsetf_internal( ctx: Context, env: Environment, args ) -> Any:
+   def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Register a struct field accessor as a valid setf target."""
       accessor_sym, field_sym = args
       if not isinstance(accessor_sym, LSymbol) or not isinstance(field_sym, LSymbol):
@@ -77,7 +77,7 @@ not a macro call."""
       return accessor_sym
 
    @primitive( 'set-accessor!', '(accessor-symbol instance newValue)' )
-   def LP_set_accessor( ctx: Context, env: Environment, args ) -> Any:
+   def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Internal: write a struct field value via the defsetf registry."""
       accessor, instance, newval = args
       if not isinstance( accessor, LSymbol ):
@@ -93,7 +93,7 @@ not a macro call."""
 
    @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
                mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
-   def LP_setq( ctx: Context, env: Environment, args ) -> Any:
+   def LP_setq( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Updates one or more variables' values', returns value.  The search for
 the variable begins locally and proceeds to search ever less local scopes until
 the global scope is searched.  If the variable is located in this search its
@@ -104,7 +104,7 @@ Alternate usage: (setf (at keyOrIndex dictOrList) newValue)"""
       raise LRuntimePrimError( LP_setq, 'Handled by main eval loop.' )
 
    @primitive( 'makunbound', '(symbol)' )
-   def LP_makunbound( ctx: Context, env: Environment, args ) -> Any:
+   def LP_makunbound( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Undefines the global definition for a symbol and returns nil.
 The argument is evaluated: (makunbound 'x) unbinds X."""
       key = args[0]
@@ -114,7 +114,7 @@ The argument is evaluated: (makunbound 'x) unbinds X."""
       return L_NIL
 
    @primitive( 'symtab!', '()', max_args=0 )
-   def LP_symtab( ctx: Context, env: Environment, args ) -> Any:
+   def LP_symtab( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Prints the entire environment stack and returns nil.  Each scope is printed
 in a separate list and begins on a new line.  The local scope is first; global
 is last."""
@@ -128,7 +128,7 @@ is last."""
       return L_NIL
 
    @primitive( 'trace', '(&rest fn-names)', preEvalArgs=False )
-   def LP_trace( ctx: Context, env: Environment, args ) -> Any:
+   def LP_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
       tracer = ctx.tracer
@@ -141,7 +141,7 @@ trace list.  With no arguments, returns the list of currently traced functions."
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'untrace', '(&rest fn-names)', preEvalArgs=False )
-   def LP_untrace( ctx: Context, env: Environment, args ) -> Any:
+   def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
       tracer = ctx.tracer
@@ -155,7 +155,7 @@ trace list.  With no arguments, clears all named function tracing."""
       return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
    @primitive( 'call/cc', '(procedure)' )
-   def LP_callcc( ctx: Context, env: Environment, args ) -> Any:
+   def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Calls procedure with one argument: an escape continuation object.
 Invoking the continuation with a value causes call/cc to immediately return
 that value, unwinding any intermediate computation.  Only upward (escape)
@@ -177,7 +177,7 @@ continuations are supported; invoking a stale continuation is an error."""
          raise   # re-raise so an outer call/cc can catch it
 
    @primitive( 'boundp', '(symbol)' )
-   def LP_boundp( ctx: Context, env: Environment, args ) -> Any:
+   def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
       sym = args[0]
       if not isinstance( sym, LSymbol ):
@@ -189,7 +189,7 @@ continuations are supported; invoking a stale continuation is an error."""
          return L_NIL
 
    @primitive( 'gensym', '(&optional x)' )
-   def LP_gensym( ctx: Context, env: Environment, args ) -> Any:
+   def LP_gensym( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Generate and return a new, unique symbol.
 If x is a string it is used as the prefix (default \"G\").  The current
 value of *gensym-counter* is appended and then *gensym-counter* is
@@ -210,19 +210,19 @@ numeric suffix and *gensym-counter* is left unchanged."""
    _ITUPS = 1_000_000
 
    @primitive( 'internal-time-units-per-second', '()' )
-   def LP_itups( ctx: Context, env: Environment, args ) -> Any:
+   def LP_itups( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns the number of internal time units per second (1,000,000)."""
       return _ITUPS
 
    @primitive( 'get-internal-real-time', '()' )
-   def LP_get_internal_real_time( ctx: Context, env: Environment, args ) -> Any:
+   def LP_get_internal_real_time( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns a high-resolution timestamp as an integer in units of
 internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
       return int( time.perf_counter() * _ITUPS )
 
    @primitive( 'set-extension-dirs', '(&rest paths)',
                   mode=LambdaListMode.DOC_ONLY, min_args=0 )
-   def LP_set_extension_dirs( ctx: Context, env: Environment, args ) -> Any:
+   def LP_set_extension_dirs( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Sets the list of user extension directories to be scanned on reboot.
 Each argument must be a string path.  Directories are scanned in order."""
       for arg in args:
@@ -232,7 +232,7 @@ Each argument must be a string path.  Directories are scanned in order."""
       return L_T
 
    @primitive( 'load-extension', '(path)' )
-   def LP_load_extension( ctx: Context, env: Environment, args ) -> Any:
+   def LP_load_extension( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Loads a single extension file.  A .lisp file is parsed and evaluated;
 a .py file must export register(primitive) which is called to register primitives.
 Returns T on success."""
@@ -243,7 +243,7 @@ Returns T on success."""
       return L_T
 
    @primitive( 'load-extension-dir', '(path)' )
-   def LP_load_extension_dir( ctx: Context, env: Environment, args ) -> Any:
+   def LP_load_extension_dir( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Loads all extension files in a directory: all .py files alphabetically,
 then all .lisp files alphabetically.  Returns T on success."""
       path = args[0]

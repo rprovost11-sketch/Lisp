@@ -8,32 +8,34 @@ from pythonslisp.AST import LSymbol
 The Language
 ------------
 Lexemes
+   Character Classes
+      SIGN:         '+-'
+      DIGIT:        '0123456789'
+      SYMBOL_FIRST: 'a..zA..Z+-~!$%^&*_=\/?<>:#|'
+      SYMBOL_REST:  'a..zA..Z+-~!$%^&*_=\/?<>:#|0..9'
+   
    Comments
       Comments extend from ';' through '\n'.
 
    Literals
-      NumberLiteral:  ['+'|'-'] ('0' .. '9')+
-                         ( '/' ('0' .. '9')+
-                         | 'e' ['+'|'-'] ('0' .. '9')+
-                         | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]
+      NumberLiteral:  [SIGN] DIGIT+
+                         ( '/' DIGIT+
+                         | 'e' [SIGN] DIGIT+
+                         | '.' DIGIT+ [ 'e' [SIGN] DIGIT+ ]
                          )   # Supports integers, floats and fractions
-      StringLiteral:  '"' { ^["] } '"'   # Supports all python escape sequences
-      Symbol:         'a..zA..Z+-~!$%^&*_=\\/?<>#|'
-                      { 'a..zA..Z+-~!$%^&*_=\\/?<>#|0..9' }
-
-   Predefined Symbols
-         'nil', 't', 'e', 'pi'
+      StringLiteral:  '"' { ^["] } '"'   # Supports all python string escape sequences
+      Symbol:         SYMBOL_FIRST {SYMBOL_REST}
 
 Grammar
    Start:
       { Object } EOF
 
    Object:
-      NumberLiteral | StringLiteral | Symbol | List | '#' | '|' | ':' | '[' | ']'
+      NumberLiteral | StringLiteral | Symbol | List
       | "'" Object | "`" Object | "," Object | ",@" Object
 
    List:
-      '(' Object* ')'
+      '(' { Object } ')'
 """
 
 class Lexer( LexerBase ):
@@ -184,10 +186,10 @@ class Lexer( LexerBase ):
 
    def _scanNumOrSymbol( self ) -> int:
       '''
-      NumberLiteral:  ['+'|'-']('0' .. '9')+                                    # <-- leader
-                         ( '/' ('0' .. '9')+                                    # <-- fraction case
-                         | 'e' ['+'|'-'] ('0' .. '9')+                          # <-- exponentiation case
-                         | '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]    # <-- decimal/exponentiation case
+      NumberLiteral:  [SIGN] DIGIT+                            # <-- leader
+                         ( '/' DIGIT+                          # <-- fraction case
+                         | 'e' [SIGN] DIGIT+                   # <-- exponentiation case
+                         | '.' DIGIT+ [ 'e' [SIGN] DIGIT+ ]    # <-- decimal/exponentiation case
                          )
       '''
       SAVE = self.saveState( )                  # Save the lexer state

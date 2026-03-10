@@ -16,6 +16,7 @@ from pythonslisp.Parser import Parser, ParseError
 _LISP_PARSER = Parser()
 from pythonslisp.ltk.Utils import columnize
 from pythonslisp.extensions import LambdaListMode
+from pythonslisp.Highlighter import render_markdown
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
@@ -96,10 +97,15 @@ def register(primitive) -> None:
       macrosList     = []
       typesList    = []
       findUpper = find.upper() if find is not None else None
-      rawTopics = sorted(HELP_DIR.glob('*.txt')) if HELP_DIR.exists() else []
+      if HELP_DIR.exists():
+         txt_stems = {f.stem.upper() for f in HELP_DIR.glob('*.txt')}
+         md_stems  = {f.stem.upper() for f in HELP_DIR.glob('*.md')}
+         all_stems = sorted(txt_stems | md_stems)
+      else:
+         all_stems = []
       if findUpper is not None:
-         rawTopics = [f for f in rawTopics if findUpper in f.stem.upper()]
-      topicsList = [f'"{f.stem}"' for f in rawTopics]
+         all_stems = [s for s in all_stems if findUpper in s]
+      topicsList = [f'"{s}"' for s in all_stems]
       outFile  = outStrm or sys.stdout
       useColor = hasattr(outFile, 'isatty') and outFile.isatty()
 
@@ -156,14 +162,14 @@ def register(primitive) -> None:
       print( file=outStrm )
       print( "Type '(help callable)' for available documentation on a callable.", file=outStrm )
       print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )
-      print( "Type '(help :find \"substring\")' to search all names by substring.", file=outStrm )
+      print( "Type '(help \"substring\" :substring t)' to search all names by substring.", file=outStrm )
 
    # -----------------------------------------------------------------------
 
    @primitive( 'open',
                '(filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_open( ctx: Context, env: Environment, args ) -> Any:
+   def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Opens and returns a stream connected to a file.
 :direction :input (default) opens for reading; :output opens for writing.
 :if-exists controls behaviour when an output file already exists:
@@ -213,14 +219,14 @@ def register(primitive) -> None:
          raise LRuntimePrimError( LP_open, ':direction must be :input or :output.' )
 
    @primitive( 'make-string-output-stream', '()' )
-   def LP_make_string_output_stream( ctx: Context, env: Environment, args ) -> Any:
+   def LP_make_string_output_stream( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Creates and returns a new string output stream for writing.  Use
 get-output-stream-string to retrieve and clear the accumulated content."""
       return StringIO()
 
    @primitive( 'make-string-input-stream', '(string &optional (start 0) end)',
                mode=LambdaListMode.FULL_BINDING )
-   def LP_make_string_input_stream( ctx: Context, env: Environment, args ) -> Any:
+   def LP_make_string_input_stream( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Creates and returns a readable string stream backed by string.
 Optionally constrained to the substring from start (default 0) up to
 but not including end (default: entire string)."""
@@ -235,7 +241,7 @@ but not including end (default: entire string)."""
       return StringIO( s[start_py:end_py] )
 
    @primitive( 'get-output-stream-string', '(string-stream)' )
-   def LP_get_output_stream_string( ctx: Context, env: Environment, args ) -> Any:
+   def LP_get_output_stream_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns the string accumulated in string-stream since it was created or
 since the last call to get-output-stream-string, then clears the buffer.
 The stream remains open and writable.  (CL semantics.)"""
@@ -252,7 +258,7 @@ The stream remains open and writable.  (CL semantics.)"""
       return content
 
    @primitive( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
-   def LP_close( ctx: Context, env: Environment, args ) -> Any:
+   def LP_close( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Closes a stream and returns T.
 The :abort keyword argument is accepted for CL compatibility but is ignored
 in this implementation (flushing on close cannot be suppressed)."""
@@ -263,7 +269,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return L_T
 
    @primitive( 'flush', '(&optional stream)' )
-   def LP_flush( ctx: Context, env: Environment, args ) -> Any:
+   def LP_flush( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Flushes a stream and returns t."""
       if len(args) == 1:
          stream = args[0]
@@ -275,7 +281,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return L_T
 
    @primitive( 'open-stream-p', '(stream)' )
-   def LP_open_stream_p( ctx: Context, env: Environment, args ) -> Any:
+   def LP_open_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns T if the stream is open, NIL if it is closed."""
       stream = args[0]
       if not isinstance(stream, IOBase):
@@ -283,7 +289,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return L_NIL if stream.closed else L_T
 
    @primitive( 'interactive-stream-p', '(stream)' )
-   def LP_interactive_stream_p( ctx: Context, env: Environment, args ) -> Any:
+   def LP_interactive_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
       stream = args[0]
       if not isinstance(stream, IOBase):
@@ -291,7 +297,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return L_T if stream.isatty() else L_NIL
 
    @primitive( 'input-stream-p', '(stream)' )
-   def LP_input_stream_p( ctx: Context, env: Environment, args ) -> Any:
+   def LP_input_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns T if the stream can be read from, NIL otherwise."""
       stream = args[0]
       if not isinstance(stream, IOBase):
@@ -299,7 +305,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return L_T if stream.readable() else L_NIL
 
    @primitive( 'output-stream-p', '(stream)' )
-   def LP_output_stream_p( ctx: Context, env: Environment, args ) -> Any:
+   def LP_output_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns T if the stream can be written to, NIL otherwise."""
       stream = args[0]
       if not isinstance(stream, IOBase):
@@ -307,7 +313,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return L_T if stream.writable() else L_NIL
 
    @primitive( 'stdin', '()' )
-   def LP_stdin( ctx: Context, env: Environment, args ) -> Any:
+   def LP_stdin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns the standard input stream (sys.stdin)."""
       if isinstance( sys.stdin, IOBase ):
          return sys.stdin
@@ -316,7 +322,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return sys.stdin
 
    @primitive( 'stdout', '()' )
-   def LP_stdout( ctx: Context, env: Environment, args ) -> Any:
+   def LP_stdout( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns the standard output stream (sys.stdout)."""
       if isinstance( sys.stdout, IOBase ):
          return sys.stdout
@@ -325,7 +331,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return sys.stdout
 
    @primitive( 'stderr', '()' )
-   def LP_stderr( ctx: Context, env: Environment, args ) -> Any:
+   def LP_stderr( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns the standard error stream (sys.stderr)."""
       if isinstance( sys.stderr, IOBase ):
          return sys.stderr
@@ -334,12 +340,12 @@ in this implementation (flushing on close cannot be suppressed)."""
       return sys.stderr
 
    @primitive( 'tmpdir', '()' )
-   def LP_tmpdir( ctx: Context, env: Environment, args ) -> str:
+   def LP_tmpdir( ctx: Context, env: Environment, args: list[Any] ) -> str:
       """Returns the system temporary directory as a string."""
       return tempfile.gettempdir()
 
    @primitive( 'path-join', '(path-segment &rest more-segments)' )
-   def LP_path_join( ctx: Context, env: Environment, args ) -> str:
+   def LP_path_join( ctx: Context, env: Environment, args: list[Any] ) -> str:
       """Joins path-segments using the OS path separator.  Returns the result as a string."""
       for i, arg in enumerate(args):
          if not isinstance(arg, str):
@@ -347,7 +353,7 @@ in this implementation (flushing on close cannot be suppressed)."""
       return os.path.join(*args)
 
    @primitive( 'writef', '(formatString &optional dictOrList stream)' )
-   def LP_writef( ctx: Context, env: Environment, args ) -> str:
+   def LP_writef( ctx: Context, env: Environment, args: list[Any] ) -> str:
       """Writes formatted text.  Returns the string that is written.
 Takes a Python format string and an optional map or list of values.
 If no second argument is given, the format string is output unchanged.
@@ -399,7 +405,7 @@ Returns the output string."""
       return outputStr
 
    @primitive( 'write!', '(&optional stream &rest objects)' )
-   def LP_write( ctx: Context, env: Environment, args ) -> Any:
+   def LP_write( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
 the output is written.  If stream is omitted, output goes to stdout."""
@@ -413,7 +419,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
       return lwrite( stream, *args, end='' )
 
    @primitive( 'writeLn!', '(&optional stream &rest objects)' )
-   def LP_writeln( ctx: Context, env: Environment, args ) -> Any:
+   def LP_writeln( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
@@ -428,7 +434,7 @@ Returns the last value printed."""
       return lwrite( stream, *args, end='\n' )
 
    @primitive( 'uwrite!', '(&optional stream &rest objects)' )
-   def LP_uwrite( ctx: Context, env: Environment, args ) -> Any:
+   def LP_uwrite( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
 If stream is omitted, output goes to stdout.  Returns the last value printed."""
@@ -442,7 +448,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
       return luwrite( stream, *args, end='' )
 
    @primitive( 'uwriteLn!', '(&optional stream &rest objects)' )
-   def LP_uwriteln( ctx: Context, env: Environment, args ) -> Any:
+   def LP_uwriteln( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
@@ -457,7 +463,7 @@ Returns the last value printed."""
       return luwrite( stream, *args, end='\n' )
 
    @primitive( 'terpri', '(&optional stream)' )
-   def LP_terpri( ctx: Context, env: Environment, args ) -> Any:
+   def LP_terpri( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Outputs a newline character.  Returns NIL."""
       if len(args) == 0:
          stream = ctx.outStrm
@@ -471,7 +477,7 @@ Returns the last value printed."""
       return L_NIL
 
    @primitive( 'readall', '(stream)' )
-   def LP_readall( ctx: Context, env: Environment, args ) -> Any:
+   def LP_readall( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Reads and returns the entire contents of a readable stream as a single string."""
       stream = args[0]
       if not isinstance(stream, IOBase):
@@ -481,7 +487,7 @@ Returns the last value printed."""
       return stream.read()
 
    @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-   def LP_read_line( ctx: Context, env: Environment, args ) -> Any:
+   def LP_read_line( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Reads one line of text from stream (default: standard input) and
 returns it as a string, without the trailing newline character.
 At end of file: signals an error if eof-error-p is T (default), otherwise
@@ -514,7 +520,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
       return line[:-1] if line.endswith( '\n' ) else line
 
    @primitive( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-   def LP_read_char( ctx: Context, env: Environment, args ) -> Any:
+   def LP_read_char( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Reads and returns the next character from stream (default: standard input)
 as a one-character string.
 At end of file: signals an error if eof-error-p is T (default), otherwise
@@ -547,7 +553,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
       return ch
 
    @primitive( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-   def LP_read( ctx: Context, env: Environment, args ) -> Any:
+   def LP_read( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Reads and returns one s-expression from stream (default: standard input),
 without evaluating it.  At end of file, signals an error if eof-error-p is T
 (default), otherwise returns eof-value (default NIL).
@@ -606,7 +612,7 @@ is accumulated."""
             raise LRuntimeError( f'read: {exc}' )
 
    @primitive( 'save', '(filename &rest objects)' )
-   def LP_save( ctx: Context, env: Environment, args ) -> Any:
+   def LP_save( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Saves python object to a text file."""
       filename, *objs = args
       if not isinstance(filename, str):
@@ -617,7 +623,7 @@ is accumulated."""
       return L_NIL
 
    @primitive( 'load', '(fileName)' )
-   def LP_load( ctx: Context, env: Environment, args ) -> Any:
+   def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
       filename = args[0]
       if not isinstance(filename, str):
@@ -630,7 +636,7 @@ is accumulated."""
       return ctx.parse( content )   # (progn form1 form2 ...)
 
    @primitive( 'error', '(formatString &optional dictOrList)' )
-   def LP_error( ctx: Context, env: Environment, args ) -> Any:
+   def LP_error( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Signals a runtime error with the given message string.
 The format string may optionally be followed by a list or map of values,
 in which case the message is formatted using Python str.format() before
@@ -653,7 +659,7 @@ being raised.  With no second argument the format string is used as-is."""
       raise LRuntimeError( message )
 
    @primitive( 'parse', '(string)' )
-   def LP_parse( ctx: Context, env: Environment, args ) -> Any:
+   def LP_parse( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
       theExprStr = args[0]
       if not isinstance(theExprStr, str):
@@ -661,7 +667,7 @@ being raised.  With no second argument the format string is used as-is."""
       return ctx.parse( theExprStr )
 
    @primitive( 'python', '(string)' )
-   def LP_python( ctx: Context, env: Environment, args ) -> Any:
+   def LP_python( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Executes some python code from Lisp."""
       thePythonCode = args[0]
       if not isinstance(thePythonCode, str):
@@ -670,7 +676,7 @@ being raised.  With no second argument the format string is used as-is."""
       return theReturnVal
 
    @primitive( 'recursion-limit', '(&optional newLimit)' )
-   def LP_recursionlimit( ctx: Context, env: Environment, args ) -> Any:
+   def LP_recursionlimit( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Returns or sets the system recursion limit.  The higher the integer
 argument the deeper the recursion will be allowed to go.  If setting,
 returns newLimit upon success."""
@@ -683,46 +689,47 @@ returns newLimit upon success."""
       except (TypeError, ValueError):
          raise LRuntimePrimError( LP_recursionlimit, 'Argument must be an integer.' )
 
-   @primitive( 'help', '(&optional callable-or-string &key find)',
-               mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
-   def LP_help( ctx: Context, env: Environment, args ) -> Any:
+   @primitive( 'help', '(&optional target &key (substring nil))',
+               mode=LambdaListMode.FULL_BINDING )
+   def LP_help( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Prints a set of tables for all the globally defined symbols and
 topics currently available in Python's Lisp. Or prints the usage and
 documentation for a specific callable (primitive, function or macro) or topic.
 
 Type '(help callable)' for available documentation on a callable.
 Type '(help "topic")' for available documentation on the named topic.
-Type '(help :find "substring")' to search all names by substring."""
-      numArgs  = len(args)
-      find_val = None
-      pos_arg  = None
+Type '(help "substring" :substring t)' to search all names by substring."""
+      target    = env.lookup( 'TARGET' )
+      substring = env.lookup( 'SUBSTRING' )
 
-      if numArgs == 2:
-         if isinstance(args[0], LSymbol) and args[0].name == ':FIND':
-            if not isinstance(args[1], str):
-               raise LRuntimePrimError( LP_help, ':find argument must be a string.' )
-            find_val = args[1]
-         else:
-            raise LRuntimePrimError( LP_help, '0 or 1 arguments expected, or :find "substring".' )
-      elif numArgs == 1:
-         pos_arg = args[0]
-      elif numArgs > 2:
-         raise LRuntimePrimError( LP_help, '0 or 1 arguments expected, or :find "substring".' )
-
-      if find_val is not None:
-         printHelpListings( ctx.outStrm, env, find=find_val )
+      if substring is not L_NIL:
+         if not isinstance( target, str ):
+            raise LRuntimePrimError( LP_help, ':substring t requires a string target.' )
+         printHelpListings( ctx.outStrm, env, find=target )
          return L_T
 
-      if pos_arg is None:
+      if isinstance( target, list ) and not target:   # NIL — no target given
          printHelpListings( ctx.outStrm, env )
          return L_T
+
+      pos_arg = target
 
       # Positional arg: show specific callable or topic
       if isinstance(pos_arg, str):
          topicName = pos_arg.upper()
-         topicFile = HELP_DIR / f'{topicName}.txt'
-         if topicFile.exists():
-            print( topicFile.read_text( encoding='utf-8' ), file=ctx.outStrm )
+         topicMd   = HELP_DIR / f'{topicName}.md'
+         topicTxt  = HELP_DIR / f'{topicName}.txt'
+         if topicMd.exists():
+            outFile   = ctx.outStrm or sys.stdout
+            use_color = ( hasattr(outFile, 'isatty')
+                          and outFile.isatty()
+                          and os.environ.get('NO_COLOR') is None
+                          and os.environ.get('TERM') != 'dumb' )
+            content  = topicMd.read_text( encoding='utf-8' )
+            rendered = render_markdown( content, use_color=use_color )
+            print( rendered, file=ctx.outStrm )
+         elif topicTxt.exists():
+            print( topicTxt.read_text( encoding='utf-8' ), file=ctx.outStrm )
          else:
             print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
          return L_T
@@ -761,7 +768,7 @@ Type '(help :find "substring")' to search all names by substring."""
       return L_T
 
    @primitive( 'define-help-topic', '(name-string text-string)' )
-   def LP_define_help_topic( ctx: Context, env: Environment, args ) -> Any:
+   def LP_define_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
 as a symbol.  An existing topic with the same name is overwritten."""
@@ -776,7 +783,7 @@ as a symbol.  An existing topic with the same name is overwritten."""
       return LSymbol( name )
 
    @primitive( 'undefine-help-topic', '(name-string)' )
-   def LP_undefine_help_topic( ctx: Context, env: Environment, args ) -> Any:
+   def LP_undefine_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Removes a help topic by deleting its file from the help directory.
 Returns T if the topic existed and was removed, NIL if the topic was not found."""
       name = args[0]

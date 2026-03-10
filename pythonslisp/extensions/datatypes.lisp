@@ -12,7 +12,8 @@
 
 (defmacro defstruct (typename &rest field-specs)
    "Define a struct type. An optional docstring may appear as the first
-element of field-specs. Remaining field-specs are symbols or (name default) pairs.
+element of field-specs. Remaining field-specs are symbols or (name default)
+pairs.
 Generates: make-<typename>, <typename>-p, <typename>-<field> accessors,
 setf support for accessors, and copy-<typename>.
 Binds <typename> in the global namespace to a struct descriptor."

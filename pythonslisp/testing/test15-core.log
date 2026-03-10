@@ -1574,6 +1574,32 @@ Returns the first item in a list.
 Unknown topic: "UNKNOWN-TOPIC"
 ==> T
 
+>>> ;;; help substring search returns T
+... (help "car" :substring t)
+Predefined Symbols
+==================
+
+Primitives
+==========
+CAR  MAPCAR
+
+Functions
+=========
+
+Macros
+======
+
+Types
+=====
+
+TOPICS
+======
+
+Type '(help callable)' for available documentation on a callable.
+Type '(help "topic")' for available documentation on the named topic.
+Type '(help "substring" :substring t)' to search all names by substring.
+==> T
+
 ; --- alias macro tests ---
 
 >>> ;;; alias creates a working alias for +

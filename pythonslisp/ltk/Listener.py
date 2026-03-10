@@ -27,6 +27,10 @@ class InterpreterBase( ABC ):
       pass
    
    @abstractmethod
+   def eval_instrumented( self, source: str, outStrm=None ) -> tuple(str, float, float):
+      pass
+   
+   @abstractmethod
    def evalFile( self, filename: str, outStrm=None ) -> None:
       pass
 

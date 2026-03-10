@@ -6,10 +6,11 @@ lambda-list -> ( {var}*
                  [ &aux {var | (var [initForm])}* ] )
 
 Notes:
-- parentheses are taken literally as actual parentheses in lisp
-- braces indicate grouping
-- brackets surround optional parts
-- pipes separate alternative parts
-- asterisks indicate zero of more of the form it follows
-- symbols beginning with & are taken literally
-- the ordering of sections is not flexible
+- Lambda lists for macros support destructuring.
+- Parentheses are taken literally as actual parentheses in lisp.
+- Braces indicate grouping.
+- Brackets surround optional parts.
+- Pipes separate alternative parts.
+- Ssterisks indicate zero of more of the form it follows.
+- Symbols beginning with & are taken literally.
+- The ordering of sections is not flexible.
