@@ -201,6 +201,41 @@
 >>> (comment this is ignored and returns nil)
 ==> NIL
 
+; ── load-extension with :name — bind primitives into a module ───────────────
+
+; load my_extension.py into a new module named EXTMOD
+>>> (load-extension "pythonslisp/examples/my_extension.py" :name 'extmod)
+==> T
+
+>>> (modulep extmod)
+==> T
+
+>>> (module-symbols extmod)
+==> (COMMENT GREET REPEAT-STRING)
+
+; call primitives via colon navigation
+>>> ((: extmod greet) "Module")
+==> "Hello, Module!"
+
+>>> ((: extmod repeat-string) "xy" :count 3 :separator ".")
+==> "xy.xy.xy"
+
+>>> ((: extmod comment) ignored args)
+==> NIL
+
+; load into a nested package path
+>>> (load-extension "pythonslisp/examples/my_extension.py" :name 'extpkg:tools)
+==> T
+
+>>> (modulep extpkg)
+==> T
+
+>>> (modulep extpkg:tools)
+==> T
+
+>>> ((: extpkg tools greet) "Nested")
+==> "Hello, Nested!"
+
 ; ── error cases ────────────────────────────────────────────────────────────
 
 ; navigating into a non-module (tmod:x was set to 100 above)
@@ -222,3 +257,8 @@
 >>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
 %%% ERROR 'LOAD-MODULE': :name must be a symbol, string, or quoted (: ...) path.
 %%% PRIMITIVE USAGE: (LOAD-MODULE filespec &key name)
+
+; load-extension with bad :name type
+>>> (load-extension "pythonslisp/examples/my_extension.py" :name 99)
+%%% ERROR 'LOAD-EXTENSION': :name must be a symbol, string, or quoted (: ...) path.
+%%% PRIMITIVE USAGE: (LOAD-EXTENSION &rest files &key name)

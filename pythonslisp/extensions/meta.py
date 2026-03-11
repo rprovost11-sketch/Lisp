@@ -10,6 +10,7 @@ from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError, ContinuationInvoked
 from pythonslisp.Expander import Expander
 from pythonslisp.extensions import LambdaListMode
+from pythonslisp.extensions.modules import resolve_module_path
 
 
 def register(primitive) -> None:
@@ -221,18 +222,35 @@ numeric suffix and *gensym-counter* is left unchanged."""
 internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
       return int( time.perf_counter() * _ITUPS )
 
-   @primitive( 'load-extension', '(&rest files)',
+   @primitive( 'load-extension', '(&rest files &key name)',
                   mode=LambdaListMode.DOC_ONLY, min_args=0 )
    def LP_load_extensions( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       """Loads each file in the argument list.  A .lisp file is parsed and
 evaluated; a .py file must export register(primitive) which is called to
-register primitives.  All arguments must be string paths.  Returns T if all
-files loaded successfully."""
-      for path in args:
+register primitives.  All FILES must be string paths.
+:name optionally specifies a module or package path (symbol or 'pkg:submod
+notation) into which primitives are bound instead of the global environment.
+Returns T if all files loaded successfully."""
+      # Manually separate file paths from :name keyword argument.
+      files    = []
+      name_arg = L_NIL
+      i = 0
+      while i < len(args):
+         arg = args[i]
+         if isinstance( arg, LSymbol ) and arg.name == ':NAME':
+            if i + 1 >= len(args):
+               raise LRuntimePrimError( LP_load_extensions, ':name keyword requires a value.' )
+            name_arg = args[i + 1]
+            i += 2
+         else:
+            files.append( arg )
+            i += 1
+      for path in files:
          if not isinstance( path, str ):
-            raise LRuntimePrimError( LP_load_extensions, 'Each argument must be a string path.' )
-      for path in args:
-         ctx.loadExt( path )
+            raise LRuntimePrimError( LP_load_extensions, 'Each file argument must be a string path.' )
+      target_env = resolve_module_path( name_arg, env.getGlobalEnv(), ctx, LP_load_extensions )
+      for path in files:
+         ctx.loadExt( path, target_env )
       return L_T
 
    @primitive( 'load-extension-dirs', '(&rest dirs)',

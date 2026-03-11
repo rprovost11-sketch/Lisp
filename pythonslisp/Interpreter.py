@@ -145,16 +145,19 @@ class Interpreter( InterpreterBase ):
       ctx.parseOne         = self._parser.parseOne
       ctx.expand           = lambda env, ast: Expander.expand( ctx, env, ast )
       ctx.analyze          = lambda env, ast: Analyzer.analyze( env, ast )
-      ctx.loadExt          = lambda path: self._loadExtFile( Path(path), ctx.outStrm )
+      ctx.loadExt          = lambda path, targetEnv=None: self._loadExtFile( Path(path), ctx.outStrm, targetEnv )
       ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
       return ctx
 
-   def _makeLispFunction( self ):
-      """Returns the primitive decorator class used by extension .py files."""
+   def _makeLispFunction( self, targetEnv=None ):
+      """Returns the primitive decorator class used by extension .py files.
+When targetEnv is a ModuleEnvironment, primitives are bound into that module
+instead of the global environment."""
       _UNSET      = object()
       _KW_MARKERS = frozenset({'&OPTIONAL', '&REST', '&BODY', '&KEY',
                                '&AUX', '&ALLOW-OTHER-KEYS'})
-      interpreter = self
+      interpreter  = self
+      _target_env  = targetEnv    # capture for closure
 
       def _derive_arity( ll_ast: list ) -> tuple[int, int|None]:
          min_args   = 0
@@ -245,7 +248,10 @@ class Interpreter( InterpreterBase ):
                                        min_args=self._min_args, max_args=self._max_args,
                                        arity_msg=self._arity_msg,
                                        lambdaListAST=self._lambdaListAST )
-            interpreter._env.bindGlobal( self._name, lPrimitivObj )
+            if _target_env is not None:
+               _target_env.bindLocal( self._name, lPrimitivObj )
+            else:
+               interpreter._env.bindGlobal( self._name, lPrimitivObj )
             pythonFn.primitive = lPrimitivObj
             return pythonFn
 
@@ -260,16 +266,20 @@ class Interpreter( InterpreterBase ):
       for lisp_file in sorted( ext_dir.glob('*.lisp') ):
          self._loadExtFile( lisp_file, outStrm )
 
-   def _loadExtFile( self, path: Path, outStrm=None ) -> None:
+   def _loadExtFile( self, path: Path, outStrm=None, targetEnv=None ) -> None:
       path = Path(path)
       if path.suffix == '.py':
          spec   = importlib.util.spec_from_file_location( path.stem, path )
          module = importlib.util.module_from_spec( spec )
          spec.loader.exec_module( module )
          if hasattr( module, 'register' ):
-            module.register( self._makeLispFunction() )
+            module.register( self._makeLispFunction( targetEnv ) )
       elif path.suffix == '.lisp':
-         self.evalFile( str(path), outStrm )
+         if targetEnv is not None:
+            ast = self._parser.parseFile( str(path) )
+            Interpreter._lEval( self._ctx, targetEnv, ast )
+         else:
+            self.evalFile( str(path), outStrm )
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:

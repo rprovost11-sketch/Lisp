@@ -11,6 +11,53 @@ from pythonslisp.extensions import LambdaListMode
 from pythonslisp.AST import L_NIL
 
 
+def _navigate_or_create_path( path_syms, global_env, evalFn ):
+   """Walk/create a chain of ModuleEnvironments, returning the leaf.
+   Raises ValueError(name) if a name already exists as a non-module binding."""
+   container = global_env
+   for sym in path_syms:
+      name     = sym.name
+      existing = container._bindings.get( name )
+      if existing is None:
+         mod = ModuleEnvironment( name=name, parent=global_env, evalFn=evalFn )
+         container._bindings[name] = mod
+      elif isinstance( existing, ModuleEnvironment ):
+         mod = existing
+      else:
+         raise ValueError( name )
+      container = mod
+   return container
+
+
+def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
+   """Resolve a :name argument to an existing-or-new ModuleEnvironment.
+   Returns None if name_arg is NIL (caller should bind globally).
+   Raises LRuntimePrimError for bad types or conflicts."""
+   try:
+      if isinstance( name_arg, list ) and len(name_arg) == 0:
+         return None
+      elif isinstance( name_arg, LSymbol ):
+         return _navigate_or_create_path( [name_arg], global_env, ctx.lEval )
+      elif isinstance( name_arg, str ):
+         return _navigate_or_create_path( [LSymbol( name_arg.upper() )],
+                                          global_env, ctx.lEval )
+      elif ( isinstance( name_arg, list )
+             and len(name_arg) >= 2
+             and isinstance( name_arg[0], LSymbol )
+             and name_arg[0].name == ':' ):
+         path = name_arg[1:]
+         if not all( isinstance(s, LSymbol) for s in path ):
+            raise LRuntimePrimError( prim_for_error,
+               ':name path elements must all be symbols.' )
+         return _navigate_or_create_path( path, global_env, ctx.lEval )
+      else:
+         raise LRuntimePrimError( prim_for_error,
+            ':name must be a symbol, string, or quoted (: ...) path.' )
+   except ValueError as exc:
+      raise LRuntimePrimError( prim_for_error,
+         f'{exc.args[0]} already exists but is not a module.' )
+
+
 def register(primitive) -> None:
 
    @primitive( ':', '(module-or-pkg &rest path)', preEvalArgs=False,
@@ -61,42 +108,35 @@ Returns the new module object."""
          raise LRuntimePrimError( LP_load_module, 'filespec must be a string.' )
       global_env = env.getGlobalEnv()
       # Determine module name and binding location from :name argument.
-      # :name may be a symbol, string, or a quoted (: ...) path form.
-      if isinstance( name_arg, list ) and len(name_arg) == 0:
-         # NIL — derive name from filename, bind in global env
-         module_name = Path(filespec).stem.upper()
-         container   = global_env
-      elif ( isinstance( name_arg, list )
-             and len(name_arg) >= 3
-             and isinstance( name_arg[0], LSymbol )
-             and name_arg[0].name == ':' ):
-         # Quoted (: pkg subpkg ... module) path — navigate/create intermediate packages
-         path = name_arg[1:]
-         if not all( isinstance(s, LSymbol) for s in path ):
-            raise LRuntimePrimError( LP_load_module, ':name path elements must all be symbols.' )
-         module_name = path[-1].name
-         container   = global_env
-         for part_sym in path[:-1]:
-            part = part_sym.name
-            existing = container._bindings.get(part)
-            if existing is None:
-               pkg = ModuleEnvironment( name=part, parent=global_env, evalFn=ctx.lEval )
-               container._bindings[part] = pkg
-            elif not isinstance( existing, ModuleEnvironment ):
+      # :name may be NIL, a symbol, a string, or a quoted (: ...) path form.
+      try:
+         if isinstance( name_arg, list ) and len(name_arg) == 0:
+            # NIL — derive name from filename, bind in global env
+            module_name = Path(filespec).stem.upper()
+            container   = global_env
+         elif ( isinstance( name_arg, list )
+                and len(name_arg) >= 3
+                and isinstance( name_arg[0], LSymbol )
+                and name_arg[0].name == ':' ):
+            # Quoted (: pkg subpkg ... module) path — navigate/create intermediate packages
+            path = name_arg[1:]
+            if not all( isinstance(s, LSymbol) for s in path ):
                raise LRuntimePrimError( LP_load_module,
-                  f'{part} already exists but is not a module.' )
-            else:
-               pkg = existing
-            container = pkg
-      elif isinstance( name_arg, LSymbol ):
-         module_name = name_arg.name
-         container   = global_env
-      elif isinstance( name_arg, str ):
-         module_name = name_arg.upper()
-         container   = global_env
-      else:
+                  ':name path elements must all be symbols.' )
+            module_name = path[-1].name
+            container   = _navigate_or_create_path( path[:-1], global_env, ctx.lEval )
+         elif isinstance( name_arg, LSymbol ):
+            module_name = name_arg.name
+            container   = global_env
+         elif isinstance( name_arg, str ):
+            module_name = name_arg.upper()
+            container   = global_env
+         else:
+            raise LRuntimePrimError( LP_load_module,
+               ':name must be a symbol, string, or quoted (: ...) path.' )
+      except ValueError as exc:
          raise LRuntimePrimError( LP_load_module,
-            ':name must be a symbol, string, or quoted (: ...) path.' )
+            f'{exc.args[0]} already exists but is not a module.' )
       module_env = ModuleEnvironment( name=module_name, parent=global_env, evalFn=ctx.lEval )
       ast = ctx.parseFile( filespec )
       ctx.lEval( module_env, ast )

@@ -29,7 +29,8 @@ from pythonslisp.AST import (
 #   ctx.parseOne(source)           — parse one s-expression; returns (ast, chars_consumed)
 #   ctx.expand(env, ast)           — macro-expand an AST
 #   ctx.analyze(env, ast)          — statically analyze an AST for errors
-#   ctx.loadExt(path)              — load a single extension file (.py or .lisp)
+#   ctx.loadExt(path, targetEnv)   — load a single extension file (.py or .lisp);
+#                                     optional targetEnv (ModuleEnvironment) binds into a module
 #   ctx.loadExtDir(path)           — load a directory of extensions
 #
 # Full parse/expand/analyze/eval pattern:
