@@ -221,34 +221,30 @@ numeric suffix and *gensym-counter* is left unchanged."""
 internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
       return int( time.perf_counter() * _ITUPS )
 
-   @primitive( 'set-extension-dirs', '(&rest paths)',
+   @primitive( 'load-extension', '(&rest files)',
                   mode=LambdaListMode.DOC_ONLY, min_args=0 )
-   def LP_set_extension_dirs( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Sets the list of user extension directories to be scanned on reboot.
-Each argument must be a string path.  Directories are scanned in order."""
-      for arg in args:
-         if not isinstance( arg, str ):
-            raise LRuntimePrimError( LP_set_extension_dirs, 'Each argument must be a string path.' )
-      ctx.setExtDirs( *args )
+   def LP_load_extensions( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+      """Loads each file in the argument list.  A .lisp file is parsed and
+evaluated; a .py file must export register(primitive) which is called to
+register primitives.  All arguments must be string paths.  Returns T if all
+files loaded successfully."""
+      for path in args:
+         if not isinstance( path, str ):
+            raise LRuntimePrimError( LP_load_extensions, 'Each argument must be a string path.' )
+      for path in args:
+         ctx.loadExt( path )
       return L_T
 
-   @primitive( 'load-extension', '(path)' )
-   def LP_load_extension( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Loads a single extension file.  A .lisp file is parsed and evaluated;
-a .py file must export register(primitive) which is called to register primitives.
-Returns T on success."""
-      path = args[0]
-      if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_extension, 'Argument must be a string path.' )
-      ctx.loadExt( path )
-      return L_T
-
-   @primitive( 'load-extension-dir', '(path)' )
-   def LP_load_extension_dir( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Loads all extension files in a directory: all .py files alphabetically,
-then all .lisp files alphabetically.  Returns T on success."""
-      path = args[0]
-      if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_extension_dir, 'Argument must be a string path.' )
-      ctx.loadExtDir( path )
+   @primitive( 'load-extension-dirs', '(&rest dirs)',
+                  mode=LambdaListMode.DOC_ONLY, min_args=0 )
+   def LP_load_extension_dirs( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+      """Loads each directory in the argument list.  Within each directory all
+.py files are loaded alphabetically, then all .lisp files alphabetically.
+All arguments must be string paths.  Returns T if all directories loaded
+successfully."""
+      for path in args:
+         if not isinstance( path, str ):
+            raise LRuntimePrimError( LP_load_extension_dirs, 'Each argument must be a string path.' )
+      for path in args:
+         ctx.loadExtDir( path )
       return L_T

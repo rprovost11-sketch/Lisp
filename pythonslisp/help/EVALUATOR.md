@@ -17,7 +17,7 @@ shows just the essential structure.
 ```python
 env = {}       # the global environment: maps names to values
 
-def lEval( env, expr ):
+def lEval( expr, env ):
    # A string is a variable name -- look it up in the environment.
    if isinstance(expr, str):
       return env[expr]
@@ -33,19 +33,19 @@ def lEval( env, expr ):
    # Special forms: the head names a form that controls its own evaluation.
    # 'if' must NOT evaluate both branches -- only the one that is taken.
    if head == 'if':
-      condValue = lEval( env, expr[1] )
-      return lEval( env, expr[ 2 if condValue else 3 ] )
+      condValue = lEval( expr[1], env )
+      return lEval( expr[ 2 if condValue else 3 ], env )
 
    # 'setq' must NOT evaluate the variable name -- only the value expression.
    elif head == 'setq':
       var, valExpr = expr[1:]
-      val = lEval(env, valExpr)
+      val = lEval(valExpr, env)
       env[var] = val
       return val
 
    # Regular function call: evaluate everything -- the head and all arguments --
    # then call the resulting function with the resulting argument values.
-   fn, *evaluatedArgs = [ lEval(env, subExpr) for subExpr in expr ]
+   fn, *evaluatedArgs = [ lEval(subExpr, env) for subExpr in expr ]
    return fn( evaluatedArgs, env )
 ```
 
@@ -56,23 +56,16 @@ by name.  From the evaluator's perspective they are just values that happen
 to be callable.
 
 ```python
-def LP_add( args, env ):
-   return sum(args)
+def LP_add( argsList, env ):
+   return argsList[0] + argsList[1]
 env['+'] = LP_add
 
-def LP_sub( args, env ):
-   if len(args) == 1:
-      return -1 * args[0]
-   return args[0] - sum(args[1:])
+def LP_sub( argsList, env ):
+   return argsList[0] - argsList[1]
 env['-'] = LP_sub
 
-def LP_isEqualTo( args, env ):
-   prior = None
-   for mbr in args:
-      if prior is not None and prior != mbr:
-         return 0             # a falsy value
-      prior = mbr
-   return 1                   # a truthy value
+def LP_isEqualTo( argsList, env ):
+   return 1 if argsList[0] == argsList[1] else 0
 env['='] = LP_isEqualTo
 ```
 
@@ -82,23 +75,26 @@ The following expressions exercise all three evaluator paths.
 
 ```python
 def evalLispExpr( expr ):
-   print( f'==> {lEval( env, expr )}' )
+   print( f'==> {lEval( expr, env )}' )
 
 def main():
    evalLispExpr( ['setq', 'a', ['+', 1, 1]] )           # ==> 2
-   evalLispExpr( ['+', 2, ['-', 10, 7], 'a'] )           # ==> 7
+   evalLispExpr( ['+', ['-', 10, 7], 'a'] )             # ==> 5
    evalLispExpr( ['if', ['=', 'a', 2], ['+', 'a', 1], ['-', 'a', 1]] )  # ==> 3
+
+if __name__ == '__main__':
+   main()
 ```
 
 ```lisp
 ; setq is a special form: the name 'a' is NOT evaluated, only the value.
 (setq a (+ 1 1))                ; ==> 2
 
-; Regular function call: +, 2, (- 10 7), and a are all evaluated first.
-(+ 2 (- 10 7) a)                ; ==> 7
+; Regular function call: +, (- 10 7), and a are all evaluated first.
+(+ (- 10 7) a)                  ; ==> 5
 
 ; if is a special form: only ONE branch is evaluated, never both.
-(if (= a 2) (+ a 1) (- a 1))   ; ==> 3
+(if (= a 2) (+ a 1) (- a 1))    ; ==> 3
 ```
 
 ## What the Real Interpreter Adds
@@ -115,3 +111,5 @@ The `lEval` above is the complete conceptual core.  The real `_lEval` in
   inline and re-evaluated in the same loop iteration
 - **Continuations, tracing, and full argument binding** for the complete
   feature set
+
+**Note:** The complete working code from this document is available as a standalone script in `pythonslisp/examples/evaluator.py`. Run it with `python pythonslisp/examples/evaluator.py`.

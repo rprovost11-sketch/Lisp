@@ -313,6 +313,30 @@ class Parser( ParserBase ):
       self._scanner.resetFromFile( filename )
       return self._parse( )
 
+   def parseOne( self, source: str ):
+      """Parse exactly one s-expression from the start of source.
+      Returns (ast, chars_consumed) where chars_consumed is the number of
+      characters consumed from source, including the expression itself and
+      any trailing whitespace/comments up to the next expression.
+      Raises ParseError if source contains no parseable expression."""
+      self._scanner.reset( source )
+      if self._scanner.peekToken( ) == Lexer.EOF_TOK:
+         raise ParseError( self._scanner, 'End of file: no expression found.' )
+      ast = self._parseObject( )
+      tok = self._scanner.peekToken( )
+      buf = self._scanner.buffer
+      if tok == Lexer.EOF_TOK:
+         chars_consumed = buf._point
+      elif tok == Lexer.COMMA_AT_TOK:
+         chars_consumed = buf._point - 2
+      elif tok in ( Lexer.OPEN_PAREN_TOK, Lexer.CLOSE_PAREN_TOK,
+                    Lexer.SINGLE_QUOTE_TOK, Lexer.BACK_QUOTE_TOK,
+                    Lexer.COMMA_TOK ):
+         chars_consumed = buf._point - 1
+      else:
+         chars_consumed = buf._mark
+      return ast, chars_consumed
+
    def _parse( self ) -> Any:
       # Parse all the sexpressions and insert them into a lisp progn function
       bodyExpr = [ LSymbol('progn') ]
@@ -331,9 +355,15 @@ class Parser( ParserBase ):
 
       nextToken = self._scanner.peekToken( )
       if nextToken == Lexer.SYMBOL_TOK:
-         lex = self._scanner.getLexeme( )   # Make symbols case insensitive
-         ast = LSymbol(lex)
+         lex = self._scanner.getLexeme( )
          self._scanner.consume( )
+         if ':' in lex and not lex.startswith(':') and all(lex.split(':')):
+            parts = lex.split(':')
+            ast   = [LSymbol(':')]
+            for part in parts:
+               ast.append( LSymbol(part) )
+         else:
+            ast = LSymbol(lex)
       elif nextToken == Lexer.OPEN_PAREN_TOK:
          lex = '()'
          ast = self._parseList( )
@@ -383,30 +413,6 @@ class Parser( ParserBase ):
          raise ParseError( self._scanner, 'Object expected.' )
 
       return ast
-
-   def parseOne( self, source: str ):
-      """Parse exactly one s-expression from the start of source.
-      Returns (ast, chars_consumed) where chars_consumed is the number of
-      characters consumed from source, including the expression itself and
-      any trailing whitespace/comments up to the next expression.
-      Raises ParseError if source contains no parseable expression."""
-      self._scanner.reset( source )
-      if self._scanner.peekToken( ) == Lexer.EOF_TOK:
-         raise ParseError( self._scanner, 'End of file: no expression found.' )
-      ast = self._parseObject( )
-      tok = self._scanner.peekToken( )
-      buf = self._scanner.buffer
-      if tok == Lexer.EOF_TOK:
-         chars_consumed = buf._point
-      elif tok == Lexer.COMMA_AT_TOK:
-         chars_consumed = buf._point - 2
-      elif tok in ( Lexer.OPEN_PAREN_TOK, Lexer.CLOSE_PAREN_TOK,
-                    Lexer.SINGLE_QUOTE_TOK, Lexer.BACK_QUOTE_TOK,
-                    Lexer.COMMA_TOK ):
-         chars_consumed = buf._point - 1
-      else:
-         chars_consumed = buf._mark
-      return ast, chars_consumed
 
    def _parseList( self ) -> list:
       scn = self._scanner

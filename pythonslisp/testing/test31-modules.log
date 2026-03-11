@@ -1,0 +1,224 @@
+; test31 — module system
+; Covers: parser colon expansion, make-module, modulep, type-of MODULE,
+;         module-name, module-symbols, module-set!, : navigation,
+;         setf with colon notation, load-module, nested :name path,
+;         calling module functions, aliasing into scope.
+
+; ── parser expansion ───────────────────────────────────────────────────────
+
+; foo:bar is expanded by the parser to the list (: foo bar)
+>>> (car 'foo:bar)
+==> :
+
+>>> (cadr 'foo:bar)
+==> FOO
+
+>>> (caddr 'foo:bar)
+==> BAR
+
+; a:b:c expands to (: a b c) which is a 4-element list
+>>> (length 'a:b:c)
+==> 4
+
+; leading colon is a keyword symbol — NOT expanded
+>>> ':key
+==> :KEY
+
+; ── make-module ────────────────────────────────────────────────────────────
+
+>>> (make-module 'tmod)
+==> #<MODULE TMOD>
+
+>>> (modulep tmod)
+==> T
+
+>>> (modulep 42)
+==> NIL
+
+>>> (modulep "hello")
+==> NIL
+
+>>> (type-of tmod)
+==> MODULE
+
+>>> (module-name tmod)
+==> "TMOD"
+
+; fresh module has no symbols
+>>> (module-symbols tmod)
+==> NIL
+
+; ── module-set! and : navigation ──────────────────────────────────────────
+
+>>> (module-set! tmod 'x 42)
+==> 42
+
+>>> (: tmod x)
+==> 42
+
+>>> (module-symbols tmod)
+==> (X)
+
+>>> (module-set! tmod 'y "hello")
+==> "hello"
+
+>>> (: tmod y)
+==> "hello"
+
+>>> (module-symbols tmod)
+==> (X Y)
+
+; ── setf with colon notation ───────────────────────────────────────────────
+
+; (setf tmod:z 99) expands via parser to (setf (: tmod z) 99)
+; which the setf macro expands to (module-set! tmod 'z 99)
+>>> (setf tmod:z 99)
+==> 99
+
+>>> tmod:z
+==> 99
+
+>>> (module-symbols tmod)
+==> (X Y Z)
+
+; update an existing module binding via colon setf
+>>> (setf tmod:x 100)
+==> 100
+
+>>> tmod:x
+==> 100
+
+; ── load-module — name derived from filename ───────────────────────────────
+
+>>> (load-module "pythonslisp/testing/module-fixture.lisp")
+==> #<MODULE MODULE-FIXTURE>
+
+>>> (modulep module-fixture)
+==> T
+
+>>> (type-of module-fixture)
+==> MODULE
+
+>>> (module-name module-fixture)
+==> "MODULE-FIXTURE"
+
+; fixture defines version, greet, add, square
+>>> (module-symbols module-fixture)
+==> (ADD GREET SQUARE VERSION)
+
+; verify fixture bindings stayed in the module, not global
+>>> (boundp 'version)
+==> NIL
+
+>>> (boundp 'greet)
+==> NIL
+
+; ── calling module functions ───────────────────────────────────────────────
+
+>>> ((: module-fixture greet) "World")
+==> "Hello, World!"
+
+>>> ((: module-fixture square) 7)
+==> 49
+
+>>> ((: module-fixture add) 3 4)
+==> 7
+
+>>> (: module-fixture version)
+==> "1.0"
+
+; ── aliasing module symbols into scope ─────────────────────────────────────
+
+>>> (setf my-square module-fixture:square)
+==> (FUNCTION SQUARE (N) ...)
+
+>>> (my-square 9)
+==> 81
+
+; ── load-module with explicit :name ────────────────────────────────────────
+
+>>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 'mathlib)
+==> #<MODULE MATHLIB>
+
+>>> (module-name mathlib)
+==> "MATHLIB"
+
+>>> ((: mathlib square) 5)
+==> 25
+
+; ── load-module with quoted (: ...) path ───────────────────────────────────
+
+; 'mylib:utils expands to (quote (: mylib utils))
+; load-module creates the intermediate package MYLIB automatically
+>>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 'mylib:utils)
+==> #<MODULE UTILS>
+
+>>> (modulep mylib)
+==> T
+
+>>> (module-name mylib)
+==> "MYLIB"
+
+>>> (modulep mylib:utils)
+==> T
+
+>>> (module-name mylib:utils)
+==> "UTILS"
+
+>>> ((: mylib utils square) 6)
+==> 36
+
+; ── nested package navigation ──────────────────────────────────────────────
+
+; create a second level of nesting
+>>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 'mylib:extra:tools)
+==> #<MODULE TOOLS>
+
+>>> (modulep mylib:extra)
+==> T
+
+>>> ((: mylib extra tools square) 4)
+==> 16
+
+; ── load-extension — Python extension (not a module) ──────────────────────
+
+; my_extension.py registers primitives globally, not into a module
+>>> (load-extension "pythonslisp/examples/my_extension.py")
+==> T
+
+>>> (greet "Lisp")
+==> "Hello, Lisp!"
+
+>>> (greet "Lisp" "Hi")
+==> "Hi, Lisp!"
+
+>>> (repeat-string "ab")
+==> "abab"
+
+>>> (repeat-string "ab" :count 3 :separator "-")
+==> "ab-ab-ab"
+
+>>> (comment this is ignored and returns nil)
+==> NIL
+
+; ── error cases ────────────────────────────────────────────────────────────
+
+; navigating into a non-module (tmod:x was set to 100 above)
+>>> (: tmod x y)
+%%% ERROR ':': 100 is not a module or package.
+%%% PRIMITIVE USAGE: (: module-or-pkg &rest path)
+
+; missing symbol in module
+>>> (: tmod nosuchsym)
+%%% ERROR ':': NOSUCHSYM not found in module TMOD.
+%%% PRIMITIVE USAGE: (: module-or-pkg &rest path)
+
+; module-set! on non-module
+>>> (module-set! 42 'x 1)
+%%% ERROR 'MODULE-SET!': 1st argument must be a module.
+%%% PRIMITIVE USAGE: (MODULE-SET! module symbol value)
+
+; load-module with bad :name type
+>>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
+%%% ERROR 'LOAD-MODULE': :name must be a symbol, string, or quoted (: ...) path.
+%%% PRIMITIVE USAGE: (LOAD-MODULE filespec &key name)

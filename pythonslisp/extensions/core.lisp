@@ -32,6 +32,13 @@ Multiple (place value) pairs expand to a progn of individual setfs."
                   (if (/= (length place) 3)
                       (error "setf: (at ...) place form expected 3 elements")
                       `(at-set ,(car (cdr place)) ,(car (cdr (cdr place))) ,value)))
+                 ((= (car place) ':)
+                  (let ((path (cdr place)))
+                     (if (< (length path) 2)
+                         (error "setf: (: ...) place form requires at least 2 path elements")
+                         (if (= (length path) 2)
+                             `(module-set! ,(car path) ',(cadr path) ,value)
+                             `(module-set! (: ,@(butlast path)) ',(car (last path)) ,value)))))
                  ((/= (length place) 2)
                   (error "setf: struct accessor place must have exactly 1 instance argument"))
                  (t

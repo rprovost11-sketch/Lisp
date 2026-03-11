@@ -10,6 +10,7 @@ from pythonslisp.AST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LP
                                    eql, equal, equalp )
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
+from pythonslisp.Environment import ModuleEnvironment
 from pythonslisp.Exceptions import LRuntimePrimError, LRuntimeError
 from pythonslisp.Parser import ParseError
 from pythonslisp.extensions import LambdaListMode
@@ -41,6 +42,7 @@ def _typep_atom( obj, tname: str ) -> bool:
    if tname == 'STREAM':         return isinstance(obj, IOBase)
    if tname == 'FILE-STREAM':    return isinstance(obj, IOBase) and not isinstance(obj, StringIO)
    if tname == 'STRING-STREAM':  return isinstance(obj, StringIO)
+   if tname == 'MODULE':         return isinstance(obj, ModuleEnvironment)
    if tname == 'DICT':           return isinstance(obj, dict)
    if isinstance(obj, dict):
       struct_type = obj.get('STRUCT-TYPE')
@@ -111,6 +113,11 @@ spec may be an LSymbol (atomic) or a list (compound)."""
 
 
 def register(primitive) -> None:
+
+   @primitive( 'modulep', '(sexpr)' )
+   def LP_modulep( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+      """Returns t if expr is a module otherwise nil."""
+      return L_T if isinstance( args[0], ModuleEnvironment ) else L_NIL
 
    @primitive( 'numberp', '(sexpr)' )
    def LP_numberp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -212,6 +219,8 @@ or open-string), nil otherwise."""
       elif isinstance( arg, dict ):
          struct_type = arg.get('STRUCT-TYPE')
          return struct_type if struct_type is not None else LSymbol('DICT')
+      elif isinstance( arg, ModuleEnvironment ):
+         return LSymbol('MODULE')
       elif isinstance( arg, LFunction ):
          return LSymbol('FUNCTION')
       elif isinstance( arg, LMacro ):

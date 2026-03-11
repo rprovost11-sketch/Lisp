@@ -19,8 +19,9 @@ class Context:
       self.lApply:           Callable = None   # set by Interpreter after construction
       self.lBackquoteExpand: Callable = None   # set by Interpreter after construction
       self.parse:            Callable = None   # set by Interpreter after construction
+      self.parseFile:        Callable = None   # set by Interpreter after construction
+      self.parseOne:         Callable = None   # set by Interpreter after construction
       self.expand:           Callable = None   # set by Interpreter after construction
       self.analyze:          Callable = None   # set by Interpreter after construction
       self.loadExt:          Callable = None   # set by Interpreter after construction
       self.loadExtDir:       Callable = None   # set by Interpreter after construction
-      self.setExtDirs:       Callable = None   # set by Interpreter after construction

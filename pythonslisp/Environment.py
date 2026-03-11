@@ -19,11 +19,12 @@ from pythonslisp.Exceptions import LArgBindingError
 
 
 class Environment(EnvironmentBase):
-   __slots__ = ('_evalFn',)
+   __slots__ = ('_evalFn', '_MODULE_ENV')
 
    def __init__( self, parent: (EnvironmentBase|None) = None,
                  initialBindings: (dict[str, Any]|None) = None,
-                 evalFn: (Callable|None) = None ) -> None:
+                 evalFn: (Callable|None) = None,
+                 isModuleRoot: bool = False ) -> None:
       super().__init__( parent, initialBindings )
       if evalFn is not None:
          self._evalFn = evalFn
@@ -31,6 +32,19 @@ class Environment(EnvironmentBase):
          self._evalFn = parent._evalFn
       else:
          self._evalFn = None
+      if isModuleRoot:
+         self._MODULE_ENV = self
+      elif parent is not None and hasattr( parent, '_MODULE_ENV' ):
+         self._MODULE_ENV = parent._MODULE_ENV
+      else:
+         self._MODULE_ENV = self._GLOBAL_ENV
+
+   def bindInModule( self, key: str, value: Any ) -> Any:
+      self._MODULE_ENV._bindings[ key ] = value
+      return value
+
+   def lookupInModule( self, key: str ) -> Any:
+      return self._MODULE_ENV._bindings[ key ]
 
    def bind( self, key: str, value: Any ) -> Any:
       '''Bind using lisp semantics.'''
@@ -484,3 +498,28 @@ class Environment(EnvironmentBase):
          paramNum += 1
 
       return paramNum, argNum
+
+
+class ModuleEnvironment(Environment):
+   """A module-root environment.  All top-level definitions made during
+   module loading bind here rather than in the global environment.
+   ModuleEnvironment instances are first-class Lisp values."""
+
+   __slots__ = ('name',)
+
+   def __init__( self, name: str,
+                 parent: (EnvironmentBase|None) = None,
+                 evalFn: (Callable|None) = None ) -> None:
+      super().__init__( parent=parent, evalFn=evalFn, isModuleRoot=True )
+      self.name = name
+
+   def bind( self, key: str, value: Any ) -> Any:
+      '''At module top level, always bind locally.  Child environments
+      created inside the module (let scopes, function bodies) are plain
+      Environment instances and use the standard walk-up bind(), which
+      correctly finds and updates module-level bindings via the parent chain.'''
+      self._bindings[key] = value
+      return value
+
+   def __repr__( self ) -> str:
+      return f'#<MODULE {self.name}>'

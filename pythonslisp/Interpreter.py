@@ -30,7 +30,6 @@ class Interpreter( InterpreterBase ):
       self._parser:       Parser           = Parser()
       self._tracer:       Tracer           = Tracer()
       self._setf_registry: dict[str, str]  = {}        # accessor-name → field-dict-key
-      self._ext_dirs:     list[Path]       = []        # set by set-extension-dirs primitive
       self._ctx:          Context          = None      # initialized in reboot()
       self._env:          Environment      = None      # initialized in reboot()
 
@@ -48,10 +47,6 @@ class Interpreter( InterpreterBase ):
 
       # Load built-in extensions (pythonslisp/extensions/)
       self._loadExtDir( self.BUILTIN_EXT_DIR, outStrm )
-
-      # Load configured extension dirs (set via set-extension-dirs)
-      for ext_path in self._ext_dirs:
-         self._loadExtDir( ext_path, outStrm )
 
       # Load caller-specified extension dir
       if ext_dir is not None:
@@ -146,11 +141,12 @@ class Interpreter( InterpreterBase ):
       ctx.lApply           = Interpreter._lApply
       ctx.lBackquoteExpand = Interpreter._lbackquoteExpand
       ctx.parse            = self._parser.parse
+      ctx.parseFile        = self._parser.parseFile
+      ctx.parseOne         = self._parser.parseOne
       ctx.expand           = lambda env, ast: Expander.expand( ctx, env, ast )
       ctx.analyze          = lambda env, ast: Analyzer.analyze( env, ast )
       ctx.loadExt          = lambda path: self._loadExtFile( Path(path), ctx.outStrm )
       ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
-      ctx.setExtDirs       = self._setExtDirs
       return ctx
 
    def _makeLispFunction( self ):
@@ -274,9 +270,6 @@ class Interpreter( InterpreterBase ):
             module.register( self._makeLispFunction() )
       elif path.suffix == '.lisp':
          self.evalFile( str(path), outStrm )
-
-   def _setExtDirs( self, *paths ) -> None:
-      self._ext_dirs = [Path(p) for p in paths]
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
