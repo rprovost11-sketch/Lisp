@@ -2,9 +2,10 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
-from pythonslisp.AST import LSymbol, LCallable, LFunction, L_NIL, eql
+from pythonslisp.Environment import Environment
+from pythonslisp.AST import LSymbol, LCallable, LFunction, LMultipleValues, L_NIL, eql
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, Thrown, ReturnFrom
+from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, Thrown, ReturnFrom, Signaled
 from pythonslisp.extensions import LambdaListMode
 
 
@@ -186,3 +187,85 @@ last body form, or NIL if body is empty."""
          if eql( e.tag, tag ):
             return e.value
          raise
+
+   @primitive( 'multiple-value-bind',
+               '((var1 var2 ...) values-form &rest body)',
+               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
+   def LP_multiple_value_bind( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+      """Evaluates values-form and binds its multiple return values to the listed
+variables in a new scope.  Extra variables beyond the number of values are bound
+to NIL; extra values beyond the number of variables are discarded.  Evaluates
+body forms in sequence and returns the result of the last."""
+      var_list, values_form, *body = args
+      result = ctx.lEval( env, values_form )
+      if type(result) is LMultipleValues:
+         vals = result.values
+      else:
+         vals = [result]
+      new_env = Environment( env )
+      for i, var in enumerate( var_list ):
+         new_env.bindLocal( var.name, vals[i] if i < len(vals) else L_NIL )
+      if len(body) == 0:
+         return L_NIL
+      for sexpr in body[:-1]:
+         ctx.lEval( new_env, sexpr )
+      return ctx.lEval( new_env, body[-1] )
+
+   @primitive( 'handler-case',
+               '(form (type1 (var) body1...) (type2 (var) body2...) ...)',
+               mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
+   def LP_handler_case( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+      """Evaluates form with condition handlers established.  If a condition is
+signaled that matches a clause type, the matching clause body is evaluated with
+var bound to the condition object and that result is returned.  If no clause
+matches the condition propagates.  Use T or ERROR as the type to match any
+condition.  handler-case also catches errors raised by the error primitive,
+wrapping them in a condition with type ERROR."""
+      if len(args) == 0:
+         raise LRuntimeError( 'handler-case: requires a protected form.' )
+      form    = args[0]
+      clauses = args[1:]
+      parsed  = []
+      for clause in clauses:
+         if not isinstance( clause, list ) or len(clause) < 2:
+            raise LRuntimeError( 'handler-case: malformed clause.' )
+         ctype   = clause[0]
+         var_lst = clause[1]
+         body    = clause[2:]
+         var     = var_lst[0] if isinstance( var_lst, list ) and len(var_lst) > 0 else None
+         parsed.append( (ctype, var, body) )
+
+      def _find_handler( type_name: str ):
+         for ctype, var, body in parsed:
+            if isinstance( ctype, LSymbol ):
+               if ctype.name in ('T', 'ERROR'):
+                  return var, body
+               if ctype.name == type_name:
+                  return var, body
+         return None, None
+
+      def _run_handler( var, body, cond ):
+         new_env = Environment( env )
+         if var is not None:
+            new_env.bindLocal( var.name, cond )
+         result = L_NIL
+         for sexpr in body:
+            result = ctx.lEval( new_env, sexpr )
+         return result
+
+      try:
+         return ctx.lEval( env, form )
+      except Signaled as e:
+         cond      = e.condition
+         ctype_sym = cond.get( 'CONDITION-TYPE', LSymbol('ERROR') )
+         type_name = ctype_sym.name if isinstance( ctype_sym, LSymbol ) else 'ERROR'
+         var, body = _find_handler( type_name )
+         if var is None and body is None:
+            raise
+         return _run_handler( var, body, cond )
+      except LRuntimeError as e:
+         var, body = _find_handler( 'ERROR' )
+         if var is None and body is None:
+            raise
+         cond = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': str(e)}
+         return _run_handler( var, body, cond )

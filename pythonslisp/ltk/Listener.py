@@ -113,9 +113,9 @@ class Listener( object ):
                   self._runListenerCommand( inputExprStr )
                else:
                   start = time.perf_counter( )
-                  resultStr,parseTime,evalTime = self._interp.eval_instrumented( inputExprStr )
+                  rawVal,parseTime,evalTime = self._interp.rawEval_instrumented( inputExprStr )
                   totalTime  = time.perf_counter( ) - start
-                  self._writeResult( resultStr )
+                  self._writeResult( rawVal )
                   if self._instrumenting:
                      print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
                      print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
@@ -567,16 +567,27 @@ class Listener( object ):
       else:
          writeln_multiFile( value, file )
 
-   def _writeResult( self, resultStr: str ) -> None:
+   def _writeResult( self, rawVal ) -> None:
+      from pythonslisp.AST import LMultipleValues, prettyPrintSExpr
       useColor     = sys.stdout.isatty()
       BRIGHT_GREEN = '\033[92m'  if useColor else ''
       BOLD_WHITE   = '\033[1;97m' if useColor else ''
       RESET        = '\033[0m'    if useColor else ''
-      plainLine    = f'\n==> {resultStr}'
-      colorLine    = f'\n{BRIGHT_GREEN}==>{RESET} {BOLD_WHITE}{resultStr}{RESET}'
-      print( colorLine if useColor else plainLine, flush=True )
-      if self._logFile:
-         print( plainLine, file=self._logFile, flush=True )
+      if type(rawVal) is LMultipleValues:
+         for v in rawVal.values:
+            valStr    = prettyPrintSExpr( v ).strip()
+            plainLine = f'\n==> {valStr}'
+            colorLine = f'\n{BRIGHT_GREEN}==>{RESET} {BOLD_WHITE}{valStr}{RESET}'
+            print( colorLine if useColor else plainLine, flush=True )
+            if self._logFile:
+               print( plainLine, file=self._logFile, flush=True )
+      else:
+         resultStr = prettyPrintSExpr( rawVal ).strip()
+         plainLine = f'\n==> {resultStr}'
+         colorLine = f'\n{BRIGHT_GREEN}==>{RESET} {BOLD_WHITE}{resultStr}{RESET}'
+         print( colorLine if useColor else plainLine, flush=True )
+         if self._logFile:
+            print( plainLine, file=self._logFile, flush=True )
 
    def _writeErrorMsg( self, errMsg: str, file=None ):
       RED   = '\033[91m'

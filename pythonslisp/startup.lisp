@@ -38,7 +38,8 @@
 spec is (var filespec &rest open-options) where open-options are keyword args
 passed directly to open.  Default direction is :input.
 Returns the value of the last body form.
-Note: file is closed normally; on error the file may remain open (no unwind-protect)."
+Note: file is closed normally; on error the file may remain open
+(no unwind-protect)."
    (let ((var      (car spec))
          (filespec (car (cdr spec)))
          (options  (cdr (cdr spec))))
@@ -66,6 +67,14 @@ var-spec is (var string), (var string start), or (var string start end)."
           (let ((_wifs_result_ (progn ,@body)))
              (when ,var (close ,var))
              _wifs_result_))))
+
+;;; Condition system convenience macros
+
+(defmacro ignore-errors (&rest body)
+   "Evaluates body forms.  If any error or condition is signaled, returns NIL.
+Returns the value of the last body form if no error occurs."
+   `(handler-case (progn ,@body)
+      (t (_ign_e_) nil)))
 
 ;;; Online help system welcome message
 (uwriteln! "- For LOHS (lisp online help system) type \"(help)\" to begin.")

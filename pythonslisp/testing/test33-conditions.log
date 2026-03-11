@@ -1,0 +1,138 @@
+; test33-conditions.log — Condition system: make-condition, signal, handler-case,
+;                          ignore-errors, condition-type, condition-message
+
+; make-condition — basic construction
+>>> (make-condition 'my-error "something went wrong")
+==> (DICT
+   ("CONDITION-TYPE" MY-ERROR)
+   ("MESSAGE" "something went wrong")
+)
+
+; conditionp — recognizes condition objects
+>>> (conditionp (make-condition 'foo "bar"))
+==> T
+
+; conditionp — rejects non-conditions
+>>> (conditionp "hello")
+==> NIL
+
+>>> (conditionp 42)
+==> NIL
+
+>>> (conditionp '(a b c))
+==> NIL
+
+; condition-type
+>>> (condition-type (make-condition 'type-a "msg"))
+==> TYPE-A
+
+; condition-message
+>>> (condition-message (make-condition 'type-a "the message"))
+==> "the message"
+
+; condition-message — empty message default
+>>> (condition-message (make-condition 'type-a))
+==> ""
+
+; handler-case — catch by exact type
+>>> (handler-case (signal 'my-error "oops")
+...   (my-error (e) (condition-message e)))
+==> "oops"
+
+; handler-case — catch by T (catch-all)
+>>> (handler-case (signal 'anything "caught")
+...   (t (e) 'caught-it))
+==> CAUGHT-IT
+
+; handler-case — catch by ERROR (catch-all)
+>>> (handler-case (signal 'whatever "msg")
+...   (error (e) 'also-caught))
+==> ALSO-CAUGHT
+
+; handler-case — first matching clause wins
+>>> (handler-case (signal 'file-error "not found")
+...   (file-error (e) 'file-clause)
+...   (t          (e) 'catchall-clause))
+==> FILE-CLAUSE
+
+; handler-case — non-matching type re-raises
+>>> (handler-case (signal 'type-x "unhandled")
+...   (type-y (e) 'wrong))
+%%% Unhandled condition: (DICT
+%%%    ("CONDITION-TYPE" TYPE-X)
+%%%    ("MESSAGE" "unhandled")
+%%% )
+
+; handler-case — catches (error ...) primitive as ERROR condition
+>>> (handler-case (error "something bad")
+...   (error (e) (condition-message e)))
+==> "something bad"
+
+; handler-case — catches error primitive via T
+>>> (handler-case (error "caught by t")
+...   (t (e) 'got-it))
+==> GOT-IT
+
+; handler-case — normal execution (no signal) returns form value
+>>> (handler-case (* 6 7)
+...   (t (e) 'should-not-run))
+==> 42
+
+; handler-case — condition-type of a wrapped LRuntimeError is ERROR
+>>> (handler-case (error "test")
+...   (error (e) (condition-type e)))
+==> ERROR
+
+; handler-case — signal with condition object directly
+>>> (let ((c (make-condition 'my-type "direct")))
+...   (handler-case (signal c)
+...     (my-type (e) (condition-message e))))
+==> "direct"
+
+; ignore-errors — suppresses errors, returns NIL
+>>> (ignore-errors (error "swallowed"))
+==> NIL
+
+; ignore-errors — suppresses signaled conditions, returns NIL
+>>> (ignore-errors (signal 'bad-thing "swallowed"))
+==> NIL
+
+; ignore-errors — returns normal value when no error
+>>> (ignore-errors (* 3 4))
+==> 12
+
+; ignore-errors — returns last body form value
+>>> (ignore-errors
+...   (setf _ign_test_ 1)
+...   (* 5 5))
+==> 25
+
+; handler-case — no var binding when var list is empty
+>>> (handler-case (signal 'oops "ignored")
+...   (oops () 'no-var-needed))
+==> NO-VAR-NEEDED
+
+; nested handler-case — inner catches first
+>>> (handler-case
+...   (handler-case (signal 'inner-err "inner")
+...     (inner-err (e) 'inner-caught))
+...   (t (e) 'outer-caught))
+==> INNER-CAUGHT
+
+; nested handler-case — unmatched inner propagates to outer
+>>> (handler-case
+...   (handler-case (signal 'unmatched "bubbles")
+...     (other-type (e) 'wrong))
+...   (t (e) 'outer-caught))
+==> OUTER-CAUGHT
+
+; condition-type and condition-message error on non-condition
+>>> (condition-type 42)
+%%% condition-type: argument must be a condition object.
+
+>>> (condition-message "oops")
+%%% condition-message: argument must be a condition object.
+
+; signal error on non-symbol, non-condition first arg
+>>> (signal 42)
+%%% signal: first argument must be a condition object or a symbol.

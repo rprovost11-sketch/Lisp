@@ -9,16 +9,24 @@ from pythonslisp.Parser import Parser
 from pythonslisp.ltk.Listener import InterpreterBase
 from pythonslisp.AST import ( LSymbol, L_T, L_NIL,
                               LCallable, LFunction, LPrimitive, LMacro, LContinuation,
-                              prettyPrintSExpr )
+                              LMultipleValues, prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError,
                                          LArgBindingError, ContinuationInvoked,
-                                         ReturnFrom, Thrown )
+                                         ReturnFrom, Thrown, Signaled )
 from pythonslisp.Environment import Environment
 from pythonslisp.Expander import Expander
 from pythonslisp.Analyzer import Analyzer
 from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
 from pythonslisp.extensions import LambdaListMode
+
+
+def _primary( val: Any ) -> Any:
+   """In scalar context, extract the primary (first) value from LMultipleValues.
+All other objects pass through unchanged."""
+   if type(val) is LMultipleValues:
+      return val.values[0] if val.values else L_NIL
+   return val
 
 
 class Interpreter( InterpreterBase ):
@@ -64,6 +72,8 @@ class Interpreter( InterpreterBase ):
 
    def eval( self, source: str, outStrm=None ) -> str:
       returnVal = self.rawEval( source, outStrm=outStrm )
+      if type(returnVal) is LMultipleValues:
+         return '\n'.join( prettyPrintSExpr(v) for v in returnVal.values )
       return prettyPrintSExpr( returnVal ).strip()
 
    def eval_instrumented( self, source: str, outStrm=None ) -> str:
@@ -90,6 +100,8 @@ class Interpreter( InterpreterBase ):
          raise LRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' )
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
+      except Signaled as e:
+         raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
       return returnVal
 
    def rawEval_instrumented( self, source: str, outStrm=None ) -> Any:
@@ -114,6 +126,8 @@ class Interpreter( InterpreterBase ):
          raise LRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' )
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
+      except Signaled as e:
+         raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
       return returnVal, parseTime, evalTime
 
    def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
@@ -133,6 +147,8 @@ class Interpreter( InterpreterBase ):
          raise LRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' )
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
+      except Signaled as e:
+         raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
       return returnVal
 
    def _makeContext( self, outStrm ) -> Context:
@@ -281,6 +297,8 @@ instead of the global environment."""
          else:
             self.evalFile( str(path), outStrm )
 
+   _primary = staticmethod( _primary )
+
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:
       if isinstance(sExpr, list):
@@ -319,7 +337,7 @@ instead of the global environment."""
 
          if headStr in _SPECIAL_OPERATOR_SET:
             if headStr == 'IF':
-               condValue = _eval( ctx, env, sExprAST[1] )
+               condValue = _primary( _eval( ctx, env, sExprAST[1] ) )
                sExprAST = sExprAST[2] if _true(condValue) else sExprAST[3]
                continue
 
@@ -341,7 +359,7 @@ instead of the global environment."""
                         initForm = L_NIL
                      else:
                         varName, initForm = varSpec
-                  initDict[varName.name] = _eval(ctx, env, initForm)
+                  initDict[varName.name] = _primary( _eval(ctx, env, initForm) )
                # Open the new scope
                env = Environment( env, initialBindings=initDict )
                # Evaluate each body sexpr in the new env/scope
@@ -367,7 +385,7 @@ instead of the global environment."""
                         initForm = L_NIL
                      else:
                         varName, initForm = varSpec
-                  env.bindLocal( varName.name, _eval(ctx, env, initForm) )
+                  env.bindLocal( varName.name, _primary( _eval(ctx, env, initForm) ) )
                # Evaluate each body sexpr in the new env/scope.
                if len(body) == 0:
                   return L_NIL
@@ -391,7 +409,7 @@ instead of the global environment."""
                exprLen = len(sExprAST)
                while exprIdx < exprLen:
                   lval = sExprAST[exprIdx]
-                  rval = _eval( ctx, env, sExprAST[exprIdx + 1] )
+                  rval = _primary( _eval( ctx, env, sExprAST[exprIdx + 1] ) )
                   if (type(rval) is LMacro or type(rval) is LFunction) and (rval.name == ''):
                      rval.name = lval.name
                   env.bind( lval.name, rval )
@@ -402,7 +420,7 @@ instead of the global environment."""
                args = sExprAST[1:]
                for clause in args:
                   testExpr = clause[0]      # analyzer guarantees: list, len >= 2
-                  if _true( _eval(ctx, env, testExpr) ):
+                  if _true( _primary( _eval(ctx, env, testExpr) ) ):
                      body = clause[1:]
                      if len(body) == 0:
                         return L_NIL
@@ -416,7 +434,7 @@ instead of the global environment."""
 
             elif headStr == 'CASE':
                args   = sExprAST[1:]
-               keyVal = _eval( ctx, env, args[0] )
+               keyVal = _primary( _eval( ctx, env, args[0] ) )
                for argsIdx in range(1, len(args)):
                   clause  = args[argsIdx]
                   caseVal = clause[0]       # analyzer guarantees: list, len >= 2; key is NOT evaluated (CL)
@@ -442,25 +460,25 @@ instead of the global environment."""
                args     = sExprAST[1:]
                if len(args) < 1:
                   raise LRuntimeError( 'Error binding arguments in call to function "FUNCALL".\nToo few positional arguments.' )
-               function = _eval( ctx, env, args[0] )
+               function = _primary( _eval( ctx, env, args[0] ) )
                if not isinstance( function, LCallable ):
                   raise LRuntimeError( 'FUNCALL: first argument must evaluate to a callable.' )
                if type( function ) is LContinuation:
                   if len(args) != 2:
                      raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args) - 1}.' )
-                  raise ContinuationInvoked( function.token, _eval(ctx, env, args[1]) )
+                  raise ContinuationInvoked( function.token, _primary( _eval(ctx, env, args[1]) ) )
                if type( function ) is LMacro:
                   raise LRuntimeError( f'FUNCALL: cannot call macro "{function.name}".' )
                if not function.preEvalArgs:
                   raise LRuntimeError( 'FUNCALL: first argument may not be a special form.' )
-               args          = [ _eval( ctx, env, a ) for a in args[1:] ]
+               args          = [ _primary( _eval( ctx, env, a ) ) for a in args[1:] ]
                argsPreEvaled = True
 
             elif headStr == 'APPLY':
                args = sExprAST[1:]
                if len(args) < 2:
                   raise LRuntimeError( 'Error binding arguments in call to function "APPLY".\nToo few positional arguments.' )
-               fn_val = _eval( ctx, env, args[0] )
+               fn_val = _primary( _eval( ctx, env, args[0] ) )
                if isinstance( fn_val, LCallable ):
                   function = fn_val
                elif type( fn_val ) is LSymbol:
@@ -472,7 +490,7 @@ instead of the global environment."""
                      raise LRuntimeError( f'APPLY: "{fn_val}" is not bound to a callable.' )
                else:
                   raise LRuntimeError( 'APPLY: first argument must evaluate to a callable or symbol.' )
-               evaled   = [ _eval( ctx, env, a ) for a in args[1:] ]
+               evaled   = [ _primary( _eval( ctx, env, a ) ) for a in args[1:] ]
                list_arg = evaled.pop()
                if not isinstance( list_arg, list ):
                   raise LRuntimeError( 'APPLY: last argument must be a list.' )
@@ -492,14 +510,14 @@ instead of the global environment."""
          else:
             # Common function-call path
             args     = sExprAST[1:]
-            function = _eval( ctx, env, head )
+            function = _primary( _eval( ctx, env, head ) )
             if not isinstance( function, LCallable ):
                raise LRuntimeError( f'Badly formed list expression \'{head}\'.  The first element should evaluate to a callable.' )
             # Continuation invocation: bypass tracing, raise immediately
             if type( function ) is LContinuation:
                if len(args) != 1:
                   raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
-               value = _eval( ctx, env, args[0] )
+               value = _primary( _eval( ctx, env, args[0] ) )
                raise ContinuationInvoked( function.token, value )
             # Inline macro expansion fallback.
             # Normally all macros are expanded by the pre-evaluation expander before
@@ -527,7 +545,7 @@ instead of the global environment."""
 
          # Pre-evaluate args unless FUNCALL/APPLY already did so.
          if not argsPreEvaled and function.preEvalArgs:
-            args = [ _eval(ctx, env, arg) for arg in args ]
+            args = [ _primary( _eval(ctx, env, arg) ) for arg in args ]
 
          try:
             if type( function ) is LPrimitive:
@@ -618,6 +636,7 @@ instead of the global environment."""
       finally:
          if printed:
             tracer.setMaxTraceDepth( depth )   # restore depth on both normal exit and exception
+      result = _primary( result )
       if printed:
          tracer.trace( 'exit', function, result, depth, ctx.outStrm )
       return result

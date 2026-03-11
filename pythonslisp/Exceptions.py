@@ -52,3 +52,12 @@ class Thrown( Exception ):
       self.tag   = tag
       self.value = value
       super().__init__()
+
+
+class Signaled( Exception ):
+   """Raised by signal.  Propagates up to the nearest enclosing handler-case with a matching type."""
+   __slots__ = ('condition',)
+
+   def __init__( self, condition ) -> None:
+      self.condition = condition
+      super().__init__()

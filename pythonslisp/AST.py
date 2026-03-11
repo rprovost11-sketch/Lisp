@@ -152,6 +152,16 @@ class LMacro( LCallable ):
       return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ...)'
 
 
+class LMultipleValues:
+   """Wrapper for zero or more values returned by (values ...).
+In scalar context the primary (first) value is used; extra values are discarded.
+Use multiple-value-bind or nth-value to capture all values."""
+   __slots__ = ('values',)
+
+   def __init__( self, values: list ) -> None:
+      self.values: list = values
+
+
 class LContinuation( LCallable ):
    """An escape continuation captured by call/cc.  Invoking it raises ContinuationInvoked."""
    __slots__ = ('token',)
@@ -203,6 +213,11 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
          resultStrLines.append( f'   ({key} {value})')
       resultStrLines.append(')')
       return '\n'.join(resultStrLines)
+   elif isinstance(sExpr, LMultipleValues):
+      if not sExpr.values:
+         return '#<VALUES>'
+      parts = ' '.join( prettyPrintSExpr(v) for v in sExpr.values )
+      return f'#<VALUES {parts}>'
    elif isinstance(sExpr, LCallable):
       return sExpr.idString()
    elif isinstance(sExpr, IOBase):
@@ -232,6 +247,11 @@ def prettyPrint( sExpr: Any ) -> str:
          resultStrLines.append( f'   ({key} {value})')
       resultStrLines.append(')')
       return '\n'.join(resultStrLines)
+   elif isinstance(sExpr, LMultipleValues):
+      if not sExpr.values:
+         return '#<VALUES>'
+      parts = ' '.join( prettyPrint(v) for v in sExpr.values )
+      return f'#<VALUES {parts}>'
    elif isinstance(sExpr, LCallable):
       return sExpr.idString()
    elif isinstance(sExpr, IOBase):

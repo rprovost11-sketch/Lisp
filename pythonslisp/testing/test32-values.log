@@ -1,0 +1,151 @@
+; test32-values.log — Multiple values: values, multiple-value-bind, nth-value,
+;                     values-list, multiple-value-list
+
+; Basic values — single value passes through unchanged
+>>> (values 42)
+==> 42
+
+; Two values displayed one per line
+>>> (values 1 2)
+==> 1
+2
+
+; Three values
+>>> (values 'a 'b 'c)
+==> A
+B
+C
+
+; Zero values
+>>> (values)
+==>
+
+; multiple-value-bind — exact match
+>>> (multiple-value-bind (q r) (values 7 3)
+...   (list q r))
+==> (7 3)
+
+; multiple-value-bind — fewer values than vars: extras get NIL
+>>> (multiple-value-bind (a b c) (values 10 20)
+...   (list a b c))
+==> (10 20 NIL)
+
+; multiple-value-bind — more values than vars: extras discarded
+>>> (multiple-value-bind (x) (values 1 2 3)
+...   x)
+==> 1
+
+; multiple-value-bind — single non-multiple value
+>>> (multiple-value-bind (p q) 99
+...   (list p q))
+==> (99 NIL)
+
+; multiple-value-bind — zero values: all vars get NIL
+>>> (multiple-value-bind (a b) (values)
+...   (list a b))
+==> (NIL NIL)
+
+; multiple-value-bind — body with multiple forms
+>>> (multiple-value-bind (x y) (values 3 4)
+...   (setf _mv_sum_ (+ x y))
+...   (* x y))
+==> 12
+
+; nth-value — 0th value
+>>> (nth-value 0 (values 'a 'b 'c))
+==> A
+
+; nth-value — 1st value
+>>> (nth-value 1 (values 'a 'b 'c))
+==> B
+
+; nth-value — 2nd value
+>>> (nth-value 2 (values 'a 'b 'c))
+==> C
+
+; nth-value — out of range returns NIL
+>>> (nth-value 5 (values 1 2))
+==> NIL
+
+; nth-value — single non-multiple value: 0 returns it
+>>> (nth-value 0 42)
+==> 42
+
+; nth-value — single non-multiple value: >0 returns NIL
+>>> (nth-value 1 42)
+==> NIL
+
+; values-list — converts list to multiple values
+>>> (multiple-value-bind (a b c) (values-list '(10 20 30))
+...   (+ a b c))
+==> 60
+
+; values-list — single element
+>>> (values-list '(99))
+==> 99
+
+; multiple-value-list — multiple values to list
+>>> (multiple-value-list (values 1 2 3))
+==> (1 2 3)
+
+; multiple-value-list — single value to one-element list
+>>> (multiple-value-list 42)
+==> (42)
+
+; multiple-value-list — zero values to empty list
+>>> (multiple-value-list (values))
+==> NIL
+
+; scalar context: multiple values stripped to primary in IF condition
+>>> (if (values t nil) 'yes 'no)
+==> YES
+
+; scalar context: multiple values stripped in LET binding
+>>> (let ((x (values 100 200)))
+...   x)
+==> 100
+
+; scalar context: multiple values stripped in LET* binding
+>>> (let* ((x (values 5 6))
+...        (y (* x 2)))
+...   y)
+==> 10
+
+; scalar context: multiple values stripped in SETQ
+>>> (setq _mv_test_ (values 'first 'second))
+==> FIRST
+
+; scalar context: multiple values stripped as function arg
+>>> (+ (values 3 99) (values 4 99))
+==> 7
+
+; tail position: multiple values propagate through progn
+>>> (progn (values 1 2))
+==> 1
+2
+
+; tail position: multiple values propagate through cond
+>>> (cond (t (values 'x 'y)))
+==> X
+Y
+
+; tail position: multiple values propagate through let body
+>>> (let ((z 0))
+...   (values z (+ z 1)))
+==> 0
+1
+
+; values works in functions
+>>> (defun quot-rem (n d)
+...   (values (floor n d) (mod n d)))
+==> (FUNCTION QUOT-REM (N D) ...)
+
+>>> (multiple-value-bind (q r) (quot-rem 17 5)
+...   (list q r))
+==> (3 2)
+
+>>> (nth-value 0 (quot-rem 17 5))
+==> 3
+
+>>> (nth-value 1 (quot-rem 17 5))
+==> 2
