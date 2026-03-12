@@ -1,5 +1,8 @@
 # Scoping
 
+*Quick reference: `(help "scoping")` — Full documentation: this file.*
+
+
 Python's Lisp uses **lexical scope**: a variable is resolved by looking
 outward through the statically nested forms in which it appears, not
 through the runtime call stack.  This document covers how bindings are
@@ -232,3 +235,7 @@ Use `let` when you want the bindings to be local.
 | `(progn body...)` | Sequence; no new scope |
 
 See also: CLOSURES for captured environments; CONTROL-TRANSFER for block/return-from.
+
+---
+
+*See `(help "scoping")` for the condensed quick reference.*

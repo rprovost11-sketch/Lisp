@@ -1,5 +1,8 @@
 # Streams
 
+*Quick reference: `(help "streams")` — Full documentation: this file.*
+
+
 A stream is an object that represents a source or destination for character
 data.  File streams connect to files on disk.  String streams read from or
 write to an in-memory string.  The standard streams connect to the terminal.
@@ -387,3 +390,7 @@ Forces any buffered output to be written.
 | `(open-stream-p stream)` | T if open |
 | `(input-stream-p stream)` | T if readable |
 | `(output-stream-p stream)` | T if writable |
+
+---
+
+*See `(help "streams")` for the condensed quick reference.*

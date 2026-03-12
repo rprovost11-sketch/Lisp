@@ -1,5 +1,8 @@
 # Lambda Lists
 
+*Quick reference: `(help "lambda-list")` — Full documentation: this file.*
+
+
 A lambda list is the parameter specification that appears in a `lambda`,
 `defun`, or `defmacro` form.  It describes what arguments the callable
 accepts, how they are bound to names, and what default values are used
@@ -329,3 +332,7 @@ See EXTENSIONS for more on writing primitives.
 | `&allow-other-keys` | `&key` section | Ignore unknown keywords |
 | `(var init)` | `&aux` | Local binding; not an argument |
 | `(pattern)` | Macro positional | Destructure nested list |
+
+---
+
+*See `(help "lambda-list")` for the condensed quick reference.*

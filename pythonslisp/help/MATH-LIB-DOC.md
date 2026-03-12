@@ -1,5 +1,8 @@
 # Math Library
 
+*Quick reference: `(help "math-lib")` — Full documentation: this file.*
+
+
 The math library consists of primitive operations (built in to the
 interpreter) and a collection of Lisp-defined functions loaded at startup.
 Together they cover arithmetic, number theory, trigonometry, rounding,
@@ -246,3 +249,7 @@ pairs (or all pairs for `/=`).
 | `PI` / `E` | Math constants |
 | `(zerop x)` `(plusp x)` `(minusp x)` | Zero/positive/negative |
 | `(evenp n)` `(oddp n)` | Even/odd |
+
+---
+
+*See `(help "math-lib")` for the condensed quick reference.*

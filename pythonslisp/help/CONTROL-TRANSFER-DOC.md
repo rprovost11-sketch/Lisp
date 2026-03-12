@@ -1,5 +1,8 @@
 # Control Transfer
 
+*Quick reference: `(help "control-transfer")` — Full documentation: this file.*
+
+
 Python's Lisp provides several mechanisms for non-local exit — returning
 from a point other than the normal end of a computation.  Each mechanism
 has a different scope and use case.
@@ -238,3 +241,7 @@ See CONDITIONS for the complete condition system API.
 | `(handler-case form (type (e) body))` | Catch by condition type |
 
 See also: LOOPING for `return` in loop macros; CONDITIONS for the full condition API.
+
+---
+
+*See `(help "control-transfer")` for the condensed quick reference.*

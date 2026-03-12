@@ -1,5 +1,8 @@
 # Types
 
+*Quick reference: `(help "types")` — Full documentation: this file.*
+
+
 Python's Lisp is dynamically typed: every value carries its type at
 runtime.  This document describes the type system, how to query and test
 types, and the full type hierarchy.
@@ -255,3 +258,7 @@ Python's Lisp has three equality predicates:
 | `(etypecase x (t1 body) ...)` | Dispatch; error if no match |
 | `(numberp x)` `(stringp x)` etc. | Type predicates |
 | `(eq a b)` `(eql a b)` `(equal a b)` | Equality |
+
+---
+
+*See `(help "types")` for the condensed quick reference.*

@@ -1,5 +1,8 @@
 # The Condition System
 
+*Quick reference: `(help "conditions")` — Full documentation: this file.*
+
+
 The condition system provides a structured way to signal and handle
 exceptional situations.  A condition is a typed object carrying a message.
 Code that detects a problem signals a condition; code that knows how to
@@ -267,3 +270,7 @@ want to log the error, recover specifically, or distinguish condition types.
 | `(handler-case form (t (var) body...))` | Catch-all: any condition or error |
 | `(handler-case form (error (var) body...))` | Catch-all: same as T |
 | `(ignore-errors body...)` | Suppress all errors, return NIL on failure |
+
+---
+
+*See `(help "conditions")` for the condensed quick reference.*

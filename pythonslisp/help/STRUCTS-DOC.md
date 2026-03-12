@@ -1,5 +1,8 @@
 # Structs
 
+*Quick reference: `(help "structs")` — Full documentation: this file.*
+
+
 `defstruct` defines a named record type and generates a complete set of
 functions for creating, inspecting, and copying instances.  Each struct type
 is independent: the predicate and accessors for one type know nothing about
@@ -316,3 +319,7 @@ Copier:      (copy-color inst)
 | `(type-of inst)` | Returns type name symbol |
 | `(typep obj 'name)` | T if obj is an instance of NAME |
 | `(help name)` | Show struct descriptor |
+
+---
+
+*See `(help "structs")` for the condensed quick reference.*

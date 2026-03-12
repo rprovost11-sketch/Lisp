@@ -1,5 +1,8 @@
 # Multiple Values
 
+*Quick reference: `(help "multiple-values")` — Full documentation: this file.*
+
+
 Python's Lisp supports returning more than one value from a function, as
 in Common Lisp.  Multiple values are distinct from returning a list: the
 caller decides whether it wants all values, just the primary value, or
@@ -179,3 +182,7 @@ Remaining values are silently discarded.
 | `(truncate n d)` | Truncate quotient + remainder |
 
 See also: MATH-LIB for floor/ceiling/round/truncate details.
+
+---
+
+*See `(help "multiple-values")` for the condensed quick reference.*

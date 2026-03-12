@@ -1,5 +1,8 @@
 # Sequences
 
+*Quick reference: `(help "sequences")` — Full documentation: this file.*
+
+
 Python's Lisp sequences are lists and strings.  This document covers the
 full library of functions for creating, accessing, searching, filtering,
 transforming, and sorting lists.  String-specific operations are in STRINGS.
@@ -252,3 +255,7 @@ Dicts (maps) support some sequence operations:
 | `(reduce fn lst)` | Fold to single value |
 | `(every pred lst...)` | T if pred holds for all |
 | `(some pred lst...)` | First truthy pred result |
+
+---
+
+*See `(help "sequences")` for the condensed quick reference.*

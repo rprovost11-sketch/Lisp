@@ -1,5 +1,8 @@
 # Closures and Lexical Scope
 
+*Quick reference: `(help "closures")` — Full documentation: this file.*
+
+
 A closure is a function that captures the lexical environment in which it
 was defined.  Any free variable referenced in the function body is looked
 up in the environment that existed when the function was created, not when
@@ -201,3 +204,7 @@ call them with `funcall` or `apply`:
 | Recursive closure | Bind name to NIL first, then `setf` to the lambda |
 
 See also: SCOPING for `let`/`let*` scoping rules.
+
+---
+
+*See `(help "closures")` for the condensed quick reference.*

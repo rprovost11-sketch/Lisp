@@ -1,5 +1,8 @@
 # The Module System
 
+*Quick reference: `(help "modules")` — Full documentation: this file.*
+
+
 Modules are named namespaces that isolate definitions from the global
 environment.  A module holds any number of symbol bindings — functions,
 macros, variables — that are accessed through the module rather than looked
@@ -223,3 +226,7 @@ Example — explore a loaded module:
 | `(modulep x)` | T if X is a module |
 | `(module-name mod)` | Name of module as a string |
 | `(module-symbols mod)` | Sorted list of symbols in module |
+
+---
+
+*See `(help "modules")` for the condensed quick reference.*

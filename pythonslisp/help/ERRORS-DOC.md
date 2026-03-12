@@ -1,5 +1,8 @@
 # Errors
 
+*Quick reference: `(help "errors")` — Full documentation: this file.*
+
+
 Python's Lisp has two ways to report exceptional situations: the `error`
 primitive for unrecoverable failures, and the condition system (`signal`,
 `handler-case`) for structured recoverable conditions.  This document
@@ -200,3 +203,7 @@ is reached.
 | `(condition-type e)` | Extract type from caught condition |
 
 See also: CONDITIONS for the full condition/signal/handler-case API.
+
+---
+
+*See `(help "errors")` for the condensed quick reference.*

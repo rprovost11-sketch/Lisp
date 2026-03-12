@@ -1,5 +1,8 @@
 # Macros
 
+*Quick reference: `(help "macros")` — Full documentation: this file.*
+
+
 Macros are code transformers.  A macro takes unevaluated s-expressions as
 arguments and returns a new s-expression which is then evaluated in their
 place.  This lets you extend the language with new control structures,
@@ -242,3 +245,7 @@ want to synthesize code.
 | `(gensym)` | Fresh unique symbol G*n* |
 | `(gensym "prefix")` | Fresh symbol with given prefix |
 | `(macrop x)` | T if x is a macro |
+
+---
+
+*See `(help "macros")` for the condensed quick reference.*

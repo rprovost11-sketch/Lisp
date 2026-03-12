@@ -1,5 +1,8 @@
 # Looping and Iteration
 
+*Quick reference: `(help "looping")` — Full documentation: this file.*
+
+
 Python's Lisp provides four looping macros for imperative iteration, a set
 of higher-order functions for functional-style iteration over sequences, and
 full tail-call optimization (TCO) so that tail-recursive functions can iterate
@@ -289,3 +292,7 @@ Use tail recursion when:
 - You are threading multiple pieces of state through the loop
 - You want a value computed across the entire iteration
 - The pattern naturally mirrors a mathematical definition
+
+---
+
+*See `(help "looping")` for the condensed quick reference.*

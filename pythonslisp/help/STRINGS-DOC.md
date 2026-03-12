@@ -1,5 +1,8 @@
 # Strings
 
+*Quick reference: `(help "strings")` — Full documentation: this file.*
+
+
 Strings in Python's Lisp are immutable sequences of characters represented
 as Python str values.  String literals use double quotes with standard
 escape sequences (`\n`, `\t`, `\\`, `\"`).
@@ -226,3 +229,7 @@ See STREAMS for more string stream operations.
 | `(equal s1 s2)` | String equality |
 | `(writef fmt args)` | Formatted string output |
 | `(integer s)` / `(float s)` | Parse string as number |
+
+---
+
+*See `(help "strings")` for the condensed quick reference.*
