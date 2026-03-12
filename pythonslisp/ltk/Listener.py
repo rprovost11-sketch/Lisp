@@ -60,7 +60,9 @@ class Listener( object ):
       print( f'{BOLD_WHITE}{{language}} {{version}} by {{author}}{RESET}'.format(**kwargs) )
       print( f'{DIM}Project home {{project}}{RESET}'.format(**kwargs) )
       print( )
-      print( f'{DIM}- Initializing Listener{RESET}', flush=True )
+      print( f'{DIM}- Interpreter Initialized{RESET}', flush=True )      
+      print( f'{DIM}- Runtime Library Loaded{RESET}', flush=True )      
+      print( f'{DIM}- Listener Initialized{RESET}', flush=True )
       self._interp        = anInterpreter
       self._testdir       = testdir
       self._logFile: Any  = None

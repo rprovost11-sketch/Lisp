@@ -19,6 +19,7 @@ from pythonslisp.Analyzer import Analyzer
 from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
 from pythonslisp.extensions import LambdaListMode, primitive as _ext_primitive
+from pythonslisp.CEK import cek_eval as _cek_eval
 
 
 def _primary( val: Any ) -> Any:
@@ -94,7 +95,7 @@ class Interpreter( InterpreterBase ):
          for form in top_level_forms:
             form = Expander.expand( ctx, self._env, form )
             Analyzer.analyze( self._env, form )
-            returnVal = Interpreter._lEval( ctx, self._env, form )
+            returnVal = _cek_eval( ctx, self._env, form )
       except ContinuationInvoked:
          raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       except Thrown as e:
@@ -119,7 +120,7 @@ class Interpreter( InterpreterBase ):
          for form in top_level_forms:
             form = Expander.expand( ctx, self._env, form )
             Analyzer.analyze( self._env, form )
-            returnVal = Interpreter._lEval( ctx, self._env, form )
+            returnVal = _cek_eval( ctx, self._env, form )
          evalTime = time.perf_counter() - startTime
       except ContinuationInvoked:
          raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
@@ -141,7 +142,7 @@ class Interpreter( InterpreterBase ):
          for form in top_level_forms:
             form = Expander.expand( ctx, self._env, form )
             Analyzer.analyze( self._env, form )
-            returnVal = Interpreter._lEval( ctx, self._env, form )
+            returnVal = _cek_eval( ctx, self._env, form )
       except ContinuationInvoked:
          raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       except Thrown as e:
@@ -154,7 +155,7 @@ class Interpreter( InterpreterBase ):
 
    def _makeContext( self, outStrm ) -> Context:
       ctx = Context( outStrm, self._tracer, self._setf_registry )
-      ctx.lEval            = lambda env, sexpr: Interpreter._lEval( ctx, env, sexpr )
+      ctx.lEval            = lambda env, sexpr: _cek_eval( ctx, env, sexpr )
       ctx.lApply           = Interpreter._lApply
       ctx.lBackquoteExpand = Interpreter._lbackquoteExpand
       ctx.parse            = self._parser.parse
@@ -293,7 +294,7 @@ instead of the global environment."""
       elif path.suffix == '.lisp':
          if targetEnv is not None:
             ast = self._parser.parseFile( str(path) )
-            Interpreter._lEval( self._ctx, targetEnv, ast )
+            _cek_eval( self._ctx, targetEnv, ast )
          else:
             self.evalFile( str(path), outStrm )
 
