@@ -68,6 +68,7 @@ class Listener( object ):
       print( )
       print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.' )
+      print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
       if not Listener._rl:
@@ -461,7 +462,8 @@ class Listener( object ):
       self._interp.reboot( )                     # boot/Reboot the interpreter
       print( )
       print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
-      print( 'Enter any expression to have it evaluated by the interpreter.')
+      print( 'Enter any expression to have it evaluated by the interpreter.' )
+      print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
 

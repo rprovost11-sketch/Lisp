@@ -5,9 +5,7 @@
 ;;; Adjust Python's recursion limit for deep Lisp recursion
 (let ((newLimit 10000))
    (if (< (recursion-limit) newLimit)
-       (if (recursion-limit newLimit)
-           (writef "- Recursion limit increased to {0:,d}\n" (list newLimit))
-           (uwriteln! "- Failed to increase recursion limit."))
+       (recursion-limit newLimit)
        nil))
 
 ;;; Standard CL special variables
@@ -76,5 +74,3 @@ Returns the value of the last body form if no error occurs."
    `(handler-case (progn ,@body)
       (t (_ign_e_) nil)))
 
-;;; Online help system welcome message
-(uwriteln! "- For LOHS (lisp online help system) type \"(help)\" to begin.")
