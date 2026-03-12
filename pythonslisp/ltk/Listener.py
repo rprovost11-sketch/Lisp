@@ -497,6 +497,16 @@ class Listener( object ):
       outStrm = io.StringIO()
       totalTestsRun = 0
 
+      useColor   = sys.stdout.isatty()
+      BOLD_WHITE = '\033[1;97m' if useColor else ''
+      GREEN      = '\033[92m'   if useColor else ''
+      RED        = '\033[91m'   if useColor else ''
+      RESET      = '\033[0m'    if useColor else ''
+
+      # Print header to screen before testing begins
+      print( f'\n{BOLD_WHITE}Test Report{RESET}', flush=True )
+      print( f'{BOLD_WHITE}==========={RESET}', flush=True )
+
       # Conduct the testing — redirect stdout to file
       testSummaryList: list[tuple[str, str]] = [ ]
       savedStdout = sys.stdout
@@ -507,17 +517,14 @@ class Listener( object ):
             testResultMsg, numTestsRunThisFile = self.sessionLog_test( filename, verbosity=3 )
             testSummaryList.append( (filename, testResultMsg) )
             totalTestsRun += numTestsRunThisFile
+            resultColor = GREEN if 'TESTS PASSED!' in testResultMsg else RED
+            print( f'{os.path.basename(filename):40} {resultColor}{testResultMsg}{RESET}',
+                   file=savedStdout, flush=True )
       finally:
          sys.stdout = savedStdout
       self._interp.reboot( outStrm=outStrm )
 
-      # Summarize Test Results — print to both screen and file
-      useColor   = sys.stdout.isatty()
-      BOLD_WHITE = '\033[1;97m' if useColor else ''
-      GREEN      = '\033[92m'   if useColor else ''
-      RED        = '\033[91m'   if useColor else ''
-      RESET      = '\033[0m'    if useColor else ''
-
+      # Write full report to run file only
       reportLines = [
          '\n\nTest Report',
          '===========',
@@ -527,19 +534,14 @@ class Listener( object ):
       reportLines.append( '' )
       reportLines.append( f'Total test files: {len(filenameList)}.' )
       reportLines.append( f'Total test cases: {totalTestsRun}.' )
-
       for line in reportLines:
-         print( line, file=runFile )   # always plain in the run file
-         if line in ('\n\nTest Report', '==========='):
-            print( f'{BOLD_WHITE}{line}{RESET}' )
-         elif 'TESTS PASSED!' in line:
-            print( f'{GREEN}{line}{RESET}' )
-         elif 'Failed.' in line and not line.startswith('Total'):
-            print( f'{RED}{line}{RESET}' )
-         else:
-            print( line )
+         print( line, file=runFile )
 
       runFile.close()
+
+      # Print totals and run file path to screen
+      print( f'\nTotal test files: {len(filenameList)}.' )
+      print( f'Total test cases: {totalTestsRun}.' )
       print( f'\nTest output: {runFilename}' )
 
    def _cmd_trace( self, args: list[str] ) -> None:
