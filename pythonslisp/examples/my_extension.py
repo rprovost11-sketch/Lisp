@@ -51,69 +51,68 @@ from pythonslisp.Exceptions import (
     LRuntimePrimError, # runtime error attributed to a specific primitive (preferred)
 )
 
+# primitive — decorator for defining Lisp primitives
 # LambdaListMode — controls how the decorator interprets the lambda list
-from pythonslisp.extensions import LambdaListMode
+from pythonslisp.extensions import primitive, LambdaListMode
 
 
-def register(primitive) -> None:
+# -----------------------------------------------------------------------
+# Example 1: ARITY_ONLY (the most common case)
+#
+# The lambda list is used to compute min/max arg counts and for
+# documentation, but your function receives args as a plain list and
+# must unpack them manually.  Use this for most new primitives.
+# -----------------------------------------------------------------------
 
-    # -----------------------------------------------------------------------
-    # Example 1: ARITY_ONLY (the most common case)
-    #
-    # The lambda list is used to compute min/max arg counts and for
-    # documentation, but your function receives args as a plain list and
-    # must unpack them manually.  Use this for most new primitives.
-    # -----------------------------------------------------------------------
+@primitive( 'greet', '(name &optional (greeting "Hello"))' )
+def LP_greet( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+    """Returns a greeting string.  NAME is required.  GREETING defaults to "Hello"."""
+    name = args[0]
+    greeting = args[1] if len(args) > 1 else "Hello"
+    if not isinstance(name, str):
+        raise LRuntimePrimError( LP_greet, '1st argument NAME must be a string.' )
+    return f'{greeting}, {prettyPrint(name)}!'
 
-    @primitive( 'greet', '(name &optional (greeting "Hello"))' )
-    def LP_greet( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-        """Returns a greeting string.  NAME is required.  GREETING defaults to "Hello"."""
-        name = args[0]
-        greeting = args[1] if len(args) > 1 else "Hello"
-        if not isinstance(name, str):
-            raise LRuntimePrimError( LP_greet, '1st argument NAME must be a string.' )
-        return f'{greeting}, {prettyPrint(name)}!'
+# -----------------------------------------------------------------------
+# Example 2: FULL_BINDING
+#
+# The interpreter runs its full argument-binding machinery before calling
+# your function.  Every parameter in the lambda list is bound as a local
+# variable in env and must be retrieved with env.lookup().  Use this when
+# you have &key parameters or other complex but syntactically valid lambda
+# lists and you want the interpreter to do the unpacking for you.
+# -----------------------------------------------------------------------
 
-    # -----------------------------------------------------------------------
-    # Example 2: FULL_BINDING
-    #
-    # The interpreter runs its full argument-binding machinery before calling
-    # your function.  Every parameter in the lambda list is bound as a local
-    # variable in env and must be retrieved with env.lookup().  Use this when
-    # you have &key parameters or other complex but syntactically valid lambda
-    # lists and you want the interpreter to do the unpacking for you.
-    # -----------------------------------------------------------------------
-
-    @primitive( 'repeat-string', '(string &key (count 2) (separator ""))',
-                mode=LambdaListMode.FULL_BINDING )
-    def LP_repeat_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-        """Returns STRING repeated COUNT times with SEPARATOR between each copy.
+@primitive( 'repeat-string', '(string &key (count 2) (separator ""))',
+            mode=LambdaListMode.FULL_BINDING )
+def LP_repeat_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+    """Returns STRING repeated COUNT times with SEPARATOR between each copy.
 :count (default 2) controls how many copies are produced.
 :separator (default empty string) is inserted between copies."""
-        string    = env.lookup('STRING')
-        count     = env.lookup('COUNT')
-        separator = env.lookup('SEPARATOR')
-        if not isinstance(string, str):
-            raise LRuntimePrimError( LP_repeat_string, '1st argument STRING must be a string.' )
-        if not isinstance(count, int) or count < 0:
-            raise LRuntimePrimError( LP_repeat_string, ':count must be a non-negative integer.' )
-        if not isinstance(separator, str):
-            raise LRuntimePrimError( LP_repeat_string, ':separator must be a string.' )
-        return separator.join([string] * count)
+    string    = env.lookup('STRING')
+    count     = env.lookup('COUNT')
+    separator = env.lookup('SEPARATOR')
+    if not isinstance(string, str):
+        raise LRuntimePrimError( LP_repeat_string, '1st argument STRING must be a string.' )
+    if not isinstance(count, int) or count < 0:
+        raise LRuntimePrimError( LP_repeat_string, ':count must be a non-negative integer.' )
+    if not isinstance(separator, str):
+        raise LRuntimePrimError( LP_repeat_string, ':separator must be a string.' )
+    return separator.join([string] * count)
 
-    # -----------------------------------------------------------------------
-    # Example 3: DOC_ONLY with a special form (preEvalArgs=False)
-    #
-    # preEvalArgs=False means arguments arrive unevaluated (raw AST).
-    # Use this for forms that need to control their own evaluation -- macros
-    # and control structures.  DOC_ONLY with explicit min_args/max_args is
-    # required when the lambda list can't express the real arity (e.g. it
-    # uses non-standard syntax as documentation shorthand).
-    # -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Example 3: DOC_ONLY with a special form (preEvalArgs=False)
+#
+# preEvalArgs=False means arguments arrive unevaluated (raw AST).
+# Use this for forms that need to control their own evaluation -- macros
+# and control structures.  DOC_ONLY with explicit min_args/max_args is
+# required when the lambda list can't express the real arity (e.g. it
+# uses non-standard syntax as documentation shorthand).
+# -----------------------------------------------------------------------
 
-    @primitive( 'comment', '(&rest forms)', preEvalArgs=False,
-                mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
-    def LP_comment( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-        """Ignores all its arguments and returns NIL.  Useful as a block comment.
+@primitive( 'comment', '(&rest forms)', preEvalArgs=False,
+            mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
+def LP_comment( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+    """Ignores all its arguments and returns NIL.  Useful as a block comment.
 Arguments are never evaluated."""
-        return L_NIL
+    return L_NIL

@@ -112,4 +112,4 @@ The `lEval` above is the complete conceptual core.  The real `_lEval` in
 - **Continuations, tracing, and full argument binding** for the complete
   feature set
 
-**Note:** The complete working code from this document is available as a standalone script in `pythonslisp/examples/evaluator.py`. Run it with `python pythonslisp/examples/evaluator.py`.
+**Note:** The complete working code from this document is available as a standalone script in `pythonslisp/examples/IttyBittyLisp.py`. Run it with `python pythonslisp/examples/IttyBittyLisp.py`.

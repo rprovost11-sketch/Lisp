@@ -18,7 +18,7 @@ from pythonslisp.Expander import Expander
 from pythonslisp.Analyzer import Analyzer
 from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
-from pythonslisp.extensions import LambdaListMode
+from pythonslisp.extensions import LambdaListMode, primitive as _ext_primitive
 
 
 def _primary( val: Any ) -> Any:
@@ -288,16 +288,13 @@ instead of the global environment."""
          spec   = importlib.util.spec_from_file_location( path.stem, path )
          module = importlib.util.module_from_spec( spec )
          spec.loader.exec_module( module )
-         if hasattr( module, 'register' ):
-            module.register( self._makeLispFunction( targetEnv ) )
+         _ext_primitive._flush( self._makeLispFunction( targetEnv ) )
       elif path.suffix == '.lisp':
          if targetEnv is not None:
             ast = self._parser.parseFile( str(path) )
             Interpreter._lEval( self._ctx, targetEnv, ast )
          else:
             self.evalFile( str(path), outStrm )
-
-   _primary = staticmethod( _primary )
 
    @staticmethod
    def _lTrue( sExpr: Any ) -> bool:

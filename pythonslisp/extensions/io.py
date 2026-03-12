@@ -16,162 +16,159 @@ from pythonslisp.Parser import Parser, ParseError
 
 _LISP_PARSER = Parser()
 from pythonslisp.ltk.Utils import columnize
-from pythonslisp.extensions import LambdaListMode
+from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.ltk.Highlighter import render_markdown
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
 
 
-def register(primitive) -> None:
+def _decode_escapes( s: str ) -> str:
+   """Interpret standard escape sequences without corrupting non-ASCII text."""
+   return ( s.replace('\\\\', '\x00')
+             .replace('\\n', '\n')
+             .replace('\\t', '\t')
+             .replace('\\"', '"')
+             .replace('\x00', '\\') )
 
-   def _decode_escapes( s: str ) -> str:
-      """Interpret standard escape sequences without corrupting non-ASCII text."""
-      return ( s.replace('\\\\', '\x00')
-                .replace('\\n', '\n')
-                .replace('\\t', '\t')
-                .replace('\\"', '"')
-                .replace('\x00', '\\') )
+def lwrite( outStrm, *values, end='' ):
+   if not values:
+      return []
+   for value in values:
+      valueStr = prettyPrintSExpr( value )
+      valueStr = _decode_escapes( valueStr )
+      print( valueStr, end='', file=outStrm )
+   if end:
+      print( end=end, file=outStrm )
+   return values[-1]
 
-   def lwrite( outStrm, *values, end='' ):
-      if not values:
-         return []
-      for value in values:
-         valueStr = prettyPrintSExpr( value )
-         valueStr = _decode_escapes( valueStr )
-         print( valueStr, end='', file=outStrm )
-      if end:
-         print( end=end, file=outStrm )
-      return values[-1]
+def luwrite( outStrm, *values, end='' ):
+   if not values:
+      return []
+   for value in values:
+      valueStr = prettyPrint( value )
+      valueStr = _decode_escapes( valueStr )
+      print( valueStr, end='', file=outStrm )
+   if end:
+      print( end=end, file=outStrm )
+   return values[-1]
 
-   def luwrite( outStrm, *values, end='' ):
-      if not values:
-         return []
-      for value in values:
-         valueStr = prettyPrint( value )
-         valueStr = _decode_escapes( valueStr )
-         print( valueStr, end='', file=outStrm )
-      if end:
-         print( end=end, file=outStrm )
-      return values[-1]
+def is_struct_descriptor( obj ) -> bool:
+   return isinstance(obj, dict) and obj.get('STRUCT-TYPE') == LSymbol('%STRUCT-DESCRIPTOR%')
 
-   def is_struct_descriptor( obj ) -> bool:
-      return isinstance(obj, dict) and obj.get('STRUCT-TYPE') == LSymbol('%STRUCT-DESCRIPTOR%')
-
-   def print_struct_help( descriptor, outStrm ) -> None:
-      name    = descriptor.get('NAME', LSymbol('?'))
-      docstr  = descriptor.get('DOCSTRING', L_NIL)
-      fields  = descriptor.get('FIELDS', [])
-      nameStr = name.name if isinstance(name, LSymbol) else str(name)
-      nameLow = nameStr.lower()
-      field_names = [ f[0].name.lower()
-                      for f in fields
-                      if isinstance(f, list) and f and isinstance(f[0], LSymbol) ]
-      print( f'STRUCT  {nameStr}', file=outStrm )
-      if isinstance(docstr, str) and docstr:
-         print( file=outStrm )
-         print( f'   {docstr}', file=outStrm )
+def print_struct_help( descriptor, outStrm ) -> None:
+   name    = descriptor.get('NAME', LSymbol('?'))
+   docstr  = descriptor.get('DOCSTRING', L_NIL)
+   fields  = descriptor.get('FIELDS', [])
+   nameStr = name.name if isinstance(name, LSymbol) else str(name)
+   nameLow = nameStr.lower()
+   field_names = [ f[0].name.lower()
+                   for f in fields
+                   if isinstance(f, list) and f and isinstance(f[0], LSymbol) ]
+   print( f'STRUCT  {nameStr}', file=outStrm )
+   if isinstance(docstr, str) and docstr:
       print( file=outStrm )
-      print( 'Fields:', file=outStrm )
-      if isinstance(fields, list) and fields:
-         for fspec in fields:
-            if isinstance(fspec, list) and fspec and isinstance(fspec[0], LSymbol):
-               fname    = fspec[0].name
-               fdefault = prettyPrintSExpr(fspec[1]) if len(fspec) > 1 else 'NIL'
-               print( f'   {fname:<20} default: {fdefault}', file=outStrm )
+      print( f'   {docstr}', file=outStrm )
+   print( file=outStrm )
+   print( 'Fields:', file=outStrm )
+   if isinstance(fields, list) and fields:
+      for fspec in fields:
+         if isinstance(fspec, list) and fspec and isinstance(fspec[0], LSymbol):
+            fname    = fspec[0].name
+            fdefault = prettyPrintSExpr(fspec[1]) if len(fspec) > 1 else 'NIL'
+            print( f'   {fname:<20} default: {fdefault}', file=outStrm )
+   else:
+      print( '   (none)', file=outStrm )
+   print( file=outStrm )
+   key_args = ' '.join(field_names)
+   print( f'Constructor: (make-{nameLow} &key {key_args})', file=outStrm )
+   print( f'Predicate:   ({nameLow}-p obj)', file=outStrm )
+   if field_names:
+      accessors = '  '.join(f'{nameLow}-{n}' for n in field_names)
+      print( f'Accessors:   {accessors}', file=outStrm )
+   print( f'Copier:      (copy-{nameLow} inst)', file=outStrm )
+
+def printHelpListings( outStrm, env, find: str | None = None ) -> None:
+   # Create bins to sort symbols into
+   variablesList = []
+   primitivesList = []
+   functionsList  = []
+   macrosList     = []
+   typesList    = []
+   findUpper = find.upper() if find is not None else None
+   if HELP_DIR.exists():
+      txt_stems = {f.stem.upper() for f in HELP_DIR.glob('*.txt')}
+      md_stems  = {f.stem.upper() for f in HELP_DIR.glob('*.md')}
+      all_stems = sorted(txt_stems | md_stems)
+   else:
+      all_stems = []
+   if findUpper is not None:
+      all_stems = [s for s in all_stems if findUpper in s]
+   topicsList = [f'"{s}"' for s in all_stems]
+   outFile  = outStrm or sys.stdout
+   useColor = hasattr(outFile, 'isatty') and outFile.isatty()
+
+   # Define the color strings
+   BOLD_WHITE = '\033[1;97m' if useColor else ''
+   CYAN       = '\033[96m'   if useColor else ''
+   GREEN      = '\033[92m'   if useColor else ''
+   MAGENTA    = '\033[95m'   if useColor else ''
+   YELLOW     = '\033[93m'   if useColor else ''
+   RESET      = '\033[0m'    if useColor else ''
+
+   # Print a table header
+   def hdr( text ):
+      ul = '=' * len(text)
+      print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
+      print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
+
+   # Bin the global symbols into the various lists, filtering by substring if requested
+   for symbolStr in env.getGlobalEnv().localSymbols():
+      if symbolStr.startswith('%') or symbolStr.endswith('-INTERNAL'):
+         continue
+      if findUpper is not None and findUpper not in symbolStr:
+         continue
+      obj = env.lookupGlobal(symbolStr)
+      if isinstance(obj, LPrimitive):
+         primitivesList.append(symbolStr)
+      elif isinstance(obj, LFunction):
+         functionsList.append(symbolStr)
+      elif isinstance(obj, LMacro):
+         macrosList.append(symbolStr)
+      elif is_struct_descriptor(obj):
+         typesList.append(symbolStr)
       else:
-         print( '   (none)', file=outStrm )
-      print( file=outStrm )
-      key_args = ' '.join(field_names)
-      print( f'Constructor: (make-{nameLow} &key {key_args})', file=outStrm )
-      print( f'Predicate:   ({nameLow}-p obj)', file=outStrm )
-      if field_names:
-         accessors = '  '.join(f'{nameLow}-{n}' for n in field_names)
-         print( f'Accessors:   {accessors}', file=outStrm )
-      print( f'Copier:      (copy-{nameLow} inst)', file=outStrm )
+         variablesList.append(symbolStr)
 
-   def printHelpListings( outStrm, env: Environment, find: str | None = None ) -> None:
-      # Create bins to sort symbols into
-      variablesList = []
-      primitivesList = []
-      functionsList  = []
-      macrosList     = []
-      typesList    = []
-      findUpper = find.upper() if find is not None else None
-      if HELP_DIR.exists():
-         txt_stems = {f.stem.upper() for f in HELP_DIR.glob('*.txt')}
-         md_stems  = {f.stem.upper() for f in HELP_DIR.glob('*.md')}
-         all_stems = sorted(txt_stems | md_stems)
-      else:
-         all_stems = []
-      if findUpper is not None:
-         all_stems = [s for s in all_stems if findUpper in s]
-      topicsList = [f'"{s}"' for s in all_stems]
-      outFile  = outStrm or sys.stdout
-      useColor = hasattr(outFile, 'isatty') and outFile.isatty()
+   # Print out the table
+   hdr( "Predefined Symbols" )
+   columnize( variablesList, 78, file=outStrm )
+   print( file=outStrm )
+   hdr( "Primitives" )
+   columnize( primitivesList, 78, file=outStrm, itemColor=CYAN or None )
+   print( file=outStrm )
+   hdr( "Functions" )
+   columnize( functionsList, 78, file=outStrm, itemColor=GREEN or None )
+   print( file=outStrm )
+   hdr( "Macros" )
+   columnize( macrosList, 78, file=outStrm, itemColor=MAGENTA or None )
+   print( file=outStrm )
+   hdr( "Types" )
+   columnize( typesList, 78, file=outStrm, itemColor=YELLOW or None )
+   print( file=outStrm )
+   hdr( "TOPICS" )
+   columnize( topicsList, 78, file=outStrm, itemColor=YELLOW or None )
+   print( file=outStrm )
+   print( "Type '(help callable)' for available documentation on a callable.", file=outStrm )
+   print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )
+   print( "Type '(help \"substring\" :substring t)' to search all names by substring.", file=outStrm )
 
-      # Define the color strings
-      BOLD_WHITE = '\033[1;97m' if useColor else ''
-      CYAN       = '\033[96m'   if useColor else ''
-      GREEN      = '\033[92m'   if useColor else ''
-      MAGENTA    = '\033[95m'   if useColor else ''
-      YELLOW     = '\033[93m'   if useColor else ''
-      RESET      = '\033[0m'    if useColor else ''
 
-      # Print a table header
-      def hdr( text ):
-         ul = '=' * len(text)
-         print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
-         print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
-
-      # Bin the global symbols into the various lists, filtering by substring if requested
-      for symbolStr in env.getGlobalEnv().localSymbols():
-         if symbolStr.startswith('%') or symbolStr.endswith('-INTERNAL'):
-            continue
-         if findUpper is not None and findUpper not in symbolStr:
-            continue
-         obj = env.lookupGlobal(symbolStr)
-         if isinstance(obj, LPrimitive):
-            primitivesList.append(symbolStr)
-         elif isinstance(obj, LFunction):
-            functionsList.append(symbolStr)
-         elif isinstance(obj, LMacro):
-            macrosList.append(symbolStr)
-         elif is_struct_descriptor(obj):
-            typesList.append(symbolStr)
-         else:
-            variablesList.append(symbolStr)
-
-      # Print out the table
-      hdr( "Predefined Symbols" )
-      columnize( variablesList, 78, file=outStrm )
-      print( file=outStrm )
-      hdr( "Primitives" )
-      columnize( primitivesList, 78, file=outStrm, itemColor=CYAN or None )
-      print( file=outStrm )
-      hdr( "Functions" )
-      columnize( functionsList, 78, file=outStrm, itemColor=GREEN or None )
-      print( file=outStrm )
-      hdr( "Macros" )
-      columnize( macrosList, 78, file=outStrm, itemColor=MAGENTA or None )
-      print( file=outStrm )
-      hdr( "Types" )
-      columnize( typesList, 78, file=outStrm, itemColor=YELLOW or None )
-      print( file=outStrm )
-      hdr( "TOPICS" )
-      columnize( topicsList, 78, file=outStrm, itemColor=YELLOW or None )
-      print( file=outStrm )
-      print( "Type '(help callable)' for available documentation on a callable.", file=outStrm )
-      print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )
-      print( "Type '(help \"substring\" :substring t)' to search all names by substring.", file=outStrm )
-
-   # -----------------------------------------------------------------------
-
-   @primitive( 'open',
-               '(filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))',
-               mode=LambdaListMode.FULL_BINDING )
-   def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Opens and returns a stream connected to a file.
+@primitive( 'open',
+            '(filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))',
+            mode=LambdaListMode.FULL_BINDING )
+def LP_open( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Opens and returns a stream connected to a file.
 :direction :input (default) opens for reading; :output opens for writing.
 :if-exists controls behaviour when an output file already exists:
   :supersede (default) — truncate and overwrite
@@ -181,617 +178,617 @@ def register(primitive) -> None:
 :if-does-not-exist controls behaviour when the file is absent:
   :error (default) — signal an error
   nil              — return nil without opening"""
-      filespec  = env.lookup( LSymbol('FILESPEC') )
-      direction = env.lookup( LSymbol('DIRECTION') )
-      if_exists = env.lookup( LSymbol('IF-EXISTS') )
-      if_dne    = env.lookup( LSymbol('IF-DOES-NOT-EXIST') )
-      if not isinstance( filespec, str ):
-         raise LRuntimePrimError( LP_open, '1st argument expected to be a filename string.' )
-      if direction == LSymbol(':INPUT'):
-         if isinstance( if_dne, list ) and not os.path.exists( filespec ):
+   filespec  = env.lookup( LSymbol('FILESPEC') )
+   direction = env.lookup( LSymbol('DIRECTION') )
+   if_exists = env.lookup( LSymbol('IF-EXISTS') )
+   if_dne    = env.lookup( LSymbol('IF-DOES-NOT-EXIST') )
+   if not isinstance( filespec, str ):
+      raise LRuntimePrimError( LP_open, '1st argument expected to be a filename string.' )
+   if direction == LSymbol(':INPUT'):
+      if isinstance( if_dne, list ) and not os.path.exists( filespec ):
+         return L_NIL
+      try:
+         return open( filespec, 'r' )
+      except FileNotFoundError:
+         raise LRuntimePrimError( LP_open, f'File not found "{filespec}".' )
+   elif direction == LSymbol(':OUTPUT'):
+      if isinstance( if_exists, list ):           # nil
+         if os.path.exists( filespec ):
             return L_NIL
-         try:
-            return open( filespec, 'r' )
-         except FileNotFoundError:
-            raise LRuntimePrimError( LP_open, f'File not found "{filespec}".' )
-      elif direction == LSymbol(':OUTPUT'):
-         if isinstance( if_exists, list ):           # nil
-            if os.path.exists( filespec ):
-               return L_NIL
-            mode_str = 'w'
-         elif if_exists == LSymbol(':SUPERSEDE'):
-            mode_str = 'w'
-         elif if_exists == LSymbol(':APPEND'):
-            mode_str = 'a'
-         elif if_exists == LSymbol(':ERROR'):
-            if os.path.exists( filespec ):
-               raise LRuntimePrimError( LP_open, f'File already exists "{filespec}".' )
-            mode_str = 'w'
-         else:
-            raise LRuntimePrimError( LP_open,
-               ':if-exists must be :supersede, :append, :error, or nil.' )
-         if isinstance( if_dne, list ) and not os.path.exists( filespec ):
-            return L_NIL
-         try:
-            return open( filespec, mode_str )
-         except (FileNotFoundError, OSError):
-            raise LRuntimePrimError( LP_open, f'Cannot open file "{filespec}".' )
+         mode_str = 'w'
+      elif if_exists == LSymbol(':SUPERSEDE'):
+         mode_str = 'w'
+      elif if_exists == LSymbol(':APPEND'):
+         mode_str = 'a'
+      elif if_exists == LSymbol(':ERROR'):
+         if os.path.exists( filespec ):
+            raise LRuntimePrimError( LP_open, f'File already exists "{filespec}".' )
+         mode_str = 'w'
       else:
-         raise LRuntimePrimError( LP_open, ':direction must be :input or :output.' )
+         raise LRuntimePrimError( LP_open,
+            ':if-exists must be :supersede, :append, :error, or nil.' )
+      if isinstance( if_dne, list ) and not os.path.exists( filespec ):
+         return L_NIL
+      try:
+         return open( filespec, mode_str )
+      except (FileNotFoundError, OSError):
+         raise LRuntimePrimError( LP_open, f'Cannot open file "{filespec}".' )
+   else:
+      raise LRuntimePrimError( LP_open, ':direction must be :input or :output.' )
 
-   @primitive( 'make-string-output-stream', '()' )
-   def LP_make_string_output_stream( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Creates and returns a new string output stream for writing.  Use
+@primitive( 'make-string-output-stream', '()' )
+def LP_make_string_output_stream( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Creates and returns a new string output stream for writing.  Use
 get-output-stream-string to retrieve and clear the accumulated content."""
-      return StringIO()
+   return StringIO()
 
-   @primitive( 'make-string-input-stream', '(string &optional (start 0) end)',
-               mode=LambdaListMode.FULL_BINDING )
-   def LP_make_string_input_stream( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Creates and returns a readable string stream backed by string.
+@primitive( 'make-string-input-stream', '(string &optional (start 0) end)',
+            mode=LambdaListMode.FULL_BINDING )
+def LP_make_string_input_stream( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Creates and returns a readable string stream backed by string.
 Optionally constrained to the substring from start (default 0) up to
 but not including end (default: entire string)."""
-      s     = env.lookup( LSymbol('STRING') )
-      start = env.lookup( LSymbol('START') )
-      end   = env.lookup( LSymbol('END') )
-      if not isinstance( s, str ):
-         raise LRuntimePrimError( LP_make_string_input_stream,
-                                     '1st argument expected to be a string.' )
-      start_py = start if isinstance( start, int ) else 0
-      end_py   = end   if isinstance( end, int )   else None
-      return StringIO( s[start_py:end_py] )
+   s     = env.lookup( LSymbol('STRING') )
+   start = env.lookup( LSymbol('START') )
+   end   = env.lookup( LSymbol('END') )
+   if not isinstance( s, str ):
+      raise LRuntimePrimError( LP_make_string_input_stream,
+                                  '1st argument expected to be a string.' )
+   start_py = start if isinstance( start, int ) else 0
+   end_py   = end   if isinstance( end, int )   else None
+   return StringIO( s[start_py:end_py] )
 
-   @primitive( 'get-output-stream-string', '(string-stream)' )
-   def LP_get_output_stream_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns the string accumulated in string-stream since it was created or
+@primitive( 'get-output-stream-string', '(string-stream)' )
+def LP_get_output_stream_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the string accumulated in string-stream since it was created or
 since the last call to get-output-stream-string, then clears the buffer.
 The stream remains open and writable.  (CL semantics.)"""
-      stream = args[0]
-      if not isinstance( stream, StringIO ):
-         raise LRuntimePrimError( LP_get_output_stream_string,
-                                     'Argument must be a string stream (created by make-string-output-stream).' )
-      if stream.closed:
-         raise LRuntimePrimError( LP_get_output_stream_string,
-                                     'String stream is closed.' )
-      content = stream.getvalue()
-      stream.seek( 0 )
-      stream.truncate( 0 )
-      return content
+   stream = args[0]
+   if not isinstance( stream, StringIO ):
+      raise LRuntimePrimError( LP_get_output_stream_string,
+                                  'Argument must be a string stream (created by make-string-output-stream).' )
+   if stream.closed:
+      raise LRuntimePrimError( LP_get_output_stream_string,
+                                  'String stream is closed.' )
+   content = stream.getvalue()
+   stream.seek( 0 )
+   stream.truncate( 0 )
+   return content
 
-   @primitive( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
-   def LP_close( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Closes a stream and returns T.
+@primitive( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
+def LP_close( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Closes a stream and returns T.
 The :abort keyword argument is accepted for CL compatibility but is ignored
 in this implementation (flushing on close cannot be suppressed)."""
-      stream = env.lookup( LSymbol('STREAM') )
-      if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_close, 'Argument expected to be a stream.' )
-      stream.close()
-      return L_T
+   stream = env.lookup( LSymbol('STREAM') )
+   if not isinstance(stream, IOBase):
+      raise LRuntimePrimError( LP_close, 'Argument expected to be a stream.' )
+   stream.close()
+   return L_T
 
-   @primitive( 'flush', '(&optional stream)' )
-   def LP_flush( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Flushes a stream and returns t."""
-      if len(args) == 1:
-         stream = args[0]
-         if not isinstance(stream, IOBase):
-            raise LRuntimePrimError( LP_flush, 'Argument expected to be a stream.' )
-         stream.flush( )
-      else:
-         sys.stdout.flush()
-      return L_T
-
-   @primitive( 'open-stream-p', '(stream)' )
-   def LP_open_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns T if the stream is open, NIL if it is closed."""
+@primitive( 'flush', '(&optional stream)' )
+def LP_flush( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Flushes a stream and returns t."""
+   if len(args) == 1:
       stream = args[0]
       if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_open_stream_p, 'Argument expected to be a stream.' )
-      return L_NIL if stream.closed else L_T
+         raise LRuntimePrimError( LP_flush, 'Argument expected to be a stream.' )
+      stream.flush( )
+   else:
+      sys.stdout.flush()
+   return L_T
 
-   @primitive( 'interactive-stream-p', '(stream)' )
-   def LP_interactive_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
-      stream = args[0]
-      if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_interactive_stream_p, 'Argument expected to be a stream.' )
-      return L_T if stream.isatty() else L_NIL
+@primitive( 'open-stream-p', '(stream)' )
+def LP_open_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns T if the stream is open, NIL if it is closed."""
+   stream = args[0]
+   if not isinstance(stream, IOBase):
+      raise LRuntimePrimError( LP_open_stream_p, 'Argument expected to be a stream.' )
+   return L_NIL if stream.closed else L_T
 
-   @primitive( 'input-stream-p', '(stream)' )
-   def LP_input_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns T if the stream can be read from, NIL otherwise."""
-      stream = args[0]
-      if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_input_stream_p, 'Argument expected to be a stream.' )
-      return L_T if stream.readable() else L_NIL
+@primitive( 'interactive-stream-p', '(stream)' )
+def LP_interactive_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
+   stream = args[0]
+   if not isinstance(stream, IOBase):
+      raise LRuntimePrimError( LP_interactive_stream_p, 'Argument expected to be a stream.' )
+   return L_T if stream.isatty() else L_NIL
 
-   @primitive( 'output-stream-p', '(stream)' )
-   def LP_output_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns T if the stream can be written to, NIL otherwise."""
-      stream = args[0]
-      if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_output_stream_p, 'Argument expected to be a stream.' )
-      return L_T if stream.writable() else L_NIL
+@primitive( 'input-stream-p', '(stream)' )
+def LP_input_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns T if the stream can be read from, NIL otherwise."""
+   stream = args[0]
+   if not isinstance(stream, IOBase):
+      raise LRuntimePrimError( LP_input_stream_p, 'Argument expected to be a stream.' )
+   return L_T if stream.readable() else L_NIL
 
-   @primitive( 'stdin', '()' )
-   def LP_stdin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns the standard input stream (sys.stdin)."""
-      if isinstance( sys.stdin, IOBase ):
-         return sys.stdin
-      if sys.__stdin__ is not None:
-         return sys.__stdin__
+@primitive( 'output-stream-p', '(stream)' )
+def LP_output_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns T if the stream can be written to, NIL otherwise."""
+   stream = args[0]
+   if not isinstance(stream, IOBase):
+      raise LRuntimePrimError( LP_output_stream_p, 'Argument expected to be a stream.' )
+   return L_T if stream.writable() else L_NIL
+
+@primitive( 'stdin', '()' )
+def LP_stdin( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the standard input stream (sys.stdin)."""
+   if isinstance( sys.stdin, IOBase ):
       return sys.stdin
+   if sys.__stdin__ is not None:
+      return sys.__stdin__
+   return sys.stdin
 
-   @primitive( 'stdout', '()' )
-   def LP_stdout( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns the standard output stream (sys.stdout)."""
-      if isinstance( sys.stdout, IOBase ):
-         return sys.stdout
-      if sys.__stdout__ is not None:
-         return sys.__stdout__
+@primitive( 'stdout', '()' )
+def LP_stdout( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the standard output stream (sys.stdout)."""
+   if isinstance( sys.stdout, IOBase ):
       return sys.stdout
+   if sys.__stdout__ is not None:
+      return sys.__stdout__
+   return sys.stdout
 
-   @primitive( 'stderr', '()' )
-   def LP_stderr( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns the standard error stream (sys.stderr)."""
-      if isinstance( sys.stderr, IOBase ):
-         return sys.stderr
-      if sys.__stderr__ is not None:
-         return sys.__stderr__
+@primitive( 'stderr', '()' )
+def LP_stderr( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the standard error stream (sys.stderr)."""
+   if isinstance( sys.stderr, IOBase ):
       return sys.stderr
+   if sys.__stderr__ is not None:
+      return sys.__stderr__
+   return sys.stderr
 
-   @primitive( 'tmpdir', '()' )
-   def LP_tmpdir( ctx: Context, env: Environment, args: list[Any] ) -> str:
-      """Returns the system temporary directory as a string."""
-      return tempfile.gettempdir()
+@primitive( 'tmpdir', '()' )
+def LP_tmpdir( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
+   """Returns the system temporary directory as a string."""
+   return tempfile.gettempdir()
 
-   @primitive( 'path-join', '(path-segment &rest more-segments)' )
-   def LP_path_join( ctx: Context, env: Environment, args: list[Any] ) -> str:
-      """Joins path-segments using the OS path separator.  Returns the result as a string."""
-      for i, arg in enumerate(args):
-         if not isinstance(arg, str):
-            raise LRuntimePrimError( LP_path_join, f'Argument {i+1} expected to be a string.' )
-      return os.path.join(*args)
+@primitive( 'path-join', '(path-segment &rest more-segments)' )
+def LP_path_join( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
+   """Joins path-segments using the OS path separator.  Returns the result as a string."""
+   for i, arg in enumerate(args):
+      if not isinstance(arg, str):
+         raise LRuntimePrimError( LP_path_join, f'Argument {i+1} expected to be a string.' )
+   return os.path.join(*args)
 
-   @primitive( 'writef', '(formatString &optional dictOrList stream)' )
-   def LP_writef( ctx: Context, env: Environment, args: list[Any] ) -> str:
-      """Writes formatted text.  Returns the string that is written.
+@primitive( 'writef', '(formatString &optional dictOrList stream)' )
+def LP_writef( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
+   """Writes formatted text.  Returns the string that is written.
 Takes a Python format string and an optional map or list of values.
 If no second argument is given, the format string is output unchanged.
 Returns the output string."""
-      formatString = args[0]
-      if not isinstance( formatString, str ):
-         raise LRuntimePrimError( LP_writef, "1st argument expected to be a format string." )
+   formatString = args[0]
+   if not isinstance( formatString, str ):
+      raise LRuntimePrimError( LP_writef, "1st argument expected to be a format string." )
 
-      numArgs = len(args)
-      if numArgs == 1:
-         dictOrList = None
+   numArgs = len(args)
+   if numArgs == 1:
+      dictOrList = None
+      stream = ctx.outStrm
+      formattedStr = formatString
+   elif numArgs == 2:
+      otherArg = args[1]
+      if isinstance( otherArg, (list, dict)):
+         dictOrList = otherArg
          stream = ctx.outStrm
-         formattedStr = formatString
-      elif numArgs == 2:
-         otherArg = args[1]
-         if isinstance( otherArg, (list, dict)):
-            dictOrList = otherArg
-            stream = ctx.outStrm
-         elif isinstance(otherArg, IOBase):
-            dictOrList = None
-            stream = otherArg
-            if not stream.writable():
-               raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
-         else:
-            raise LRuntimePrimError( LP_writef, "2nd argument expected to be a list, dict or stream." )
-      else: # numArgs == 3
-         dictOrList, stream = args[1:]
-         if not isinstance(dictOrList, (list, dict)):
-            raise LRuntimePrimError( LP_writef, '2nd argument expected to be a list or dict.' )
-         if not isinstance(stream, IOBase):
-            raise LRuntimePrimError( LP_writef, '3rd argument expected to be a stream.' )
+      elif isinstance(otherArg, IOBase):
+         dictOrList = None
+         stream = otherArg
          if not stream.writable():
             raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
+      else:
+         raise LRuntimePrimError( LP_writef, "2nd argument expected to be a list, dict or stream." )
+   else: # numArgs == 3
+      dictOrList, stream = args[1:]
+      if not isinstance(dictOrList, (list, dict)):
+         raise LRuntimePrimError( LP_writef, '2nd argument expected to be a list or dict.' )
+      if not isinstance(stream, IOBase):
+         raise LRuntimePrimError( LP_writef, '3rd argument expected to be a stream.' )
+      if not stream.writable():
+         raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
 
-      try:
-         if dictOrList is None:
-            formattedStr = formatString
-         elif isinstance( dictOrList, list ):
-            formattedStr = formatString.format( *dictOrList )
-         elif isinstance( dictOrList, dict ):
-            formattedStr = formatString.format( **dictOrList )
-         else:
-            raise LRuntimePrimError( LP_writef, "2nd argument expected to be a list or dict." )
-      except (IndexError, KeyError, ValueError) as e:
-         raise LRuntimePrimError( LP_writef, f"Format error: {e}" )
+   try:
+      if dictOrList is None:
+         formattedStr = formatString
+      elif isinstance( dictOrList, list ):
+         formattedStr = formatString.format( *dictOrList )
+      elif isinstance( dictOrList, dict ):
+         formattedStr = formatString.format( **dictOrList )
+      else:
+         raise LRuntimePrimError( LP_writef, "2nd argument expected to be a list or dict." )
+   except (IndexError, KeyError, ValueError) as e:
+      raise LRuntimePrimError( LP_writef, f"Format error: {e}" )
 
-      outputStr = _decode_escapes( formattedStr )
-      print( outputStr, end='', file=stream )
-      return outputStr
+   outputStr = _decode_escapes( formattedStr )
+   print( outputStr, end='', file=stream )
+   return outputStr
 
-   @primitive( 'write!', '(&optional stream &rest objects)' )
-   def LP_write( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Sequentially prettyPrints in programmer readable text the objects listed.
+@primitive( 'write!', '(&optional stream &rest objects)' )
+def LP_write( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
 the output is written.  If stream is omitted, output goes to stdout."""
-      if args and isinstance( args[0], IOBase):
-         stream = args[0]
-         args = args[1:]
-         if not stream.writable():
-            raise LRuntimePrimError( LP_write, 'Stream is not writable.' )
-      else:
-         stream = ctx.outStrm
-      return lwrite( stream, *args, end='' )
+   if args and isinstance( args[0], IOBase):
+      stream = args[0]
+      args = args[1:]
+      if not stream.writable():
+         raise LRuntimePrimError( LP_write, 'Stream is not writable.' )
+   else:
+      stream = ctx.outStrm
+   return lwrite( stream, *args, end='' )
 
-   @primitive( 'writeLn!', '(&optional stream &rest objects)' )
-   def LP_writeln( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Sequentially prettyPrints in programmer readable text the objects listed.
+@primitive( 'writeLn!', '(&optional stream &rest objects)' )
+def LP_writeln( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
 Returns the last value printed."""
-      if args and isinstance( args[0], IOBase):
-         stream = args[0]
-         args = args[1:]
-         if not stream.writable():
-            raise LRuntimePrimError( LP_writeln, 'Stream is not writable.' )
-      else:
-         stream = ctx.outStrm
-      return lwrite( stream, *args, end='\n' )
+   if args and isinstance( args[0], IOBase):
+      stream = args[0]
+      args = args[1:]
+      if not stream.writable():
+         raise LRuntimePrimError( LP_writeln, 'Stream is not writable.' )
+   else:
+      stream = ctx.outStrm
+   return lwrite( stream, *args, end='\n' )
 
-   @primitive( 'uwrite!', '(&optional stream &rest objects)' )
-   def LP_uwrite( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Sequentially prettyPrints in user readable text the objects listed.
+@primitive( 'uwrite!', '(&optional stream &rest objects)' )
+def LP_uwrite( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
 If stream is omitted, output goes to stdout.  Returns the last value printed."""
-      if args and isinstance( args[0], IOBase):
-         stream = args[0]
-         args = args[1:]
-         if not stream.writable():
-            raise LRuntimePrimError( LP_uwrite, 'Stream is not writable.' )
-      else:
-         stream = ctx.outStrm
-      return luwrite( stream, *args, end='' )
+   if args and isinstance( args[0], IOBase):
+      stream = args[0]
+      args = args[1:]
+      if not stream.writable():
+         raise LRuntimePrimError( LP_uwrite, 'Stream is not writable.' )
+   else:
+      stream = ctx.outStrm
+   return luwrite( stream, *args, end='' )
 
-   @primitive( 'uwriteLn!', '(&optional stream &rest objects)' )
-   def LP_uwriteln( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Sequentially prettyPrints in user readable text the objects listed.
+@primitive( 'uwriteLn!', '(&optional stream &rest objects)' )
+def LP_uwriteln( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
 Returns the last value printed."""
-      if args and isinstance( args[0], IOBase):
-         stream = args[0]
-         args = args[1:]
-         if not stream.writable():
-            raise LRuntimePrimError( LP_uwriteln, 'Stream is not writable.' )
-      else:
-         stream = ctx.outStrm
-      return luwrite( stream, *args, end='\n' )
+   if args and isinstance( args[0], IOBase):
+      stream = args[0]
+      args = args[1:]
+      if not stream.writable():
+         raise LRuntimePrimError( LP_uwriteln, 'Stream is not writable.' )
+   else:
+      stream = ctx.outStrm
+   return luwrite( stream, *args, end='\n' )
 
-   @primitive( 'terpri', '(&optional stream)' )
-   def LP_terpri( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Outputs a newline character.  Returns NIL."""
-      if len(args) == 0:
-         stream = ctx.outStrm
-      else:
-         stream = args[0]
-         if not isinstance(stream, IOBase):
-            raise LRuntimePrimError( LP_terpri, "Optional argument expected to be a stream." )
-         if not stream.writable():
-            raise LRuntimePrimError( LP_terpri, 'Stream is not writable.' )
-      print( end='\n', file=stream )
-      return L_NIL
-
-   @primitive( 'readall', '(stream)' )
-   def LP_readall( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Reads and returns the entire contents of a readable stream as a single string."""
+@primitive( 'terpri', '(&optional stream)' )
+def LP_terpri( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Outputs a newline character.  Returns NIL."""
+   if len(args) == 0:
+      stream = ctx.outStrm
+   else:
       stream = args[0]
       if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_readall, 'Argument expected to be a stream.' )
-      if not stream.readable():
-         raise LRuntimePrimError( LP_readall, 'Stream is not readable.' )
-      return stream.read()
+         raise LRuntimePrimError( LP_terpri, "Optional argument expected to be a stream." )
+      if not stream.writable():
+         raise LRuntimePrimError( LP_terpri, 'Stream is not writable.' )
+   print( end='\n', file=stream )
+   return L_NIL
 
-   @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-   def LP_read_line( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Reads one line of text from stream (default: standard input) and
+@primitive( 'readall', '(stream)' )
+def LP_readall( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Reads and returns the entire contents of a readable stream as a single string."""
+   stream = args[0]
+   if not isinstance(stream, IOBase):
+      raise LRuntimePrimError( LP_readall, 'Argument expected to be a stream.' )
+   if not stream.readable():
+      raise LRuntimePrimError( LP_readall, 'Stream is not readable.' )
+   return stream.read()
+
+@primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+def LP_read_line( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Reads one line of text from stream (default: standard input) and
 returns it as a string, without the trailing newline character.
 At end of file: signals an error if eof-error-p is T (default), otherwise
 returns eof-value (default NIL).  recursive-p is accepted but ignored."""
-      stream       = None
-      eof_error_p  = True
-      eof_value    = L_NIL
-      if len( args ) >= 1 and args[0] is not L_NIL:
-         stream = args[0]
-         if not isinstance( stream, IOBase ):
-            raise LRuntimePrimError( LP_read_line, 'Argument 1 must be a stream.' )
-      if len( args ) >= 2:
-         eof_error_p = args[1] is not L_NIL
-      if len( args ) >= 3:
-         eof_value = args[2]
-      if stream is None:
-         try:
-            return input( )
-         except EOFError:
-            if eof_error_p:
-               raise LRuntimeError( 'read-line: end of file on standard input.' )
-            return eof_value
-      if not stream.readable( ):
-         raise LRuntimePrimError( LP_read_line, 'Stream is not readable.' )
-      line = stream.readline( )
-      if line == '':
+   stream       = None
+   eof_error_p  = True
+   eof_value    = L_NIL
+   if len( args ) >= 1 and args[0] is not L_NIL:
+      stream = args[0]
+      if not isinstance( stream, IOBase ):
+         raise LRuntimePrimError( LP_read_line, 'Argument 1 must be a stream.' )
+   if len( args ) >= 2:
+      eof_error_p = args[1] is not L_NIL
+   if len( args ) >= 3:
+      eof_value = args[2]
+   if stream is None:
+      try:
+         return input( )
+      except EOFError:
          if eof_error_p:
-            raise LRuntimeError( 'read-line: end of file.' )
+            raise LRuntimeError( 'read-line: end of file on standard input.' )
          return eof_value
-      return line[:-1] if line.endswith( '\n' ) else line
+   if not stream.readable( ):
+      raise LRuntimePrimError( LP_read_line, 'Stream is not readable.' )
+   line = stream.readline( )
+   if line == '':
+      if eof_error_p:
+         raise LRuntimeError( 'read-line: end of file.' )
+      return eof_value
+   return line[:-1] if line.endswith( '\n' ) else line
 
-   @primitive( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-   def LP_read_char( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Reads and returns the next character from stream (default: standard input)
+@primitive( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+def LP_read_char( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Reads and returns the next character from stream (default: standard input)
 as a one-character string.
 At end of file: signals an error if eof-error-p is T (default), otherwise
 returns eof-value (default NIL).  recursive-p is accepted but ignored."""
-      stream       = None
-      eof_error_p  = True
-      eof_value    = L_NIL
-      if len( args ) >= 1 and args[0] is not L_NIL:
-         stream = args[0]
-         if not isinstance( stream, IOBase ):
-            raise LRuntimePrimError( LP_read_char, 'Argument 1 must be a stream.' )
-      if len( args ) >= 2:
-         eof_error_p = args[1] is not L_NIL
-      if len( args ) >= 3:
-         eof_value = args[2]
-      if stream is None:
-         ch = sys.stdin.read( 1 )
-         if ch == '':
-            if eof_error_p:
-               raise LRuntimeError( 'read-char: end of file on standard input.' )
-            return eof_value
-         return ch
-      if not stream.readable( ):
-         raise LRuntimePrimError( LP_read_char, 'Stream is not readable.' )
-      ch = stream.read( 1 )
+   stream       = None
+   eof_error_p  = True
+   eof_value    = L_NIL
+   if len( args ) >= 1 and args[0] is not L_NIL:
+      stream = args[0]
+      if not isinstance( stream, IOBase ):
+         raise LRuntimePrimError( LP_read_char, 'Argument 1 must be a stream.' )
+   if len( args ) >= 2:
+      eof_error_p = args[1] is not L_NIL
+   if len( args ) >= 3:
+      eof_value = args[2]
+   if stream is None:
+      ch = sys.stdin.read( 1 )
       if ch == '':
          if eof_error_p:
-            raise LRuntimeError( 'read-char: end of file.' )
+            raise LRuntimeError( 'read-char: end of file on standard input.' )
          return eof_value
       return ch
+   if not stream.readable( ):
+      raise LRuntimePrimError( LP_read_char, 'Stream is not readable.' )
+   ch = stream.read( 1 )
+   if ch == '':
+      if eof_error_p:
+         raise LRuntimeError( 'read-char: end of file.' )
+      return eof_value
+   return ch
 
-   @primitive( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-   def LP_read( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Reads and returns one s-expression from stream (default: standard input),
+@primitive( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
+def LP_read( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Reads and returns one s-expression from stream (default: standard input),
 without evaluating it.  At end of file, signals an error if eof-error-p is T
 (default), otherwise returns eof-value (default NIL).
 recursive-p is accepted but ignored.
 Seekable streams (files, string streams) are supported via tell/seek.
 Non-seekable streams (stdin) are read line by line until a complete expression
 is accumulated."""
-      stream       = None
-      eof_error_p  = True
-      eof_value    = L_NIL
-      if len( args ) >= 1 and args[0] is not L_NIL:
-         stream = args[0]
-         if not isinstance( stream, IOBase ):
-            raise LRuntimePrimError( LP_read, 'Argument 1 must be a stream.' )
-      if len( args ) >= 2:
-         eof_error_p = args[1] is not L_NIL
-      if len( args ) >= 3:
-         eof_value = args[2]
-      if stream is None:
-         stream = sys.stdin
-      if not stream.readable( ):
-         raise LRuntimePrimError( LP_read, 'Stream is not readable.' )
-      if stream.seekable( ):
-         pos     = stream.tell( )
-         content = stream.read( )
-         if not content:
-            if eof_error_p:
-               raise LRuntimeError( 'read: end of file.' )
-            return eof_value
-         try:
-            ast, chars_consumed = _LISP_PARSER.parseOne( content )
-         except ParseError as exc:
-            raise LRuntimeError( f'read: {exc}' )
-         stream.seek( pos + chars_consumed )
-         return ast
-      else:
-         accumulated = ''
-         while True:
-            line = stream.readline( )
-            if line == '':
-               if not accumulated:
-                  if eof_error_p:
-                     raise LRuntimeError( 'read: end of file.' )
-                  return eof_value
-               break
-            accumulated += line
-            try:
-               ast, _ = _LISP_PARSER.parseOne( accumulated )
-               return ast
-            except ParseError:
-               continue
+   stream       = None
+   eof_error_p  = True
+   eof_value    = L_NIL
+   if len( args ) >= 1 and args[0] is not L_NIL:
+      stream = args[0]
+      if not isinstance( stream, IOBase ):
+         raise LRuntimePrimError( LP_read, 'Argument 1 must be a stream.' )
+   if len( args ) >= 2:
+      eof_error_p = args[1] is not L_NIL
+   if len( args ) >= 3:
+      eof_value = args[2]
+   if stream is None:
+      stream = sys.stdin
+   if not stream.readable( ):
+      raise LRuntimePrimError( LP_read, 'Stream is not readable.' )
+   if stream.seekable( ):
+      pos     = stream.tell( )
+      content = stream.read( )
+      if not content:
+         if eof_error_p:
+            raise LRuntimeError( 'read: end of file.' )
+         return eof_value
+      try:
+         ast, chars_consumed = _LISP_PARSER.parseOne( content )
+      except ParseError as exc:
+         raise LRuntimeError( f'read: {exc}' )
+      stream.seek( pos + chars_consumed )
+      return ast
+   else:
+      accumulated = ''
+      while True:
+         line = stream.readline( )
+         if line == '':
+            if not accumulated:
+               if eof_error_p:
+                  raise LRuntimeError( 'read: end of file.' )
+               return eof_value
+            break
+         accumulated += line
          try:
             ast, _ = _LISP_PARSER.parseOne( accumulated )
             return ast
-         except ParseError as exc:
-            raise LRuntimeError( f'read: {exc}' )
-
-   @primitive( 'save', '(filename &rest objects)' )
-   def LP_save( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Saves python object to a text file."""
-      filename, *objs = args
-      if not isinstance(filename, str):
-         raise LRuntimePrimError( LP_save, '1st argument expected to be a filename.' )
-      with open( filename, 'w', encoding='utf-8' ) as st:
-         lines = [ f'{prettyPrintSExpr(obj)}\n' for obj in objs ]
-         st.writelines( lines )
-      return L_NIL
-
-   @primitive( 'load', '(fileName)' )
-   def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
-      filename = args[0]
-      if not isinstance(filename, str):
-         raise LRuntimePrimError( LP_load, 'Argument expected to be a filename.' )
+         except ParseError:
+            continue
       try:
-         with open( filename, 'r', encoding='utf-8' ) as f:
-            content = f.read()
-      except FileNotFoundError:
-         raise LRuntimePrimError( LP_load, f'File not found "{filename}".' )
-      return ctx.parse( content )   # (progn form1 form2 ...)
+         ast, _ = _LISP_PARSER.parseOne( accumulated )
+         return ast
+      except ParseError as exc:
+         raise LRuntimeError( f'read: {exc}' )
 
-   @primitive( 'error', '(formatString &optional dictOrList)' )
-   def LP_error( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Signals a runtime error with the given message string.
+@primitive( 'save', '(filename &rest objects)' )
+def LP_save( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Saves python object to a text file."""
+   filename, *objs = args
+   if not isinstance(filename, str):
+      raise LRuntimePrimError( LP_save, '1st argument expected to be a filename.' )
+   with open( filename, 'w', encoding='utf-8' ) as st:
+      lines = [ f'{prettyPrintSExpr(obj)}\n' for obj in objs ]
+      st.writelines( lines )
+   return L_NIL
+
+@primitive( 'load', '(fileName)' )
+def LP_load( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
+   filename = args[0]
+   if not isinstance(filename, str):
+      raise LRuntimePrimError( LP_load, 'Argument expected to be a filename.' )
+   try:
+      with open( filename, 'r', encoding='utf-8' ) as f:
+         content = f.read()
+   except FileNotFoundError:
+      raise LRuntimePrimError( LP_load, f'File not found "{filename}".' )
+   return ctx.parse( content )   # (progn form1 form2 ...)
+
+@primitive( 'error', '(formatString &optional dictOrList)' )
+def LP_error( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Signals a runtime error with the given message string.
 The format string may optionally be followed by a list or map of values,
 in which case the message is formatted using Python str.format() before
 being raised.  With no second argument the format string is used as-is."""
-      formatString = args[0]
-      if not isinstance( formatString, str ):
-         raise LRuntimePrimError( LP_error, 'Argument 1 must be a String.' )
-      if len(args) == 1:
-         raise LRuntimeError( formatString )
-      dictOrList = args[1]
-      try:
-         if isinstance( dictOrList, list ):
-            message = formatString.format( *dictOrList )
-         elif isinstance( dictOrList, dict ):
-            message = formatString.format( **dictOrList )
-         else:
-            raise LRuntimePrimError( LP_error, '2nd argument expected to be a list or dict.' )
-      except (IndexError, KeyError, ValueError) as e:
-         raise LRuntimePrimError( LP_error, f'Format error: {e}' )
-      raise LRuntimeError( message )
+   formatString = args[0]
+   if not isinstance( formatString, str ):
+      raise LRuntimePrimError( LP_error, 'Argument 1 must be a String.' )
+   if len(args) == 1:
+      raise LRuntimeError( formatString )
+   dictOrList = args[1]
+   try:
+      if isinstance( dictOrList, list ):
+         message = formatString.format( *dictOrList )
+      elif isinstance( dictOrList, dict ):
+         message = formatString.format( **dictOrList )
+      else:
+         raise LRuntimePrimError( LP_error, '2nd argument expected to be a list or dict.' )
+   except (IndexError, KeyError, ValueError) as e:
+      raise LRuntimePrimError( LP_error, f'Format error: {e}' )
+   raise LRuntimeError( message )
 
-   @primitive( 'parse', '(string)' )
-   def LP_parse( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
-      theExprStr = args[0]
-      if not isinstance(theExprStr, str):
-         raise LRuntimePrimError( LP_parse, 'Argument expected to be a string.' )
-      return ctx.parse( theExprStr )
+@primitive( 'parse', '(string)' )
+def LP_parse( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
+   theExprStr = args[0]
+   if not isinstance(theExprStr, str):
+      raise LRuntimePrimError( LP_parse, 'Argument expected to be a string.' )
+   return ctx.parse( theExprStr )
 
-   @primitive( 'python', '(string)' )
-   def LP_python( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Executes some python code from Lisp."""
-      thePythonCode = args[0]
-      if not isinstance(thePythonCode, str):
-         raise LRuntimePrimError( LP_python, 'Argument expected to be a string.' )
-      theReturnVal = eval( thePythonCode, globals(), locals() )
-      return theReturnVal
+@primitive( 'python', '(string)' )
+def LP_python( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Executes some python code from Lisp."""
+   thePythonCode = args[0]
+   if not isinstance(thePythonCode, str):
+      raise LRuntimePrimError( LP_python, 'Argument expected to be a string.' )
+   theReturnVal = eval( thePythonCode, globals(), locals() )
+   return theReturnVal
 
-   @primitive( 'recursion-limit', '(&optional newLimit)' )
-   def LP_recursionlimit( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns or sets the system recursion limit.  The higher the integer
+@primitive( 'recursion-limit', '(&optional newLimit)' )
+def LP_recursionlimit( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns or sets the system recursion limit.  The higher the integer
 argument the deeper the recursion will be allowed to go.  If setting,
 returns newLimit upon success."""
-      if len(args) == 0:
-         return sys.getrecursionlimit()
-      try:
-         newLimit = int(args[0])
-         sys.setrecursionlimit(newLimit)
-         return newLimit
-      except (TypeError, ValueError):
-         raise LRuntimePrimError( LP_recursionlimit, 'Argument must be an integer.' )
+   if len(args) == 0:
+      return sys.getrecursionlimit()
+   try:
+      newLimit = int(args[0])
+      sys.setrecursionlimit(newLimit)
+      return newLimit
+   except (TypeError, ValueError):
+      raise LRuntimePrimError( LP_recursionlimit, 'Argument must be an integer.' )
 
-   @primitive( 'help', '(&optional target &key (substring nil))',
-               mode=LambdaListMode.FULL_BINDING )
-   def LP_help( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Prints a set of tables for all the globally defined symbols and
+@primitive( 'help', '(&optional target &key (substring nil))',
+            mode=LambdaListMode.FULL_BINDING )
+def LP_help( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Prints a set of tables for all the globally defined symbols and
 topics currently available in Python's Lisp. Or prints the usage and
 documentation for a specific callable (primitive, function or macro) or topic.
 
 Type '(help callable)' for available documentation on a callable.
 Type '(help "topic")' for available documentation on the named topic.
 Type '(help "substring" :substring t)' to search all names by substring."""
-      target    = env.lookup( 'TARGET' )
-      substring = env.lookup( 'SUBSTRING' )
+   target    = env.lookup( 'TARGET' )
+   substring = env.lookup( 'SUBSTRING' )
 
-      if substring is not L_NIL:
-         if not isinstance( target, str ):
-            raise LRuntimePrimError( LP_help, ':substring t requires a string target.' )
-         printHelpListings( ctx.outStrm, env, find=target )
-         return L_T
-
-      if isinstance( target, list ) and not target:   # NIL — no target given
-         printHelpListings( ctx.outStrm, env )
-         return L_T
-
-      pos_arg = target
-
-      # Positional arg: show specific callable or topic
-      if isinstance(pos_arg, str):
-         topicName = pos_arg.upper()
-         topicMd   = HELP_DIR / f'{topicName}.md'
-         topicTxt  = HELP_DIR / f'{topicName}.txt'
-         if topicMd.exists():
-            outFile   = ctx.outStrm or sys.stdout
-            use_color = ( hasattr(outFile, 'isatty')
-                          and outFile.isatty()
-                          and os.environ.get('NO_COLOR') is None
-                          and os.environ.get('TERM') != 'dumb' )
-            content  = topicMd.read_text( encoding='utf-8' )
-            rendered = render_markdown( content, use_color=use_color )
-            print( rendered, file=ctx.outStrm )
-         elif topicTxt.exists():
-            print( topicTxt.read_text( encoding='utf-8' ), file=ctx.outStrm )
-         else:
-            print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
-         return L_T
-
-      # If passed a symbol, resolve it to its global value
-      if isinstance(pos_arg, LSymbol):
-         try:
-            pos_arg = env.lookupGlobal(pos_arg.name)
-         except KeyError:
-            raise LRuntimePrimError( LP_help, f'Unknown symbol: {pos_arg.name}.' )
-
-      if is_struct_descriptor(pos_arg):
-         print_struct_help( pos_arg, ctx.outStrm )
-         return L_T
-
-      if not isinstance(pos_arg, LCallable):
-         raise LRuntimePrimError( LP_help, 'First argument expected to be a callable or struct type.' )
-      callableObj = pos_arg
-
-      outStrm  = ctx.outStrm
-      outFile  = outStrm or sys.stdout
-      useColor = hasattr(outFile, 'isatty') and outFile.isatty()
-      CYAN  = '\033[96m' if useColor else ''
-      RESET = '\033[0m'  if useColor else ''
-
-      evalLabel = 'args: pre-evaluated' if callableObj.preEvalArgs else 'args: not pre-evaluated'
-      print( f'{callableObj.typeLabel()}  |  {evalLabel}', file=outStrm )
-      print( file=outStrm )
-      print( f'   {CYAN}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
-      print( file=outStrm )
-      if callableObj.docString != '':
-         valueStr = prettyPrint( callableObj.docString )
-         valueStr = _decode_escapes( valueStr )
-         print( valueStr, file=outStrm )
-
+   if substring is not L_NIL:
+      if not isinstance( target, str ):
+         raise LRuntimePrimError( LP_help, ':substring t requires a string target.' )
+      printHelpListings( ctx.outStrm, env, find=target )
       return L_T
 
-   @primitive( 'define-help-topic', '(name-string text-string)' )
-   def LP_define_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Defines a new help topic by writing a text file to the help directory.
+   if isinstance( target, list ) and not target:   # NIL — no target given
+      printHelpListings( ctx.outStrm, env )
+      return L_T
+
+   pos_arg = target
+
+   # Positional arg: show specific callable or topic
+   if isinstance(pos_arg, str):
+      topicName = pos_arg.upper()
+      topicMd   = HELP_DIR / f'{topicName}.md'
+      topicTxt  = HELP_DIR / f'{topicName}.txt'
+      if topicMd.exists():
+         outFile   = ctx.outStrm or sys.stdout
+         use_color = ( hasattr(outFile, 'isatty')
+                       and outFile.isatty()
+                       and os.environ.get('NO_COLOR') is None
+                       and os.environ.get('TERM') != 'dumb' )
+         content  = topicMd.read_text( encoding='utf-8' )
+         rendered = render_markdown( content, use_color=use_color )
+         print( rendered, file=ctx.outStrm )
+      elif topicTxt.exists():
+         print( topicTxt.read_text( encoding='utf-8' ), file=ctx.outStrm )
+      else:
+         print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
+      return L_T
+
+   # If passed a symbol, resolve it to its global value
+   if isinstance(pos_arg, LSymbol):
+      try:
+         pos_arg = env.lookupGlobal(pos_arg.name)
+      except KeyError:
+         raise LRuntimePrimError( LP_help, f'Unknown symbol: {pos_arg.name}.' )
+
+   if is_struct_descriptor(pos_arg):
+      print_struct_help( pos_arg, ctx.outStrm )
+      return L_T
+
+   if not isinstance(pos_arg, LCallable):
+      raise LRuntimePrimError( LP_help, 'First argument expected to be a callable or struct type.' )
+   callableObj = pos_arg
+
+   outStrm  = ctx.outStrm
+   outFile  = outStrm or sys.stdout
+   useColor = hasattr(outFile, 'isatty') and outFile.isatty()
+   CYAN  = '\033[96m' if useColor else ''
+   RESET = '\033[0m'  if useColor else ''
+
+   evalLabel = 'args: pre-evaluated' if callableObj.preEvalArgs else 'args: not pre-evaluated'
+   print( f'{callableObj.typeLabel()}  |  {evalLabel}', file=outStrm )
+   print( file=outStrm )
+   print( f'   {CYAN}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
+   print( file=outStrm )
+   if callableObj.docString != '':
+      valueStr = prettyPrint( callableObj.docString )
+      valueStr = _decode_escapes( valueStr )
+      print( valueStr, file=outStrm )
+
+   return L_T
+
+@primitive( 'define-help-topic', '(name-string text-string)' )
+def LP_define_help_topic( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
 as a symbol.  An existing topic with the same name is overwritten."""
-      name, text = args
-      if not isinstance( name, str ):
-         raise LRuntimePrimError( LP_define_help_topic, 'Argument 1 must be a string (topic name).' )
-      if not isinstance( text, str ):
-         raise LRuntimePrimError( LP_define_help_topic, 'Argument 2 must be a string (topic text).' )
-      HELP_DIR.mkdir( exist_ok=True )
-      topicFile = HELP_DIR / f'{name.upper()}.txt'
-      topicFile.write_text( text, encoding='utf-8' )
-      return LSymbol( name )
+   name, text = args
+   if not isinstance( name, str ):
+      raise LRuntimePrimError( LP_define_help_topic, 'Argument 1 must be a string (topic name).' )
+   if not isinstance( text, str ):
+      raise LRuntimePrimError( LP_define_help_topic, 'Argument 2 must be a string (topic text).' )
+   HELP_DIR.mkdir( exist_ok=True )
+   topicFile = HELP_DIR / f'{name.upper()}.txt'
+   topicFile.write_text( text, encoding='utf-8' )
+   return LSymbol( name )
 
-   @primitive( 'undefine-help-topic', '(name-string)' )
-   def LP_undefine_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Removes a help topic by deleting its file from the help directory.
+@primitive( 'undefine-help-topic', '(name-string)' )
+def LP_undefine_help_topic( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Removes a help topic by deleting its file from the help directory.
 Returns T if the topic existed and was removed, NIL if the topic was not found."""
-      name = args[0]
-      if not isinstance( name, str ):
-         raise LRuntimePrimError( LP_undefine_help_topic, 'Argument 1 must be a string (topic name).' )
-      topicFile = HELP_DIR / f'{name.upper()}.txt'
-      if topicFile.exists():
-         topicFile.unlink()
-         return L_T
-      return L_NIL
+   name = args[0]
+   if not isinstance( name, str ):
+      raise LRuntimePrimError( LP_undefine_help_topic, 'Argument 1 must be a string (topic name).' )
+   topicFile = HELP_DIR / f'{name.upper()}.txt'
+   if topicFile.exists():
+      topicFile.unlink()
+      return L_T
+   return L_NIL

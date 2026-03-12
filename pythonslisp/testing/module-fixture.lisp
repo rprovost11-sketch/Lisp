@@ -1,4 +1,4 @@
-; module-fixture.lisp — loaded by test31-modules.log via load-module.
+; module-fixture.lisp loaded by test31-modules.log via load-module.
 ; Defines a small library for use in module system tests.
 
 (setf version "1.0")

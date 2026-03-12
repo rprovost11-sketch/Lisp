@@ -1,10 +1,10 @@
-; test31 — module system
+; test31 module system
 ; Covers: parser colon expansion, make-module, modulep, type-of MODULE,
 ;         module-name, module-symbols, module-set!, : navigation,
 ;         setf with colon notation, load-module, nested :name path,
 ;         calling module functions, aliasing into scope.
 
-; ── parser expansion ───────────────────────────────────────────────────────
+; parser expansion
 
 ; foo:bar is expanded by the parser to the list (: foo bar)
 >>> (car 'foo:bar)
@@ -20,11 +20,11 @@
 >>> (length 'a:b:c)
 ==> 4
 
-; leading colon is a keyword symbol — NOT expanded
+; leading colon is a keyword symbol NOT expanded
 >>> ':key
 ==> :KEY
 
-; ── make-module ────────────────────────────────────────────────────────────
+; make-module
 
 >>> (make-module 'tmod)
 ==> #<MODULE TMOD>
@@ -48,7 +48,7 @@
 >>> (module-symbols tmod)
 ==> NIL
 
-; ── module-set! and : navigation ──────────────────────────────────────────
+; module-set! and : navigation 
 
 >>> (module-set! tmod 'x 42)
 ==> 42
@@ -68,7 +68,7 @@
 >>> (module-symbols tmod)
 ==> (X Y)
 
-; ── setf with colon notation ───────────────────────────────────────────────
+; setf with colon notation
 
 ; (setf tmod:z 99) expands via parser to (setf (: tmod z) 99)
 ; which the setf macro expands to (module-set! tmod 'z 99)
@@ -88,7 +88,7 @@
 >>> tmod:x
 ==> 100
 
-; ── load-module — name derived from filename ───────────────────────────────
+; load-module name derived from filename
 
 >>> (load-module "pythonslisp/testing/module-fixture.lisp")
 ==> #<MODULE MODULE-FIXTURE>
@@ -113,7 +113,7 @@
 >>> (boundp 'greet)
 ==> NIL
 
-; ── calling module functions ───────────────────────────────────────────────
+; calling module functions
 
 >>> ((: module-fixture greet) "World")
 ==> "Hello, World!"
@@ -127,7 +127,7 @@
 >>> (: module-fixture version)
 ==> "1.0"
 
-; ── aliasing module symbols into scope ─────────────────────────────────────
+; aliasing module symbols into scope
 
 >>> (setf my-square module-fixture:square)
 ==> (FUNCTION SQUARE (N) ...)
@@ -135,7 +135,7 @@
 >>> (my-square 9)
 ==> 81
 
-; ── load-module with explicit :name ────────────────────────────────────────
+; load-module with explicit :name
 
 >>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 'mathlib)
 ==> #<MODULE MATHLIB>
@@ -146,7 +146,7 @@
 >>> ((: mathlib square) 5)
 ==> 25
 
-; ── load-module with quoted (: ...) path ───────────────────────────────────
+; load-module with quoted (: ...) path
 
 ; 'mylib:utils expands to (quote (: mylib utils))
 ; load-module creates the intermediate package MYLIB automatically
@@ -168,7 +168,7 @@
 >>> ((: mylib utils square) 6)
 ==> 36
 
-; ── nested package navigation ──────────────────────────────────────────────
+; nested package navigation
 
 ; create a second level of nesting
 >>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 'mylib:extra:tools)
@@ -180,7 +180,7 @@
 >>> ((: mylib extra tools square) 4)
 ==> 16
 
-; ── load-extension — Python extension (not a module) ──────────────────────
+; load-extension Python extension (not a module)
 
 ; my_extension.py registers primitives globally, not into a module
 >>> (load-extension "pythonslisp/examples/my_extension.py")
@@ -201,7 +201,7 @@
 >>> (comment this is ignored and returns nil)
 ==> NIL
 
-; ── load-extension with :name — bind primitives into a module ───────────────
+; load-extension with :name bind primitives into a module
 
 ; load my_extension.py into a new module named EXTMOD
 >>> (load-extension "pythonslisp/examples/my_extension.py" :name 'extmod)
@@ -236,7 +236,7 @@
 >>> ((: extpkg tools greet) "Nested")
 ==> "Hello, Nested!"
 
-; ── error cases ────────────────────────────────────────────────────────────
+; error cases
 
 ; navigating into a non-module (tmod:x was set to 100 above)
 >>> (: tmod x y)
