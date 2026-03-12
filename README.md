@@ -108,21 +108,19 @@ initialized/reinitialized you can add .pythonslisp_rc to your home directory.
 API: Using Lisp as a Package
 ============================
 
-The easiest way to use the package is to import then instantiate an
-Interpreter.  Call reboot to initialize the interpreter and load the
-runtime.  If at any time you want completely reset the interpreter you can call
-reboot() again.  Next use the interpreter's eval() functions to call into lisp.
-Everything is persistent across calls to these eval functions so you can mix
-and match which one you use at any given time.
+The easiest way to use the package is to import and instantiate an Interpreter.
+The constructor loads the full runtime automatically.  Use the interpreter's
+eval() functions to call into Lisp.  Everything is persistent across calls so
+you can mix and match which eval function you use at any given time.  To reset
+the interpreter to a clean state, simply instantiate a new one.
 
-The example below simply defines a fibonacci function in lisp, then calls the
-function from python and prints the results.
+The example below defines a fibonacci function in Lisp, then calls it from
+Python and prints the results.
 
           from pythonslisp.Interpreter import Interpreter
           from pythonslisp.AST import prettyPrintSExpr
 
           interp = Interpreter( )
-          interp.reboot( )
           interp.rawEval( '''(defun fibo (num)
                                  (if (< num 2)
                                      1

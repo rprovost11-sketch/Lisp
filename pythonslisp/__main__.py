@@ -71,7 +71,6 @@ def main( ) -> None:
    else:
       # Execute a lisp source file
       try:
-         interp.reboot( )
          interp.evalFile( source_file )
       except FileNotFoundError as ex:
          print( f'File not found: "{ex.filename}"', file=sys.stderr )

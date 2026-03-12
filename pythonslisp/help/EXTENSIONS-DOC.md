@@ -160,14 +160,14 @@ environment (or in a named module, if one is specified).
 
 ### Startup sequence
 
-Each time the interpreter is initialized (by calling `reboot()`) it loads
-extensions in the following order:
+Each time an `Interpreter` is constructed (or `reboot()` is called explicitly)
+it loads extensions in the following order:
 
 1. **Built-in Python extensions** all `.py` files in `pythonslisp/extensions/`
    are loaded alphabetically and their primitives registered.
 2. **Built-in Lisp extensions** all `.lisp` files in `pythonslisp/extensions/`
    are loaded alphabetically.
-3. **Caller-supplied extension directory** if `reboot(ext_dir=...)` is given,
+3. **Caller-supplied extension directory** if `Interpreter(ext_dir=...)` is given,
    all `.py` files in that directory are loaded alphabetically, then all
    `.lisp` files.
 4. **`startup.lisp`** the system startup script is loaded.
@@ -177,7 +177,7 @@ extensions in the following order:
 ### Runtime loading from Python
 
 Use `Interpreter._loadExtFile(path)` to load a single extension file at
-any time after `reboot()`.  Use `Interpreter._loadExtDir(path)` to load a
+any time after construction.  Use `Interpreter._loadExtDir(path)` to load a
 directory.  Both are private methods; the public way to do this from within
 Lisp is with the primitives described below.
 

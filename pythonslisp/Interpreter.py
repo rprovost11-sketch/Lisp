@@ -34,12 +34,13 @@ class Interpreter( InterpreterBase ):
    _SPECIAL_OPERATOR_SET = frozenset({'IF', 'QUOTE', 'LET', 'LET*', 'PROGN', 'SETQ',
                                       'COND', 'CASE', 'FUNCALL', 'APPLY'})
 
-   def __init__( self ) -> None:
+   def __init__( self, ext_dir=None, outStrm=None ) -> None:
       self._parser:       Parser           = Parser()
       self._tracer:       Tracer           = Tracer()
-      self._setf_registry: dict[str, str]  = {}        # accessor-name → field-dict-key
-      self._ctx:          Context          = None      # initialized in reboot()
-      self._env:          Environment      = None      # initialized in reboot()
+      self._setf_registry: dict[str, str]  = {}
+      self._ctx:          Context          = None
+      self._env:          Environment      = None
+      self.reboot( ext_dir=ext_dir, outStrm=outStrm )
 
    def reboot( self, ext_dir=None, outStrm=None ) -> None:
       # Reset tracing state so stale traced-function names don't linger

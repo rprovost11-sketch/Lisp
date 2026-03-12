@@ -65,7 +65,11 @@ class Listener( object ):
       self._testdir       = testdir
       self._logFile: Any  = None
       self._instrumenting = False
-      self._cmd_reboot( [] )
+      print( )
+      print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
+      print( 'Enter any expression to have it evaluated by the interpreter.' )
+      print( f'{BOLD_GREEN}Welcome!{RESET}' )
+      print( )
       if not Listener._rl:
          if sys.platform == 'win32':
             try:
