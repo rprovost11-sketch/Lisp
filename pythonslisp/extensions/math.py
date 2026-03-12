@@ -6,7 +6,7 @@ from fractions import Fraction
 from typing import Any
 
 from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
-from pythonslisp.AST import LNUMBER
+from pythonslisp.AST import LNUMBER, LMultipleValues
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
 
@@ -171,39 +171,67 @@ logarithm (base e).  An optional second argument specifies the base."""
 
    @primitive( 'floor', '(number &optional divisor)' )
    def LP_floor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns the largest integer = number (or <= number/divisor).
-Returns only the primary value; remainder is discarded."""
+      """Returns two values: the largest integer <= number (or <= number/divisor),
+and the remainder (number - quotient*divisor).  In scalar context only the
+quotient is used."""
       try:
          if len(args) == 1:
-            return math.floor( args[0] )
+            q = math.floor( args[0] )
+            r = args[0] - q
          else:
-            return math.floor( args[0] / args[1] )
+            q = math.floor( args[0] / args[1] )
+            r = args[0] - q * args[1]
+         return LMultipleValues( [q, r] )
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LRuntimePrimError( LP_floor, f'Invalid argument: {e}' )
 
    @primitive( 'ceiling', '(number &optional divisor)' )
    def LP_ceiling( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Returns the smallest integer >= number (or >= number/divisor).
-Returns only the primary value; remainder is discarded."""
+      """Returns two values: the smallest integer >= number (or >= number/divisor),
+and the remainder (number - quotient*divisor).  In scalar context only the
+quotient is used."""
       try:
          if len(args) == 1:
-            return math.ceil( args[0] )
+            q = math.ceil( args[0] )
+            r = args[0] - q
          else:
-            return math.ceil( args[0] / args[1] )
+            q = math.ceil( args[0] / args[1] )
+            r = args[0] - q * args[1]
+         return LMultipleValues( [q, r] )
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LRuntimePrimError( LP_ceiling, f'Invalid argument: {e}' )
 
    @primitive( 'round', '(number &optional divisor)' )
    def LP_round( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-      """Rounds number to the nearest integer (ties go to even, per CL).
-Returns only the primary value; remainder is discarded."""
+      """Returns two values: number rounded to the nearest integer (ties go to
+even, per CL) (or rounded quotient of number/divisor), and the remainder
+(number - quotient*divisor).  In scalar context only the quotient is used."""
       try:
          if len(args) == 1:
-            return round( args[0] )
+            q = round( args[0] )
+            r = args[0] - q
          else:
-            return round( args[0] / args[1] )
+            q = round( args[0] / args[1] )
+            r = args[0] - q * args[1]
+         return LMultipleValues( [q, r] )
       except (TypeError, ValueError, ZeroDivisionError) as e:
          raise LRuntimePrimError( LP_round, f'Invalid argument: {e}' )
+
+   @primitive( 'truncate', '(number &optional divisor)' )
+   def LP_truncate( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+      """Returns two values: number truncated toward zero (or truncated quotient
+of number/divisor), and the remainder (number - quotient*divisor).
+In scalar context only the quotient is used."""
+      try:
+         if len(args) == 1:
+            q = math.trunc( args[0] )
+            r = args[0] - q
+         else:
+            q = math.trunc( args[0] / args[1] )
+            r = args[0] - q * args[1]
+         return LMultipleValues( [q, r] )
+      except (TypeError, ValueError, ZeroDivisionError) as e:
+         raise LRuntimePrimError( LP_truncate, f'Invalid argument: {e}' )
 
    @primitive( 'min', '(&rest numbers)' )
    def LP_min( ctx: Context, env: Environment, args: list[Any] ) -> Any:

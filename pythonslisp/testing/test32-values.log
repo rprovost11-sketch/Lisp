@@ -149,3 +149,88 @@ Y
 
 >>> (nth-value 1 (quot-rem 17 5))
 ==> 2
+
+; floor, ceiling, round, truncate — multiple-value returns
+
+; floor 1-arg: quotient and remainder
+>>> (floor 7)
+==> 7
+0
+
+>>> (floor -7)
+==> -7
+0
+
+>>> (floor 7.5)
+==> 7
+0.5
+
+>>> (floor -7.5)
+==> -8
+0.5
+
+; floor 2-arg
+>>> (multiple-value-bind (q r) (floor 17 5)
+...   (list q r))
+==> (3 2)
+
+>>> (multiple-value-bind (q r) (floor -17 5)
+...   (list q r))
+==> (-4 3)
+
+; floor scalar context — primary value only
+>>> (+ (floor 7.9) 1)
+==> 8
+
+; ceiling 1-arg
+>>> (ceiling 7.2)
+==> 8
+-0.7999999999999998
+
+>>> (ceiling -7.2)
+==> -7
+-0.20000000000000018
+
+; ceiling 2-arg
+>>> (multiple-value-bind (q r) (ceiling 17 5)
+...   (list q r))
+==> (4 -3)
+
+; round 1-arg (ties to even)
+>>> (round 2.5)
+==> 2
+0.5
+
+>>> (round 3.5)
+==> 4
+-0.5
+
+; round 2-arg
+>>> (multiple-value-bind (q r) (round 17 5)
+...   (list q r))
+==> (3 2)
+
+; truncate 1-arg
+>>> (truncate 7.9)
+==> 7
+0.9000000000000004
+
+>>> (truncate -7.9)
+==> -7
+-0.9000000000000004
+
+; truncate 2-arg
+>>> (multiple-value-bind (q r) (truncate 17 5)
+...   (list q r))
+==> (3 2)
+
+>>> (multiple-value-bind (q r) (truncate -17 5)
+...   (list q r))
+==> (-3 -2)
+
+; nth-value on floor
+>>> (nth-value 0 (floor 17 5))
+==> 3
+
+>>> (nth-value 1 (floor 17 5))
+==> 2
