@@ -622,7 +622,7 @@ instead of the global environment."""
             # evaluate the body expressions.
             result = L_NIL
             for sexpr in function.bodyAST:
-               result = Interpreter._lEval( ctx, env, sexpr )
+               result = _cek_eval( ctx, env, sexpr )
          else:   # LMacro — should have been expanded before reaching here
             raise LRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
       except LArgBindingError as ex:
@@ -661,14 +661,14 @@ instead of the global environment."""
 
       if head == 'COMMA':
          if depth == 1:
-            return Interpreter._lEval( ctx, env, expr[1] )
+            return ctx.lEval( env, expr[1] )
          else:
             inner = Interpreter._lbackquoteExpand( ctx, env, expr[1], depth - 1 )
             return [ LSymbol('COMMA'), inner ]
 
       if head == 'COMMA-AT':
          if depth == 1:
-            result = Interpreter._lEval( ctx, env, expr[1] )
+            result = ctx.lEval( env, expr[1] )
             if not isinstance( result, list ):
                raise LRuntimePrimError( env.lookup('COMMA-AT'), 'Argument 1 must evaluate to a List.' )
             return [ LSymbol('COMMA-AT'), result ]
