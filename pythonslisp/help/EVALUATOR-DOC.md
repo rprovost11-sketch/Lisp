@@ -99,8 +99,8 @@ if __name__ == '__main__':
 
 ## What the Real Interpreter Adds
 
-The `lEval` above is the complete conceptual core.  The real `_lEval` in
-`Interpreter.py` extends it with:
+The `lEval` above is the complete conceptual core.  The real `cek_eval` in
+`CEK.py` extends it with:
 
 - **More special forms** inlined for performance: `let`, `let*`, `progn`,
   `cond`, `case`, `funcall`, `apply`

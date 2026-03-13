@@ -3,7 +3,7 @@ Expander - Macro expansion and structural normalization as a single pass.
 
 expand() walks the AST once, interleaving top-down macro expansion with
 bottom-up structural normalization.  The result is ready for Analyzer
-and then _lEval.
+and then cek_eval.
 """
 from __future__ import annotations
 

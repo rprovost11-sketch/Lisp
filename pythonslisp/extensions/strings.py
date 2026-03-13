@@ -6,6 +6,7 @@ from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.extensions.sequences import _validate_bounds
+from pythonslisp.AST import prettyPrintSExpr
 
 
 @primitive( 'string-upcase', '(string)' )
@@ -95,3 +96,16 @@ Optional :start and :end bound the region affected; text outside is unchanged.""
    middle   = s[start_n:end_n]
    suffix   = s[end_n:]
    return prefix + _cl_capitalize( middle ) + suffix
+
+@primitive( 'string-join', '(separator list)' )
+def LP_string_join( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Joins the elements of list into a single string, separated by separator.
+Each element is converted via prettyPrintSExpr, except strings which are
+used as-is (without surrounding quotes)."""
+   if not isinstance( args[0], str ):
+      raise LRuntimePrimError( LP_string_join, 'Argument 1 (separator) must be a String.' )
+   if not isinstance( args[1], list ):
+      raise LRuntimePrimError( LP_string_join, 'Argument 2 must be a List.' )
+   parts = [ (elt if isinstance( elt, str ) else prettyPrintSExpr( elt ).strip())
+             for elt in args[1] ]
+   return args[0].join( parts )

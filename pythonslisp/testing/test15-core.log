@@ -2013,6 +2013,40 @@ Type '(help "substring" :substring t)' to search all names by substring.
 >>> (string-capitalize "already Capitalized words")
 ==> "Already Capitalized Words"
 
+; --- string-join ---
+
+>>> (string-join ", " (list 1 2 3))
+==> "1, 2, 3"
+
+>>> (string-join " " (list 'hello 'world))
+==> "HELLO WORLD"
+
+; strings are joined without surrounding quotes
+>>> (string-join ", " (list "a" "b" "c"))
+==> "a, b, c"
+
+; mixed types
+>>> (string-join " | " (list 1 "two" 'three))
+==> "1 | two | THREE"
+
+; empty list
+>>> (string-join ", " (list))
+==> ""
+
+; single element
+>>> (string-join "-" (list 42))
+==> "42"
+
+; error: separator must be a string
+>>> (string-join 42 (list 1 2))
+%%% ERROR 'STRING-JOIN': Argument 1 (separator) must be a String.
+%%% PRIMITIVE USAGE: (STRING-JOIN separator list)
+
+; error: second arg must be a list
+>>> (string-join ", " 99)
+%%% ERROR 'STRING-JOIN': Argument 2 must be a List.
+%%% PRIMITIVE USAGE: (STRING-JOIN separator list)
+
 ; --- gensym ---
 
 >>> (symbolp (gensym))

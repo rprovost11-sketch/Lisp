@@ -38,8 +38,8 @@ to their source as possible and re-raise them as higher-level Lisp exceptions
 Lisp programmer.  This ensures that error messages make sense in Lisp terms
 rather than exposing Python internals.
 
-Do **not** wrap a call to `Interpreter._lEval()` (or anything that calls
-`_lEval()`) in a broad `try` block.  Doing so intercepts exceptions that are
+Do **not** wrap a call to `cek_eval()` (or anything that calls
+`cek_eval()`) in a broad `try` block.  Doing so intercepts exceptions that are
 meant to propagate upward — condition signals, `throw`/`catch` tags,
 `return-from` tokens, and continuation invocations all travel as exceptions
 through the call stack.  Catching them prematurely will break control flow in

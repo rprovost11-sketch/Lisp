@@ -80,7 +80,7 @@ class Environment(EnvironmentBase):
       search for pi is started three scope levels in.
          lookup()  eval time between 0.44 and 0.74 seconds.
          lookup2() eval time between 4.52 and 6.28 seconds.
-      by calling the versions of lookup() from Interpreter._lEval()
+      by calling the versions of lookup() from the evaluator
       '''
       scope: (EnvironmentBase | None) = self
       while scope:
