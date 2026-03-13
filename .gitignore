@@ -8,5 +8,6 @@ build/
 .claude/
 CLAUDE.md
 pythonslisp.egg-info/
+pythonslisp/testing/runs/
 test.py
 test2.py
