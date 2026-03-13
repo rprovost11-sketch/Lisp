@@ -83,14 +83,6 @@
 
 ==> "hello world"
 
-; --- recursion-limit ---
-
->>> ;;; recursion-limit returns current limit
-... (integerp (recursion-limit))
-...
-
-==> T
-
 ; --- funcall errors ---
 
 >>> ;;; Error: funcall with no arguments
@@ -151,22 +143,6 @@
 
 %%% ERROR 'EVAL': 1 argument expected.
 %%% PRIMITIVE USAGE: (EVAL sexpr)
-==>
-
-; --- recursion-limit errors ---
-
->>> ;;; Error: recursion-limit with non-integer
-... (recursion-limit "a")
-
-%%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
-==>
-
->>> ;;; Error: recursion-limit with too many args
-... (recursion-limit 1 2)
-
-%%% ERROR 'RECURSION-LIMIT': 0 or 1 arguments expected.
-%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
 ; --- Control structure edge cases ---
@@ -1481,14 +1457,6 @@
 ...
 
 ==> "ababab"
-
-; --- recursion-limit returns integer ---
-
->>> ;;; recursion-limit returns an integer
-... (integerp (recursion-limit))
-...
-
-==> T
 
 ; --- internal-time-units-per-second / get-internal-real-time ---
 

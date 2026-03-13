@@ -1,5 +1,6 @@
 from __future__ import annotations
 import importlib.util
+import sys
 import time
 from fractions import Fraction
 from pathlib import Path
@@ -34,6 +35,7 @@ class Interpreter( InterpreterBase ):
    BUILTIN_EXT_DIR       = Path(__file__).parent / 'extensions'
 
    def __init__( self, ext_dir=None, outStrm=None ) -> None:
+      sys.setrecursionlimit( 3000 )
       self._parser:       Parser           = Parser()
       self._tracer:       Tracer           = Tracer()
       self._setf_registry: dict[str, str]  = {}
@@ -295,12 +297,6 @@ instead of the global environment."""
             _cek_eval( self._ctx, targetEnv, ast )
          else:
             self.evalFile( str(path), outStrm )
-
-   @staticmethod
-   def _lTrue( sExpr: Any ) -> bool:
-      if isinstance(sExpr, list):
-         return len(sExpr) != 0
-      return True
 
    @staticmethod
    def _lApply( ctx: Context, env: Environment, function: LCallable, args: Sequence ) -> Any:

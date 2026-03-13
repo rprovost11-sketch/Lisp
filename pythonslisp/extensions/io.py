@@ -673,20 +673,6 @@ def LP_python( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    theReturnVal = eval( thePythonCode, globals(), locals() )
    return theReturnVal
 
-@primitive( 'recursion-limit', '(&optional newLimit)' )
-def LP_recursionlimit( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """Returns or sets the system recursion limit.  The higher the integer
-argument the deeper the recursion will be allowed to go.  If setting,
-returns newLimit upon success."""
-   if len(args) == 0:
-      return sys.getrecursionlimit()
-   try:
-      newLimit = int(args[0])
-      sys.setrecursionlimit(newLimit)
-      return newLimit
-   except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_recursionlimit, 'Argument must be an integer.' )
-
 @primitive( 'help', '(&optional target &key (substring nil))',
             mode=LambdaListMode.FULL_BINDING )
 def LP_help( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
