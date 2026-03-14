@@ -150,12 +150,12 @@
    ("c" 3)
 )
 
->>> (hasValue? 1 mymap)
+>>> (has-value-p 1 mymap)
 ...
 
 ==> T
 
->>> (hasValue? 10 mymap)
+>>> (has-value-p 10 mymap)
 ...
 
 ==> NIL
@@ -180,28 +180,28 @@
    ("d" 10)
 )
 
->>> (hasKey? "a" mymap)
+>>> (has-key-p "a" mymap)
 ...
 
 ==> T
 
->>> (hasKey? 3 mymap)
+>>> (has-key-p 3 mymap)
 ...
 
 ==> NIL
 
->>> ;;; Error: hasKey? requires a map as second argument
-... (hasKey? "a" 1)
+>>> ;;; Error: has-key-p requires a map as second argument
+... (has-key-p "a" 1)
 
-%%% ERROR 'HASKEY?': Invalid argument 2.  Dict expected.
-%%% PRIMITIVE USAGE: (HASKEY? key dict)
+%%% ERROR 'HAS-KEY-P': Invalid argument 2.  Dict expected.
+%%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
 ==>
 
->>> ;;; Error: hasValue? requires a list or map as second argument
-... (hasValue? 2 1)
+>>> ;;; Error: has-value-p requires a list or map as second argument
+... (has-value-p 2 1)
 
-%%% ERROR 'HASVALUE?': Invalid argument.  Argument 2 expected to be a list or dict.
-%%% PRIMITIVE USAGE: (HASVALUE? value listOrDict)
+%%% ERROR 'HAS-VALUE-P': Invalid argument.  Argument 2 expected to be a list or dict.
+%%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
 >>> ;;; Error: update! requires map arguments

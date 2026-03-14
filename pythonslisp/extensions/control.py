@@ -87,26 +87,26 @@ def LP_quote( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Returns expr without evaluating it."""
    return args[0]
 
-@primitive( 'backquote', '(sexpr)', preEvalArgs=False )
-def LP_backquote( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """Similar to quote but allows comma and comma-at expressions within expr.
-Backquotes may be nested; each level of comma belongs to the nearest enclosing backquote."""
-   result = ctx.lBackquoteExpand( ctx, env, args[0] )
+@primitive( 'quasiquote', '(sexpr)', preEvalArgs=False )
+def LP_quasiquote( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Similar to quote but allows unquote and unquote-splicing expressions within expr.
+Quasiquotes may be nested; each level of unquote belongs to the nearest enclosing quasiquote."""
+   result = ctx.lQuasiquoteExpand( ctx, env, args[0] )
    if ( isinstance(result, list) and
         len(result) > 0 and
-        result[0] == LSymbol('COMMA-AT') ):
-      raise LRuntimeError( "Ill-placed ,@ (COMMA-AT): splice requires a list context." )
+        result[0] == LSymbol('UNQUOTE-SPLICING') ):
+      raise LRuntimeError( "Ill-placed ,@ (UNQUOTE-SPLICING): splice requires a list context." )
    return result
 
-@primitive( 'comma', '(sexpr)', preEvalArgs=False )
-def LP_comma( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """Must occur within a backquote expr or it's an error."""
-   raise LRuntimePrimError( LP_comma, 'COMMA can only occur inside a BACKQUOTE.')
+@primitive( 'unquote', '(sexpr)', preEvalArgs=False )
+def LP_unquote( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Must occur within a quasiquote expr or it's an error."""
+   raise LRuntimePrimError( LP_unquote, 'UNQUOTE can only occur inside a QUASIQUOTE.')
 
-@primitive( 'comma-at', '(sexpr)', preEvalArgs=False )
-def LP_comma_at( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """Must occur within a backquote expr or it's an error."""
-   raise LRuntimePrimError( LP_comma_at, 'COMMA-AT can only occur inside a BACKQUOTE.')
+@primitive( 'unquote-splicing', '(sexpr)', preEvalArgs=False )
+def LP_unquote_splicing( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Must occur within a quasiquote expr or it's an error."""
+   raise LRuntimePrimError( LP_unquote_splicing, 'UNQUOTE-SPLICING can only occur inside a QUASIQUOTE.')
 
 @primitive( 'block', '(name &rest body)', preEvalArgs=False )
 def LP_block( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

@@ -28,27 +28,27 @@
 
 ==> (R H L)
 
-; --- nested backquotes ---
+; --- nested quasiquotes ---
 
->>> ;;; inner backquote preserved as data no commas
+>>> ;;; inner quasiquote preserved as data no unquotes
 ... `(a `b)
 ...
 
-==> (A (BACKQUOTE B))
+==> (A (QUASIQUOTE B))
 
->>> ;;; inner comma preserved as form (belongs to inner backquote)
+>>> ;;; inner unquote preserved as form (belongs to inner quasiquote)
 ... `(a `(b ,name))
 ...
 
-==> (A (BACKQUOTE (B (COMMA NAME))))
+==> (A (QUASIQUOTE (B (UNQUOTE NAME))))
 
->>> ;;; double-comma: outer comma evaluated now, inner comma preserved
+>>> ;;; double-unquote: outer unquote evaluated now, inner unquote preserved
 ... `(a `(b ,,name))
 ...
 
-==> (A (BACKQUOTE (B (COMMA JOHN))))
+==> (A (QUASIQUOTE (B (UNQUOTE JOHN))))
 
->>> ;;; macro-generating-macro using nested backquote
+>>> ;;; macro-generating-macro using nested quasiquote
 ... (defmacro make-adder-macro (name amount)
 ...    `(defmacro ,name (x)
 ...       `(+ ,x ,,amount)))

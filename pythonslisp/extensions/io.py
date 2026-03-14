@@ -416,8 +416,8 @@ the output is written.  If stream is omitted, output goes to stdout."""
       stream = ctx.outStrm
    return lwrite( stream, *args, end='' )
 
-@primitive( 'writeLn!', '(&optional stream &rest objects)' )
-def LP_writeln( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+@primitive( 'write-line', '(&optional stream &rest objects)' )
+def LP_write_line( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
@@ -426,7 +426,7 @@ Returns the last value printed."""
       stream = args[0]
       args = args[1:]
       if not stream.writable():
-         raise LRuntimePrimError( LP_writeln, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_write_line, 'Stream is not writable.' )
    else:
       stream = ctx.outStrm
    return lwrite( stream, *args, end='\n' )
@@ -445,8 +445,8 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
       stream = ctx.outStrm
    return luwrite( stream, *args, end='' )
 
-@primitive( 'uwriteLn!', '(&optional stream &rest objects)' )
-def LP_uwriteln( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+@primitive( 'uwrite-line', '(&optional stream &rest objects)' )
+def LP_uwrite_line( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
@@ -455,7 +455,7 @@ Returns the last value printed."""
       stream = args[0]
       args = args[1:]
       if not stream.writable():
-         raise LRuntimePrimError( LP_uwriteln, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_uwrite_line, 'Stream is not writable.' )
    else:
       stream = ctx.outStrm
    return luwrite( stream, *args, end='\n' )

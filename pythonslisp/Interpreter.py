@@ -157,7 +157,7 @@ class Interpreter( InterpreterBase ):
       ctx = Context( outStrm, self._tracer, self._setf_registry )
       ctx.lEval            = lambda env, sexpr: _cek_eval( ctx, env, sexpr )
       ctx.lApply           = Interpreter._lApply
-      ctx.lBackquoteExpand = Interpreter._lbackquoteExpand
+      ctx.lQuasiquoteExpand = Interpreter._lquasiquoteExpand
       ctx.parse            = self._parser.parse
       ctx.parseFile        = self._parser.parseFile
       ctx.parseOne         = self._parser.parseOne
@@ -349,11 +349,11 @@ instead of the global environment."""
       return result
 
    @staticmethod
-   def _lbackquoteExpand( ctx: Context, env: Environment, expr: Any, depth: int = 1 ) -> Any:
-      '''Expand a backquote expression, tracking nesting depth.
-      depth=1 is the innermost (active) backquote level.  Commas and
+   def _lquasiquoteExpand( ctx: Context, env: Environment, expr: Any, depth: int = 1 ) -> Any:
+      '''Expand a quasiquote expression, tracking nesting depth.
+      depth=1 is the innermost (active) quasiquote level.  Commas and
       splices are only evaluated at depth 1; at deeper levels they are
-      preserved as template structure for the inner backquote.'''
+      preserved as template structure for the inner quasiquote.'''
       if not isinstance(expr, list):
          return expr       # atoms/symbols pass through unchanged at any depth
 
@@ -362,37 +362,37 @@ instead of the global environment."""
 
       head = expr[0]
 
-      if head == 'BACKQUOTE':
-         # Nested backquote — increase depth, process content, rewrap
-         inner = Interpreter._lbackquoteExpand( ctx, env, expr[1], depth + 1 )
-         return [ LSymbol('BACKQUOTE'), inner ]
+      if head == 'QUASIQUOTE':
+         # Nested quasiquote — increase depth, process content, rewrap
+         inner = Interpreter._lquasiquoteExpand( ctx, env, expr[1], depth + 1 )
+         return [ LSymbol('QUASIQUOTE'), inner ]
 
-      if head == 'COMMA':
+      if head == 'UNQUOTE':
          if depth == 1:
             return ctx.lEval( env, expr[1] )
          else:
-            inner = Interpreter._lbackquoteExpand( ctx, env, expr[1], depth - 1 )
-            return [ LSymbol('COMMA'), inner ]
+            inner = Interpreter._lquasiquoteExpand( ctx, env, expr[1], depth - 1 )
+            return [ LSymbol('UNQUOTE'), inner ]
 
-      if head == 'COMMA-AT':
+      if head == 'UNQUOTE-SPLICING':
          if depth == 1:
             result = ctx.lEval( env, expr[1] )
             if not isinstance( result, list ):
-               raise LRuntimePrimError( env.lookup('COMMA-AT'), 'Argument 1 must evaluate to a List.' )
-            return [ LSymbol('COMMA-AT'), result ]
+               raise LRuntimePrimError( env.lookup('UNQUOTE-SPLICING'), 'Argument 1 must evaluate to a List.' )
+            return [ LSymbol('UNQUOTE-SPLICING'), result ]
          else:
-            inner = Interpreter._lbackquoteExpand( ctx, env, expr[1], depth - 1 )
-            return [ LSymbol('COMMA-AT'), inner ]
+            inner = Interpreter._lquasiquoteExpand( ctx, env, expr[1], depth - 1 )
+            return [ LSymbol('UNQUOTE-SPLICING'), inner ]
 
       # Regular list — process each element at the same depth.
-      # Splice COMMA-AT sentinels only at depth 1.
+      # Splice UNQUOTE-SPLICING sentinels only at depth 1.
       resultList: list[Any] = [ ]
       for listElt in expr:
-         resultListElt = Interpreter._lbackquoteExpand( ctx, env, listElt, depth )
+         resultListElt = Interpreter._lquasiquoteExpand( ctx, env, listElt, depth )
          if ( depth == 1 and
               isinstance(resultListElt, list) and
               len(resultListElt) > 0 and
-              resultListElt[0] == 'COMMA-AT' ):
+              resultListElt[0] == 'UNQUOTE-SPLICING' ):
             for elt in resultListElt[1]:
                resultList.append( elt )
          else:

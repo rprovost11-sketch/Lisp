@@ -5,9 +5,9 @@
 | Syntax | Expands to | Meaning |
 |---|---|---|
 | `'expr`    | `(quote expr)`     | Return expr unevaluated |
-| `` `expr `` | `(backquote expr)` | Template -- mostly unevaluated |
-| `,expr`    | `(comma expr)`     | Evaluate expr inside a backquote |
-| `,@expr`   | `(comma-at expr)`  | Splice a list into a backquote |
+| `` `expr `` | `(quasiquote expr)` | Template -- mostly unevaluated |
+| `,expr`    | `(unquote expr)`     | Evaluate expr inside a quasiquote |
+| `,@expr`   | `(unquote-splicing expr)`  | Splice a list into a quasiquote |
 
 ## Quote -- Suppress Evaluation
 
@@ -17,7 +17,7 @@
 '(a b c)      ;==> (A B C)   (list of symbols)
 ```
 
-## Backquote -- Templates
+## Quasiquote -- Templates
 
 ```lisp
 (setf x 42)
@@ -32,6 +32,6 @@
 `(1 ,@items 5)           ;==> (1 2 3 4 5)
 ```
 
-Backquote is the primary tool for writing macros.
+Quasiquote is the primary tool for writing macros.
 
 See `(help "quoting-doc")` for full documentation and examples.

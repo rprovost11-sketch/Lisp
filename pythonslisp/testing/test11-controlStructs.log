@@ -74,7 +74,7 @@
 >>> (defun countdown1 (num)
 ...    (while (> num 0)
 ...       (let ()
-...          (writeLn! num)
+...          (write-line num)
 ...          (setf num (- num 1))
 ...          )
 ...       )
@@ -96,7 +96,7 @@
 >>> (defun countdown2 (num)
 ...    (while (> num 0)
 ...       (let ()
-...          (writeLn! num)
+...          (write-line num)
 ...          (setf num (- num 1))
 ...          )
 ...    )
@@ -113,7 +113,7 @@
 ==> 0
 
 >>> (dolist (item '(0 1 2 3 4 5))
-...    (writeLn! item))
+...    (write-line item))
 ...
 0
 1
@@ -138,7 +138,7 @@
 ABC
 ==> DONE
 
->>> (dotimes (i 3) (writeLn! i))
+>>> (dotimes (i 3) (write-line i))
 ...
 0
 1

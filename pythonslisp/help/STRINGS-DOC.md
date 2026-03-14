@@ -168,11 +168,11 @@ output (or a stream if supplied as the third argument):
 ```lisp
 ; Programmer-readable (strings shown with quotes)
 (write! "hello")    ; prints "hello" (with the quotes)
-(writeLn! "hello")  ; adds newline
+(write-line "hello")  ; adds newline
 
 ; User-readable (no quotes, escapes decoded)
 (uwrite! "hello")   ; prints hello
-(uwriteLn! "hello" " " "world")  ; prints hello world
+(uwrite-line "hello" " " "world")  ; prints hello world
 ```
 
 ### with-output-to-string — capture as a string

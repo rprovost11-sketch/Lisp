@@ -93,7 +93,7 @@ using `error` or `t` as the clause type:
 (defun try-parse (s)
   (handler-case (integer s)
     (error (e)
-      (uwriteLn! (ustring "Warning: could not parse \"" s "\": "
+      (uwrite-line (ustring "Warning: could not parse \"" s "\": "
                           (condition-message e)))
       nil)))
 

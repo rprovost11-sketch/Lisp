@@ -163,4 +163,5 @@ versions of eval() return a tuple of three values: return value, parse time in
 seconds, evaluation time in seconds.  They are used by the listener's repl to
 report performance characteristics during interactive sessions.
 
-To extend or modify the interpreter, evaluate '(help "MODIFYING")' in the REPL.
+To extend or modify the interpreter, evaluate '(help "MODIFYING-DOC")' in
+the REPL.

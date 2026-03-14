@@ -216,8 +216,8 @@ Dicts (maps) support some sequence operations:
 ```lisp
 (setf d (map (a 1) (b 2) (c 3)))
 (length d)           ;==> 3
-(hasKey? 'b d)       ;==> T
-(hasValue? 2 d)      ;==> T
+(has-key-p 'b d)       ;==> T
+(has-value-p 2 d)      ;==> T
 (at 'b d)            ;==> 2
 (at-set 'b d 99)     ; mutates d
 (at-delete 'a d)     ; mutates d, returns T

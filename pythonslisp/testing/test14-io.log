@@ -6,12 +6,12 @@
 "hello"
 ==> "hello"
 
->>> (writeLn! 42)
+>>> (write-line 42)
 42
 
 ==> 42
 
->>> (writeLn! "hello")
+>>> (write-line "hello")
 "hello"
 
 ==> "hello"
@@ -24,12 +24,12 @@
 hello
 ==> "hello"
 
->>> (uwriteLn! 42)
+>>> (uwrite-line 42)
 42
 
 ==> 42
 
->>> (uwriteLn! "hello")
+>>> (uwrite-line "hello")
 hello
 
 ==> "hello"
@@ -51,17 +51,17 @@ x=99
 no substitution needed
 ==> "no substitution needed"
 
->>> ;;; write!/writeLn! with no arguments are valid no-ops returning NIL
+>>> ;;; write!/write-line with no arguments are valid no-ops returning NIL
 ... (write!)
 ==> NIL
 
->>> (writeLn!)
+>>> (write-line)
 ==> NIL
 
 >>> (uwrite!)
 ==> NIL
 
->>> (uwriteLn!)
+>>> (uwrite-line)
 ==> NIL
 
 >>> ;;; Error: writef requires at least one argument
@@ -86,7 +86,7 @@ no substitution needed
 ==>
 
 ; ============================================================
-; Additional write!/uwrite!/writeLn!/uwriteLn! coverage
+; Additional write!/uwrite!/write-line/uwrite-line coverage
 ; ============================================================
 
 ; --- write! with various types ---
@@ -163,15 +163,15 @@ FOO
 (1 2 3)
 ==> (1 2 3)
 
-; --- uwrite!/uwriteLn! with multiple arguments ---
+; --- uwrite!/uwrite-line with multiple arguments ---
 
 >>> ;;; uwrite! with multiple args concatenates
 ... (uwrite! 1 2 3)
 123
 ==> 3
 
->>> ;;; uwriteLn! with multiple args
-... (uwriteLn! 4 5 6)
+>>> ;;; uwrite-line with multiple args
+... (uwrite-line 4 5 6)
 456
 
 ==> 6
@@ -217,16 +217,16 @@ x=42
 1end
 ==> "end"
 
-; --- writeLn!/uwriteLn! multi-arg ---
+; --- write-line/uwrite-line multi-arg ---
 
->>> ;;; writeLn! with multiple string args
-... (writeLn! "a" "b")
+>>> ;;; write-line with multiple string args
+... (write-line "a" "b")
 "a""b"
 
 ==> "b"
 
->>> ;;; uwriteLn! with multiple string args
-... (uwriteLn! "a" "b")
+>>> ;;; uwrite-line with multiple string args
+... (uwrite-line "a" "b")
 ab
 
 ==> "b"
@@ -308,11 +308,11 @@ ab
 >>> (open-stream-p st14w)
 ==> T
 
->>> ;;; uwriteLn! to stream: no stdout output, returns last arg
-... (uwriteLn! st14w "hi")
+>>> ;;; uwrite-line to stream: no stdout output, returns last arg
+... (uwrite-line st14w "hi")
 ==> "hi"
 
->>> (uwriteLn! st14w "bye")
+>>> (uwrite-line st14w "bye")
 ==> "bye"
 
 >>> (flush st14w)
@@ -356,7 +356,7 @@ ab
 ==> T
 
 ; ============================================================
-; terpri, write!, writeLn!, writef to stream
+; terpri, write!, write-line, writef to stream
 ; ============================================================
 
 >>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
@@ -370,8 +370,8 @@ ab
 ... (write! st14w 7)
 ==> 7
 
->>> ;;; writeLn! to stream: writes programmer-format with trailing newline
-... (writeLn! st14w "ok")
+>>> ;;; write-line to stream: writes programmer-format with trailing newline
+... (write-line st14w "ok")
 ==> "ok"
 
 >>> ;;; writef 3-arg: format + list + stream
@@ -414,7 +414,7 @@ ab
 ... (setf st14a (open (path-join (tmpdir) "test14-append.tmp") :direction :output))
 ==> #<STREAM>
 
->>> (uwriteLn! st14a "first")
+>>> (uwrite-line st14a "first")
 ==> "first"
 
 >>> (close st14a)
@@ -427,7 +427,7 @@ ab
 >>> (output-stream-p st14a)
 ==> T
 
->>> (uwriteLn! st14a "second")
+>>> (uwrite-line st14a "second")
 ==> "second"
 
 >>> (close st14a)
@@ -457,10 +457,10 @@ ab
 >>> (setf st14w (open (path-join (tmpdir) "test14-stream.tmp") :direction :output))
 ==> #<STREAM>
 
->>> (uwriteLn! st14w "hello")
+>>> (uwrite-line st14w "hello")
 ==> "hello"
 
->>> (uwriteLn! st14w "world")
+>>> (uwrite-line st14w "world")
 ==> "world"
 
 >>> (close st14w)
@@ -691,10 +691,10 @@ ab
 %%% PRIMITIVE USAGE: (WRITE! &optional stream &rest objects)
 ==>
 
->>> (writeLn! st14r "hello")
+>>> (write-line st14r "hello")
 
-%%% ERROR 'WRITELN!': Stream is not writable.
-%%% PRIMITIVE USAGE: (WRITELN! &optional stream &rest objects)
+%%% ERROR 'WRITE-LINE': Stream is not writable.
+%%% PRIMITIVE USAGE: (WRITE-LINE &optional stream &rest objects)
 ==>
 
 >>> (uwrite! st14r "hello")
@@ -703,10 +703,10 @@ ab
 %%% PRIMITIVE USAGE: (UWRITE! &optional stream &rest objects)
 ==>
 
->>> (uwriteLn! st14r "hello")
+>>> (uwrite-line st14r "hello")
 
-%%% ERROR 'UWRITELN!': Stream is not writable.
-%%% PRIMITIVE USAGE: (UWRITELN! &optional stream &rest objects)
+%%% ERROR 'UWRITE-LINE': Stream is not writable.
+%%% PRIMITIVE USAGE: (UWRITE-LINE &optional stream &rest objects)
 ==>
 
 >>> (terpri st14r)
@@ -837,15 +837,15 @@ ab
 ... (= (length (get-output-stream-string ss14)) 8)
 ==> T
 
->>> ;;; uwriteLn! adds a trailing newline: "line\n" = 5 chars
-... (uwriteLn! ss14 "line")
+>>> ;;; uwrite-line adds a trailing newline: "line\n" = 5 chars
+... (uwrite-line ss14 "line")
 ==> "line"
 
 >>> (= (length (get-output-stream-string ss14)) 5)
 ==> T
 
->>> ;;; writeLn! programmer format with newline: '"line"\n' = 7 chars
-... (writeLn! ss14 "line")
+>>> ;;; write-line programmer format with newline: '"line"\n' = 7 chars
+... (write-line ss14 "line")
 ==> "line"
 
 >>> (= (length (get-output-stream-string ss14)) 7)
@@ -1188,9 +1188,9 @@ ab
 ...       (length (read-line st nil nil))))
 ==> 3
 
->>> ;;; uwriteLn! adds a newline: result is 6 chars ("hello" + newline)
+>>> ;;; uwrite-line adds a newline: result is 6 chars ("hello" + newline)
 ... (let ((out (make-string-output-stream)))
-...    (uwriteLn! out "hello")
+...    (uwrite-line out "hello")
 ...    (= (length (get-output-stream-string out)) 6))
 ==> T
 

@@ -101,7 +101,7 @@ keyword-value pairs:
 
 ```lisp
 (defun show (&rest args &key verbose)
-  (when verbose (uwriteLn! "verbose mode"))
+  (when verbose (uwrite-line "verbose mode"))
   args)
 (show :verbose t :x 1)  ;==> (:VERBOSE T :X 1)
 ```

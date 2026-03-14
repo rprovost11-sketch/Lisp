@@ -17,7 +17,7 @@ class Context:
       self.setfRegistry:     dict     = setfRegistry
       self.lEval:            Callable = None   # set by Interpreter after construction
       self.lApply:           Callable = None   # set by Interpreter after construction
-      self.lBackquoteExpand: Callable = None   # set by Interpreter after construction
+      self.lQuasiquoteExpand: Callable = None   # set by Interpreter after construction
       self.parse:            Callable = None   # set by Interpreter after construction
       self.parseFile:        Callable = None   # set by Interpreter after construction
       self.parseOne:         Callable = None   # set by Interpreter after construction

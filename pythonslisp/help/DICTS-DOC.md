@@ -63,7 +63,7 @@ string it was stored under.
 (at "b" d)    ;==> 2
 ```
 
-`at` on a dict with a missing key signals an error.  Use `hasKey?` to
+`at` on a dict with a missing key signals an error.  Use `has-key-p` to
 guard lookups when the key may be absent.
 
 ---
@@ -104,10 +104,10 @@ any keys that already exist in dict1.  It mutates dict1 and returns it.
 ```lisp
 (setf d (make-dict ("x" 10) ("y" 20)))
 
-(hasKey?   "x" d)    ;==> T
-(hasKey?   "z" d)    ;==> NIL
-(hasValue? 10  d)    ;==> T
-(hasValue? 99  d)    ;==> NIL
+(has-key-p   "x" d)    ;==> T
+(has-key-p   "z" d)    ;==> NIL
+(has-value-p 10  d)    ;==> T
+(has-value-p 99  d)    ;==> NIL
 (dictp d)            ;==> T
 (dictp '(1 2 3))     ;==> NIL
 ```
@@ -158,8 +158,8 @@ interface.
 | `(at-set key dict val)` | Write value at key (mutates) |
 | `(setf (at key dict) val)` | Same via setf |
 | `(update! dict1 dict2)` | Merge dict2 into dict1 (mutates dict1) |
-| `(hasKey? key dict)` | T if key present |
-| `(hasValue? val dict)` | T if value present |
+| `(has-key-p key dict)` | T if key present |
+| `(has-value-p val dict)` | T if value present |
 | `(dictp x)` | T if x is a dict |
 
 See also: STRUCTS for struct instances (which are dicts); SEQUENCES for

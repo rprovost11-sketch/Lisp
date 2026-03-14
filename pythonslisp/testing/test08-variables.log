@@ -98,7 +98,7 @@
 ...    (- var2)
 ...    (if (= var1 "my value")
 ...        (* 7 3)
-...        (writeLn! var1)
+...        (write-line var1)
 ...        )
 ...    var1
 ...    )
@@ -108,7 +108,7 @@
 ==> "some string value"
 
 >>> (let ( (var1 -22/7) )
-...    (writeLn! var1)
+...    (write-line var1)
 ...    )
 ...
 -22/7
@@ -127,7 +127,7 @@
 ==>
 
 >>> (let ( (var3 "true") )
-...    (writeLn! var3)
+...    (write-line var3)
 ...    )
 ...
 "true"
@@ -156,18 +156,18 @@
 ==> NIL
 
 >>> (let ( (var3 'var3) )
-...    (writeLn! var1)
-...    (writeLn! var2)
-...    (writeLn! var3)
+...    (write-line var1)
+...    (write-line var2)
+...    (write-line var3)
 ...    (setf var2 -22/7)
 ...    (setf var3 "a value")
-...    (writeLn! var1)
-...    (writeLn! var2)
-...    (writeLn! var3)
+...    (write-line var1)
+...    (write-line var2)
+...    (write-line var3)
 ...    (let ( (var3 T) )
-...       (writeLn! var1)
-...       (writeLn! var2)
-...       (writeLn! var3)
+...       (write-line var1)
+...       (write-line var2)
+...       (write-line var3)
 ...       (symTab!)
 ...       )
 ...    )

@@ -67,9 +67,9 @@ class Lexer( LexerBase ):
    CLOSE_PAREN_TOK    = 202
 
    SINGLE_QUOTE_TOK   = 501    # Misc tokens
-   COMMA_TOK          = 502
-   COMMA_AT_TOK       = 503
-   BACK_QUOTE_TOK     = 504
+   UNQUOTE_TOK          = 502
+   UNQUOTE_SPLICING_TOK       = 503
+   QUASIQUOTE_TOK     = 504
 
    def __init__( self ) -> None:
       super( ).__init__( )
@@ -93,14 +93,14 @@ class Lexer( LexerBase ):
          return Lexer.SINGLE_QUOTE_TOK
       elif nextChar == '`':
          buf.consume( )
-         return Lexer.BACK_QUOTE_TOK
+         return Lexer.QUASIQUOTE_TOK
       elif nextChar == ',':
          buf.consume( )
          nextChar = buf.peekNextChar( )
          if nextChar == '@':
             buf.consume( )
-            return Lexer.COMMA_AT_TOK
-         return Lexer.COMMA_TOK
+            return Lexer.UNQUOTE_SPLICING_TOK
+         return Lexer.UNQUOTE_TOK
       elif nextChar == '"':
          return self._scanStringLiteral( )
       elif nextChar in Lexer.SIGN_OR_DIGIT:
@@ -327,11 +327,11 @@ class Parser( ParserBase ):
       buf = self._scanner.buffer
       if tok == Lexer.EOF_TOK:
          chars_consumed = buf._point
-      elif tok == Lexer.COMMA_AT_TOK:
+      elif tok == Lexer.UNQUOTE_SPLICING_TOK:
          chars_consumed = buf._point - 2
       elif tok in ( Lexer.OPEN_PAREN_TOK, Lexer.CLOSE_PAREN_TOK,
-                    Lexer.SINGLE_QUOTE_TOK, Lexer.BACK_QUOTE_TOK,
-                    Lexer.COMMA_TOK ):
+                    Lexer.SINGLE_QUOTE_TOK, Lexer.QUASIQUOTE_TOK,
+                    Lexer.UNQUOTE_TOK ):
          chars_consumed = buf._point - 1
       else:
          chars_consumed = buf._mark
@@ -389,24 +389,24 @@ class Parser( ParserBase ):
          if subordinate is None:
             raise ParseError( self._scanner, 'Unexpected end of input after quote.' )
          ast = [ LSymbol('QUOTE'), subordinate ]
-      elif nextToken == Lexer.BACK_QUOTE_TOK:
+      elif nextToken == Lexer.QUASIQUOTE_TOK:
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
-            raise ParseError( self._scanner, 'Unexpected end of input after backquote.' )
-         ast = [ LSymbol('BACKQUOTE'), subordinate ]
-      elif nextToken == Lexer.COMMA_TOK:
+            raise ParseError( self._scanner, 'Unexpected end of input after quasiquote.' )
+         ast = [ LSymbol('QUASIQUOTE'), subordinate ]
+      elif nextToken == Lexer.UNQUOTE_TOK:
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
-            raise ParseError( self._scanner, 'Unexpected end of input after comma.' )
-         ast = [ LSymbol('COMMA'), subordinate ]
-      elif nextToken == Lexer.COMMA_AT_TOK:
+            raise ParseError( self._scanner, 'Unexpected end of input after unquote.' )
+         ast = [ LSymbol('UNQUOTE'), subordinate ]
+      elif nextToken == Lexer.UNQUOTE_SPLICING_TOK:
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
-            raise ParseError( self._scanner, 'Unexpected end of input after comma-at.' )
-         ast = [ LSymbol('COMMA-AT'), subordinate ]
+            raise ParseError( self._scanner, 'Unexpected end of input after unquote-splicing.' )
+         ast = [ LSymbol('UNQUOTE-SPLICING'), subordinate ]
       elif nextToken == Lexer.EOF_TOK:
          ast = None
       else:

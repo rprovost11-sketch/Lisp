@@ -17,7 +17,7 @@ binding forms, and domain-specific syntax.
 ```
 
 The body returns the expansion — the code that will be evaluated.  Use
-backquote to construct that code conveniently.
+quasiquote to construct that code conveniently.
 
 ```lisp
 ; A simple swap macro
@@ -38,18 +38,18 @@ y   ;==> 1
 
 ---
 
-## Backquote, Unquote, and Splicing
+## Quasiquote, Unquote, and Splicing
 
 These three reader macros are the primary tools for writing macro bodies.
 
 | Syntax | Name | Meaning |
 |---|---|---|
-| `` `form `` | backquote | Return form as data, with selected parts substituted |
+| `` `form `` | quasiquote | Return form as data, with selected parts substituted |
 | `,expr` | unquote | Evaluate expr and insert its value here |
 | `,@expr` | unquote-splice | Evaluate expr (must be a list) and splice its elements here |
 
 ```lisp
-; Backquote without any unquotes — same as quote
+; Quasiquote without any unquotes — same as quote
 `(+ 1 2)         ;==> (+ 1 2)
 
 ; Unquote inserts a value
@@ -61,8 +61,8 @@ These three reader macros are the primary tools for writing macro bodies.
 `(+ ,@args)      ;==> (+ 1 2 3)
 ```
 
-Backquotes may be nested.  Each unquote belongs to the nearest enclosing
-backquote.
+Quasiquotes may be nested.  Each unquote belongs to the nearest enclosing
+quasiquote.
 
 ---
 
@@ -197,9 +197,9 @@ want to synthesize code.
 ```lisp
 (defmacro with-logging (tag &rest body)
   `(progn
-     (uwriteLn! (ustring "ENTER " ,tag))
+     (uwrite-line (ustring "ENTER " ,tag))
      (let ((result (progn ,@body)))
-       (uwriteLn! (ustring "EXIT " ,tag))
+       (uwrite-line (ustring "EXIT " ,tag))
        result)))
 
 (with-logging "compute"
@@ -237,7 +237,7 @@ want to synthesize code.
 | Expression | Meaning |
 |---|---|
 | `(defmacro name (args) body)` | Define macro NAME |
-| `` `form `` | Backquote — data with substitutions |
+| `` `form `` | Quasiquote — data with substitutions |
 | `,expr` | Unquote — insert value of expr |
 | `,@expr` | Unquote-splice — insert list elements |
 | `(macroexpand '(form))` | Fully expand a macro call |

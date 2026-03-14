@@ -207,8 +207,8 @@ def LP_append( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
       resultList.extend( lst )
    return resultList
 
-@primitive( 'hasValue?', '(value listOrDict)' )
-def LP_hasValue( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+@primitive( 'has-value-p', '(value listOrDict)' )
+def LP_has_value_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Returns t if the list/map contains value otherwise nil."""
    aVal, keyed = args
 
@@ -217,7 +217,7 @@ def LP_hasValue( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    elif isinstance(keyed, dict):
       keyed = keyed.values()
    else:
-      raise LRuntimePrimError( LP_hasValue, 'Invalid argument.  Argument 2 expected to be a list or dict.')
+      raise LRuntimePrimError( LP_has_value_p, 'Invalid argument.  Argument 2 expected to be a list or dict.')
 
    return L_T if aVal in keyed else L_NIL
 
@@ -235,13 +235,13 @@ def LP_update( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    dict1.update( dict2 )
    return dict1
 
-@primitive( 'hasKey?', '(key dict)' )
-def LP_hasKey( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+@primitive( 'has-key-p', '(key dict)' )
+def LP_has_key_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Returns t if the key is in the map otherwise nil."""
    aKey, aMap = args
 
    if not isinstance(aMap, dict):
-      raise LRuntimePrimError( LP_hasKey, 'Invalid argument 2.  Dict expected.')
+      raise LRuntimePrimError( LP_has_key_p, 'Invalid argument 2.  Dict expected.')
 
    if isinstance( aKey, LSymbol ):
       aKey = aKey.name

@@ -78,14 +78,30 @@ def LP_intdiv( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
       raise LRuntimePrimError( LP_intdiv, 'division by zero' )
 
 @primitive( 'mod', '(number divisor)' )
-def LP_moddiv( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """Returns the integer remainder of division of two numbers."""
+def LP_mod( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the modulus of two numbers.  The sign of the result matches
+the sign of the divisor (second argument)."""
    try:
       return args[0] % args[1]
    except TypeError:
-      raise LRuntimePrimError( LP_moddiv, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_mod, 'Invalid argument.' )
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_moddiv, 'division by zero' )
+      raise LRuntimePrimError( LP_mod, 'division by zero' )
+
+@primitive( 'rem', '(number divisor)' )
+def LP_rem( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the remainder of division of two numbers.  The sign of the
+result matches the sign of the dividend (first argument)."""
+   try:
+      a, b = args
+      m = a % b
+      if m == 0 or (a >= 0) == (b >= 0):
+         return m
+      return m - b
+   except TypeError:
+      raise LRuntimePrimError( LP_rem, 'Invalid argument.' )
+   except ZeroDivisionError:
+      raise LRuntimePrimError( LP_rem, 'division by zero' )
 
 @primitive( 'gcd', '(&rest integers)' )
 def LP_gcd( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

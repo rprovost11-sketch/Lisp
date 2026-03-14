@@ -304,32 +304,32 @@
 %%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
 ==>
 
-; --- hasValue? / hasKey? / update! errors ---
+; --- has-value-p / has-key-p / update! errors ---
 
->>> (hasValue?)
+>>> (has-value-p)
 
-%%% ERROR 'HASVALUE?': 2 arguments expected.
-%%% PRIMITIVE USAGE: (HASVALUE? value listOrDict)
+%%% ERROR 'HAS-VALUE-P': 2 arguments expected.
+%%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
->>> ;;; hasValue? on non-collection
-... (hasValue? 2 1)
+>>> ;;; has-value-p on non-collection
+... (has-value-p 2 1)
 
-%%% ERROR 'HASVALUE?': Invalid argument.  Argument 2 expected to be a list or dict.
-%%% PRIMITIVE USAGE: (HASVALUE? value listOrDict)
+%%% ERROR 'HAS-VALUE-P': Invalid argument.  Argument 2 expected to be a list or dict.
+%%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
->>> (hasKey?)
+>>> (has-key-p)
 
-%%% ERROR 'HASKEY?': 2 arguments expected.
-%%% PRIMITIVE USAGE: (HASKEY? key dict)
+%%% ERROR 'HAS-KEY-P': 2 arguments expected.
+%%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
 ==>
 
->>> ;;; hasKey? with non-map second arg
-... (hasKey? "a" 1)
+>>> ;;; has-key-p with non-map second arg
+... (has-key-p "a" 1)
 
-%%% ERROR 'HASKEY?': Invalid argument 2.  Dict expected.
-%%% PRIMITIVE USAGE: (HASKEY? key dict)
+%%% ERROR 'HAS-KEY-P': Invalid argument 2.  Dict expected.
+%%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
 ==>
 
 >>> (update!)
@@ -507,7 +507,7 @@
 
 ==> (FUNCTION  () ...)
 
-; --- Quote / backquote errors ---
+; --- Quote / quasiquote errors ---
 
 >>> (quote)
 
@@ -521,31 +521,31 @@
 %%% PRIMITIVE USAGE: (QUOTE sexpr)
 ==>
 
->>> ;;; comma outside backquote
+>>> ;;; unquote outside quasiquote
 ... ,x
 
-%%% ERROR 'COMMA': COMMA can only occur inside a BACKQUOTE.
-%%% PRIMITIVE USAGE: (COMMA sexpr)
+%%% ERROR 'UNQUOTE': UNQUOTE can only occur inside a QUASIQUOTE.
+%%% PRIMITIVE USAGE: (UNQUOTE sexpr)
 ==>
 
->>> ;;; comma-at outside backquote
+>>> ;;; unquote-splicing outside quasiquote
 ... ,@x
 
-%%% ERROR 'COMMA-AT': COMMA-AT can only occur inside a BACKQUOTE.
-%%% PRIMITIVE USAGE: (COMMA-AT sexpr)
+%%% ERROR 'UNQUOTE-SPLICING': UNQUOTE-SPLICING can only occur inside a QUASIQUOTE.
+%%% PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)
 ==>
 
->>> ;;; comma-at result must be a list
+>>> ;;; unquote-splicing result must be a list
 ... `(a ,@1 c)
 
-%%% ERROR 'COMMA-AT': Argument 1 must evaluate to a List.
-%%% PRIMITIVE USAGE: (COMMA-AT sexpr)
+%%% ERROR 'UNQUOTE-SPLICING': Argument 1 must evaluate to a List.
+%%% PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)
 ==>
 
->>> ;;; comma-at at top level of backquote: splice requires a list context
+>>> ;;; unquote-splicing at top level of quasiquote: splice requires a list context
 ... `,@(list 1 2)
 
-%%% Ill-placed ,@ (COMMA-AT): splice requires a list context.
+%%% Ill-placed ,@ (UNQUOTE-SPLICING): splice requires a list context.
 ==>
 
 
@@ -914,6 +914,27 @@
 
 %%% ERROR 'MOD': 2 arguments expected.
 %%% PRIMITIVE USAGE: (MOD number divisor)
+==>
+
+>>> ;;; rem by zero
+... (rem 7 0)
+
+%%% ERROR 'REM': division by zero
+%%% PRIMITIVE USAGE: (REM number divisor)
+==>
+
+>>> ;;; rem with non-number
+... (rem "a" 2)
+
+%%% ERROR 'REM': Invalid argument.
+%%% PRIMITIVE USAGE: (REM number divisor)
+==>
+
+>>> ;;; rem with too many arguments
+... (rem 1 2 3)
+
+%%% ERROR 'REM': 2 arguments expected.
+%%% PRIMITIVE USAGE: (REM number divisor)
 ==>
 
 ; --- Arithmetic type errors ---
@@ -1350,20 +1371,20 @@
 ; Error cases for under-tested error paths.
 ; ============================================================
 
-; --- backquote argument count errors ---
+; --- quasiquote argument count errors ---
 
->>> ;;; backquote with no arguments
-... (backquote)
+>>> ;;; quasiquote with no arguments
+... (quasiquote)
 
-%%% ERROR 'BACKQUOTE': 1 argument expected.
-%%% PRIMITIVE USAGE: (BACKQUOTE sexpr)
+%%% ERROR 'QUASIQUOTE': 1 argument expected.
+%%% PRIMITIVE USAGE: (QUASIQUOTE sexpr)
 ==>
 
->>> ;;; backquote with too many arguments
-... (backquote 1 2)
+>>> ;;; quasiquote with too many arguments
+... (quasiquote 1 2)
 
-%%% ERROR 'BACKQUOTE': 1 argument expected.
-%%% PRIMITIVE USAGE: (BACKQUOTE sexpr)
+%%% ERROR 'QUASIQUOTE': 1 argument expected.
+%%% PRIMITIVE USAGE: (QUASIQUOTE sexpr)
 ==>
 
 ; --- log domain errors ---

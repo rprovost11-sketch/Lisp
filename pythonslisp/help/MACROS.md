@@ -3,7 +3,7 @@
 | Expression | Meaning |
 |---|---|
 | `(defmacro name (args) body)` | Define macro NAME |
-| `` `form `` | Backquote — quoted data with substitutions |
+| `` `form `` | Quasiquote — quoted data with substitutions |
 | `,expr` | Unquote — insert value of expr |
 | `,@expr` | Unquote-splice — insert list elements inline |
 | `(macroexpand '(form))` | Fully expand all macros in form |

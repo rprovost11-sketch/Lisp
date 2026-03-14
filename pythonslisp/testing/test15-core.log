@@ -263,32 +263,32 @@
 
 ==> (3)
 
->>> ;;; hasValue? on list (true)
-... (hasValue? 2 '(1 2 3))
+>>> ;;; has-value-p on list (true)
+... (has-value-p 2 '(1 2 3))
 ...
 
 ==> T
 
->>> ;;; hasValue? on list (false)
-... (hasValue? 5 '(1 2 3))
+>>> ;;; has-value-p on list (false)
+... (has-value-p 5 '(1 2 3))
 ...
 
 ==> NIL
 
->>> ;;; hasValue? on map (true)
-... (hasValue? 2 (make-dict (a 1) (b 2)))
+>>> ;;; has-value-p on map (true)
+... (has-value-p 2 (make-dict (a 1) (b 2)))
 ...
 
 ==> T
 
->>> ;;; hasValue? on map (false)
-... (hasValue? 3 (make-dict (a 1) (b 2)))
+>>> ;;; has-value-p on map (false)
+... (has-value-p 3 (make-dict (a 1) (b 2)))
 ...
 
 ==> NIL
 
->>> ;;; hasKey? on empty map
-... (hasKey? 'a (make-dict))
+>>> ;;; has-key-p on empty map
+... (has-key-p 'a (make-dict))
 ...
 
 ==> NIL
@@ -643,15 +643,15 @@
 10 20
 ==> "10 20"
 
-; --- write!/writeLn! with multiple arguments ---
+; --- write!/write-line with multiple arguments ---
 
 >>> ;;; write! with multiple args concatenates output
 ... (write! 1 2 3)
 123
 ==> 3
 
->>> ;;; writeLn! with multiple args
-... (writeLn! 4 5 6)
+>>> ;;; write-line with multiple args
+... (write-line 4 5 6)
 456
 
 ==> 6
@@ -1624,29 +1624,29 @@ Type '(help "substring" :substring t)' to search all names by substring.
 
 ==> (PROGN (QUOTE (1 2 3)))
 
-; --- backquote edge cases ---
+; --- quasiquote edge cases ---
 
->>> ;;; backquote atom passthrough
+>>> ;;; quasiquote atom passthrough
 ... `42
 
 ==> 42
 
->>> ;;; backquote string passthrough
+>>> ;;; quasiquote string passthrough
 ... `"hello"
 
 ==> "hello"
 
->>> ;;; backquote empty list
+>>> ;;; quasiquote empty list
 ... `()
 
 ==> NIL
 
->>> ;;; splice empty list into backquote
+>>> ;;; splice empty list into quasiquote
 ... `(a ,@'() b)
 
 ==> (A B)
 
->>> ;;; splice non-empty list into backquote
+>>> ;;; splice non-empty list into quasiquote
 ... `(a ,@'(1 2) b)
 
 ==> (A 1 2 B)

@@ -50,11 +50,11 @@ class Analyzer:
             raise LRuntimePrimError(env.lookup('QUOTE'), '1 argument expected.')
          return  # Don't recurse into quoted data
 
-      # ---------- BACKQUOTE -----------------------------------------------
-      if name == 'BACKQUOTE':
+      # ---------- QUASIQUOTE -----------------------------------------------
+      if name == 'QUASIQUOTE':
          if len(args) != 1:
-            raise LRuntimePrimError(env.lookup('BACKQUOTE'), '1 argument expected.')
-         return  # Don't recurse into backquote templates
+            raise LRuntimePrimError(env.lookup('QUASIQUOTE'), '1 argument expected.')
+         return  # Don't recurse into quasiquote templates
 
       # ---------- IF -------------------------------------------------------
       if name == 'IF':

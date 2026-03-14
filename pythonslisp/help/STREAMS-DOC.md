@@ -29,8 +29,8 @@ The primitives `(stdin)`, `(stdout)`, and `(stderr)` return the underlying
 system streams directly.
 
 ```lisp
-(writeLn! (stdout) "hello")    ; write to stdout explicitly
-(writeLn! *error-output* "!")  ; write to stderr via variable
+(write-line (stdout) "hello")    ; write to stdout explicitly
+(write-line *error-output* "!")  ; write to stderr via variable
 ```
 
 ---
@@ -59,15 +59,15 @@ work with files because it guarantees the file is closed.
 
 ```lisp
 (with-open-file (f "output.txt" :direction :output)
-  (writeLn! f "line one")
-  (writeLn! f "line two"))
+  (write-line f "line one")
+  (write-line f "line two"))
 ```
 
 **Appending to a file:**
 
 ```lisp
 (with-open-file (f "log.txt" :direction :output :if-exists :append)
-  (writeLn! f "new entry"))
+  (write-line f "new entry"))
 ```
 
 ### open and close
@@ -114,7 +114,7 @@ then returns everything written to that stream as a single string.
 
 ```lisp
 (with-output-to-string (s)
-  (writeLn! s "hello")
+  (write-line s "hello")
   (writef "value = {0}\n" (list 42) s))
 ;==> "hello\nvalue = 42\n"
 ```
@@ -140,8 +140,8 @@ evaluates body forms.
 ```lisp
 ; Output stream
 (setf out (make-string-output-stream))
-(writeLn! out "first")
-(writeLn! out "second")
+(write-line out "first")
+(write-line out "second")
 (get-output-stream-string out)   ;==> "first\nsecond\n"
 ; get-output-stream-string clears the buffer; stream stays open
 (get-output-stream-string out)   ;==> ""
@@ -171,7 +171,7 @@ Reads one line and returns it as a string, without the trailing newline.
 ```lisp
 (with-open-file (f "data.txt")
   (for (line (read-line f nil nil)) line (read-line f nil nil)
-    (uwriteLn! line)))
+    (uwrite-line line)))
 ```
 
 ### read-char
@@ -223,25 +223,25 @@ Reads the entire remaining contents of a stream as a single string.
 All write primitives accept an optional stream as their first argument.
 When omitted, output goes to the current output stream.
 
-### write! and writeLn!
+### write! and write-line
 
 Print values in **programmer-readable** form — strings are quoted and escape
-sequences are shown.  `writeLn!` appends a newline.
+sequences are shown.  `write-line` appends a newline.
 
 ```lisp
 (write! "hello")           ; prints "hello" (with quotes)
-(writeLn! "hello")         ; prints "hello"\n
-(writeLn! f "hello" 42)    ; write to stream f
+(write-line "hello")         ; prints "hello"\n
+(write-line f "hello" 42)    ; write to stream f
 ```
 
-### uwrite! and uwriteLn!
+### uwrite! and uwrite-line
 
 Print values in **user-readable** form — strings are printed without quotes
-and escape sequences are decoded.  `uwriteLn!` appends a newline.
+and escape sequences are decoded.  `uwrite-line` appends a newline.
 
 ```lisp
 (uwrite! "hello")          ; prints hello (no quotes)
-(uwriteLn! "hello" " " "world")  ; prints hello world\n
+(uwrite-line "hello" " " "world")  ; prints hello world\n
 ```
 
 ### writef
@@ -314,7 +314,7 @@ Forces any buffered output to be written.
   (let ((count 0))
     (for (line (read-line f nil nil)) line (read-line f nil nil)
       (setf count (+ count 1))
-      (uwriteLn! line))
+      (uwrite-line line))
     count))
 ```
 
@@ -350,8 +350,8 @@ Forces any buffered output to be written.
 ```lisp
 (defun write-report (filename data)
   (with-open-file (f filename :direction :output)
-    (writeLn! f "Report")
-    (writeLn! f "======")
+    (write-line f "Report")
+    (write-line f "======")
     (dolist (row data)
       (writef "{name}: {value}\n" row f))))
 ```

@@ -99,32 +99,32 @@
 ==> 1
 
 
->>> (and nil (writeLn! "should not print"))
+>>> (and nil (write-line "should not print"))
 ...
 
 ==> NIL
 
->>> (and t (writeLn! "should print"))
+>>> (and t (write-line "should print"))
 "should print"
 
 ==> "should print"
 
->>> (or t (writeLn! "should not print"))
+>>> (or t (write-line "should not print"))
 ...
 
 ==> T
 
->>> (or nil (writeLn! "should print"))
+>>> (or nil (write-line "should print"))
 "should print"
 
 ==> "should print"
 
->>> (and (writeLn! "first") nil (writeLn! "third"))
+>>> (and (write-line "first") nil (write-line "third"))
 "first"
 
 ==> NIL
 
->>> (or (writeLn! "first") t (writeLn! "third"))
+>>> (or (write-line "first") t (write-line "third"))
 "first"
 
 ==> "first"

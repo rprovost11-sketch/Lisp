@@ -1,4 +1,4 @@
-# Quoting and Backquote
+# Quoting and Quasiquote
 
 *Quick reference: `(help "quoting")` -- Full documentation: this file.*
 
@@ -42,9 +42,9 @@ to evaluate.
 
 ---
 
-## Backquote -- Quasi-quotation
+## Quasiquote -- Quasi-quotation
 
-Backquote (`` ` ``) is like `quote` with holes.  Most of the expression
+Quasiquote (`` ` ``) is like `quote` with holes.  Most of the expression
 is returned unevaluated, but positions marked with `,` are evaluated and
 their results spliced in.
 
@@ -54,7 +54,7 @@ their results spliced in.
 
 ### Unquote -- `,`
 
-`,expr` inside a backquote evaluates `expr` and inserts the result:
+`,expr` inside a quasiquote evaluates `expr` and inserts the result:
 
 ```lisp
 (setf name "Alice")
@@ -100,7 +100,7 @@ The difference: `,` inserts one value; `,@` inserts many.
 
 ### Writing macros
 
-Backquote is the standard tool for constructing the code a macro returns.
+Quasiquote is the standard tool for constructing the code a macro returns.
 The macro body is a template; `,` and `,@` fill in the parts supplied by
 the caller:
 
@@ -133,9 +133,9 @@ splice them into the template.
 
 ---
 
-## Nesting Backquotes
+## Nesting Quasiquotes
 
-Backquotes can be nested, which is occasionally needed when a macro
+Quasiquotes can be nested, which is occasionally needed when a macro
 generates another macro.  Each `,` peels off one level of quoting.
 This is an advanced use case; in practice a single level handles the
 vast majority of macro-writing tasks.

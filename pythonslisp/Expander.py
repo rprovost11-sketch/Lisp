@@ -39,8 +39,8 @@ class Expander:
       if not isinstance(sexpr, list) or len(sexpr) == 0:
          return sexpr
 
-      # Don't expand or normalize inside QUOTE or BACKQUOTE — they are data / templates
-      if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'BACKQUOTE'):
+      # Don't expand or normalize inside QUOTE or QUASIQUOTE — they are data / templates
+      if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'QUASIQUOTE'):
          return sexpr
 
       # --- Step 1: macro expand at this level (top-down, fixed-point) ---
@@ -131,8 +131,8 @@ class Expander:
          indent = "  " * depth
 
          if isinstance(sexpr, list) and len(sexpr) > 0:
-            # Don't expand inside quote or backquote — content is literal data/template
-            if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'BACKQUOTE'):
+            # Don't expand inside quote or quasiquote — content is literal data/template
+            if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'QUASIQUOTE'):
                return sexpr
             head = sexpr[0]
             if isinstance(head, LSymbol):

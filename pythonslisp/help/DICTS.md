@@ -28,8 +28,8 @@ Symbol keys are interned as uppercase strings. Values **are** evaluated.
 
 | Expression | Meaning |
 |---|---|
-| `(hasKey? key dict)` | T if key exists |
-| `(hasValue? val dict)` | T if val exists anywhere in dict |
+| `(has-key-p key dict)` | T if key exists |
+| `(has-value-p val dict)` | T if val exists anywhere in dict |
 | `(dictp x)` | T if x is a dict |
 
 ## Printing

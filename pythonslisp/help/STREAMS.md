@@ -27,9 +27,9 @@
 | Expression | Meaning |
 |---|---|
 | `(write! stream val...)` | Programmer-readable output (strings quoted) |
-| `(writeLn! stream val...)` | Same with trailing newline |
+| `(write-line stream val...)` | Same with trailing newline |
 | `(uwrite! stream val...)` | User-readable output (strings unquoted) |
-| `(uwriteLn! stream val...)` | Same with trailing newline |
+| `(uwrite-line stream val...)` | Same with trailing newline |
 | `(writef fmt list stream)` | Formatted string output |
 | `(terpri stream)` | Write a newline |
 | `(flush stream)` | Flush buffered output |
