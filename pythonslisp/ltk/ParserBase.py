@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 class LexerState( object ):
+   __slots__ = ('lexer_tok',
+                'buffer_filename', 'buffer_source', 'buffer_sourceLen',
+                'buffer_nextChar', 'buffer_point', 'buffer_mark', 'buffer_lineNum')
+
    def __init__( self, filename: str = '', source: str = '', sourceLen: int = 0,
                        nextChar: str = '', point: int = 0, mark: int = 0, lineNum: int = 0 ) -> None:
       self.lexer_tok: int              = 0
@@ -128,11 +132,25 @@ class LexerBuffer( object ):
       self._nextChar = src[pos] if pos < end else ''
       return count
 
-   def saveState( self ) -> LexerState:
-      return LexerState( filename=self._filename, source=self._source,
-                           sourceLen=self._sourceLen, nextChar=self._nextChar,
-                           point=self._point, mark=self._mark,
-                           lineNum=self._lineNum )
+   def markStartOfLexeme( self ) -> None:
+      '''Set mark to the current vlaue of point to record the start of a lex.'''
+      self._mark = self._point
+
+   def getLexeme( self ) -> str:
+      '''Returns the substring spanning from mark to point.'''
+      return self._source[ self._mark : self._point ]
+
+   def saveState( self, stateInst: LexerState = None ) -> LexerState:
+      if stateInst is None:
+         stateInst = LexerState( )
+      stateInst.buffer_filename  = self._filename
+      stateInst.buffer_source    = self._source
+      stateInst.buffer_sourceLen = self._sourceLen
+      stateInst.buffer_nextChar  = self._nextChar
+      stateInst.buffer_point     = self._point
+      stateInst.buffer_mark      = self._mark
+      stateInst.buffer_lineNum   = self._lineNum
+      return stateInst
 
    def restoreState( self, stateInst: LexerState ) -> None:
       self._filename  = stateInst.buffer_filename
@@ -143,21 +161,15 @@ class LexerBuffer( object ):
       self._mark      = stateInst.buffer_mark
       self._lineNum   = stateInst.buffer_lineNum
 
-   def markStartOfLexeme( self ) -> None:
-      '''Set mark to the current vlaue of point to record the start of a lex.'''
-      self._mark = self._point
-
-   def getLexeme( self ) -> str:
-      '''Returns the substring spanning from mark to point.'''
-      return self._source[ self._mark : self._point ]
-
-   def consumedToPoint( self ):
+   def point( self ):
+      """Returns the number of characters that have been consumed by point."""
       return self._point
    
-   def consumedToMark( self ):
+   def mark( self ):
+      '''Returns the number of characters that have been consumed by mark.'''
       return self._mark
 
-   def scanFilename( self ) -> str:
+   def filename( self ) -> str:
       return self._filename
 
    def scanLineNum( self ) -> int:
@@ -166,18 +178,18 @@ class LexerBuffer( object ):
 
    def scanColNum( self ) -> int:
       '''Return the column numm (first column is 1) of point.'''
-      return self._point - self._linePos( ) + 1
+      return self._point - self.scanLinePos( ) + 1
 
    def scanLineTxt( self ) -> str:
       '''Return the complete text of the line currently pointed to by point.'''
-      fromIdx = self._linePos( )
+      fromIdx = self.scanLinePos( )
       toIdx   = self._source.find( '\n', fromIdx )
       if toIdx == -1:
          return self._source[ fromIdx : ]
       else:
          return self._source[ fromIdx : toIdx ]
 
-   def _linePos( self ) -> int:
+   def scanLinePos( self ) -> int:
       '''Return the index into the buffer string of the first character of the current line.'''
       if self._point >= self._sourceLen:
          theLinePos = self._source.rfind( '\n', 0, self._sourceLen - 1 ) + 1
@@ -214,10 +226,10 @@ class LexerBase( ABC ):
       This should be called before consume.'''
       return self.buffer.getLexeme( )
 
-   def saveState( self ) -> LexerState:
+   def saveState( self, stateInst: LexerState = None ) -> LexerState:
       '''Create a restore point (for backtracking).  The current
       state of the scanner is preserved under aStateName.'''
-      stateInst = self.buffer.saveState( )
+      stateInst = self.buffer.saveState( stateInst )
       stateInst.lexer_tok = self._tok
       return stateInst
 
@@ -238,7 +250,7 @@ class LexerBase( ABC ):
 
 class ParseError( Exception ):
    def __init__( self, aScanner: LexerBase, errorMessage: str ) -> None:
-      super().__init__( self._generateVerboseErrorString(srcfilename=aScanner.buffer.scanFilename(),
+      super().__init__( self._generateVerboseErrorString(srcfilename=aScanner.buffer.filename(),
                                                          lineNum=aScanner.buffer.scanLineNum(),
                                                          colNum=aScanner.buffer.scanColNum(),
                                                          sourceLine=aScanner.buffer.scanLineTxt(),

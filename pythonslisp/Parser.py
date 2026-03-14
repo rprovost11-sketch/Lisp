@@ -2,7 +2,7 @@ from __future__ import annotations
 from fractions import Fraction
 from typing import Any
 
-from pythonslisp.ltk.ParserBase import LexerBase, ParserBase, ParseError
+from pythonslisp.ltk.ParserBase import LexerBase, LexerState, ParserBase, ParseError
 from pythonslisp.AST import LSymbol
 
 """
@@ -41,18 +41,21 @@ Grammar
 
 class Lexer( LexerBase ):
    # Character Classes
-   WHITESPACE     = ' \t\n\r'
-   SIGN           = '+-'
-   DIGIT          = '0123456789'
-   OCTAL_DIGIT    = '01234567'
-   HEX_DIGIT      = DIGIT + 'ABCDEFabcdef'
-   SIGN_OR_DIGIT  = SIGN + DIGIT
-   ALPHA_LOWER    = 'abcdefghijklmnopqrstuvwxyz'
-   ALPHA_UPPER    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-   ALPHA          = ALPHA_LOWER + ALPHA_UPPER
-   SYMBOL_OTHER   = '~!$%^&*_=\\/?<>:#|'
-   SYMBOL_FIRST   = ALPHA + SIGN + SYMBOL_OTHER
-   SYMBOL_REST    = ALPHA + SIGN + SYMBOL_OTHER + DIGIT
+   WHITESPACE            = frozenset(' \t\n\r')
+   NEWLINE = frozenset('\n\r')
+   SIGN                  = frozenset('+-')
+   DIGIT                 = frozenset('0123456789')
+   OCTAL_DIGIT           = frozenset('01234567')
+   HEX_DIGIT             = DIGIT | frozenset('ABCDEFabcdef')
+   SIGN_OR_DIGIT         = SIGN | DIGIT
+   ALPHA_LOWER           = frozenset('abcdefghijklmnopqrstuvwxyz')
+   ALPHA_UPPER           = frozenset('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+   ALPHA                 = ALPHA_LOWER | ALPHA_UPPER
+   SYMBOL_OTHER          = frozenset('~!$%^&*_=\\/?<>:#|')
+   SYMBOL_FIRST          = ALPHA | SIGN | SYMBOL_OTHER
+   SYMBOL_REST           = ALPHA | SIGN | SYMBOL_OTHER | DIGIT
+   ESCAPE_SIMPLE         = frozenset('\\\'"abfnrtv')
+   STRING_STOP           = frozenset('"\\')
 
    # Token Definitions
    EOF_TOK            =   0
@@ -73,6 +76,7 @@ class Lexer( LexerBase ):
 
    def __init__( self ) -> None:
       super( ).__init__( )
+      self._savedState = LexerState( )
 
    def _scanNextToken( self ) -> int:
       buf = self.buffer
@@ -111,6 +115,7 @@ class Lexer( LexerBase ):
          raise ParseError( self, 'Unknown Token' )
 
    def _scanStringLiteral( self ) -> int:
+      STRING_STOP = Lexer.STRING_STOP
       buf = self.buffer
 
       # Scan in the initial quote
@@ -120,14 +125,12 @@ class Lexer( LexerBase ):
       buf.markStartOfLexeme( )
       buf.consume( )
 
-      nextChar =  buf.peekNextChar( )
-      while (nextChar != '"') and (nextChar != ''):  # Loop until we reach the end quote.
-         if nextChar == '\\':
-            self._consumeStringEscapeSequence( )
-         else:
-            buf.consume( )
-
+      while True:
+         buf.consumeUpTo( STRING_STOP )
          nextChar = buf.peekNextChar( )
+         if nextChar != '\\':
+            break
+         self._consumeStringEscapeSequence( )
 
       # Scan past the final quote
       if nextChar != '"':
@@ -179,7 +182,7 @@ class Lexer( LexerBase ):
          numDigitsConsumed = buf.consumePastWithMax( Lexer.HEX_DIGIT, maxCharsToConsume=8 )
          if numDigitsConsumed != 8:
             raise ParseError( self, 'Escape sequence expects exactly 8 hex digits following \\U.' )
-      elif nextChar in '\\\'\"abfnrtv':
+      elif nextChar in Lexer.ESCAPE_SIMPLE:
          # consume 1 character
          buf.consume( )
       else:
@@ -193,19 +196,22 @@ class Lexer( LexerBase ):
                          | '.' DIGIT+ [ 'e' [SIGN] DIGIT+ ]    # <-- decimal/exponentiation case
                          )
       '''
-      SAVE = self.saveState( )                  # Save the lexer state
+      SIGN = Lexer.SIGN
+      DIGIT = Lexer.DIGIT
+      
+      SAVE = self.saveState( self._savedState )  # Save the lexer state
 
       buf = self.buffer
       buf.markStartOfLexeme( )
       nextChar = buf.peekNextChar()
-      if nextChar in Lexer.SIGN:
+      if nextChar in SIGN:
          buf.consume()
          secondChar = buf.peekNextChar( )
-         if (secondChar == '') or (secondChar not in Lexer.DIGIT):
+         if (secondChar == '') or (secondChar not in DIGIT):
             self.restoreState( SAVE )         # Restore the lexer state
             return self._scanSymbol( )
 
-      buf.consumePast( Lexer.DIGIT )
+      buf.consumePast( DIGIT )
       nextChar = buf.peekNextChar()
 
       if nextChar == '/':
@@ -213,11 +219,11 @@ class Lexer( LexerBase ):
          buf.consume( )
 
          nextChar = buf.peekNextChar( )
-         if nextChar not in Lexer.DIGIT:
+         if nextChar not in DIGIT:
             self.restoreState( SAVE )         # Restore the lexer state
             return self._scanSymbol( )
 
-         buf.consumePast( Lexer.DIGIT )
+         buf.consumePast( DIGIT )
          return Lexer.FRAC_TOK
 
       elif nextChar in ('e', 'E'):
@@ -225,19 +231,19 @@ class Lexer( LexerBase ):
          buf.consume( )
 
          nextChar = buf.peekNextChar( )
-         if (nextChar not in Lexer.SIGN) and (nextChar not in Lexer.DIGIT):
+         if (nextChar not in SIGN) and (nextChar not in DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         if nextChar in Lexer.SIGN:
+         if nextChar in SIGN:
             buf.consume( )
             nextChar = buf.peekNextChar( )
 
-         if (nextChar not in Lexer.DIGIT):
+         if (nextChar not in DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         buf.consumePast( Lexer.DIGIT )
+         buf.consumePast( DIGIT )
          return Lexer.FLOAT_TOK
 
       elif nextChar == '.':
@@ -246,12 +252,12 @@ class Lexer( LexerBase ):
          #self.saveState( SAVE )
          buf.consume()
          nextChar = buf.peekNextChar()
-         if nextChar not in Lexer.DIGIT:
+         if nextChar not in DIGIT:
             # Integer
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         buf.consumePast( Lexer.DIGIT )
+         buf.consumePast( DIGIT )
          nextChar = buf.peekNextChar( )
 
          if nextChar not in ('e', 'E'):
@@ -260,19 +266,19 @@ class Lexer( LexerBase ):
          buf.consume( )
          nextChar = buf.peekNextChar( )
 
-         if (nextChar not in Lexer.SIGN) and (nextChar not in Lexer.DIGIT):
+         if (nextChar not in SIGN) and (nextChar not in DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         if nextChar in Lexer.SIGN:
+         if nextChar in SIGN:
             buf.consume( )
             nextChar = buf.peekNextChar( )
 
-         if (nextChar not in Lexer.DIGIT):
+         if (nextChar not in DIGIT):
             self.restoreState( SAVE )
             return self._scanSymbol( )
 
-         buf.consumePast( Lexer.DIGIT )
+         buf.consumePast( DIGIT )
          return Lexer.FLOAT_TOK
 
       return Lexer.INTEGER_TOK
@@ -293,12 +299,11 @@ class Lexer( LexerBase ):
    def _skipWhitespaceAndComments( self ) -> None:
       buf = self.buffer
 
-      nextChar = buf.peekNextChar()
-      while (nextChar in '; \t\n\r') and (nextChar != ''):
-         if nextChar == ';':
-            buf.consumeUpTo( '\n\r' )
-         buf.consume( )
-         nextChar = buf.peekNextChar()
+      while True:
+         buf.consumePast( Lexer.WHITESPACE )
+         if buf.peekNextChar() != ';':
+            break
+         buf.consumeUpTo( Lexer.NEWLINE )
 
 
 class Parser( ParserBase ):
@@ -326,15 +331,15 @@ class Parser( ParserBase ):
       tok = self._scanner.peekToken( )
       buf = self._scanner.buffer
       if tok == Lexer.EOF_TOK:
-         chars_consumed = buf.consumedToPoint()
+         chars_consumed = buf.point()
       elif tok == Lexer.UNQUOTE_SPLICING_TOK:
-         chars_consumed = buf.consumedToPoint() - 2
+         chars_consumed = buf.point() - 2
       elif tok in ( Lexer.OPEN_PAREN_TOK, Lexer.CLOSE_PAREN_TOK,
                     Lexer.SINGLE_QUOTE_TOK, Lexer.QUASIQUOTE_TOK,
                     Lexer.UNQUOTE_TOK ):
-         chars_consumed = buf.consumedToPoint() - 1
+         chars_consumed = buf.point() - 1
       else:
-         chars_consumed = buf.consumedToMark()
+         chars_consumed = buf.mark()
       return ast, chars_consumed
 
    def _parse( self ) -> Any:
@@ -357,6 +362,9 @@ class Parser( ParserBase ):
       if nextToken == Lexer.SYMBOL_TOK:
          lex = self._scanner.getLexeme( )
          self._scanner.consume( )
+         # Expanded here rather than in the Expander so that quoted forms like
+         # 'foo:bar correctly yield the list (: FOO BAR) as data, since the
+         # Expander does not recurse into QUOTE/QUASIQUOTE bodies.
          if ':' in lex and not lex.startswith(':') and all(lex.split(':')):
             parts = lex.split(':')
             ast   = [LSymbol(':')]
