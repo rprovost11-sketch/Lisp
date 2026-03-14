@@ -48,6 +48,10 @@ def _typep_atom( obj, tname: str ) -> bool:
       struct_type = obj.get('STRUCT-TYPE')
       if isinstance(struct_type, LSymbol) and struct_type.name == tname:
          return True
+      struct_includes = obj.get('STRUCT-INCLUDES')
+      if isinstance(struct_includes, list):
+         if any(isinstance(s, LSymbol) and s.name == tname for s in struct_includes):
+            return True
    return False
 
 

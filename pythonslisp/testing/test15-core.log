@@ -1964,6 +1964,143 @@ Type '(help "substring" :substring t)' to search all names by substring.
 
 ==> 42
 
+; --- defstruct :include ---
+
+>>> ;;; base struct for include tests
+... (defstruct base26 (x 0) (y 0))
+
+==> BASE26
+
+>>> ;;; derived struct inherits base fields
+... (defstruct (derived26 (:include base26)) (z 0))
+
+==> DERIVED26
+
+>>> ;;; constructor accepts inherited and own fields
+... (setf d26 (make-derived26 :x 1 :y 2 :z 3))
+
+==> (DICT
+   ("STRUCT-INCLUDES" (BASE26))
+   ("STRUCT-TYPE" DERIVED26)
+   ("X" 1)
+   ("Y" 2)
+   ("Z" 3)
+)
+
+>>> ;;; inherited accessor works on derived instance
+... (base26-x d26)
+
+==> 1
+
+>>> ;;; inherited accessor works on derived instance
+... (base26-y d26)
+
+==> 2
+
+>>> ;;; own accessor works
+... (derived26-z d26)
+
+==> 3
+
+>>> ;;; derived predicate returns T for derived instance
+... (derived26-p d26)
+
+==> T
+
+>>> ;;; parent predicate returns T for derived instance
+... (base26-p d26)
+
+==> T
+
+>>> ;;; parent predicate returns T for base instance
+... (base26-p (make-base26 :x 9 :y 9))
+
+==> T
+
+>>> ;;; derived predicate returns NIL for base instance
+... (derived26-p (make-base26 :x 9 :y 9))
+
+==> NIL
+
+>>> ;;; type-of returns the most specific type
+... (type-of d26)
+
+==> DERIVED26
+
+>>> ;;; typep works for own type
+... (typep d26 'derived26)
+
+==> T
+
+>>> ;;; typep works for ancestor type
+... (typep d26 'base26)
+
+==> T
+
+>>> ;;; setf on inherited field
+... (setf (base26-x d26) 99)
+
+==> 99
+
+>>> ;;; verify inherited field was modified
+... (base26-x d26)
+
+==> 99
+
+>>> ;;; copy preserves all fields including inherited
+... (setf d26b (copy-derived26 d26))
+
+==> (DICT
+   ("STRUCT-INCLUDES" (BASE26))
+   ("STRUCT-TYPE" DERIVED26)
+   ("X" 99)
+   ("Y" 2)
+   ("Z" 3)
+)
+
+>>> ;;; copy is independent of original
+... (setf (base26-x d26) 0)
+... (base26-x d26b)
+
+==> 99
+
+>>> ;;; two-level inheritance
+... (defstruct (extra26 (:include derived26)) (w 0))
+
+==> EXTRA26
+
+>>> ;;; three-level constructor
+... (setf e26 (make-extra26 :x 1 :y 2 :z 3 :w 4))
+
+==> (DICT
+   ("STRUCT-INCLUDES" (DERIVED26 BASE26))
+   ("STRUCT-TYPE" EXTRA26)
+   ("W" 4)
+   ("X" 1)
+   ("Y" 2)
+   ("Z" 3)
+)
+
+>>> ;;; grandparent predicate returns T for grandchild
+... (base26-p e26)
+
+==> T
+
+>>> ;;; parent predicate returns T for grandchild
+... (derived26-p e26)
+
+==> T
+
+>>> ;;; own predicate returns T for grandchild
+... (extra26-p e26)
+
+==> T
+
+>>> ;;; base instance does not satisfy grandchild predicate
+... (extra26-p (make-base26))
+
+==> NIL
+
 ; --- string-capitalize ---
 
 >>> (string-capitalize "hello world")

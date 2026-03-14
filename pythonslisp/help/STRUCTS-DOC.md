@@ -210,6 +210,104 @@ default like `(list 1 2)` produces a fresh list each time.
 
 ---
 
+## Struct Inheritance — :include
+
+`defstruct` supports single-parent inheritance via the `:include` option.
+Pass a list `(name (:include parent))` as the typename instead of a bare symbol:
+
+```lisp
+(defstruct point (x 0) (y 0))
+(defstruct (colored-point (:include point)) color)
+```
+
+### What :include does
+
+All fields from the parent (and its ancestors) are prepended to the child's
+own fields.  The child constructor accepts keyword arguments for all of them,
+with each field's default coming from the original definition:
+
+```lisp
+(setf cp (make-colored-point :x 3 :y 4 :color 'red))
+
+(point-x cp)             ;==> 3    ; inherited accessor
+(point-y cp)             ;==> 4    ; inherited accessor
+(colored-point-color cp) ;==> RED  ; own accessor
+```
+
+Only accessors for the child's **own** new fields are generated.  The parent's
+accessors are not redefined — they already work on any dict that has those keys.
+
+`setf` works on inherited fields through the parent's accessor:
+
+```lisp
+(setf (point-x cp) 10)
+(point-x cp)             ;==> 10
+```
+
+`copy-colored-point` copies all fields — inherited and own:
+
+```lisp
+(setf cp2 (copy-colored-point cp))
+(setf (point-x cp) 0)
+(point-x cp2)            ;==> 10   ; copy is independent
+```
+
+### Predicate behaviour
+
+The **parent predicate returns T for child instances**:
+
+```lisp
+(colored-point-p cp)           ;==> T   ; own predicate
+(point-p cp)                   ;==> T   ; parent predicate also returns T
+(point-p (make-point))         ;==> T   ; parent still matches parent instances
+(colored-point-p (make-point)) ;==> NIL ; child predicate does not match parent
+```
+
+`typep` and `typecase` respect inheritance the same way:
+
+```lisp
+(typep cp 'colored-point)  ;==> T
+(typep cp 'point)          ;==> T
+
+(typecase cp
+  (colored-point "colored point")
+  (point         "plain point"))  ;==> "colored point"
+```
+
+### Multi-level inheritance
+
+Inheritance chains of any depth are supported.  Each level adds its own fields
+and the full ancestor chain is tracked:
+
+```lisp
+(defstruct (3d-colored-point (:include colored-point)) (z 0))
+
+(setf p3 (make-3d-colored-point :x 1 :y 2 :z 3 :color 'blue))
+
+(point-x p3)              ;==> 1
+(colored-point-color p3)  ;==> BLUE
+(3d-colored-point-z p3)   ;==> 3
+
+(point-p p3)              ;==> T
+(colored-point-p p3)      ;==> T
+(3d-colored-point-p p3)   ;==> T
+
+(point-p (make-colored-point)) ;==> T
+(3d-colored-point-p (make-colored-point)) ;==> NIL
+```
+
+### Descriptor
+
+The descriptor's `INCLUDES` field holds the full ancestor chain:
+
+```lisp
+(at 'INCLUDES colored-point)       ;==> (POINT)
+(at 'INCLUDES 3d-colored-point)    ;==> (COLORED-POINT POINT)
+(at 'INCLUDES point)               ;==> NIL
+```
+
+---
+
 ## The Struct Descriptor
 
 `defstruct` binds the typename to a struct descriptor object in the global
@@ -311,13 +409,14 @@ Copier:      (copy-color inst)
 | `(defstruct name field...)` | Define struct type NAME |
 | `(defstruct name "doc" field...)` | With docstring |
 | `(defstruct name (field default)...)` | Fields with defaults |
+| `(defstruct (name (:include parent)) field...)` | Inherit fields from PARENT |
 | `(make-name :field val...)` | Create an instance |
 | `(name-field inst)` | Read a field |
 | `(setf (name-field inst) val)` | Write a field |
-| `(name-p obj)` | T if obj is an instance of NAME |
+| `(name-p obj)` | T if obj is NAME or any descendant |
 | `(copy-name inst)` | Shallow copy of instance |
 | `(type-of inst)` | Returns type name symbol |
-| `(typep obj 'name)` | T if obj is an instance of NAME |
+| `(typep obj 'name)` | T if obj is NAME or any descendant |
 | `(help name)` | Show struct descriptor |
 
 ---
