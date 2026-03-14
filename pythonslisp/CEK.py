@@ -316,7 +316,7 @@ class ArgFrame:
                return self.pending[0], self.env   # expression
             if type(fn) is LMacro:
                # Inline macro expansion — return the expansion as an expression.
-               expansion = Expander._expandMacroCall( ctx, self.env, fn, self.pending )
+               expansion = Expander.expandMacroCall( ctx, self.env, fn, self.pending )
                return expansion, self.env         # expression (code to evaluate)
 
          # preEvalArgs=False: phase-1 limitation — call directly with raw args.

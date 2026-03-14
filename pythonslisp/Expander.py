@@ -97,14 +97,14 @@ class Expander:
             callableObj = env.lookup(head.name)
             if isinstance(callableObj, LMacro):
                args = sexpr[1:]
-               return Expander._expandMacroCall(ctx, env, callableObj, args)
+               return Expander.expandMacroCall(ctx, env, callableObj, args)
          except KeyError:
             pass
 
       return sexpr
 
    @staticmethod
-   def _expandMacroCall(ctx: Context, env: Environment, macro: LMacro, argsList: list) -> Any:
+   def expandMacroCall(ctx: Context, env: Environment, macro: LMacro, argsList: list) -> Any:
       """Expand a single macro call and return the unevaluated expansion."""
       expansionEnv = Environment(env, evalFn=ctx.lEval)
       expansionEnv.bindArguments(macro.lambdaListAST, argsList, destructuring=True)

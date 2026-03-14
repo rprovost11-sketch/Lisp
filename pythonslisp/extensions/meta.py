@@ -43,7 +43,7 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
          break
       if not isinstance( macroDef, LMacro ):
          break
-      form = Expander._expandMacroCall( ctx, env, macroDef, form[1:] )
+      form = Expander.expandMacroCall( ctx, env, macroDef, form[1:] )
    return form
 
 @primitive( 'macroexpand-1', '(\'form)',
@@ -65,7 +65,7 @@ not a macro call."""
    if not isinstance( macroDef, LMacro ):
       return form
 
-   return Expander._expandMacroCall( ctx, env, macroDef, form[1:] )
+   return Expander.expandMacroCall( ctx, env, macroDef, form[1:] )
 
 @primitive( 'defsetf-internal', '(accessor-symbol field-symbol)' )
 def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> Any:
