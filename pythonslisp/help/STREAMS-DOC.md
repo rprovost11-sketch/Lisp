@@ -383,7 +383,9 @@ Forces any buffered output to be written.
 | `(read stream nil nil)` | Read one s-expression; NIL at EOF |
 | `(readall stream)` | Read entire stream contents |
 | `(write! stream val...)` | Write programmer-readable output |
+| `(write-line stream val...)` | Same with trailing newline |
 | `(uwrite! stream val...)` | Write user-readable output |
+| `(uwrite-line stream val...)` | Same with trailing newline |
 | `(writef fmt list stream)` | Write formatted string |
 | `(terpri stream)` | Write a newline |
 | `(flush stream)` | Flush buffered output |
