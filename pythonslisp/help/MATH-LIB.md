@@ -10,6 +10,7 @@
 | `(/ a b)` | Exact division → fraction |
 | `(// a b)` | Integer (floor) division |
 | `(mod a b)` | Modulo (sign follows divisor) |
+| `(rem a b)` | Remainder (sign follows dividend) |
 | `(expt b e)` | b raised to power e |
 | `(sqrt x)` | Square root (float) |
 | `(isqrt n)` | Integer square root (floor) |

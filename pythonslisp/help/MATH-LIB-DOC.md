@@ -21,10 +21,32 @@ predicates, and common utilities.
 (/ 10 4)        ;==> 5/2      ; exact rational result
 (// 10 3)       ;==> 3        ; integer (floor) division
 (mod 10 3)      ;==> 1        ; modulo (sign follows divisor)
+(rem 10 3)      ;==> 1        ; remainder (sign follows dividend)
 ```
 
 Division always returns an exact fraction when the result is not an integer.
 Use `float` to convert: `(float (/ 10 4))` → `2.5`.
+
+### mod vs rem
+
+`mod` and `rem` differ only when the operands have opposite signs.
+`mod` returns a result with the **same sign as the divisor** (second argument);
+`rem` returns a result with the **same sign as the dividend** (first argument).
+
+```lisp
+(mod  13  4)    ;==>  1   ; same sign as divisor (+)
+(mod -13  4)    ;==>  3   ; same sign as divisor (+)
+(mod  13 -4)    ;==> -3   ; same sign as divisor (-)
+(mod -13 -4)    ;==> -1   ; same sign as divisor (-)
+
+(rem  13  4)    ;==>  1   ; same sign as dividend (+)
+(rem -13  4)    ;==> -1   ; same sign as dividend (-)
+(rem  13 -4)    ;==>  1   ; same sign as dividend (+)
+(rem -13 -4)    ;==> -1   ; same sign as dividend (-)
+```
+
+`mod` satisfies `(= n (+ (* d (floor n d)) (mod n d)))`.
+`rem` satisfies `(= n (+ (* d (truncate n d)) (rem n d)))`.
 
 ### Exponentiation and roots
 
@@ -224,7 +246,8 @@ pairs (or all pairs for `/=`).
 | `(* a b ...)` | Product |
 | `(/ a b)` | Exact division (fraction) |
 | `(// a b)` | Integer division |
-| `(mod a b)` | Modulo |
+| `(mod a b)` | Modulo (sign follows divisor) |
+| `(rem a b)` | Remainder (sign follows dividend) |
 | `(expt b e)` | b to the power e |
 | `(sqrt x)` | Square root |
 | `(isqrt n)` | Integer square root |
