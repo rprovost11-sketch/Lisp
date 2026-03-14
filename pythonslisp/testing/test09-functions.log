@@ -30,9 +30,9 @@
 
 >>> (defun main ()
 ...    (let ((next-int (int-seq)))
-...       (writeln! (next-int))
-...       (writeln! (next-int))
-...       (writeln! (next-int))))
+...       (uwrite-line (next-int))
+...       (uwrite-line (next-int))
+...       (uwrite-line (next-int))))
 ... 
 
 ==> (FUNCTION MAIN () ...)

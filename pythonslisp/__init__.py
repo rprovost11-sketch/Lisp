@@ -1,5 +1,5 @@
 
-__version__ = '0.37.5'
+__version__ = '0.37.6'
 
 __all__ = [ 'Analyzer',
             'AST',

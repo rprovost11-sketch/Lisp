@@ -83,12 +83,12 @@
 
 ==> ("a" 1 "c" "d" PI E)
 
->>> (hasvalue? pi '(a b c d))
+>>> (has-value-p pi '(a b c d))
 ...
 
 ==> NIL
 
->>> (hasvalue? 'c '(a b c d))
+>>> (has-value-p 'c '(a b c d))
 ...
 
 ==> T
