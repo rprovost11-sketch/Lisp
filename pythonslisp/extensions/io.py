@@ -66,6 +66,22 @@ def luwrite( outStrm, *values, end='' ):
       print( end=end, file=outStrm )
    return values[-1]
 
+def _get_output_stream( ctx: Context, env: EnvironmentBase ) -> Any:
+   """Return the current default output stream.
+If *standard-output* has been locally rebound (e.g. inside a let form)
+to something other than its global value, that stream is used, enabling
+output capture via (let ((*standard-output* s)) ...).  Otherwise
+ctx.outStrm is used, preserving the test runner's ability to redirect
+output at the Python level."""
+   try:
+      local_val  = env.lookup( '*STANDARD-OUTPUT*' )
+      global_val = env.lookupGlobalWithDefault( '*STANDARD-OUTPUT*', None )
+      if local_val is not global_val and isinstance( local_val, IOBase ) and local_val.writable():
+         return local_val
+   except Exception:
+      pass
+   return ctx.outStrm
+
 def is_struct_descriptor( obj ) -> bool:
    return isinstance(obj, dict) and obj.get('STRUCT-TYPE') == LSymbol('%STRUCT-DESCRIPTOR%')
 
@@ -376,13 +392,13 @@ Returns the output string."""
    numArgs = len(args)
    if numArgs == 1:
       dictOrList = None
-      stream = ctx.outStrm
+      stream = _get_output_stream( ctx, env )
       formattedStr = formatString
    elif numArgs == 2:
       otherArg = args[1]
       if isinstance( otherArg, (list, dict)):
          dictOrList = otherArg
-         stream = ctx.outStrm
+         stream = _get_output_stream( ctx, env )
       elif isinstance(otherArg, IOBase):
          dictOrList = None
          stream = otherArg
@@ -426,7 +442,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
       if not stream.writable():
          raise LRuntimePrimError( LP_write, 'Stream is not writable.' )
    else:
-      stream = ctx.outStrm
+      stream = _get_output_stream( ctx, env )
    return lwrite( stream, *args, end='' )
 
 @primitive( 'write-line', '(&optional stream &rest objects)' )
@@ -441,7 +457,7 @@ Returns the last value printed."""
       if not stream.writable():
          raise LRuntimePrimError( LP_write_line, 'Stream is not writable.' )
    else:
-      stream = ctx.outStrm
+      stream = _get_output_stream( ctx, env )
    return lwrite( stream, *args, end='\n' )
 
 @primitive( 'uwrite!', '(&optional stream &rest objects)' )
@@ -455,7 +471,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
       if not stream.writable():
          raise LRuntimePrimError( LP_uwrite, 'Stream is not writable.' )
    else:
-      stream = ctx.outStrm
+      stream = _get_output_stream( ctx, env )
    return luwrite( stream, *args, end='' )
 
 @primitive( 'uwrite-line', '(&optional stream &rest objects)' )
@@ -470,14 +486,14 @@ Returns the last value printed."""
       if not stream.writable():
          raise LRuntimePrimError( LP_uwrite_line, 'Stream is not writable.' )
    else:
-      stream = ctx.outStrm
+      stream = _get_output_stream( ctx, env )
    return luwrite( stream, *args, end='\n' )
 
 @primitive( 'terpri', '(&optional stream)' )
 def LP_terpri( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Outputs a newline character.  Returns NIL."""
    if len(args) == 0:
-      stream = ctx.outStrm
+      stream = _get_output_stream( ctx, env )
    else:
       stream = args[0]
       if not isinstance(stream, IOBase):
@@ -861,3 +877,53 @@ Has no effect if readline is not available.  Returns n."""
    if _rl is not None:
       _rl.set_history_length( n )
    return n
+
+@primitive( 'readline-read-history-file', '(&optional path)' )
+def LP_readline_read_history_file( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Loads readline history from path (default: ~/.lisp_history).
+Has no effect if readline is not available.  Returns T on success, NIL if
+the file does not exist."""
+   path = args[0] if args else os.path.expanduser( '~/.lisp_history' )
+   if not isinstance( path, str ):
+      raise LRuntimePrimError( LP_readline_read_history_file, 'Argument must be a string path.' )
+   if _rl is None:
+      return L_NIL
+   try:
+      _rl.read_history_file( path )
+      return L_T
+   except FileNotFoundError:
+      return L_NIL
+
+@primitive( 'readline-write-history-file', '(&optional path)' )
+def LP_readline_write_history_file( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Saves readline history to path (default: ~/.lisp_history).
+Has no effect if readline is not available.  Returns T on success."""
+   path = args[0] if args else os.path.expanduser( '~/.lisp_history' )
+   if not isinstance( path, str ):
+      raise LRuntimePrimError( LP_readline_write_history_file, 'Argument must be a string path.' )
+   if _rl is None:
+      return L_NIL
+   _rl.write_history_file( path )
+   return L_T
+
+@primitive( 'columnize', '(list width &optional stream)' )
+def LP_columnize( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Prints the elements of list as a compact multi-column layout fitting
+within width characters.  Columns are separated by two spaces; each column
+is only as wide as its widest item.  An optional stream argument selects
+the output destination (default: current output stream).
+All list elements must be strings.  Returns NIL."""
+   lst = args[0]
+   width = args[1]
+   outFile = args[2] if len(args) == 3 else ctx.outStrm
+   if not isinstance( lst, list ):
+      raise LRuntimePrimError( LP_columnize, 'Argument 1 must be a list.' )
+   if not isinstance( width, int ) or isinstance( width, bool ):
+      raise LRuntimePrimError( LP_columnize, 'Argument 2 must be an integer.' )
+   for i, item in enumerate( lst ):
+      if not isinstance( item, str ):
+         raise LRuntimePrimError( LP_columnize, f'List element {i+1} must be a string.' )
+   if not lst:
+      return L_NIL
+   columnize( lst, width, file=outFile )
+   return L_NIL

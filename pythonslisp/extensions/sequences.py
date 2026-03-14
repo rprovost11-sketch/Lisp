@@ -422,6 +422,59 @@ rightmost such element.  Returns NIL if not found."""
          return i
    return L_NIL
 
+@primitive( 'search', '(sequence1 sequence2 &key (test eql) (key nil) (from-end nil) (start1 0) (end1 nil) (start2 0) (end2 nil))',
+            mode=LambdaListMode.FULL_BINDING )
+def LP_search( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Searches sequence2 for a subsequence matching sequence1.  Returns the
+starting index in sequence2 of the leftmost match, or NIL if not found.
+With :from-end T, returns the rightmost match.  :start1/:end1 bound the
+pattern; :start2/:end2 bound the search region.  Works on both strings
+and lists.  For strings with the default test (eql), uses a fast native
+search."""
+   seq1     = env.lookup( 'SEQUENCE1' )
+   seq2     = env.lookup( 'SEQUENCE2' )
+   test_fn  = env.lookup( 'TEST' )
+   key_fn   = env.lookup( 'KEY' )
+   from_end = env.lookup( 'FROM-END' )
+   start1   = env.lookup( 'START1' )
+   end1     = env.lookup( 'END1' )
+   start2   = env.lookup( 'START2' )
+   end2     = env.lookup( 'END2' )
+   if not isinstance( seq1, (list, str) ):
+      raise LRuntimePrimError( LP_search, '1st argument must be a list or string.' )
+   if not isinstance( seq2, (list, str) ):
+      raise LRuntimePrimError( LP_search, '2nd argument must be a list or string.' )
+   if type(seq1) is not type(seq2):
+      raise LRuntimePrimError( LP_search, 'Both sequences must be the same type.' )
+   s1_n, e1_n = _validate_bounds( start1, end1, len(seq1), LP_search )
+   s2_n, e2_n = _validate_bounds( start2, end2, len(seq2), LP_search )
+   pattern = seq1[s1_n:e1_n]
+   pat_len = len( pattern )
+   # Fast path: native string search with default eql test and no key
+   if ( isinstance( seq1, str )
+        and _is_nil_val( key_fn )
+        and isinstance( test_fn, LSymbol ) and test_fn.name == 'EQL' ):
+      if not _is_nil_val( from_end ):
+         idx = seq2.rfind( pattern, s2_n, e2_n )
+      else:
+         idx = seq2.find( pattern, s2_n, e2_n )
+      return idx if idx != -1 else L_NIL
+   # General path: sliding window comparison
+   search_range = range( s2_n, e2_n - pat_len + 1 )
+   if not _is_nil_val( from_end ):
+      search_range = reversed( search_range )
+   for i in search_range:
+      match = True
+      for j in range( pat_len ):
+         cell1 = _extract_key( ctx, env, key_fn, pattern[j] )
+         cell2 = _extract_key( ctx, env, key_fn, seq2[i + j] )
+         if not _apply_test( ctx, env, test_fn, cell1, cell2 ):
+            match = False
+            break
+      if match:
+         return i
+   return L_NIL
+
 @primitive( 'position-if', '(pred sequence &key (key nil) (from-end nil) (start 0) (end nil))',
             mode=LambdaListMode.FULL_BINDING )
 def LP_position_if( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

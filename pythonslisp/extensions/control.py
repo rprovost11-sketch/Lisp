@@ -152,6 +152,19 @@ def LP_eval( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Evaluates expr in the current scope."""
    return ctx.lEval( env, args[0] )
 
+@primitive( 'eval-for-display', '(sexpr)' )
+def LP_eval_for_display( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Evaluates sexpr (a pre-parsed AST, typically from parse) and returns a
+list of all result values suitable for display in a REPL.  A normal single-value
+result returns a one-element list.  Multiple values return a list of all values.
+An empty multiple-values object returns NIL.
+Use as (eval-for-display (parse input)) in a REPL loop to correctly display
+(values ...) forms without losing values to multiple-value stripping."""
+   result = ctx.lEval( env, args[0] )
+   if type(result) is LMultipleValues:
+      return result.values if result.values else L_NIL
+   return [result]
+
 @primitive( 'apply', '(function &rest args)',
             mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=2 )
 def LP_apply( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
