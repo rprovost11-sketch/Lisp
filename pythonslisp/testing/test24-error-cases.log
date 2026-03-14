@@ -1478,22 +1478,6 @@
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
-; --- recursion-limit errors ---
-
->>> ;;; recursion-limit with non-integer
-... (recursion-limit "abc")
-
-%%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
-==>
-
->>> ;;; recursion-limit with too many args
-... (recursion-limit 1 2)
-
-%%% ERROR 'RECURSION-LIMIT': 0 or 1 arguments expected.
-%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
-==>
-
 ; --- library function argument count errors ---
 
 >>> ;;; evenp with no arguments

@@ -2,12 +2,6 @@
 ;;; Loaded automatically by Interpreter.__init__ (via reboot()) after the standard library.
 ;;; Contains system-level initialization that is not part of the reusable library.
 
-;;; Adjust Python's recursion limit for deep Lisp recursion
-(let ((newLimit 10000))
-   (if (< (recursion-limit) newLimit)
-       (recursion-limit newLimit)
-       nil))
-
 ;;; Standard CL special variables
 (setq *gensym-counter* 0)
 

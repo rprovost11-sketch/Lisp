@@ -83,14 +83,6 @@
 
 ==> "hello world"
 
-; --- recursion-limit ---
-
->>> ;;; recursion-limit returns current limit
-... (integerp (recursion-limit))
-...
-
-==> T
-
 ; --- funcall errors ---
 
 >>> ;;; Error: funcall with no arguments
@@ -151,22 +143,6 @@
 
 %%% ERROR 'EVAL': 1 argument expected.
 %%% PRIMITIVE USAGE: (EVAL sexpr)
-==>
-
-; --- recursion-limit errors ---
-
->>> ;;; Error: recursion-limit with non-integer
-... (recursion-limit "a")
-
-%%% ERROR 'RECURSION-LIMIT': Argument must be an integer.
-%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
-==>
-
->>> ;;; Error: recursion-limit with too many args
-... (recursion-limit 1 2)
-
-%%% ERROR 'RECURSION-LIMIT': 0 or 1 arguments expected.
-%%% PRIMITIVE USAGE: (RECURSION-LIMIT &optional newLimit)
 ==>
 
 ; --- Control structure edge cases ---
@@ -1482,14 +1458,6 @@
 
 ==> "ababab"
 
-; --- recursion-limit returns integer ---
-
->>> ;;; recursion-limit returns an integer
-... (integerp (recursion-limit))
-...
-
-==> T
-
 ; --- internal-time-units-per-second / get-internal-real-time ---
 
 >>> (= (internal-time-units-per-second) 1000000)
@@ -2012,6 +1980,40 @@ Type '(help "substring" :substring t)' to search all names by substring.
 
 >>> (string-capitalize "already Capitalized words")
 ==> "Already Capitalized Words"
+
+; --- string-join ---
+
+>>> (string-join ", " (list 1 2 3))
+==> "1, 2, 3"
+
+>>> (string-join " " (list 'hello 'world))
+==> "HELLO WORLD"
+
+; strings are joined without surrounding quotes
+>>> (string-join ", " (list "a" "b" "c"))
+==> "a, b, c"
+
+; mixed types
+>>> (string-join " | " (list 1 "two" 'three))
+==> "1 | two | THREE"
+
+; empty list
+>>> (string-join ", " (list))
+==> ""
+
+; single element
+>>> (string-join "-" (list 42))
+==> "42"
+
+; error: separator must be a string
+>>> (string-join 42 (list 1 2))
+%%% ERROR 'STRING-JOIN': Argument 1 (separator) must be a String.
+%%% PRIMITIVE USAGE: (STRING-JOIN separator list)
+
+; error: second arg must be a list
+>>> (string-join ", " 99)
+%%% ERROR 'STRING-JOIN': Argument 2 must be a List.
+%%% PRIMITIVE USAGE: (STRING-JOIN separator list)
 
 ; --- gensym ---
 

@@ -5,7 +5,7 @@ This module performs semantic analysis on a fully-expanded, normalized AST.
 It walks the AST and raises errors for structural / semantic problems,
 providing earlier and clearer diagnostics than the evaluator.
 
-Phase 2: structural checks for all inline special forms migrated out of _lEval.
+Phase 2: structural checks for all inline special forms migrated out of the evaluator.
 Phase 3: arity / type checks migrated out of primitives.
 """
 from __future__ import annotations
@@ -28,7 +28,7 @@ class Analyzer:
       Recursively walk sexpr, raising on structural / semantic problems.
 
       Checks are pure AST-structure checks (no evaluation).  Runtime checks
-      (e.g., whether a variable is bound) remain in _lEval.
+      (e.g., whether a variable is bound) remain in the evaluator.
       """
       if not isinstance(sexpr, list) or len(sexpr) == 0:
          return

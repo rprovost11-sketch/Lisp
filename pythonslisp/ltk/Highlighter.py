@@ -174,15 +174,16 @@ def highlight(code: str, lang: str) -> str:
 # Markdown renderer
 # ---------------------------------------------------------------------------
 
-_INLINE_RE = re.compile(r'\*\*(.+?)\*\*|`([^`]+)`')
+_INLINE_RE = re.compile(r'\*\*(.+?)\*\*|``(.+?)``|`([^`]+)`')
 
 
 def _render_inline(line: str) -> str:
-   """Apply inline Markdown formatting: **bold** and `code`."""
+   """Apply inline Markdown formatting: **bold**, ``double-backtick code``, and `code`."""
    def _replace(m):
       if m.group(1) is not None:
          return _BLD + m.group(1) + _R
-      return _ICY + m.group(2) + _R
+      content = m.group(2) if m.group(2) is not None else m.group(3)
+      return _ICY + content + _R
    return _INLINE_RE.sub(_replace, line)
 
 

@@ -4,9 +4,9 @@
 
 ```
 lambda-list -> ( {var}*
-                 [ &optional {var | (var [initForm [svar]])}* ]
+                 [ &optional {var | (var [initForm [pvar]])}* ]
                  [ &rest var ]
-                 [ &key {var | ({var | (keyword var)} [initForm [svar]])}*
+                 [ &key {var | ({var | (keyword var)} [initForm [pvar]])}*
                         [&allow-other-keys] ]
                  [ &aux {var | (var [initForm])}* ] )
 ```
