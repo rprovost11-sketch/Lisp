@@ -151,6 +151,12 @@ class LexerBuffer( object ):
       '''Returns the substring spanning from mark to point.'''
       return self._source[ self._mark : self._point ]
 
+   def consumedToPoint( self ):
+      return self._point
+   
+   def consumedToMark( self ):
+      return self._mark
+
    def scanFilename( self ) -> str:
       return self._filename
 

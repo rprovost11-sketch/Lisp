@@ -68,7 +68,7 @@ class Lexer( LexerBase ):
 
    SINGLE_QUOTE_TOK   = 501    # Misc tokens
    UNQUOTE_TOK          = 502
-   UNQUOTE_SPLICING_TOK       = 503
+   UNQUOTE_SPLICING_TOK = 503
    QUASIQUOTE_TOK     = 504
 
    def __init__( self ) -> None:
@@ -326,15 +326,15 @@ class Parser( ParserBase ):
       tok = self._scanner.peekToken( )
       buf = self._scanner.buffer
       if tok == Lexer.EOF_TOK:
-         chars_consumed = buf._point
+         chars_consumed = buf.consumedToPoint()
       elif tok == Lexer.UNQUOTE_SPLICING_TOK:
-         chars_consumed = buf._point - 2
+         chars_consumed = buf.consumedToPoint() - 2
       elif tok in ( Lexer.OPEN_PAREN_TOK, Lexer.CLOSE_PAREN_TOK,
                     Lexer.SINGLE_QUOTE_TOK, Lexer.QUASIQUOTE_TOK,
                     Lexer.UNQUOTE_TOK ):
-         chars_consumed = buf._point - 1
+         chars_consumed = buf.consumedToPoint() - 1
       else:
-         chars_consumed = buf._mark
+         chars_consumed = buf.consumedToMark()
       return ast, chars_consumed
 
    def _parse( self ) -> Any:
