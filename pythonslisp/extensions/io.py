@@ -19,6 +19,19 @@ from pythonslisp.ltk.Utils import columnize
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.ltk.Highlighter import render_markdown
 
+# Platform-specific readline module (same logic as Listener)
+_rl = None
+if sys.platform == 'win32':
+   try:
+      import pythonslisp.ltk.readline_win as _rl
+   except ImportError:
+      pass
+else:
+   try:
+      import readline as _rl
+   except ImportError:
+      pass
+
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
 
@@ -778,3 +791,73 @@ Returns T if the topic existed and was removed, NIL if the topic was not found."
       topicFile.unlink()
       return L_T
    return L_NIL
+
+@primitive( 'directory-files', '(dir &optional extension)' )
+def LP_directory_files( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns a sorted list of full file paths in dir.
+With an optional extension string (e.g. \".log\"), only files with that
+extension are returned.  Directories are excluded.  Returns NIL if dir
+does not exist or is empty."""
+   dirPath = args[0]
+   if not isinstance( dirPath, str ):
+      raise LRuntimePrimError( LP_directory_files, 'Argument 1 must be a string (directory path).' )
+   ext = None
+   if len(args) == 2:
+      ext = args[1]
+      if not isinstance( ext, str ):
+         raise LRuntimePrimError( LP_directory_files, 'Argument 2 must be a string (extension).' )
+   if not os.path.isdir( dirPath ):
+      return L_NIL
+   entries = sorted( os.listdir( dirPath ) )
+   result = []
+   for name in entries:
+      fullPath = os.path.join( dirPath, name )
+      if not os.path.isfile( fullPath ):
+         continue
+      if ext is not None and not name.endswith( ext ):
+         continue
+      result.append( fullPath )
+   return result
+
+@primitive( 'make-directory', '(path)' )
+def LP_make_directory( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Creates the directory at path, including any missing parent directories.
+Does nothing if the directory already exists.  Returns the path string."""
+   path = args[0]
+   if not isinstance( path, str ):
+      raise LRuntimePrimError( LP_make_directory, 'Argument 1 must be a string (path).' )
+   os.makedirs( path, exist_ok=True )
+   return path
+
+@primitive( 'file-basename', '(path)' )
+def LP_file_basename( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns the final component of a file path (the filename without
+the directory prefix).  E.g. (file-basename \"/foo/bar/baz.log\") => \"baz.log\"."""
+   path = args[0]
+   if not isinstance( path, str ):
+      raise LRuntimePrimError( LP_file_basename, 'Argument 1 must be a string (path).' )
+   return os.path.basename( path )
+
+@primitive( 'readline-add-history', '(string)' )
+def LP_readline_add_history( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Adds string to the readline input history.
+Has no effect if readline is not available.  Returns the string."""
+   s = args[0]
+   if not isinstance( s, str ):
+      raise LRuntimePrimError( LP_readline_add_history, 'Argument 1 must be a string.' )
+   if _rl is not None:
+      _rl.add_history( s )
+   return s
+
+@primitive( 'readline-set-history-length', '(n)' )
+def LP_readline_set_history_length( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Sets the maximum number of entries kept in readline history.
+Has no effect if readline is not available.  Returns n."""
+   n = args[0]
+   if not isinstance( n, int ) or isinstance( n, bool ):
+      raise LRuntimePrimError( LP_readline_set_history_length, 'Argument 1 must be an integer.' )
+   if n < 1:
+      raise LRuntimePrimError( LP_readline_set_history_length, 'History length must be a positive integer.' )
+   if _rl is not None:
+      _rl.set_history_length( n )
+   return n

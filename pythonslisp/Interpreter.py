@@ -165,6 +165,7 @@ class Interpreter( InterpreterBase ):
       ctx.analyze          = lambda env, ast: Analyzer.analyze( env, ast )
       ctx.loadExt          = lambda path, targetEnv=None: self._loadExtFile( Path(path), ctx.outStrm, targetEnv )
       ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
+      ctx.reboot           = lambda: self.reboot( outStrm=ctx.outStrm )
       return ctx
 
    def _makeLispFunction( self, targetEnv=None ):

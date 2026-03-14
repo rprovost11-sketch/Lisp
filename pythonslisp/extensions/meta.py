@@ -1,4 +1,5 @@
 from __future__ import annotations
+import datetime
 import time
 from typing import Any
 
@@ -154,6 +155,13 @@ trace list.  With no arguments, clears all named function tracing."""
          tracer.removeFnTrace( sym.name )
    return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
 
+@primitive( 'toggle-global-trace', '()' )
+def LP_toggle_global_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Toggles global function tracing on or off.  When global tracing is on,
+every call to a user-defined function is reported with its arguments and
+return value.  Returns T if tracing is now on, NIL if now off."""
+   return L_T if ctx.tracer.toggle_global() else L_NIL
+
 @primitive( 'call/cc', '(procedure)' )
 def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Calls procedure with one argument: an escape continuation object.
@@ -220,6 +228,19 @@ def LP_get_internal_real_time( ctx: Context, env: Environment, args: list[Any] )
 internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
    return int( time.perf_counter() * _ITUPS )
 
+@primitive( 'now-string', '(&optional format)' )
+def LP_now_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the current date and time as a string.
+With no argument, returns an ISO 8601 string (e.g. \"2026-03-14T10:30:00.123456\").
+With a format string, uses strftime formatting (e.g. \"%Y-%m-%d-%H%M%S\")."""
+   now = datetime.datetime.now()
+   if len(args) == 0:
+      return now.isoformat()
+   fmt = args[0]
+   if not isinstance( fmt, str ):
+      raise LRuntimePrimError( LP_now_string, 'Argument must be a format string.' )
+   return now.strftime( fmt )
+
 @primitive( 'load-extension', '(&rest files &key name)',
                mode=LambdaListMode.DOC_ONLY, min_args=0 )
 def LP_load_extensions( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -264,4 +285,12 @@ successfully."""
          raise LRuntimePrimError( LP_load_extension_dirs, 'Each argument must be a string path.' )
    for path in args:
       ctx.loadExtDir( path )
+   return L_T
+
+@primitive( 'interpreter-reboot', '()' )
+def LP_interpreter_reboot( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Reboots the interpreter: clears all user-defined functions and variables,
+reloads the standard library, and re-runs startup.lisp.  Equivalent to the
+]reboot listener command.  Returns T."""
+   ctx.reboot()
    return L_T

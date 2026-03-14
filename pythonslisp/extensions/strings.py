@@ -109,3 +109,27 @@ used as-is (without surrounding quotes)."""
    parts = [ (elt if isinstance( elt, str ) else prettyPrintSExpr( elt ).strip())
              for elt in args[1] ]
    return args[0].join( parts )
+
+@primitive( 'string-split', '(string &optional separator)' )
+def LP_string_split( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Splits string into a list of substrings.
+With no separator, splits on runs of whitespace (empty strings omitted).
+With a separator string, splits at every occurrence of that separator."""
+   s = args[0]
+   if not isinstance( s, str ):
+      raise LRuntimePrimError( LP_string_split, 'Argument 1 must be a String.' )
+   if len(args) == 1:
+      return s.split()
+   sep = args[1]
+   if not isinstance( sep, str ):
+      raise LRuntimePrimError( LP_string_split, 'Argument 2 (separator) must be a String.' )
+   return s.split( sep )
+
+@primitive( 'string-lines', '(string)' )
+def LP_string_lines( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Splits string into a list of lines.  Line endings (\\n, \\r\\n, \\r) are
+stripped from each element.  An empty string returns NIL."""
+   s = args[0]
+   if not isinstance( s, str ):
+      raise LRuntimePrimError( LP_string_lines, 'Argument 1 must be a String.' )
+   return s.splitlines()

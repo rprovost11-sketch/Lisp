@@ -25,3 +25,4 @@ class Context:
       self.analyze:          Callable = None   # set by Interpreter after construction
       self.loadExt:          Callable = None   # set by Interpreter after construction
       self.loadExtDir:       Callable = None   # set by Interpreter after construction
+      self.reboot:           Callable = None   # set by Interpreter after construction
