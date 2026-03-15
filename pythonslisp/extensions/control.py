@@ -165,6 +165,27 @@ Use as (eval-for-display (parse input)) in a REPL loop to correctly display
       return result.values if result.values else L_NIL
    return [result]
 
+@primitive( 'raweval-for-display', '(string)' )
+def LP_raweval_for_display( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Parses string as Lisp, runs the full pipeline (macro-expand, analyze, eval),
+and returns a list of all result values suitable for display in a REPL.  A normal
+single-value result returns a one-element list.  Multiple values return a list of
+all values.  An empty multiple-values object returns NIL.
+Use as (raweval-for-display input-string) in a REPL loop."""
+   source = args[0]
+   if not isinstance( source, str ):
+      raise LRuntimePrimError( LP_raweval_for_display, 'Argument must be a string.' )
+   ast       = ctx.parse( source )   # [PROGN, form1, ...]
+   top_forms = ast[1:]               # strip PROGN wrapper
+   result    = L_NIL
+   for form in top_forms:
+      form   = ctx.expand( env, form )
+      ctx.analyze( env, form )
+      result = ctx.lEval( env, form )
+   if type(result) is LMultipleValues:
+      return result.values if result.values else L_NIL
+   return [result]
+
 @primitive( 'apply', '(function &rest args)',
             mode=LambdaListMode.DOC_ONLY, preEvalArgs=False, min_args=2 )
 def LP_apply( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

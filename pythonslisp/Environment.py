@@ -121,8 +121,10 @@ class Environment(EnvironmentBase):
          if not isinstance(nextParam, LSymbol):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
+      rest_was_bound = False
       if nextParam == '&REST' or (nextParam == '&BODY' and destructuring):
          paramNum, argNum = self._bindRestArgs( lambdaListAST, paramNum+1, argList, argNum )
+         rest_was_bound = True
 
          try:
             nextParam = lambdaListAST[paramNum]
@@ -132,7 +134,8 @@ class Environment(EnvironmentBase):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
       if nextParam == '&KEY':
-         paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum )
+         paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum,
+                                               skip_non_keywords=rest_was_bound )
 
          try:
             nextParam = lambdaListAST[paramNum]
@@ -337,8 +340,11 @@ class Environment(EnvironmentBase):
       return paramNum + 1, argNum
 
    def _bindKeyArgs( self, lambdaListAST: list[Any], paramNum: int,
-                     argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
-      '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [pvar]])}* [&allow-other-keys]'''
+                     argList: Sequence[Any], argNum: int,
+                     skip_non_keywords: bool = False ) -> tuple[int, int]:
+      '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [pvar]])}* [&allow-other-keys]
+      skip_non_keywords: when True (after &rest), non-keyword args in the arg list are
+      silently skipped rather than raising an error — they are already captured by &rest.'''
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
 
@@ -424,6 +430,9 @@ class Environment(EnvironmentBase):
       while argNum < argListLength:
          keyArg = argList[argNum]
          if (not isinstance(keyArg, LSymbol)) or (not keyArg.startswith(':')):
+            if skip_non_keywords:
+               argNum += 1
+               continue
             raise LArgBindingError( f'Keyword expected, found {keyArg}.' )
          keyArgStr = keyArg.name[1:]  # Strip the leading colon
          argNum += 1

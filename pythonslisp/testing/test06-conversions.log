@@ -117,7 +117,7 @@
 ... (string)
 
 %%% ERROR 'STRING': At least 1 argument expected.
-%%% PRIMITIVE USAGE: (STRING object &rest more-objects)
+%%% PRIMITIVE USAGE: (STRING &rest objects &key (sep ""))
 ==>
 
 >>> ;;; Error: make-symbol requires exactly one argument

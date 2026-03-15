@@ -398,19 +398,23 @@ containing a valid lisp number that can be expressed as a fraction."""
    except (IndexError, TypeError, ValueError):
       raise LRuntimePrimError( LP_rational, 'Invalid argument.' )
 
-@primitive( 'string', '(object &rest more-objects)' )
+@primitive( 'string', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
 def LP_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """PrettyPrints into programmer readable strings each argument object and
-returns the concatenation of those strings."""
-   resultStrs = [ prettyPrintSExpr(sExpr) for sExpr in args ]
-   return ''.join(resultStrs)
+   """PrettyPrints each argument into programmer readable form and returns the
+results joined by :sep (default \"\").  With :sep, acts like string-join in
+programmer mode: (string 1 2 3 :sep \", \") => \"1, 2, 3\"."""
+   objects = env.lookup( LSymbol('OBJECTS') )
+   sep     = env.lookup( LSymbol('SEP') )
+   return sep.join( prettyPrintSExpr(o) for o in objects )
 
-@primitive( 'ustring', '(object &rest more-objects)' )
+@primitive( 'ustring', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
 def LP_ustring( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-   """PrettyPrints into user readable strings each argument object and
-returns the concatenation of those strings."""
-   resultStrs = [ prettyPrint(sExpr) for sExpr in args ]
-   return ''.join(resultStrs)
+   """PrettyPrints each argument into user readable form and returns the
+results joined by :sep (default \"\").  With :sep, acts like string-join in
+user mode: (ustring \"a\" \"b\" :sep \", \") => \"a, b\"."""
+   objects = env.lookup( LSymbol('OBJECTS') )
+   sep     = env.lookup( LSymbol('SEP') )
+   return sep.join( prettyPrint(o) for o in objects )
 
 @primitive( 'make-symbol', '(string)' )
 def LP_make_symbol( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

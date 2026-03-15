@@ -653,13 +653,13 @@
 >>> (string)
 
 %%% ERROR 'STRING': At least 1 argument expected.
-%%% PRIMITIVE USAGE: (STRING object &rest more-objects)
+%%% PRIMITIVE USAGE: (STRING &rest objects &key (sep ""))
 ==>
 
 >>> (ustring)
 
 %%% ERROR 'USTRING': At least 1 argument expected.
-%%% PRIMITIVE USAGE: (USTRING object &rest more-objects)
+%%% PRIMITIVE USAGE: (USTRING &rest objects &key (sep ""))
 ==>
 
 >>> (make-symbol)

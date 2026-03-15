@@ -114,10 +114,6 @@ stdout (colourised) and to the session log (plain)."
   "Remove trailing whitespace from str."
   (string-right-trim *lsl-ws* str))
 
-(defun %lsl-cat (&rest parts)
-  "Concatenate strings."
-  (string-join "" parts))
-
 
 ;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Evaluate an input string; return (retval-str output-str err-str secs)
@@ -135,10 +131,9 @@ ParseError from malformed syntax escapes this function uncaught."
         (t0       (get-internal-real-time)))
     (let ((*standard-output* out-strm))
       (handler-case
-          (let* ((ast     (parse input))
-                 (results (eval-for-display ast)))
-            ;; results is a Lisp list of values; stringify each for display/comparison
-            (setq retval (string-join *lsl-newline* (mapcar string results))))
+          ;; raweval-for-display runs the full pipeline: expand, analyze, eval.
+          ;; This ensures arity errors are caught as LRuntimeError (not raw Python ValueError).
+          (setq retval (string-join *lsl-newline* (mapcar string (raweval-for-display input))))
         (t (e)
            (setq errmsg (condition-message e)))))
     (let* ((elapsed (float (/ (- (get-internal-real-time) t0)
@@ -172,9 +167,11 @@ ParseError from malformed syntax escapes this function uncaught."
         (setq expr (%lsl-rstrip (subseq (car rem) 4)))
         (setq rem  (cdr rem))
 
-        ;; Accumulate '... ' continuation lines
+        ;; Accumulate '... ' continuation lines.
+        ;; A bare "..." (3 chars, no payload) is a visual separator — treat as empty.
         (while (and rem (%lsl-starts-with (car rem) "..."))
-          (setq expr (%lsl-cat expr *lsl-newline* (subseq (car rem) 4)))
+          (when (> (length (car rem)) 3)
+            (setq expr (ustring expr *lsl-newline* (subseq (car rem) 4))))
           (setq rem  (cdr rem)))
 
         ;; Accumulate output lines (everything before '==> ', '%%% ', or '>>> ')
@@ -183,7 +180,7 @@ ParseError from malformed syntax escapes this function uncaught."
                     (not (string= (%lsl-rstrip (car rem)) "==>"))
                     (not (%lsl-starts-with (car rem) "%%% "))
                     (not (%lsl-starts-with (car rem) ">>> ")))
-          (setq output (%lsl-cat output (car rem) *lsl-newline*))
+          (setq output (ustring output (car rem) *lsl-newline*))
           (setq rem    (cdr rem)))
 
         ;; Parse return value
@@ -202,8 +199,8 @@ ParseError from malformed syntax escapes this function uncaught."
                       (not (%lsl-starts-with (car rem) ">>> "))
                       (not (%lsl-starts-with (car rem) "%%% ")))
             (if (%lsl-starts-with (car rem) ";")
-                (setq expr   (%lsl-cat expr   *lsl-newline* (car rem)))
-                (setq retval (%lsl-cat retval *lsl-newline* (car rem))))
+                (setq expr   (ustring expr   *lsl-newline* (car rem)))
+                (setq retval (ustring retval *lsl-newline* (car rem))))
             (setq rem (cdr rem))))
 
         ;; Parse error message
@@ -211,7 +208,7 @@ ParseError from malformed syntax escapes this function uncaught."
           (setq errmsg (subseq (car rem) 4))
           (setq rem    (cdr rem))
           (while (and rem (%lsl-starts-with (car rem) "%%% "))
-            (setq errmsg (%lsl-cat errmsg (subseq (car rem) 4)))
+            (setq errmsg (ustring errmsg (subseq (car rem) 4)))
             (setq rem    (cdr rem))))
 
         ;; Skip to next '>>> ' line for next iteration
@@ -246,36 +243,34 @@ verbosity 0 = quiet (no expression output), 3 = verbose (show expressions)."
               (let ((is-first t))
                 (dolist (line (string-lines expr))
                   (if is-first
-                      (progn (%lsl-println-screen (%lsl-cat ">>> " line))
+                      (progn (%lsl-println-screen (ustring ">>> " line))
                              (setq is-first nil))
-                      (%lsl-println-screen (%lsl-cat "... " line))))))
+                      (%lsl-println-screen (ustring "... " line))))))
             ;; Evaluate — errors propagate upward
             (eval (parse expr))))
-        (%lsl-println-screen (%lsl-green (%lsl-cat "Log file read: " filename))))
+        (%lsl-println-screen (%lsl-green (ustring "Log file read: " filename))))
     (t (e)
-       (%lsl-println-screen (%lsl-cat "Error: " (condition-message e))))))
+       (%lsl-println-screen (ustring "Error: " (condition-message e))))))
 
 
 ;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Session log test — returns (result-message num-tests)
 ;;; ─────────────────────────────────────────────────────────────────────────────
 
-(defun %lsl-test-file (filename)
-  "Run one test file and print per-test results to stdout.
+(defun %lsl-test-file (filename run-strm)
+  "Run one test file and write per-test results to run-strm.
 Returns (result-msg num-tests) list."
   (let ((text nil))
     (handler-case
         (with-open-file (f filename)
           (setq text (readall f)))
       (t (e)
-         (%lsl-println-screen (%lsl-cat "   Test file: " filename "..."))
-         (%lsl-println-screen (%lsl-cat "File not found: " filename))
+         (uwrite-line run-strm (ustring "File not found: " filename))
          (return-from %lsl-test-file (list "0 TESTS PASSED!" 0))))
-    (%lsl-println-screen (%lsl-cat "   Test file: " filename "..."))
     (let ((entries    (%lsl-parse-log text))
           (num-passed 0)
           (expr-num   -1))
-      (terpri)
+      (uwrite-line run-strm "")
       (dolist (entry entries)
         (setq expr-num (+ expr-num 1))
         (let* ((expr         (at 0 entry))
@@ -286,7 +281,7 @@ Returns (result-msg num-tests) list."
                (actual-ret   (at 0 evr))
                (actual-out   (at 1 evr))
                (actual-err   (at 2 evr)))
-          (%lsl-println-screen (%lsl-cat (string (+ expr-num 1)) "> " expr))
+          (uwrite-line run-strm (ustring (string (+ expr-num 1)) "> " expr))
           (let* ((ret-ok (string= actual-ret expected-ret))
                  (out-ok (string= actual-out expected-out))
                  (err-ok (string= actual-err expected-err))
@@ -294,26 +289,25 @@ Returns (result-msg num-tests) list."
             (when passed
               (setq num-passed (+ num-passed 1)))
             (when (not ret-ok)
-              (%lsl-println-screen
-                (%lsl-cat "         RETURN: expected [" expected-ret
+              (uwrite-line run-strm
+                (ustring "         RETURN: expected [" expected-ret
                           "] got [" actual-ret "]")))
             (when (not out-ok)
-              (%lsl-println-screen
-                (%lsl-cat "         OUTPUT: expected [" expected-out
+              (uwrite-line run-strm
+                (ustring "         OUTPUT: expected [" expected-out
                           "] got [" actual-out "]")))
             (when (not err-ok)
-              (%lsl-println-screen
-                (%lsl-cat "         ERROR:  expected [" expected-err
+              (uwrite-line run-strm
+                (ustring "         ERROR:  expected [" expected-err
                           "] got [" actual-err "]")))
-            (%lsl-println-screen (%lsl-cat "         " (if passed "PASSED!" "Failed!")))
-            (%lsl-println-screen ""))))
+            (uwrite-line run-strm (ustring "         " (if passed "PASSED!" "Failed!")))
+            (uwrite-line run-strm ""))))
       (let* ((num-tests  (+ expr-num 1))
              (num-failed (- num-tests num-passed))
              (msg        (if (= num-failed 0)
-                             (%lsl-cat (string num-tests) " TESTS PASSED!")
-                             (%lsl-cat "(" (string num-failed) "/"
+                             (ustring (string num-tests) " TESTS PASSED!")
+                             (ustring "(" (string num-failed) "/"
                                        (string num-tests) ") Failed."))))
-        (%lsl-println-screen msg)
         (list msg num-tests)))))
 
 
@@ -353,7 +347,7 @@ Returns (result-msg num-tests) list."
           ((string= cmd "trace")
            (%lsl-println-screen "Usage: trace\n  Toggle global function tracing on/off."))
           (t
-           (error (%lsl-cat "No help on '" cmd "'")))))
+           (error (ustring "No help on '" cmd "'")))))
       (progn
         (%lsl-println-screen "")
         (%lsl-println-screen (%lsl-bold-white "Listener Commands"))
@@ -376,11 +370,11 @@ Returns (result-msg num-tests) list."
     (setf *lsl-log-stream* (open filename :direction :output))
     (let ((ts (now-string)))
       (uwrite-line *lsl-log-stream* ">>> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
-      (uwrite-line *lsl-log-stream* (%lsl-cat "... ;;;;;;  Starting Log ( " ts " ): " filename))
+      (uwrite-line *lsl-log-stream* (ustring "... ;;;;;;  Starting Log ( " ts " ): " filename))
       (uwrite-line *lsl-log-stream* "... 0")
       (uwrite-line *lsl-log-stream* "")
       (uwrite-line *lsl-log-stream* "==> 0"))
-    (%lsl-println-screen (%lsl-green (%lsl-cat "Logging to: " filename)))))
+    (%lsl-println-screen (%lsl-green (ustring "Logging to: " filename)))))
 
 
 (defun %lsl-cmd-close (args)
@@ -413,11 +407,11 @@ Returns (result-msg num-tests) list."
     (setf *lsl-log-stream* (open filename :direction :output :if-exists :append))
     (let ((ts (now-string)))
       (uwrite-line *lsl-log-stream* ">>> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
-      (uwrite-line *lsl-log-stream* (%lsl-cat "... ;;;;;;  Continuing Log ( " ts " ): " filename))
+      (uwrite-line *lsl-log-stream* (ustring "... ;;;;;;  Continuing Log ( " ts " ): " filename))
       (uwrite-line *lsl-log-stream* "... 0")
       (uwrite-line *lsl-log-stream* "")
       (uwrite-line *lsl-log-stream* "==> 0"))
-    (%lsl-println-screen (%lsl-green (%lsl-cat "Continuing log: " filename)))))
+    (%lsl-println-screen (%lsl-green (ustring "Continuing log: " filename)))))
 
 
 (defun %lsl-cmd-readlog (args)
@@ -439,9 +433,9 @@ Returns (result-msg num-tests) list."
     (handler-case
         (progn
           (eval (load filename))
-          (%lsl-println-screen (%lsl-green (%lsl-cat "Source file read: " filename))))
+          (%lsl-println-screen (%lsl-green (ustring "Source file read: " filename))))
       (t (e)
-         (%lsl-println-screen (%lsl-cat "Error loading file: " (condition-message e)))))))
+         (%lsl-println-screen (ustring "Error loading file: " (condition-message e)))))))
 
 
 (defun %lsl-cmd-reboot (args)
@@ -469,8 +463,8 @@ Returns (result-msg num-tests) list."
                         (directory-files *lsl-testdir* ".log")))
          (total-run  0)
          (ts         (now-string "%Y-%m-%d-%H%M%S"))
-         (runs-dir   (%lsl-cat *lsl-testdir* "/runs"))
-         (run-file   (%lsl-cat runs-dir "/test-" ts ".run")))
+         (runs-dir   (ustring *lsl-testdir* "/runs"))
+         (run-file   (ustring runs-dir "/test-" ts ".run")))
     (make-directory runs-dir)
     (%lsl-println-screen "")
     (%lsl-println-screen (%lsl-bold-white "Test Report"))
@@ -478,25 +472,25 @@ Returns (result-msg num-tests) list."
     (let ((run-strm (open run-file :direction :output)))
       (handler-case
           (dolist (filename filenames)
-            (let* ((result   (%lsl-test-file filename))
+            (let* ((result   (%lsl-test-file filename run-strm))
                    (msg      (at 0 result))
                    (n        (at 1 result))
                    (base     (file-basename filename))
                    (pad      (subseq "                                        "
                                      0 (max 0 (- 40 (length base)))))
-                   (line     (%lsl-cat base pad " " msg)))
+                   (line     (ustring base pad " " msg)))
               (setq total-run (+ total-run n))
               (%lsl-println-screen (if (search "PASSED!" msg)
                                        (%lsl-green line)
                                        (%lsl-red   line)))
               (uwrite-line run-strm line)))
         (t (e)
-           (%lsl-println-screen (%lsl-red (%lsl-cat "Test error: " (condition-message e))))))
+           (%lsl-println-screen (%lsl-red (ustring "Test error: " (condition-message e))))))
       (close run-strm))
     (%lsl-println-screen "")
-    (%lsl-println-screen (%lsl-cat "Total test files: " (string (length filenames)) "."))
-    (%lsl-println-screen (%lsl-cat "Total test cases: " (string total-run) "."))
-    (%lsl-println-screen (%lsl-cat "Test output: " run-file))))
+    (%lsl-println-screen (ustring "Total test files: " (string (length filenames)) "."))
+    (%lsl-println-screen (ustring "Total test cases: " (string total-run) "."))
+    (%lsl-println-screen (ustring "Test output: " run-file))))
 
 
 (defun %lsl-cmd-trace (args)
@@ -505,8 +499,8 @@ Returns (result-msg num-tests) list."
   (let ((on (toggle-global-trace)))
     (%lsl-println-screen
       (if on
-          (%lsl-cat "Tracing is now " (%lsl-green "ON") ".")
-          (%lsl-cat "Tracing is now " (%lsl-yellow "OFF") ".")))))
+          (ustring "Tracing is now " (%lsl-green "ON") ".")
+          (ustring "Tracing is now " (%lsl-yellow "OFF") ".")))))
 
 
 (defun %lsl-cmd-instrument (args)
@@ -515,14 +509,14 @@ Returns (result-msg num-tests) list."
   (setf *lsl-instrumenting* (not *lsl-instrumenting*))
   (%lsl-println-screen
     (if *lsl-instrumenting*
-        (%lsl-cat "Instrumenting is now " (%lsl-green "ON") ".")
-        (%lsl-cat "Instrumenting is now " (%lsl-yellow "OFF") "."))))
+        (ustring "Instrumenting is now " (%lsl-green "ON") ".")
+        (ustring "Instrumenting is now " (%lsl-yellow "OFF") "."))))
 
 
 (defun %lsl-cmd-lhistory (args)
   (cond
     ((null args)
-     (%lsl-println-screen (%lsl-cat "Current history size: " (string *lsl-hist-max*))))
+     (%lsl-println-screen (ustring "Current history size: " (string *lsl-hist-max*))))
     ((= (length args) 1)
      (handler-case
          (let ((n (integer (car args))))
@@ -530,7 +524,7 @@ Returns (result-msg num-tests) list."
              (error "History size must be a positive integer."))
            (setf *lsl-hist-max* n)
            (readline-set-history-length n)
-           (%lsl-println-screen (%lsl-cat "History size set to: " (string n))))
+           (%lsl-println-screen (ustring "History size set to: " (string n))))
        (t (e)
           (error "Usage: lhistory [<n>]"))))
     (t
@@ -574,7 +568,7 @@ Returns (result-msg num-tests) list."
       ((string= cmd "exit")       (%lsl-cmd-exit       cargs))
       ((string= cmd "quit")       (%lsl-cmd-quit       cargs))
       (t
-       (error (%lsl-cat "Unknown listener command \"" cmd "\""))))))
+       (error (ustring "Unknown listener command \"" cmd "\""))))))
 
 
 ;;; ─────────────────────────────────────────────────────────────────────────────
@@ -592,14 +586,14 @@ NOTE: ParseError from malformed input propagates uncaught."
            (first-line (car ordered))
            (rest-lines (cdr ordered)))
       (if (null rest-lines)
-          (uwrite! *lsl-log-stream* (%lsl-cat ">>> " first-line))
+          (uwrite! *lsl-log-stream* (ustring ">>> " first-line))
           (progn
-            (uwrite-line *lsl-log-stream* (%lsl-cat ">>> " first-line))
+            (uwrite-line *lsl-log-stream* (ustring ">>> " first-line))
             (let ((pending rest-lines))
               (while pending
                 (if (null (cdr pending))
-                    (uwrite! *lsl-log-stream* (%lsl-cat "... " (car pending)))
-                    (uwrite-line *lsl-log-stream* (%lsl-cat "... " (car pending))))
+                    (uwrite! *lsl-log-stream* (ustring "... " (car pending)))
+                    (uwrite-line *lsl-log-stream* (ustring "... " (car pending))))
                 (setq pending (cdr pending))))))))
   ;; Add to readline history
   (readline-add-history input)
@@ -625,7 +619,7 @@ NOTE: ParseError from malformed input propagates uncaught."
     ;; Timing (screen only, not logged)
     (when *lsl-instrumenting*
       (%lsl-println-screen
-        (%lsl-cat "-------------  Total time: " (string elapsed) " sec")))))
+        (ustring "-------------  Total time: " (string elapsed) " sec")))))
 
 
 ;;; ─────────────────────────────────────────────────────────────────────────────
@@ -634,11 +628,11 @@ NOTE: ParseError from malformed input propagates uncaught."
 
 (defun %lsl-welcome ()
   (%lsl-println-screen
-    (%lsl-cat "Enter '" (%lsl-cyan "]help") "' for listener commands."))
+    (ustring "Enter '" (%lsl-cyan "]help") "' for listener commands."))
   (%lsl-println-screen
     "Enter any expression to have it evaluated by the interpreter.")
   (%lsl-println-screen
-    (%lsl-cat "For online help type '" (%lsl-cyan "(help)") "' to begin."))
+    (ustring "For online help type '" (%lsl-cyan "(help)") "' to begin."))
   (%lsl-println-screen (%lsl-bold-green "Welcome!"))
   (%lsl-println-screen ""))
 
