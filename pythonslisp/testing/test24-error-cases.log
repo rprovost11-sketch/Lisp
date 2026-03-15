@@ -1575,3 +1575,15 @@
 %%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
+
+; --- raweval-for-display converts parse errors to catchable LRuntimeError ---
+
+>>> (handler-case
+...   (raweval-for-display "(defun")
+...   (t (e) "caught"))
+==> "caught"
+
+>>> (handler-case
+...   (raweval-for-display "(+ 1 (")
+...   (t (e) "caught"))
+==> "caught"

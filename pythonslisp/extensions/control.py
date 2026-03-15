@@ -5,7 +5,8 @@ from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LCallable, LFunction, LMultipleValues, L_NIL, eql
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, Thrown, ReturnFrom, Signaled
+from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError,
+                                      Thrown, ReturnFrom, Signaled, ContinuationInvoked )
 from pythonslisp.extensions import LambdaListMode, primitive
 
 
@@ -175,13 +176,20 @@ Use as (raweval-for-display input-string) in a REPL loop."""
    source = args[0]
    if not isinstance( source, str ):
       raise LRuntimePrimError( LP_raweval_for_display, 'Argument must be a string.' )
-   ast       = ctx.parse( source )   # [PROGN, form1, ...]
-   top_forms = ast[1:]               # strip PROGN wrapper
-   result    = L_NIL
-   for form in top_forms:
-      form   = ctx.expand( env, form )
-      ctx.analyze( env, form )
-      result = ctx.lEval( env, form )
+   try:
+      ast       = ctx.parse( source )   # [PROGN, form1, ...]
+      top_forms = ast[1:]               # strip PROGN wrapper
+      result    = L_NIL
+      for form in top_forms:
+         form   = ctx.expand( env, form )
+         ctx.analyze( env, form )
+         result = ctx.lEval( env, form )
+   except LRuntimeError:
+      raise
+   except (ReturnFrom, ContinuationInvoked, Thrown, Signaled):
+      raise
+   except Exception as e:
+      raise LRuntimeError( str(e) ) from e
    if type(result) is LMultipleValues:
       return result.values if result.values else L_NIL
    return [result]
