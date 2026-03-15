@@ -57,7 +57,7 @@
     (uwrite-line *lsl-log-stream* str)))
 
 (defun %lsl-println-screen (str)
-  "Print str+newline to stdout only — not written to the session log."
+  "Print str+newline to stdout only - not written to the session log."
   (uwrite-line str))
 
 (defun %lsl-log-writeln (str)
@@ -148,12 +148,12 @@ and returned as err-string."
             (retval "")
             (errmsg ""))
 
-        ;; Parse expression — rem currently points at a '>>> ' line
+        ;; Parse expression - rem currently points at a '>>> ' line
         (setq expr (%lsl-rstrip (subseq (car rem) 4)))
         (setq rem  (cdr rem))
 
         ;; Accumulate '... ' continuation lines.
-        ;; A bare "..." (3 chars, no payload) is a visual separator — treat as empty.
+        ;; A bare "..." (3 chars, no payload) is a visual separator - treat as empty.
         (while (and rem (%lsl-starts-with (car rem) "..."))
           (when (> (length (car rem)) 3)
             (setq expr (ustring expr *lsl-newline* (subseq (car rem) 4))))
@@ -229,14 +229,14 @@ verbosity 0 = quiet (no expression output), 3 = verbose (show expressions)."
                       (progn (%lsl-println-screen (ustring ">>> " line))
                              (setq is-first nil))
                       (%lsl-println-screen (ustring "... " line))))))
-            ;; Evaluate — errors propagate upward
+            ;; Evaluate - errors propagate upward
             (eval (parse expr))))
         (%lsl-println-screen (%lsl-green (ustring "Log file read: " filename))))
     (t (e)
        (%lsl-println-screen (ustring "Error: " (condition-message e))))))
 
 
-;;; Session log test — returns (result-message num-tests)
+;;; Session log test - returns (result-message num-tests)
 
 (defun %lsl-test-file (filename run-strm)
   "Run one test file and write per-test results to run-strm.
@@ -322,7 +322,7 @@ Returns (result-msg num-tests) list."
            (%lsl-println-screen "Usage: reboot\n  Reboot the interpreter (exits this Lisp listener)."))
           ((string= cmd "test")
            (%lsl-println-screen
-             "Usage: test [<filename>]\n  Test with a log file, or run the full test suite.\n  NOTE: No per-file reboot — env is cumulative across test files."))
+             "Usage: test [<filename>]\n  Test with a log file, or run the full test suite.\n  NOTE: No per-file reboot - env is cumulative across test files."))
           ((string= cmd "trace")
            (%lsl-println-screen "Usage: trace\n  Toggle global function tracing on/off."))
           (t
@@ -583,7 +583,7 @@ lines-rev is the accumulated input lines in reverse order (for log writing)."
        (%lsl-write-error errmsg)
        (%lsl-blank))
       (t
-       ;; Print captured output to screen (not to log — matches Python listener)
+       ;; Print captured output to screen (not to log - matches Python listener)
        (when (not (string= output ""))
          (uwrite-line output)
          (flush))
@@ -625,7 +625,7 @@ or EOF is reached on stdin."
         (handler-case
             (setq line (read-line nil nil nil))
           (t (e)
-             ;; Unexpected read error — treat as EOF
+             ;; Unexpected read error - treat as EOF
              (setq running nil)))
 
         (cond
@@ -635,11 +635,11 @@ or EOF is reached on stdin."
              (handler-case (%lsl-cmd-close nil) (t (e) nil)))
            (setq running nil))
 
-          ;; Blank line with no accumulated input — ignore
+          ;; Blank line with no accumulated input - ignore
           ((and (string= line "") (null lines-rev))
            nil)
 
-          ;; Blank line with accumulated input — evaluate
+          ;; Blank line with accumulated input - evaluate
           ((string= line "")
            (let ((input (string-join *lsl-newline* (reverse lines-rev))))
              (handler-case
@@ -651,7 +651,7 @@ or EOF is reached on stdin."
                   (%lsl-blank))))
            (setq lines-rev nil))
 
-          ;; Non-blank line — accumulate
+          ;; Non-blank line - accumulate
           (t
            (setq lines-rev (cons line lines-rev))))))))
 
@@ -668,7 +668,7 @@ calls to lsl-start, so a listener interrupted by a parse error can be resumed."
   (readline-set-history-length *lsl-hist-max*)
   ;; Print welcome
   (%lsl-welcome)
-  ;; Run — catch 'lsl-exit is the non-local exit point for ]exit, ]quit, ]reboot
+  ;; Run - catch 'lsl-exit is the non-local exit point for ]exit, ]quit, ]reboot
   (catch 'lsl-exit
     (%lsl-repl))
   ;; Save readline history on exit
