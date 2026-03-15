@@ -3,9 +3,9 @@ from typing import Any
 
 from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LCallable, LFunction, LMultipleValues, L_NIL, eql
+from pythonslisp.AST import LSymbol, LCallable, LFunction, LMultipleValues, L_NIL, eql, prettyPrintSExpr
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError,
+from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError, LArgBindingError,
                                       Thrown, ReturnFrom, Signaled, ContinuationInvoked )
 from pythonslisp.extensions import LambdaListMode, primitive
 
@@ -166,30 +166,56 @@ Use as (eval-for-display (parse input)) in a REPL loop to correctly display
       return result.values if result.values else L_NIL
    return [result]
 
-@primitive( 'raweval-for-display', '(string)' )
+@primitive( 'raweval-for-display', '(string &optional stream)', min_args=1, max_args=2 )
 def LP_raweval_for_display( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Parses string as Lisp, runs the full pipeline (macro-expand, analyze, eval),
 and returns a list of all result values suitable for display in a REPL.  A normal
 single-value result returns a one-element list.  Multiple values return a list of
 all values.  An empty multiple-values object returns NIL.
-Use as (raweval-for-display input-string) in a REPL loop."""
+If stream is supplied, ctx.outStrm is set to it for the duration of the call so
+that all output (including from user-defined functions with captured environments)
+goes to that stream.
+Use as (raweval-for-display input-string) or (raweval-for-display input-string stream)."""
    source = args[0]
    if not isinstance( source, str ):
       raise LRuntimePrimError( LP_raweval_for_display, 'Argument must be a string.' )
+   from io import IOBase
+   _UNSET = object()   # sentinel distinct from None so we can detect "did we change ctx.outStrm?"
+   stream_val = args[1] if len(args) > 1 else None
+   if isinstance( stream_val, IOBase ) and stream_val.writable():
+      old_outStrm = ctx.outStrm   # save old value — may be None if Python listener set it so
+      ctx.outStrm = stream_val
+   else:
+      old_outStrm = _UNSET        # sentinel: we did NOT change ctx.outStrm
+   result = L_NIL
    try:
       ast       = ctx.parse( source )   # [PROGN, form1, ...]
       top_forms = ast[1:]               # strip PROGN wrapper
-      result    = L_NIL
       for form in top_forms:
          form   = ctx.expand( env, form )
          ctx.analyze( env, form )
          result = ctx.lEval( env, form )
+   except LArgBindingError as e:
+      # Convert to plain LRuntimeError so CEK's outer except-LArgBindingError
+      # (in _do_apply) does not re-wrap this with "RAWEVAL-FOR-DISPLAY" as the
+      # function name.  The error originated inside expand/eval, not in our own
+      # argument binding.
+      raise LRuntimeError( str(e) ) from e
    except LRuntimeError:
       raise
-   except (ReturnFrom, ContinuationInvoked, Thrown, Signaled):
-      raise
+   except Signaled as e:
+      raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' ) from e
+   except ReturnFrom as e:
+      raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' ) from e
+   except Thrown as e:
+      raise LRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' ) from e
+   except ContinuationInvoked:
+      raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
    except Exception as e:
       raise LRuntimeError( str(e) ) from e
+   finally:
+      if old_outStrm is not _UNSET:
+         ctx.outStrm = old_outStrm
    if type(result) is LMultipleValues:
       return result.values if result.values else L_NIL
    return [result]

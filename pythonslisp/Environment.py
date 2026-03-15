@@ -440,6 +440,12 @@ class Environment(EnvironmentBase):
          try:
             argVal = argList[argNum]
          except IndexError:
+            # No value follows this keyword symbol.  When skip_non_keywords is
+            # True (i.e. we're in a &rest ... &key lambda list) an undeclared
+            # keyword with no value is a keyword symbol that was already captured
+            # by &rest — treat it as data and skip rather than raising an error.
+            if skip_non_keywords and keyArgStr not in keysDict:
+               continue
             raise LArgBindingError( f'Keyword {keyArgStr} expected to be followed by a value.' )
          argNum += 1
 

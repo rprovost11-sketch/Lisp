@@ -16,14 +16,21 @@ from pythonslisp.Parser import ParseError
 from pythonslisp.extensions import LambdaListMode, primitive
 
 
-def _filter_keyword_pairs( lst: list ) -> list:
+def _filter_keyword_pairs( lst: list, declared_keys: set = None ) -> list:
    """Strip keyword/value pairs from a &rest list that also has &key params.
-   In CL, &rest captures all args including keyword pairs; callers must filter."""
+   In CL, &rest captures all args including keyword pairs; callers must filter.
+   When declared_keys is provided, only strips pairs whose keyword name (sans colon,
+   uppercased) is in declared_keys — leaving undeclared keyword symbols as data."""
    result = []
    i = 0
    while i < len(lst):
       if isinstance(lst[i], LSymbol) and lst[i].isKeyArg():
-         i += 2
+         key = lst[i].name[1:]   # strip leading colon; already uppercased
+         if declared_keys is None or key in declared_keys:
+            i += 2               # skip this declared key-value pair
+         else:
+            result.append(lst[i])
+            i += 1
       else:
          result.append(lst[i])
          i += 1
@@ -419,7 +426,7 @@ results joined by :sep (default \"\").  With :sep, acts like string-join in
 programmer mode: (string 1 2 3 :sep \", \") => \"1, 2, 3\"."""
    objects = env.lookup( LSymbol('OBJECTS') )
    sep     = env.lookup( LSymbol('SEP') )
-   filtered = _filter_keyword_pairs( objects )
+   filtered = _filter_keyword_pairs( objects, {'SEP'} )
    return sep.join( prettyPrintSExpr(o) for o in filtered )
 
 @primitive( 'ustring', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
@@ -429,7 +436,7 @@ results joined by :sep (default \"\").  With :sep, acts like string-join in
 user mode: (ustring \"a\" \"b\" :sep \", \") => \"a, b\"."""
    objects = env.lookup( LSymbol('OBJECTS') )
    sep     = env.lookup( LSymbol('SEP') )
-   filtered = _filter_keyword_pairs( objects )
+   filtered = _filter_keyword_pairs( objects, {'SEP'} )
    return sep.join( prettyPrint(o) for o in filtered )
 
 @primitive( 'make-symbol', '(string)' )

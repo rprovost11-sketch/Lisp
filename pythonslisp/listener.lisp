@@ -103,6 +103,13 @@ stdout (colourised) and to the session log (plain)."
   "Remove trailing whitespace from str."
   (string-right-trim *lsl-ws* str))
 
+(defun %lsl-rjust (str width)
+  "Right-justify str in a field of width characters, padding with spaces on the left."
+  (let ((pad (- width (length str))))
+    (if (<= pad 0)
+        str
+        (ustring (subseq "          " 0 pad) str))))
+
 
 ;;; Evaluate an input string; return (retval-str output-str err-str secs)
 
@@ -116,13 +123,14 @@ and returned as err-string."
         (retval   "")
         (errmsg   "")
         (t0       (get-internal-real-time)))
-    (let ((*standard-output* out-strm))
-      (handler-case
-          ;; raweval-for-display runs the full pipeline: expand, analyze, eval.
-          ;; This ensures arity errors are caught as LRuntimeError (not raw Python ValueError).
-          (setq retval (string-join *lsl-newline* (mapcar string (raweval-for-display input))))
-        (t (e)
-           (setq errmsg (condition-message e)))))
+    (handler-case
+        ;; raweval-for-display runs the full pipeline: expand, analyze, eval.
+        ;; Passing out-strm sets ctx.outStrm for the duration, so output from
+        ;; user-defined functions (which run in captured envs) goes to out-strm
+        ;; rather than the live terminal.
+        (setq retval (string-join *lsl-newline* (mapcar string (raweval-for-display input out-strm))))
+      (t (e)
+         (setq errmsg (condition-message e))))
     (let* ((elapsed (float (/ (- (get-internal-real-time) t0)
                               (internal-time-units-per-second))))
            (output  (%lsl-rstrip (get-output-stream-string out-strm))))
@@ -193,7 +201,7 @@ and returned as err-string."
           (setq errmsg (subseq (car rem) 4))
           (setq rem    (cdr rem))
           (while (and rem (%lsl-starts-with (car rem) "%%% "))
-            (setq errmsg (ustring errmsg (subseq (car rem) 4)))
+            (setq errmsg (ustring errmsg *lsl-newline* (subseq (car rem) 4)))
             (setq rem    (cdr rem))))
 
         ;; Skip to next '>>> ' line for next iteration
@@ -201,8 +209,11 @@ and returned as err-string."
           (setq rem (cdr rem)))
 
         ;; Accumulate entry if non-empty
+        ;; Add trailing newline to expr to match Python _parseLog behaviour:
+        ;; splitlines(keepends=True) retains \n on each line, so Python exprs
+        ;; end with \n.  Parser error positions (line,col) depend on this.
         (when (not (string= (%lsl-rstrip expr) ""))
-          (setq result (cons (list (%lsl-rstrip expr)
+          (setq result (cons (list (ustring (%lsl-rstrip expr) *lsl-newline*)
                                    (%lsl-rstrip output)
                                    (%lsl-rstrip retval)
                                    errmsg)
@@ -286,7 +297,7 @@ Returns (result-msg num-tests) list."
       (let* ((num-tests  (+ expr-num 1))
              (num-failed (- num-tests num-passed))
              (msg        (if (= num-failed 0)
-                             (ustring (string num-tests) " TESTS PASSED!")
+                             (ustring (%lsl-rjust (string num-tests) 4) " TESTS PASSED!")
                              (ustring "(" (string num-failed) "/"
                                        (string num-tests) ") Failed."))))
         (list msg num-tests)))))
@@ -459,9 +470,10 @@ Returns (result-msg num-tests) list."
                                      0 (max 0 (- 40 (length base)))))
                    (line     (ustring base pad " " msg)))
               (setq total-run (+ total-run n))
-              (%lsl-println-screen (if (search "PASSED!" msg)
-                                       (%lsl-green line)
-                                       (%lsl-red   line)))
+              (%lsl-println-screen (ustring base pad " "
+                                           (if (search "PASSED!" msg)
+                                               (%lsl-green msg)
+                                               (%lsl-red   msg))))
               (uwrite-line run-strm line)))
         (t (e)
            (%lsl-println-screen (%lsl-red (ustring "Test error: " (condition-message e))))))

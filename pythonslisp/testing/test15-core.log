@@ -2257,7 +2257,7 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ; type error caught before eval
 >>> (raweval-for-display 42)
 %%% ERROR 'RAWEVAL-FOR-DISPLAY': Argument must be a string.
-%%% PRIMITIVE USAGE: (RAWEVAL-FOR-DISPLAY string)
+%%% PRIMITIVE USAGE: (RAWEVAL-FOR-DISPLAY string &optional stream)
 
 ; --- gensym ---
 
