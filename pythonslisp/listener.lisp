@@ -23,6 +23,13 @@
 (setf *lsl-instrumenting* nil)
 (setf *lsl-hist-max*      500)
 (setf *lsl-testdir*       "pythonslisp/testing")
+(setf *lsl-esc*           (code-char 27))   ; ESC character for ANSI sequences
+(setf *lsl-newline*       (code-char 10))   ; real newline (LF)
+(setf *lsl-ws*            (string-join "" (list " "          ; space
+                                                (code-char 9)  ; tab
+                                                (code-char 10) ; newline
+                                                (code-char 13) ; carriage return
+                                                )))
 
 
 ;;; ─────────────────────────────────────────────────────────────────────────────
@@ -36,7 +43,7 @@
 (defun %lsl-ansi (code str)
   "Wrap str in ANSI escape when colour is enabled; return str unchanged otherwise."
   (if (%lsl-color-p)
-      (string-join "" (list "\033[" code "m" str "\033[0m"))
+      (string-join "" (list *lsl-esc* "[" code "m" str *lsl-esc* "[0m"))
       str))
 
 (defun %lsl-bold-white (s) (%lsl-ansi "1;97" s))
@@ -105,7 +112,7 @@ stdout (colourised) and to the session log (plain)."
 
 (defun %lsl-rstrip (str)
   "Remove trailing whitespace from str."
-  (string-right-trim " \t\n\r" str))
+  (string-right-trim *lsl-ws* str))
 
 (defun %lsl-cat (&rest parts)
   "Concatenate strings."
@@ -131,7 +138,7 @@ ParseError from malformed syntax escapes this function uncaught."
           (let* ((ast     (parse input))
                  (results (eval-for-display ast)))
             ;; results is a Lisp list of values; stringify each for display/comparison
-            (setq retval (string-join "\n" (mapcar string results))))
+            (setq retval (string-join *lsl-newline* (mapcar string results))))
         (t (e)
            (setq errmsg (condition-message e)))))
     (let* ((elapsed (float (/ (- (get-internal-real-time) t0)
@@ -167,7 +174,7 @@ ParseError from malformed syntax escapes this function uncaught."
 
         ;; Accumulate '... ' continuation lines
         (while (and rem (%lsl-starts-with (car rem) "..."))
-          (setq expr (%lsl-cat expr "\n" (subseq (car rem) 4)))
+          (setq expr (%lsl-cat expr *lsl-newline* (subseq (car rem) 4)))
           (setq rem  (cdr rem)))
 
         ;; Accumulate output lines (everything before '==> ', '%%% ', or '>>> ')
@@ -176,7 +183,7 @@ ParseError from malformed syntax escapes this function uncaught."
                     (not (string= (%lsl-rstrip (car rem)) "==>"))
                     (not (%lsl-starts-with (car rem) "%%% "))
                     (not (%lsl-starts-with (car rem) ">>> ")))
-          (setq output (%lsl-cat output (car rem) "\n"))
+          (setq output (%lsl-cat output (car rem) *lsl-newline*))
           (setq rem    (cdr rem)))
 
         ;; Parse return value
@@ -195,8 +202,8 @@ ParseError from malformed syntax escapes this function uncaught."
                       (not (%lsl-starts-with (car rem) ">>> "))
                       (not (%lsl-starts-with (car rem) "%%% ")))
             (if (%lsl-starts-with (car rem) ";")
-                (setq expr   (%lsl-cat expr   "\n" (car rem)))
-                (setq retval (%lsl-cat retval "\n" (car rem))))
+                (setq expr   (%lsl-cat expr   *lsl-newline* (car rem)))
+                (setq retval (%lsl-cat retval *lsl-newline* (car rem))))
             (setq rem (cdr rem))))
 
         ;; Parse error message
@@ -584,9 +591,16 @@ NOTE: ParseError from malformed input propagates uncaught."
     (let* ((ordered    (reverse lines-rev))
            (first-line (car ordered))
            (rest-lines (cdr ordered)))
-      (uwrite! *lsl-log-stream* (%lsl-cat ">>> " first-line))
-      (dolist (line rest-lines)
-        (uwrite! *lsl-log-stream* (%lsl-cat "... " line)))))
+      (if (null rest-lines)
+          (uwrite! *lsl-log-stream* (%lsl-cat ">>> " first-line))
+          (progn
+            (uwrite-line *lsl-log-stream* (%lsl-cat ">>> " first-line))
+            (let ((pending rest-lines))
+              (while pending
+                (if (null (cdr pending))
+                    (uwrite! *lsl-log-stream* (%lsl-cat "... " (car pending)))
+                    (uwrite-line *lsl-log-stream* (%lsl-cat "... " (car pending))))
+                (setq pending (cdr pending))))))))
   ;; Add to readline history
   (readline-add-history input)
   ;; Evaluate
@@ -639,7 +653,7 @@ or EOF is reached on stdin."
   (let ((running   t)
         (lines-rev nil))   ; accumulated input lines, most recent first
     (while running
-      (let ((prompt (if (null lines-rev) ">>> " "... "))
+      (let ((prompt (if (null lines-rev) ",@> " "... "))
             (line   nil))
         ;; Print prompt and read input line
         (uwrite! prompt)
@@ -663,7 +677,7 @@ or EOF is reached on stdin."
 
           ;; Blank line with accumulated input — evaluate
           ((string= line "")
-           (let ((input (string-join "\n" (reverse lines-rev))))
+           (let ((input (string-join *lsl-newline* (reverse lines-rev))))
              (handler-case
                  (if (%lsl-starts-with input "]")
                      (%lsl-dispatch input)
