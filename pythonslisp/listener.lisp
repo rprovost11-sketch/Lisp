@@ -1,4 +1,4 @@
-;;; listener.lisp — Pure Lisp REPL Listener for Python's Lisp
+;;; listener.lisp - Pure Lisp REPL Listener for Python's Lisp
 ;;;
 ;;; To start: load this file (it auto-starts at the bottom), or call (lsl-start)
 ;;;   From Python listener:  ]readsrc pythonslisp/listener.lisp
@@ -15,9 +15,7 @@
 ;;;     available inside this REPL; readline-add-history still records history.
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Global state  (re-initialised each time this file is loaded)
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (setf *lsl-log-stream*    nil)
 (setf *lsl-instrumenting* nil)
@@ -32,9 +30,7 @@
                                                 )))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; ANSI colour helpers
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-color-p ()
   "T if stdout is an interactive terminal that supports ANSI colour."
@@ -55,9 +51,7 @@
 (defun %lsl-dim        (s) (%lsl-ansi "2"    s))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Low-level output helpers
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-println (str)
   "Print str+newline to stdout and (if open) to the session log."
@@ -101,9 +95,7 @@ stdout (colourised) and to the session log (plain)."
       (%lsl-log-writeln pl))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; String utilities
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-starts-with (str prefix)
   "T if str begins with prefix."
@@ -115,10 +107,8 @@ stdout (colourised) and to the session log (plain)."
   (string-right-trim *lsl-ws* str))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Evaluate an input string; return (retval-str output-str err-str secs)
 ;;; NOTE: ParseError (malformed syntax) is NOT caught — it propagates.
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-eval-expr (input)
   "Evaluate input string with output capture and error handling.
@@ -142,10 +132,8 @@ ParseError from malformed syntax escapes this function uncaught."
       (list retval output errmsg elapsed))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Session log parser
 ;;; Returns a list of (expr output retval errmsg) entries.
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-parse-log (text)
   "Parse session log text into a list of (expr output retval errmsg) 4-lists."
@@ -226,9 +214,7 @@ ParseError from malformed syntax escapes this function uncaught."
     (reverse result)))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Session log restore
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-restore-log (filename verbosity)
   "Read and replay a session log file.
@@ -253,9 +239,7 @@ verbosity 0 = quiet (no expression output), 3 = verbose (show expressions)."
        (%lsl-println-screen (ustring "Error: " (condition-message e))))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Session log test — returns (result-message num-tests)
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-test-file (filename run-strm)
   "Run one test file and write per-test results to run-strm.
@@ -311,9 +295,7 @@ Returns (result-msg num-tests) list."
         (list msg num-tests)))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Listener commands
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-cmd-help (args)
   (if args
@@ -543,9 +525,7 @@ Returns (result-msg num-tests) list."
   (%lsl-cmd-exit args))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Command dispatcher
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-dispatch (input)
   "Dispatch a ] command string.  input is the full line beginning with ']'."
@@ -571,9 +551,7 @@ Returns (result-msg num-tests) list."
        (error (ustring "Unknown listener command \"" cmd "\""))))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Process one complete (possibly multi-line) expression
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-process (input lines-rev)
   "Evaluate input string and display results.
@@ -622,9 +600,7 @@ NOTE: ParseError from malformed input propagates uncaught."
         (ustring "-------------  Total time: " (string elapsed) " sec")))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Welcome banner
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-welcome ()
   (%lsl-println-screen
@@ -637,9 +613,7 @@ NOTE: ParseError from malformed input propagates uncaught."
   (%lsl-println-screen ""))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Main REPL loop
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun %lsl-repl ()
   "Inner REPL loop.  Exits when ]exit/]quit is typed, ]reboot runs,
@@ -686,9 +660,7 @@ or EOF is reached on stdin."
            (setq lines-rev (cons line lines-rev))))))))
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Entry point
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (defun lsl-start ()
   "Start the Lisp listener.  Returns when the user types ]exit, ]quit, ]reboot,
@@ -708,8 +680,6 @@ calls to lsl-start, so a listener interrupted by a parse error can be resumed."
   nil)
 
 
-;;; ─────────────────────────────────────────────────────────────────────────────
 ;;; Auto-start when this file is loaded
-;;; ─────────────────────────────────────────────────────────────────────────────
 
 (lsl-start)

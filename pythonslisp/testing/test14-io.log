@@ -1274,3 +1274,81 @@ ab
 %%% ERROR 'READ': Argument 1 must be a stream.
 %%% PRIMITIVE USAGE: (READ &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
+
+; --- file-basename ---
+
+>>> (file-basename "some/path/file.txt")
+==> "file.txt"
+
+>>> (file-basename "file.txt")
+==> "file.txt"
+
+; path with no directory component
+>>> (file-basename "/usr/local/bin/python")
+==> "python"
+
+; error: arg must be a string
+>>> (file-basename 42)
+%%% ERROR 'FILE-BASENAME': Argument 1 must be a string (path).
+%%% PRIMITIVE USAGE: (FILE-BASENAME path)
+
+; --- make-directory ---
+
+; returns the path string
+>>> (make-directory "_wof_mktest_dir_")
+==> "_wof_mktest_dir_"
+
+; idempotent: already exists is not an error
+>>> (make-directory "_wof_mktest_dir_")
+==> "_wof_mktest_dir_"
+
+; --- directory-files ---
+
+; current dir is a real directory → returns a list
+>>> (listp (directory-files "."))
+==> T
+
+; non-existent directory → NIL
+>>> (directory-files "_wof_nonexistent_dir_xyz_")
+==> NIL
+
+; --- readline-add-history ---
+
+; returns the string argument regardless of readline availability
+>>> (readline-add-history "test history entry")
+==> "test history entry"
+
+; error: arg must be a string
+>>> (readline-add-history 42)
+%%% ERROR 'READLINE-ADD-HISTORY': Argument 1 must be a string.
+%%% PRIMITIVE USAGE: (READLINE-ADD-HISTORY string)
+
+; --- readline-set-history-length ---
+
+; returns n
+>>> (readline-set-history-length 1000)
+==> 1000
+
+; error: must be positive
+>>> (readline-set-history-length 0)
+%%% ERROR 'READLINE-SET-HISTORY-LENGTH': History length must be a positive integer.
+%%% PRIMITIVE USAGE: (READLINE-SET-HISTORY-LENGTH n)
+
+; error: arg must be an integer
+>>> (readline-set-history-length "big")
+%%% ERROR 'READLINE-SET-HISTORY-LENGTH': Argument 1 must be an integer.
+%%% PRIMITIVE USAGE: (READLINE-SET-HISTORY-LENGTH n)
+
+; --- columnize ---
+
+; empty list → NIL, no output
+>>> (columnize (list) 40)
+==> NIL
+
+; output captured via with-output-to-string
+>>> (with-output-to-string (s) (columnize (list "alpha" "beta") 40 s))
+==> "alpha  beta\n"
+
+; single item
+>>> (with-output-to-string (s) (columnize (list "x") 40 s))
+==> "x\n"

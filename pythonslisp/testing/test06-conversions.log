@@ -241,3 +241,27 @@
 
 ==> "z"
 
+; --- string / ustring with :sep ---
+
+; numbers joined with separator
+>>> (string 1 2 3 :sep ", ")
+==> "1, 2, 3"
+
+>>> (ustring 1 2 3 :sep ", ")
+==> "1, 2, 3"
+
+; strings: ustring joins without surrounding quotes, string adds them
+>>> (ustring "hello" "world" :sep " ")
+==> "hello world"
+
+>>> (string "hello" "world" :sep " ")
+==> "\"hello\" \"world\""
+
+; symbols uppercased in user mode
+>>> (ustring 'a 'b 'c :sep "->")
+==> "A->B->C"
+
+; :sep defaults to "" — existing behaviour preserved
+>>> (ustring "x" "y")
+==> "xy"
+

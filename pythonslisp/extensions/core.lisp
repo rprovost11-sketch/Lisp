@@ -238,24 +238,6 @@ Multiple (place value) pairs expand to a progn of individual setfs."
                 ((isList?   expr)  (cons (copy-tree (first expr))
                                          (copy-tree (rest  expr)))) ))
 
-(defun dig (aTree aPath)
-   "Given a nested structure of lists and maps, this function will execute\na depth-first traversal down aPath - a list of map keys and list indicies.\nReturns the object in that location."
-         (if (null aPath)
-             aTree
-             (dig (at aTree (first aPath)) (rest aPath)) ))
-
-(defun tree-equal (expr1 expr2)
-   "Compare two lists for deep equality."
-         (cond ((or (atom expr1)
-                    (null expr1))
-                                      (= expr1 expr2))
-                   ((and (listp expr1)
-                         (listp expr2))
-                                 (and (listp expr2)
-                                      (and (equal? (first expr1) (first expr2))
-                                           (equal? (rest expr1) (rest expr2)))))
-                   (1
-                                 nil)))
 
 (defmacro when (condition &rest body)
    "Executes body if c is truthy (non-nil)."

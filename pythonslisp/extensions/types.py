@@ -16,6 +16,20 @@ from pythonslisp.Parser import ParseError
 from pythonslisp.extensions import LambdaListMode, primitive
 
 
+def _filter_keyword_pairs( lst: list ) -> list:
+   """Strip keyword/value pairs from a &rest list that also has &key params.
+   In CL, &rest captures all args including keyword pairs; callers must filter."""
+   result = []
+   i = 0
+   while i < len(lst):
+      if isinstance(lst[i], LSymbol) and lst[i].isKeyArg():
+         i += 2
+      else:
+         result.append(lst[i])
+         i += 1
+   return result
+
+
 def _typep_atom( obj, tname: str ) -> bool:
    """Return True if obj belongs to the named atomic CL type specifier."""
    if tname == 'T':              return True
@@ -405,7 +419,8 @@ results joined by :sep (default \"\").  With :sep, acts like string-join in
 programmer mode: (string 1 2 3 :sep \", \") => \"1, 2, 3\"."""
    objects = env.lookup( LSymbol('OBJECTS') )
    sep     = env.lookup( LSymbol('SEP') )
-   return sep.join( prettyPrintSExpr(o) for o in objects )
+   filtered = _filter_keyword_pairs( objects )
+   return sep.join( prettyPrintSExpr(o) for o in filtered )
 
 @primitive( 'ustring', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
 def LP_ustring( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
@@ -414,7 +429,8 @@ results joined by :sep (default \"\").  With :sep, acts like string-join in
 user mode: (ustring \"a\" \"b\" :sep \", \") => \"a, b\"."""
    objects = env.lookup( LSymbol('OBJECTS') )
    sep     = env.lookup( LSymbol('SEP') )
-   return sep.join( prettyPrint(o) for o in objects )
+   filtered = _filter_keyword_pairs( objects )
+   return sep.join( prettyPrint(o) for o in filtered )
 
 @primitive( 'make-symbol', '(string)' )
 def LP_make_symbol( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

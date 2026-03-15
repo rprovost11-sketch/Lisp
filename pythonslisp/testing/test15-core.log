@@ -2152,6 +2152,113 @@ Type '(help "substring" :substring t)' to search all names by substring.
 %%% ERROR 'STRING-JOIN': Argument 2 must be a List.
 %%% PRIMITIVE USAGE: (STRING-JOIN separator list)
 
+; --- string-split ---
+
+; whitespace split — runs of spaces collapsed, empties omitted
+>>> (string-split "hello world")
+==> ("hello" "world")
+
+>>> (string-split "  foo  bar  baz  ")
+==> ("foo" "bar" "baz")
+
+; empty string → NIL
+>>> (string-split "")
+==> NIL
+
+; explicit separator
+>>> (string-split "a,b,c" ",")
+==> ("a" "b" "c")
+
+; separator that produces empty fields
+>>> (string-split "a,,b" ",")
+==> ("a" "" "b")
+
+; no occurrence of separator → single-element list
+>>> (string-split "no-split" ",")
+==> ("no-split")
+
+; error: first arg must be a string
+>>> (string-split 42)
+%%% ERROR 'STRING-SPLIT': Argument 1 must be a String.
+%%% PRIMITIVE USAGE: (STRING-SPLIT string &optional separator)
+
+; --- string-lines ---
+
+; real newlines via code-char
+>>> (string-lines (string-join "" (list "hello" (code-char 10) "world")))
+==> ("hello" "world")
+
+>>> (string-lines (string-join "" (list "a" (code-char 10) "b" (code-char 10) "c")))
+==> ("a" "b" "c")
+
+; empty string → NIL
+>>> (string-lines "")
+==> NIL
+
+; error: arg must be a string
+>>> (string-lines 42)
+%%% ERROR 'STRING-LINES': Argument 1 must be a String.
+%%% PRIMITIVE USAGE: (STRING-LINES string)
+
+; --- now-string ---
+
+; returns a string
+>>> (stringp (now-string))
+==> T
+
+; format string produces a string of the right length (4-digit year)
+>>> (= (length (now-string "%Y")) 4)
+==> T
+
+>>> (stringp (now-string "%H:%M"))
+==> T
+
+; error: arg must be a string
+>>> (now-string 42)
+%%% ERROR 'NOW-STRING': Argument must be a format string.
+%%% PRIMITIVE USAGE: (NOW-STRING &optional format)
+
+; --- toggle-global-trace ---
+
+; toggle on then immediately off; verify first return is T
+>>> (let ((result (toggle-global-trace)))
+...   (toggle-global-trace)
+...   result)
+==> T
+
+; --- eval-for-display ---
+
+; single value wrapped in a one-element list
+>>> (eval-for-display '(+ 1 2))
+==> (3)
+
+; multiple values returned as a list
+>>> (eval-for-display '(values 1 2 3))
+==> (1 2 3)
+
+; (values) with no args → NIL
+>>> (eval-for-display '(values))
+==> NIL
+
+; --- raweval-for-display ---
+
+; parses and evals a string; single value → one-element list
+>>> (raweval-for-display "(+ 1 2)")
+==> (3)
+
+; multiple values
+>>> (raweval-for-display "(values 1 2 3)")
+==> (1 2 3)
+
+; (values) → NIL
+>>> (raweval-for-display "(values)")
+==> NIL
+
+; type error caught before eval
+>>> (raweval-for-display 42)
+%%% ERROR 'RAWEVAL-FOR-DISPLAY': Argument must be a string.
+%%% PRIMITIVE USAGE: (RAWEVAL-FOR-DISPLAY string)
+
 ; --- gensym ---
 
 >>> (symbolp (gensym))
