@@ -53,7 +53,7 @@ from pythonslisp.Exceptions import (
 
 # primitive — decorator for defining Lisp primitives
 # LambdaListMode — controls how the decorator interprets the lambda list
-from pythonslisp.extensions import primitive, LambdaListMode
+from pythonslisp.extensions import primitive, macro, LambdaListMode
 
 
 # -----------------------------------------------------------------------
@@ -101,18 +101,13 @@ def LP_repeat_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> A
     return separator.join([string] * count)
 
 # -----------------------------------------------------------------------
-# Example 3: DOC_ONLY with a special form (preEvalArgs=False)
+# Example 3: macro registration
 #
-# preEvalArgs=False means arguments arrive unevaluated (raw AST).
-# Use this for forms that need to control their own evaluation -- macros
-# and control structures.  DOC_ONLY with explicit min_args/max_args is
-# required when the lambda list can't express the real arity (e.g. it
-# uses non-standard syntax as documentation shorthand).
+# Use @macro when you need a form whose arguments are NOT evaluated.
+# The macro receives its arguments as raw AST, just like defmacro in Lisp.
+# @macro takes: (lisp-name, lambda-list-string, body-expression-string)
 # -----------------------------------------------------------------------
 
-@primitive( 'comment', '(&rest forms)', preEvalArgs=False,
-            mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
-def LP_comment( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-    """Ignores all its arguments and returns NIL.  Useful as a block comment.
-Arguments are never evaluated."""
-    return L_NIL
+@macro( 'comment', '(&rest forms)', '(quote nil)' )
+def _macro_comment():
+    """Ignores all its arguments and returns NIL.  Useful as a block comment."""

@@ -154,10 +154,10 @@ class Interpreter( InterpreterBase ):
       return returnVal
 
    def _makeContext( self, outStrm ) -> Context:
+      from pythonslisp.CEK import cek_apply as _cek_apply
       ctx = Context( outStrm, self._tracer, self._setf_registry )
       ctx.lEval            = lambda env, sexpr: _cek_eval( ctx, env, sexpr )
-      ctx.lApply           = Interpreter._lApply
-      ctx.lQuasiquoteExpand = Interpreter._lquasiquoteExpand
+      ctx.lApply           = lambda ctx_, env_, fn, args: _cek_apply( ctx_, env_, fn, args )
       ctx.parse            = self._parser.parse
       ctx.parseFile        = self._parser.parseFile
       ctx.parseOne         = self._parser.parseOne
@@ -225,11 +225,9 @@ instead of the global environment."""
 
       class primitive:
          def __init__( self, primitiveSymbolString: str, params: str = '',
-                       preEvalArgs: bool = True,
                        mode: LambdaListMode = LambdaListMode.ARITY_ONLY,
                        min_args=_UNSET, max_args=_UNSET ) -> None:
             self._name        = primitiveSymbolString.upper()
-            self._preEvalArgs = preEvalArgs
             if mode is LambdaListMode.FULL_BINDING:
                ll_ast = interpreter._parser.parse( params )[1]
                self._lambdaListAST = ll_ast
@@ -263,7 +261,6 @@ instead of the global environment."""
          def __call__( self, pythonFn ):
             docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
             lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
-                                       preEvalArgs=self._preEvalArgs,
                                        min_args=self._min_args, max_args=self._max_args,
                                        arity_msg=self._arity_msg,
                                        lambdaListAST=self._lambdaListAST )
@@ -275,6 +272,24 @@ instead of the global environment."""
             return pythonFn
 
       return primitive
+
+   def _makeBindMacro( self, targetEnv=None ):
+      """Returns a function that parses and registers a Lisp macro.
+Used by extension .py files that need to register macros via @macro."""
+      interpreter = self
+      _target_env = targetEnv
+
+      def bind_macro( name: str, params_str: str, body_str: str, docstring: str ) -> None:
+         name_sym     = LSymbol( name )
+         params_ast   = interpreter._parser.parse( params_str )[1]
+         body_ast     = interpreter._parser.parse( body_str )[1:]   # strip PROGN, get forms
+         macro_obj    = LMacro( name_sym, params_ast, docstring, body_ast )
+         if _target_env is not None:
+            _target_env.bindLocal( name_sym.name, macro_obj )
+         else:
+            interpreter._env.bindGlobal( name_sym.name, macro_obj )
+
+      return bind_macro
 
    def _loadExtDir( self, ext_dir: Path, outStrm=None ) -> None:
       ext_dir = Path(ext_dir)
@@ -291,113 +306,13 @@ instead of the global environment."""
          spec   = importlib.util.spec_from_file_location( path.stem, path )
          module = importlib.util.module_from_spec( spec )
          spec.loader.exec_module( module )
-         _ext_primitive._flush( self._makeLispFunction( targetEnv ) )
+         _ext_primitive._flush( self._makeLispFunction( targetEnv ),
+                                bind_macro=self._makeBindMacro( targetEnv ) )
       elif path.suffix == '.lisp':
          if targetEnv is not None:
             ast = self._parser.parseFile( str(path) )
             _cek_eval( self._ctx, targetEnv, ast )
          else:
             self.evalFile( str(path), outStrm )
-
-   @staticmethod
-   def _lApply( ctx: Context, env: Environment, function: LCallable, args: Sequence ) -> Any:
-      # Continuation invocation: raise immediately, no tracing
-      if isinstance( function, LContinuation ):
-         if len(args) != 1:
-            raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
-         raise ContinuationInvoked( function.token, args[0] )
-
-      tracer  = ctx.tracer
-      printed = False
-      if tracer.isActive():
-         depth   = tracer.getMaxTraceDepth()
-         printed = tracer.trace( 'enter', function, args, depth, ctx.outStrm )
-         if printed:
-            tracer.setMaxTraceDepth( depth + 1 )
-      try:
-         if isinstance( function, LPrimitive ):
-            if function.lambdaListAST:
-               kw_env = Environment( env, evalFn=ctx.lEval )
-               kw_env.bindArguments( function.lambdaListAST, args )
-               result = function.pythonFn( ctx, kw_env, args )
-            else:
-               result = function.pythonFn( ctx, env, args )
-         elif isinstance( function, LFunction ):
-            env = Environment( function.capturedEnvironment, evalFn=ctx.lEval ) # Open a new scope on the function's captured env to support closures.
-
-            # store the arguments as locals
-            env.bindArguments( function.lambdaListAST, args )
-
-            # evaluate the body expressions.
-            result = L_NIL
-            for sexpr in function.bodyAST:
-               result = _cek_eval( ctx, env, sexpr )
-         else:   # LMacro — should have been expanded before reaching here
-            raise LRuntimeError( f'Macro "{function.name}" was not expanded before evaluation.' )
-      except LArgBindingError as ex:
-         errorMsg = ex.args[-1]
-         fnName = function.name
-         if fnName == '':
-            raise LRuntimeError( f'Error binding arguments in call to "(lambda ...)".\n{errorMsg}')
-         else:
-            raise LRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}')
-      finally:
-         if printed:
-            tracer.setMaxTraceDepth( depth )   # restore depth on both normal exit and exception
-      result = _primary( result )
-      if printed:
-         tracer.trace( 'exit', function, result, depth, ctx.outStrm )
-      return result
-
-   @staticmethod
-   def _lquasiquoteExpand( ctx: Context, env: Environment, expr: Any, depth: int = 1 ) -> Any:
-      '''Expand a quasiquote expression, tracking nesting depth.
-      depth=1 is the innermost (active) quasiquote level.  Commas and
-      splices are only evaluated at depth 1; at deeper levels they are
-      preserved as template structure for the inner quasiquote.'''
-      if not isinstance(expr, list):
-         return expr       # atoms/symbols pass through unchanged at any depth
-
-      if len(expr) == 0:
-         return expr
-
-      head = expr[0]
-
-      if head == 'QUASIQUOTE':
-         # Nested quasiquote — increase depth, process content, rewrap
-         inner = Interpreter._lquasiquoteExpand( ctx, env, expr[1], depth + 1 )
-         return [ LSymbol('QUASIQUOTE'), inner ]
-
-      if head == 'UNQUOTE':
-         if depth == 1:
-            return ctx.lEval( env, expr[1] )
-         else:
-            inner = Interpreter._lquasiquoteExpand( ctx, env, expr[1], depth - 1 )
-            return [ LSymbol('UNQUOTE'), inner ]
-
-      if head == 'UNQUOTE-SPLICING':
-         if depth == 1:
-            result = ctx.lEval( env, expr[1] )
-            if not isinstance( result, list ):
-               raise LRuntimePrimError( env.lookup('UNQUOTE-SPLICING'), 'Argument 1 must evaluate to a List.' )
-            return [ LSymbol('UNQUOTE-SPLICING'), result ]
-         else:
-            inner = Interpreter._lquasiquoteExpand( ctx, env, expr[1], depth - 1 )
-            return [ LSymbol('UNQUOTE-SPLICING'), inner ]
-
-      # Regular list — process each element at the same depth.
-      # Splice UNQUOTE-SPLICING sentinels only at depth 1.
-      resultList: list[Any] = [ ]
-      for listElt in expr:
-         resultListElt = Interpreter._lquasiquoteExpand( ctx, env, listElt, depth )
-         if ( depth == 1 and
-              isinstance(resultListElt, list) and
-              len(resultListElt) > 0 and
-              resultListElt[0] == 'UNQUOTE-SPLICING' ):
-            for elt in resultListElt[1]:
-               resultList.append( elt )
-         else:
-            resultList.append( resultListElt )
-      return resultList
 
 

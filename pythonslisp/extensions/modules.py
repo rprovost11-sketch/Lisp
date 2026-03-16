@@ -58,7 +58,7 @@ def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
          f'{exc.args[0]} already exists but is not a module.' )
 
 
-@primitive( ':', '(module-or-pkg &rest path)', preEvalArgs=False,
+@primitive( ':', '(module-or-pkg &rest path)',
             mode=LambdaListMode.DOC_ONLY, min_args=2 )
 def LP_colon( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Navigate a module or package hierarchy and return the named value.
@@ -66,19 +66,7 @@ The first argument is evaluated to obtain the root module or package.
 Each subsequent argument must be a symbol naming the next level.
 (: mymodule myfn)          -- returns myfn from mymodule
 (: mypkg mymodule myfn)    -- navigates pkg -> module -> symbol"""
-   current = ctx.lEval( env, args[0] )
-   for sym in args[1:]:
-      if not isinstance( sym, LSymbol ):
-         raise LRuntimePrimError( LP_colon, 'Path elements must be symbols.' )
-      if not isinstance( current, ModuleEnvironment ):
-         raise LRuntimePrimError( LP_colon,
-            f'{prettyPrint(current)} is not a module or package.' )
-      try:
-         current = current._bindings[ sym.name ]
-      except KeyError:
-         raise LRuntimePrimError( LP_colon,
-            f'{sym.name} not found in module {current.name}.' )
-   return current
+   raise LRuntimePrimError( LP_colon, 'Handled by CEK machine.' )
 
 @primitive( 'module-set!', '(module symbol value)' )
 def LP_module_set( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

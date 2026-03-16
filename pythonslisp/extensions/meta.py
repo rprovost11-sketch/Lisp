@@ -5,27 +5,20 @@ from typing import Any
 
 #from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LMacro, LContinuation, LCallable
+from pythonslisp.AST import LSymbol, LMacro
 from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimePrimError, ContinuationInvoked
+from pythonslisp.Exceptions import LRuntimePrimError
 from pythonslisp.Expander import Expander
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.extensions.modules import resolve_module_path
 
 
-@primitive( 'defmacro', '(symbol lambda-list &rest body)', preEvalArgs=False )
+@primitive( 'defmacro', '(symbol lambda-list &rest body)' )
 def LP_defmacro( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
-   fnName, funcParams, *funcBody = args   # analyzer guarantees structure
-   if funcBody and isinstance(funcBody[0], str):
-      docString = funcBody[0]
-      funcBody  = funcBody[1:]
-   else:
-      docString = ''
-   theFunc = LMacro( fnName, funcParams, docString, funcBody )
-   return env.bindGlobal( fnName.name, theFunc )
+   raise LRuntimePrimError( LP_defmacro, 'Handled by CEK machine.' )
 
 @primitive( 'macroexpand', '(\'form)',
             mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
@@ -93,7 +86,7 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    return newval
 
 @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
-            mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
+            mode=LambdaListMode.DOC_ONLY )
 def LP_setq( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Updates one or more variables' values', returns value.  The search for
 the variable begins locally and proceeds to search ever less local scopes until
@@ -128,32 +121,17 @@ is last."""
       scope = scope.parentEnv( )
    return L_NIL
 
-@primitive( 'trace', '(&rest fn-names)', preEvalArgs=False )
+@primitive( 'trace', '(&rest fn-names)' )
 def LP_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
-   tracer = ctx.tracer
-   if len(args) == 0:
-      return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
-   for sym in args:
-      if not isinstance(sym, LSymbol):
-         raise LRuntimePrimError( LP_trace, 'Arguments must be symbols.' )
-      tracer.addFnTrace( sym.name )
-   return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
+   raise LRuntimePrimError( LP_trace, 'Handled by CEK machine.' )
 
-@primitive( 'untrace', '(&rest fn-names)', preEvalArgs=False )
+@primitive( 'untrace', '(&rest fn-names)' )
 def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
-   tracer = ctx.tracer
-   if len(args) == 0:
-      tracer.removeAll()
-   else:
-      for sym in args:
-         if not isinstance(sym, LSymbol):
-            raise LRuntimePrimError( LP_untrace, 'Arguments must be symbols.' )
-         tracer.removeFnTrace( sym.name )
-   return [ LSymbol(name) for name in sorted(tracer.getFnsToTrace()) ]
+   raise LRuntimePrimError( LP_untrace, 'Handled by CEK machine.' )
 
 @primitive( 'toggle-global-trace', '()' )
 def LP_toggle_global_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -168,21 +146,7 @@ def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 Invoking the continuation with a value causes call/cc to immediately return
 that value, unwinding any intermediate computation.  Only upward (escape)
 continuations are supported; invoking a stale continuation is an error."""
-   proc = args[0]
-   if not isinstance( proc, LCallable ):
-      raise LRuntimePrimError( LP_callcc, 'Argument must be a callable.' )
-   if not proc.preEvalArgs:
-      raise LRuntimePrimError( LP_callcc, 'Argument may not be a special form.' )
-
-   token = object()          # unique identity token for this continuation
-   cont  = LContinuation( token )
-
-   try:
-      return ctx.lApply( ctx, env, proc, [cont] )
-   except ContinuationInvoked as ci:
-      if ci.token is token:
-         return ci.value
-      raise   # re-raise so an outer call/cc can catch it
+   raise LRuntimePrimError( LP_callcc, 'Handled by CEK machine.' )
 
 @primitive( 'boundp', '(symbol)' )
 def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:

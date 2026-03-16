@@ -161,12 +161,6 @@ class Analyzer:
                   tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
                   if tooFew or tooMany:
                      raise LRuntimePrimError(callableObj, callableObj.arity_msg)
-               if not callableObj.preEvalArgs:
-                  # Special-form primitives receive un-evaluated args whose
-                  # structure is defined by the form itself (e.g. make-dict's
-                  # (key val) pairs).  The analyzer cannot safely recurse into
-                  # them, so delegate sub-expression analysis to the evaluator.
-                  return
          except KeyError:
             pass
       for elt in sexpr:

@@ -55,17 +55,16 @@ class LSymbol:
 # A map type will be introduced to Lisp represented by python dict.
 
 class LCallable:
-   __slots__ = ('name', 'docString', 'preEvalArgs')
+   __slots__ = ('name', 'docString')
 
-   def __init__( self, name: str, docString: str = '', preEvalArgs: bool = True ) -> None:
+   def __init__( self, name: str, docString: str = '' ) -> None:
       self.name:str = name
       self.docString:str = docString
-      self.preEvalArgs:bool = preEvalArgs
 
 class LPrimitive( LCallable ):
    __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'lambdaListAST')
 
-   def __init__( self, fn: Callable[[EnvironmentBase], Any], name: str, paramsString: str, docString: str = '', preEvalArgs: bool=True,
+   def __init__( self, fn: Callable[[EnvironmentBase], Any], name: str, paramsString: str, docString: str = '',
                  min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '',
                  lambdaListAST: (list|None) = None ) -> None:
       self.pythonFn:Callable[[EnvironmentBase], Any] = fn
@@ -74,10 +73,10 @@ class LPrimitive( LCallable ):
       self.max_args:(int|None) = max_args
       self.arity_msg:str      = arity_msg
       self.lambdaListAST:(list|None) = lambdaListAST
-      super().__init__( name, docString, preEvalArgs )
-   
+      super().__init__( name, docString )
+
    def typeLabel( self ):
-      return 'Built-in Special Operator' if not self.preEvalArgs else 'Built-in Function'
+      return 'Built-in Function'
 
    def callForm( self ):
       if self.paramsString:
@@ -100,7 +99,7 @@ class LFunction( LCallable ):
       self.lambdaListAST: list = lambdaListAST
       self.bodyAST: list   = bodyAST
       self.capturedEnvironment: EnvironmentBase = capturedEnvironment
-      super().__init__( name, docString, preEvalArgs=True )
+      super().__init__( name, docString )
 
    def typeLabel( self ):
       return 'Function'
@@ -129,7 +128,7 @@ class LMacro( LCallable ):
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
       self.lambdaListAST: list  = lambdaListAST
       self.bodyAST: list    = bodyAST
-      super().__init__( name.name, docString, preEvalArgs=False )
+      super().__init__( name.name, docString )
 
    def typeLabel( self ):
       return 'Macro'
@@ -168,7 +167,7 @@ class LContinuation( LCallable ):
 
    def __init__( self, token: object ) -> None:
       self.token = token
-      super().__init__( 'continuation', '', preEvalArgs=True )
+      super().__init__( 'continuation', '' )
 
    def typeLabel( self ) -> str:
       return 'Continuation'

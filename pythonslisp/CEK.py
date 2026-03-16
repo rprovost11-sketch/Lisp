@@ -22,12 +22,13 @@ Frames that return values       → return (_Val(v),  env)
 from __future__ import annotations
 from typing import Any
 
-from pythonslisp.AST import ( LSymbol, L_NIL,
+from pythonslisp.AST import ( LSymbol, L_NIL, L_T,
                                LCallable, LFunction, LPrimitive, LMacro, LContinuation,
-                               LMultipleValues )
+                               LMultipleValues, eql, prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LArgBindingError,
-                                      ContinuationInvoked )
-from pythonslisp.Environment  import Environment
+                                      ContinuationInvoked, ReturnFrom,
+                                      Thrown, Signaled )
+from pythonslisp.Environment  import Environment, ModuleEnvironment
 from pythonslisp.Expander     import Expander
 
 
@@ -98,6 +99,54 @@ def _eval_body( body, env, K ) -> tuple:
       return body[0], env       # tail form — expression
    K.append( PrognFrame(list(body[1:]), env) )
    return body[0], env          # first non-tail form — expression
+
+
+def _block_name( obj ):
+   if isinstance(obj, LSymbol):
+      return obj.name
+   if isinstance(obj, list) and not obj:   # L_NIL
+      return 'NIL'
+   raise LRuntimeError('block: name must be a symbol.')
+
+
+def _lquasiquoteExpand( ctx, env, expr, depth=1 ):
+   if not isinstance(expr, list):
+      return expr
+   if len(expr) == 0:
+      return expr
+   head = expr[0]
+   if head == 'QUASIQUOTE':
+      inner = _lquasiquoteExpand(ctx, env, expr[1], depth + 1)
+      return [LSymbol('QUASIQUOTE'), inner]
+   if head == 'UNQUOTE':
+      if depth == 1:
+         return ctx.lEval(env, expr[1])
+      else:
+         inner = _lquasiquoteExpand(ctx, env, expr[1], depth - 1)
+         return [LSymbol('UNQUOTE'), inner]
+   if head == 'UNQUOTE-SPLICING':
+      if depth == 1:
+         result = ctx.lEval(env, expr[1])
+         if not isinstance(result, list):
+            raise LRuntimeError(
+               "ERROR 'UNQUOTE-SPLICING': Argument 1 must evaluate to a List.\n"
+               "PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)")
+         return [LSymbol('UNQUOTE-SPLICING'), result]
+      else:
+         inner = _lquasiquoteExpand(ctx, env, expr[1], depth - 1)
+         return [LSymbol('UNQUOTE-SPLICING'), inner]
+   resultList = []
+   for listElt in expr:
+      resultListElt = _lquasiquoteExpand(ctx, env, listElt, depth)
+      if (depth == 1 and
+              isinstance(resultListElt, list) and
+              len(resultListElt) > 0 and
+              resultListElt[0] == 'UNQUOTE-SPLICING'):
+         for elt in resultListElt[1]:
+            resultList.append(elt)
+      else:
+         resultList.append(resultListElt)
+   return resultList
 
 
 # ---------------------------------------------------------------------------
@@ -257,7 +306,7 @@ class ArgFrame:
 
    mode:
      'call'    — common call path; macros are inline-expanded
-     'funcall' — FUNCALL; rejects macros and preEvalArgs=False forms
+     'funcall' — FUNCALL; rejects macros
      'apply'   — APPLY;   like funcall but spreads the final list arg
    """
    __slots__ = ('fn', 'pending', 'done', 'env', 'mode')
@@ -286,8 +335,9 @@ class ArgFrame:
                return self.pending[0], self.env   # expression
             if type(fn) is LMacro:
                raise LRuntimeError( f'FUNCALL: cannot call macro "{fn.name}".' )
-            if not fn.preEvalArgs:
-               raise LRuntimeError( 'FUNCALL: first argument may not be a special form.' )
+            if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
+               raise LRuntimeError( f'FUNCALL: first argument may not be a special form.' )
+
 
          elif self.mode == 'apply':
             if isinstance(fn, LCallable):
@@ -303,7 +353,7 @@ class ArgFrame:
                raise LRuntimeError( 'APPLY: first argument must evaluate to a callable or symbol.' )
             if type(fn) is LMacro:
                raise LRuntimeError( f'APPLY: cannot apply macro "{fn.name}".' )
-            if not fn.preEvalArgs:
+            if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
                raise LRuntimeError( 'APPLY: first argument may not be a special form.' )
 
          else:  # 'call'
@@ -318,11 +368,6 @@ class ArgFrame:
                # Inline macro expansion — return the expansion as an expression.
                expansion = Expander.expandMacroCall( ctx, self.env, fn, self.pending )
                return expansion, self.env         # expression (code to evaluate)
-
-         # preEvalArgs=False: phase-1 limitation — call directly with raw args.
-         if not fn.preEvalArgs:
-            result = fn.pythonFn( ctx, self.env, self.pending )
-            return _Val(result), self.env   # VALUE — wrap; LMultipleValues preserved
 
          self.fn = fn
          if not self.pending:
@@ -390,6 +435,189 @@ class BodyFrame:
 
 
 # ---------------------------------------------------------------------------
+# New frame classes for inlined special operators
+# ---------------------------------------------------------------------------
+
+class BlockFrame:
+   """Marks an active block on K; receives the block body's final value."""
+   __slots__ = ('name',)
+   def __init__( self, name ):
+      self.name = name
+   def step( self, value, E, K, ctx ):
+      return _Val(value), E
+
+
+class ReturnFromFrame:
+   """Receives return-from value; unwinds K to matching BlockFrame."""
+   __slots__ = ('name',)
+   def __init__( self, name ):
+      self.name = name
+   def step( self, value, E, K, ctx ):
+      for i in reversed(range(len(K))):
+         if isinstance(K[i], BlockFrame) and K[i].name == self.name:
+            del K[i:]   # removes BlockFrame and everything above it
+            return _Val(value), E
+      raise ReturnFrom(self.name, _primary(value))
+
+
+class CatchTagFrame:
+   """Receives evaluated catch tag; pushes CatchBodyFrame and starts body."""
+   __slots__ = ('body', 'env')
+   def __init__( self, body, env ):
+      self.body = body
+      self.env  = env
+   def step( self, tag, E, K, ctx ):
+      K.append( CatchBodyFrame(_primary(tag)) )
+      return _eval_body(self.body, self.env, K)
+
+
+class CatchBodyFrame:
+   """K-stack marker for throw unwinding; passes normal completion through."""
+   __slots__ = ('tag',)
+   def __init__( self, tag ):
+      self.tag = tag
+   def step( self, value, E, K, ctx ):
+      return _Val(_primary(value)), E
+
+
+class HandlerCaseBodyFrame:
+   """K-stack marker for signal/error handling; passes normal completion through."""
+   __slots__ = ('clauses', 'env')
+   def __init__( self, clauses, env ):
+      # clauses: list of (type_sym, var_sym_or_None, body_forms)
+      self.clauses = clauses
+      self.env     = env
+   def find_handler( self, type_name ):
+      for ctype, var, body in self.clauses:
+         if isinstance(ctype, LSymbol):
+            if ctype.name in ('T', 'ERROR'):
+               return var, body
+            if ctype.name == type_name:
+               return var, body
+      return None, None
+   def step( self, value, E, K, ctx ):
+      return _Val(_primary(value)), E
+
+
+class MVBindFrame:
+   """Receives values-form result (NOT primary-stripped); binds vars, evals body."""
+   __slots__ = ('var_list', 'body', 'outer_env')
+   def __init__( self, var_list, body, outer_env ):
+      self.var_list  = var_list
+      self.body      = body
+      self.outer_env = outer_env
+   def step( self, value, E, K, ctx ):
+      vals = value.values if type(value) is LMultipleValues else [value]
+      new_env = Environment(self.outer_env, evalFn=ctx.lEval)
+      for i, var in enumerate(self.var_list):
+         new_env.bindLocal(var.name, vals[i] if i < len(vals) else L_NIL)
+      return _eval_body(self.body, new_env, K)
+
+
+class MVListFrame:
+   """Receives form result; returns all values as a list."""
+   __slots__ = ()
+   def step( self, value, E, K, ctx ):
+      if type(value) is LMultipleValues:
+         return _Val(list(value.values)), E
+      return _Val([value]), E
+
+
+class NthValueBodyFrame:
+   """Receives n; validates it; queues form evaluation."""
+   __slots__ = ('form', 'env')
+   def __init__( self, form, env ):
+      self.form = form
+      self.env  = env
+   def step( self, n_raw, E, K, ctx ):
+      n = _primary(n_raw)
+      if not isinstance(n, int) or isinstance(n, bool) or n < 0:
+         raise LRuntimeError('nth-value: first argument must be a non-negative integer.')
+      K.append( NthValueDeliverFrame(n) )
+      return self.form, self.env
+
+
+class NthValueDeliverFrame:
+   """Receives form result; extracts nth value (NOT primary-stripped)."""
+   __slots__ = ('n',)
+   def __init__( self, n ):
+      self.n = n
+   def step( self, value, E, K, ctx ):
+      if type(value) is LMultipleValues:
+         return _Val(value.values[self.n] if self.n < len(value.values) else L_NIL), E
+      return _Val(value if self.n == 0 else L_NIL), E
+
+
+class DictBuildFrame:
+   """Collects evaluated dict values; keys are already extracted (strings)."""
+   __slots__ = ('current_key', 'remaining', 'built', 'env')
+   def __init__( self, current_key, remaining, built, env ):
+      self.current_key = current_key
+      self.remaining   = remaining
+      self.built       = built
+      self.env         = env
+   def step( self, value, E, K, ctx ):
+      self.built[self.current_key] = _primary(value)
+      if self.remaining:
+         key, form        = self.remaining[0]
+         self.current_key = key
+         self.remaining   = self.remaining[1:]
+         K.append(self)
+         return form, self.env
+      return _Val(dict(self.built)), self.env
+
+
+class ColonFrame:
+   """Receives evaluated root module; navigates the raw-symbol path."""
+   __slots__ = ('path', 'env')
+   def __init__( self, path, env ):
+      self.path = path
+      self.env  = env
+   def step( self, root, E, K, ctx ):
+      from pythonslisp.AST import prettyPrint
+      _USAGE = "PRIMITIVE USAGE: (: module-or-pkg &rest path)"
+      current = _primary(root)
+      for sym in self.path:
+         if not isinstance(sym, LSymbol):
+            raise LRuntimeError(f"ERROR ':': Path elements must be symbols.\n{_USAGE}")
+         if not isinstance(current, ModuleEnvironment):
+            raise LRuntimeError(f"ERROR ':': {prettyPrint(current)} is not a module or package.\n{_USAGE}")
+         try:
+            current = current._bindings[sym.name]
+         except KeyError:
+            raise LRuntimeError(f"ERROR ':': {sym.name} not found in module {current.name}.\n{_USAGE}")
+      return _Val(current), self.env
+
+
+class CallCCProcFrame:
+   """Receives evaluated procedure for call/cc; validates it; sets up the continuation call."""
+   __slots__ = ('token', 'cont')
+   def __init__( self, token, cont ):
+      self.token = token
+      self.cont  = cont
+   def step( self, value, E, K, ctx ):
+      proc = _primary(value)
+      if not isinstance( proc, LCallable ):
+         raise LRuntimeError( "ERROR 'CALL/CC': Argument must be a callable.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
+      if type(proc) is LMacro:
+         raise LRuntimeError( "ERROR 'CALL/CC': Argument may not be a macro.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
+      if type(proc) is LPrimitive and proc.name in _SPECIAL_OPERATOR_SET:
+         raise LRuntimeError( "ERROR 'CALL/CC': Argument may not be a special form.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
+      K.append( CallCCGuardFrame(self.token) )
+      K.append( ArgFrame(None, [_Val(self.cont)], [], E, 'funcall') )
+      return _Val(proc), E
+
+
+class CallCCGuardFrame:
+   """Boundary marker for call/cc. Passes normal return through; matched by ContinuationInvoked handler."""
+   __slots__ = ('token',)
+   def __init__( self, token ):
+      self.token = token
+   def step( self, value, E, K, ctx ):
+      return _Val(_primary(value)), E
+
+
+# ---------------------------------------------------------------------------
 # Apply helper
 # ---------------------------------------------------------------------------
 
@@ -443,25 +671,26 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
       raise LRuntimeError( f'Error binding arguments in call to function "{fnName}".\n{errorMsg}' )
 
 
-# ---------------------------------------------------------------------------
-# The CEK machine loop
-# ---------------------------------------------------------------------------
+def cek_apply( ctx, env, function, args ) -> Any:
+   """Apply a callable to pre-evaluated args using the CEK machine.
+   Used by sequences, types, and other primitives that need to call
+   Lisp functions with already-evaluated argument lists.
+   Returns the primary (first) value in scalar context."""
+   if isinstance( function, LContinuation ):
+      if len(args) != 1:
+         raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
+      raise ContinuationInvoked( function.token, args[0] )
 
-_SPECIAL_OPERATOR_SET = frozenset({'IF', 'QUOTE', 'LET', 'LET*', 'PROGN',
-                                    'SETQ', 'COND', 'CASE', 'FUNCALL', 'APPLY'})
+   # Use _do_apply directly; run the full loop with the returned state.
+   K = []
+   C, E = _do_apply( function, list(args), env, K, ctx )
+   return _primary( _run_loop( C, E, K, ctx ) )
 
-def cek_eval( ctx, env, expr ) -> Any:
-   """CEK machine evaluator.  Drop-in replacement for Interpreter._lEval."""
-   C = expr
-   E = env
-   K = []   # continuation stack
 
+def _run_loop( C, E, K, ctx ) -> Any:
+   """Run the CEK loop starting from (C, E, K).
+   Returns the final value (not primary-stripped)."""
    while True:
-
-      # ----------------------------------------------------------------
-      # Deliver a value to the top continuation frame.
-      # _Val-wrapped values and self-evaluating atoms come here.
-      # ----------------------------------------------------------------
       if _is_value(C):
          v = C.v if isinstance(C, _Val) else C
          if not K:
@@ -470,127 +699,429 @@ def cek_eval( ctx, env, expr ) -> Any:
          C, E  = frame.step(v, E, K, ctx)
          continue
 
-      # ----------------------------------------------------------------
-      # Symbol — look it up; wrap result in _Val so it is not re-evaluated.
-      # ----------------------------------------------------------------
       if type(C) is LSymbol:
          try:
             C = _Val( E.lookup(C.name) )
          except KeyError:
             if C.isKeyArg():
-               C = _Val(C)    # keyword arg is self-evaluating
+               C = _Val(C)
             else:
                raise LRuntimeError( f'Unbound Variable: {C.name}.' )
          continue
 
-      # ----------------------------------------------------------------
-      # Empty list — NIL.
-      # ----------------------------------------------------------------
-      if len(C) == 0:
-         C = L_NIL   # empty list → _is_value True
+      if isinstance(C, list) and len(C) == 0:
+         C = L_NIL
          continue
 
-      # ----------------------------------------------------------------
-      # Non-empty list — an expression to reduce.
-      # ----------------------------------------------------------------
       head    = C[0]
       headStr = head.name if type(head) is LSymbol else None
 
       if headStr not in _SPECIAL_OPERATOR_SET:
-         # Common function-call path.
          K.append( ArgFrame(None, list(C[1:]), [], E, 'call') )
          C = C[0]
          continue
 
-      # ----------------------------------------------------------------
-      # Special operators
-      # ----------------------------------------------------------------
+      # For special operators in this loop, delegate to the full cek_eval.
+      # This is a sub-eval; any remaining K frames wait for its result.
+      sub_result = cek_eval( ctx, E, C )
+      C = _Val( sub_result )
+      continue
 
-      if headStr == 'QUOTE':
-         C = _Val(C[1])   # quoted datum is a value — wrap
-         continue
 
-      if headStr == 'IF':
-         then_ = C[2] if len(C) > 2 else L_NIL
-         else_ = C[3] if len(C) > 3 else L_NIL
-         K.append( IfFrame(then_, else_, E) )
-         C = C[1]
-         continue
+# ---------------------------------------------------------------------------
+# The CEK machine loop
+# ---------------------------------------------------------------------------
 
-      if headStr == 'LET':
-         vardefs = C[1]
-         body    = C[2:]
-         pairs   = _extract_vardefs(vardefs)
-         if not pairs:
-            new_env = Environment(E, evalFn=ctx.lEval)
-            C, E    = _eval_body(body, new_env, K)
+_SPECIAL_OPERATOR_SET = frozenset({
+   # existing
+   'IF', 'QUOTE', 'LET', 'LET*', 'PROGN', 'SETQ', 'COND', 'CASE',
+   'FUNCALL', 'APPLY',
+   # new
+   'LAMBDA', 'DEFMACRO',
+   'QUASIQUOTE', 'UNQUOTE', 'UNQUOTE-SPLICING',
+   'TRACE', 'UNTRACE',
+   'BLOCK', 'RETURN-FROM', 'RETURN',
+   'CATCH',
+   'HANDLER-CASE',
+   'MULTIPLE-VALUE-BIND', 'MULTIPLE-VALUE-LIST', 'NTH-VALUE',
+   'MAKE-DICT',
+   ':', 'CALL/CC',
+})
+
+
+def cek_eval( ctx, env, expr ) -> Any:
+   """CEK machine evaluator."""
+   C = expr
+   E = env
+   K = []
+
+   while True:
+      try:
+
+         # ----------------------------------------------------------------
+         # Deliver a value to the top continuation frame.
+         # ----------------------------------------------------------------
+         if _is_value(C):
+            v = C.v if isinstance(C, _Val) else C
+            if not K:
+               return v
+            frame = K.pop()
+            C, E  = frame.step(v, E, K, ctx)
             continue
-         first_name, first_form = pairs[0]
-         K.append( LetFrame(first_name, pairs[1:], {}, body, E) )
-         C = first_form
-         continue
 
-      if headStr == 'LET*':
-         vardefs = C[1]
-         body    = C[2:]
-         pairs   = _extract_vardefs(vardefs)
-         inner   = Environment(E, evalFn=ctx.lEval)
-         if not pairs:
-            C, E = _eval_body(body, inner, K)
+         # ----------------------------------------------------------------
+         # Symbol lookup
+         # ----------------------------------------------------------------
+         if type(C) is LSymbol:
+            try:
+               C = _Val( E.lookup(C.name) )
+            except KeyError:
+               if C.isKeyArg():
+                  C = _Val(C)
+               else:
+                  raise LRuntimeError( f'Unbound Variable: {C.name}.' )
             continue
-         first_name, first_form = pairs[0]
-         K.append( LetStarFrame(first_name, pairs[1:], inner, body) )
-         C = first_form
-         E = inner
-         continue
 
-      if headStr == 'PROGN':
-         if len(C) == 1:
+         # ----------------------------------------------------------------
+         # Empty list — NIL
+         # ----------------------------------------------------------------
+         if len(C) == 0:
             C = L_NIL
             continue
-         if len(C) == 2:
+
+         # ----------------------------------------------------------------
+         # Non-empty list — expression to reduce
+         # ----------------------------------------------------------------
+         head    = C[0]
+         headStr = head.name if type(head) is LSymbol else None
+
+         if headStr not in _SPECIAL_OPERATOR_SET:
+            K.append( ArgFrame(None, list(C[1:]), [], E, 'call') )
+            C = C[0]
+            continue
+
+         # ----------------------------------------------------------------
+         # Special operators — existing
+         # ----------------------------------------------------------------
+
+         if headStr == 'QUOTE':
+            C = _Val(C[1])
+            continue
+
+         if headStr == 'IF':
+            then_ = C[2] if len(C) > 2 else L_NIL
+            else_ = C[3] if len(C) > 3 else L_NIL
+            K.append( IfFrame(then_, else_, E) )
             C = C[1]
             continue
-         K.append( PrognFrame(list(C[2:]), E) )
-         C = C[1]
-         continue
 
-      if headStr == 'SETQ':
-         pairs = []
-         for i in range(1, len(C), 2):
-            pairs.append( (C[i].name, C[i + 1]) )
-         first_name, first_form = pairs[0]
-         K.append( SetqFrame(first_name, pairs[1:], E) )
-         C = first_form
-         continue
-
-      if headStr == 'COND':
-         clauses = C[1:]
-         if not clauses:
-            C = L_NIL
+         if headStr == 'LET':
+            vardefs = C[1]
+            body    = C[2:]
+            pairs   = _extract_vardefs(vardefs)
+            if not pairs:
+               new_env = Environment(E, evalFn=ctx.lEval)
+               C, E    = _eval_body(body, new_env, K)
+               continue
+            first_name, first_form = pairs[0]
+            K.append( LetFrame(first_name, pairs[1:], {}, body, E) )
+            C = first_form
             continue
-         first_clause = clauses[0]
-         K.append( CondFrame(list(first_clause[1:]), list(clauses[1:]), E) )
-         C = first_clause[0]
+
+         if headStr == 'LET*':
+            vardefs = C[1]
+            body    = C[2:]
+            pairs   = _extract_vardefs(vardefs)
+            inner   = Environment(E, evalFn=ctx.lEval)
+            if not pairs:
+               C, E = _eval_body(body, inner, K)
+               continue
+            first_name, first_form = pairs[0]
+            K.append( LetStarFrame(first_name, pairs[1:], inner, body) )
+            C = first_form
+            E = inner
+            continue
+
+         if headStr == 'PROGN':
+            if len(C) == 1:
+               C = L_NIL
+               continue
+            if len(C) == 2:
+               C = C[1]
+               continue
+            K.append( PrognFrame(list(C[2:]), E) )
+            C = C[1]
+            continue
+
+         if headStr == 'SETQ':
+            pairs = []
+            for i in range(1, len(C), 2):
+               pairs.append( (C[i].name, C[i + 1]) )
+            first_name, first_form = pairs[0]
+            K.append( SetqFrame(first_name, pairs[1:], E) )
+            C = first_form
+            continue
+
+         if headStr == 'COND':
+            clauses = C[1:]
+            if not clauses:
+               C = L_NIL
+               continue
+            first_clause = clauses[0]
+            K.append( CondFrame(list(first_clause[1:]), list(clauses[1:]), E) )
+            C = first_clause[0]
+            continue
+
+         if headStr == 'CASE':
+            K.append( CaseFrame(list(C[2:]), E) )
+            C = C[1]
+            continue
+
+         if headStr == 'FUNCALL':
+            args = C[1:]
+            if len(args) < 1:
+               raise LRuntimeError( 'Error binding arguments in call to function "FUNCALL".\nToo few positional arguments.' )
+            K.append( ArgFrame(None, list(args[1:]), [], E, 'funcall') )
+            C = args[0]
+            continue
+
+         if headStr == 'APPLY':
+            args = C[1:]
+            if len(args) < 2:
+               raise LRuntimeError( 'Error binding arguments in call to function "APPLY".\nToo few positional arguments.' )
+            K.append( ArgFrame(None, list(args[1:]), [], E, 'apply') )
+            C = args[0]
+            continue
+
+         # ----------------------------------------------------------------
+         # Special operators — new
+         # ----------------------------------------------------------------
+
+         if headStr == 'LAMBDA':
+            funcParams = C[1]
+            funcBody   = list(C[2:])
+            if funcBody and isinstance(funcBody[0], str):
+               docString = funcBody[0]
+               funcBody  = funcBody[1:]
+            else:
+               docString = ''
+            C = _Val( LFunction(LSymbol(''), funcParams, docString, funcBody,
+                                capturedEnvironment=E) )
+            continue
+
+         if headStr == 'DEFMACRO':
+            fnName     = C[1]
+            funcParams = C[2]
+            funcBody   = list(C[3:])
+            if funcBody and isinstance(funcBody[0], str):
+               docString = funcBody[0]
+               funcBody  = funcBody[1:]
+            else:
+               docString = ''
+            macro = LMacro(fnName, funcParams, docString, funcBody)
+            E.bindGlobal(fnName.name, macro)
+            C = _Val(macro)
+            continue
+
+         if headStr == 'QUASIQUOTE':
+            result = _lquasiquoteExpand(ctx, E, C[1])
+            if ( isinstance(result, list) and
+                 len(result) > 0 and
+                 result[0] == LSymbol('UNQUOTE-SPLICING') ):
+               raise LRuntimeError(
+                  'Ill-placed ,@ (UNQUOTE-SPLICING): splice requires a list context.')
+            C = _Val(result)
+            continue
+
+         if headStr == 'UNQUOTE':
+            raise LRuntimeError(
+               "ERROR 'UNQUOTE': UNQUOTE can only occur inside a QUASIQUOTE.\n"
+               "PRIMITIVE USAGE: (UNQUOTE sexpr)")
+
+         if headStr == 'UNQUOTE-SPLICING':
+            raise LRuntimeError(
+               "ERROR 'UNQUOTE-SPLICING': UNQUOTE-SPLICING can only occur inside a QUASIQUOTE.\n"
+               "PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)")
+
+         if headStr == 'TRACE':
+            tracer = ctx.tracer
+            syms   = C[1:]
+            if not syms:
+               C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
+               continue
+            for sym in syms:
+               if not isinstance(sym, LSymbol):
+                  raise LRuntimeError("trace: arguments must be symbols.")
+               tracer.addFnTrace(sym.name)
+            C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
+            continue
+
+         if headStr == 'UNTRACE':
+            tracer = ctx.tracer
+            syms   = C[1:]
+            if not syms:
+               tracer.removeAll()
+            else:
+               for sym in syms:
+                  if not isinstance(sym, LSymbol):
+                     raise LRuntimeError("untrace: arguments must be symbols.")
+                  tracer.removeFnTrace(sym.name)
+            C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
+            continue
+
+         if headStr == 'BLOCK':
+            name_str = _block_name(C[1])
+            body     = C[2:]
+            if not body:
+               C = L_NIL
+               continue
+            K.append( BlockFrame(name_str) )
+            C, E = _eval_body(body, E, K)
+            continue
+
+         if headStr == 'RETURN-FROM':
+            name_str = _block_name(C[1])
+            K.append( ReturnFromFrame(name_str) )
+            C = C[2] if len(C) > 2 else L_NIL
+            continue
+
+         if headStr == 'RETURN':
+            K.append( ReturnFromFrame('NIL') )
+            C = C[1] if len(C) > 1 else L_NIL
+            continue
+
+         if headStr == 'CATCH':
+            body = list(C[2:])
+            K.append( CatchTagFrame(body, E) )
+            C = C[1]   # eval the tag
+            continue
+
+         if headStr == 'HANDLER-CASE':
+            if len(C) < 2:
+               raise LRuntimeError('handler-case: requires a protected form.')
+            form    = C[1]
+            clauses = []
+            for clause in C[2:]:
+               if not isinstance(clause, list) or len(clause) < 2:
+                  raise LRuntimeError('handler-case: malformed clause.')
+               ctype   = clause[0]
+               var_lst = clause[1]
+               body    = clause[2:]
+               var     = var_lst[0] if isinstance(var_lst, list) and var_lst else None
+               clauses.append( (ctype, var, body) )
+            K.append( HandlerCaseBodyFrame(clauses, E) )
+            C = form
+            continue
+
+         if headStr == 'MULTIPLE-VALUE-BIND':
+            var_list    = C[1]
+            values_form = C[2]
+            body        = list(C[3:])
+            K.append( MVBindFrame(var_list, body, E) )
+            C = values_form
+            continue
+
+         if headStr == 'MULTIPLE-VALUE-LIST':
+            K.append( MVListFrame() )
+            C = C[1]
+            continue
+
+         if headStr == 'NTH-VALUE':
+            K.append( NthValueBodyFrame(C[2], E) )
+            C = C[1]   # eval n first
+            continue
+
+         if headStr == 'MAKE-DICT':
+            pairs = C[1:]
+            if not pairs:
+               C = _Val({})
+               continue
+            def _extract_pair( p ):
+               k = p[0]
+               if isinstance(k, LSymbol):
+                  k = k.name
+               return k, p[1]
+            all_pairs             = [_extract_pair(p) for p in pairs]
+            first_key, first_form = all_pairs[0]
+            K.append( DictBuildFrame(first_key, all_pairs[1:], {}, E) )
+            C = first_form
+            continue
+
+         if headStr == ':':
+            if len(C) < 2:
+               raise LRuntimeError("ERROR ':': requires at least a root argument.\nPRIMITIVE USAGE: (: module-or-pkg &rest path)")
+            K.append( ColonFrame(list(C[2:]), E) )
+            C = C[1]   # eval the root
+            continue
+
+         if headStr == 'CALL/CC':
+            token = object()
+            cont  = LContinuation(token)
+            K.append( CallCCProcFrame(token, cont) )
+            C = C[1]   # eval the procedure
+            continue
+
+      except ReturnFrom as e:
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], BlockFrame) and K[i].name == e.name:
+               del K[i:]
+               C = _Val(e.value)
+               break
+         else:
+            raise   # no block in this machine — propagate to outer cek_eval or rawEval
          continue
 
-      if headStr == 'CASE':
-         K.append( CaseFrame(list(C[2:]), E) )
-         C = C[1]
+      except Thrown as e:
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], CatchBodyFrame) and eql(K[i].tag, e.tag):
+               del K[i:]
+               C = _Val(e.value)
+               break
+         else:
+            raise   # no catch in this machine — propagate to outer cek_eval or rawEval
          continue
 
-      if headStr == 'FUNCALL':
-         args = C[1:]
-         if len(args) < 1:
-            raise LRuntimeError( 'Error binding arguments in call to function "FUNCALL".\nToo few positional arguments.' )
-         K.append( ArgFrame(None, list(args[1:]), [], E, 'funcall') )
-         C = args[0]
+      except Signaled as e:
+         ctype_sym = e.condition.get('CONDITION-TYPE', LSymbol('ERROR'))
+         type_name = ctype_sym.name if isinstance(ctype_sym, LSymbol) else 'ERROR'
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], HandlerCaseBodyFrame):
+               var, body = K[i].find_handler(type_name)
+               if body is not None:
+                  frame   = K[i]
+                  del K[i:]
+                  new_env = Environment(frame.env, evalFn=ctx.lEval)
+                  if var is not None:
+                     new_env.bindLocal(var.name, e.condition)
+                  C, E = _eval_body(body, new_env, K)
+                  break
+         else:
+            raise
          continue
 
-      if headStr == 'APPLY':
-         args = C[1:]
-         if len(args) < 2:
-            raise LRuntimeError( 'Error binding arguments in call to function "APPLY".\nToo few positional arguments.' )
-         K.append( ArgFrame(None, list(args[1:]), [], E, 'apply') )
-         C = args[0]
+      except LRuntimeError as e:
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], HandlerCaseBodyFrame):
+               var, body = K[i].find_handler('ERROR')
+               if body is not None:
+                  frame   = K[i]
+                  del K[i:]
+                  new_env = Environment(frame.env, evalFn=ctx.lEval)
+                  cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': str(e)}
+                  if var is not None:
+                     new_env.bindLocal(var.name, cond)
+                  C, E = _eval_body(body, new_env, K)
+                  break
+         else:
+            raise
+         continue
+
+      except ContinuationInvoked as e:
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], CallCCGuardFrame) and K[i].token is e.token:
+               del K[i:]
+               C = _Val(e.value)
+               break
+         else:
+            raise   # no matching guard — propagate to outer cek_eval or rawEval
          continue

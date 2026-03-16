@@ -768,8 +768,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    CYAN  = '\033[96m' if useColor else ''
    RESET = '\033[0m'  if useColor else ''
 
-   evalLabel = 'args: pre-evaluated' if callableObj.preEvalArgs else 'args: not pre-evaluated'
-   print( f'{callableObj.typeLabel()}  |  {evalLabel}', file=outStrm )
+   print( f'{callableObj.typeLabel()}  |  args: pre-evaluated', file=outStrm )
    print( file=outStrm )
    print( f'   {CYAN}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
    print( file=outStrm )

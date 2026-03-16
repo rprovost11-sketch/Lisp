@@ -60,15 +60,10 @@ def _validate_count( count: Any, fn: Any ):
 # ── Existing non-keyword primitives ────────────────────────────────────────
 
 @primitive( 'make-dict', '((key1 val1) (key2 val2) ...)',
-            mode=LambdaListMode.DOC_ONLY, preEvalArgs=False )
+            mode=LambdaListMode.DOC_ONLY )
 def LP_make_dict( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Constructs and returns a dict of key-value pairs."""
-   theMapping = dict()
-   for key, expr in args:
-      if isinstance(key, LSymbol):
-         key = key.name
-      theMapping[key] = ctx.lEval(env, expr)
-   return theMapping
+   raise LRuntimePrimError( LP_make_dict, 'Handled by CEK machine.' )
 
 @primitive( 'car', '(list)' )
 def LP_car( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
