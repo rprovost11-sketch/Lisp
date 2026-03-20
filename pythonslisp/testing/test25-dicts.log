@@ -1,0 +1,306 @@
+; ============================================================
+; test25-dicts.log  --  dict-keys, dict-values, dict-pairs
+; ============================================================
+
+; --- setup ---
+>>> (setf d1 (make-dict (a 1) (b 2) (c 3)))
+...
+
+==> (DICT
+   ("A" 1)
+   ("B" 2)
+   ("C" 3)
+)
+
+; ============================================================
+; dict-keys
+; ============================================================
+
+; happy path: symbol keys are returned as symbols (no quotes)
+>>> (dict-keys d1)
+...
+
+==> (A B C)
+
+; happy path: string-literal keys are returned as strings
+>>> (dict-keys (make-dict ("x" 10) ("y" 20)))
+...
+
+==> ("x" "y")
+
+; happy path: single-entry dict
+>>> (dict-keys (make-dict (z 99)))
+...
+
+==> (Z)
+
+; edge case: empty dict returns NIL
+>>> (dict-keys (make-dict))
+...
+
+==> NIL
+
+; edge case: insertion order is preserved
+>>> (dict-keys (make-dict (c 3) (a 1) (b 2)))
+...
+
+==> (C A B)
+
+; ============================================================
+; dict-values
+; ============================================================
+
+; happy path: values returned in insertion order
+>>> (dict-values d1)
+...
+
+==> (1 2 3)
+
+; happy path: mixed value types
+>>> (dict-values (make-dict (n 42) (s "hello") (f 3.14)))
+...
+
+==> (42 "hello" 3.14)
+
+; happy path: single-entry dict
+>>> (dict-values (make-dict (z 99)))
+...
+
+==> (99)
+
+; edge case: empty dict returns NIL
+>>> (dict-values (make-dict))
+...
+
+==> NIL
+
+; edge case: list values
+>>> (dict-values (make-dict (xs '(1 2 3))))
+...
+
+==> ((1 2 3))
+
+; ============================================================
+; dict-pairs
+; ============================================================
+
+; happy path: symbol keys come back as symbols in pairs
+>>> (dict-pairs d1)
+...
+
+==> ((A 1) (B 2) (C 3))
+
+; happy path: string-literal keys stay as strings in pairs
+>>> (dict-pairs (make-dict ("p" 10) ("q" 20)))
+...
+
+==> (("p" 10) ("q" 20))
+
+; happy path: single-entry dict
+>>> (dict-pairs (make-dict (x 7)))
+...
+
+==> ((X 7))
+
+; edge case: empty dict returns NIL
+>>> (dict-pairs (make-dict))
+...
+
+==> NIL
+
+; edge case: each pair is a proper two-element list
+>>> (length (dict-pairs d1))
+...
+
+==> 3
+
+>>> (first (dict-pairs d1))
+...
+
+==> (A 1)
+
+>>> (length (first (dict-pairs d1)))
+...
+
+==> 2
+
+; edge case: dict-pairs on struct instance includes STRUCT-TYPE key as symbol
+>>> (defstruct widget (color "red") (size 5))
+...
+
+==> WIDGET
+
+>>> (setf w1 (make-widget))
+...
+
+==> (DICT
+   ("COLOR" "red")
+   ("SIZE" 5)
+   ("STRUCT-TYPE" WIDGET)
+)
+
+>>> (dict-keys w1)
+...
+
+==> (STRUCT-TYPE COLOR SIZE)
+
+>>> (dict-values w1)
+...
+
+==> (WIDGET "red" 5)
+
+>>> (dict-pairs w1)
+...
+
+==> ((STRUCT-TYPE WIDGET) (COLOR "red") (SIZE 5))
+
+; ============================================================
+; round-trip: dict-pairs keys and values via mapcar
+; ============================================================
+
+>>> (mapcar car (dict-pairs d1))
+...
+
+==> (A B C)
+
+>>> (mapcar (lambda (pair) (cadr pair)) (dict-pairs d1))
+...
+
+==> (1 2 3)
+
+; round-trip: symbol keys from dict-keys can look up values
+>>> (at (first (dict-keys d1)) d1)
+...
+
+==> 1
+
+; ============================================================
+; error cases: dict-keys
+; ============================================================
+
+; error: argument is a list
+>>> (dict-keys '(1 2 3))
+
+%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-KEYS dict)
+==>
+
+; error: argument is an integer
+>>> (dict-keys 42)
+
+%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-KEYS dict)
+==>
+
+; error: argument is a string
+>>> (dict-keys "hello")
+
+%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-KEYS dict)
+==>
+
+; error: argument is NIL
+>>> (dict-keys nil)
+
+%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-KEYS dict)
+==>
+
+; error: too few arguments
+>>> (dict-keys)
+
+%%% ERROR 'DICT-KEYS': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-KEYS dict)
+==>
+
+; error: too many arguments
+>>> (dict-keys d1 d1)
+
+%%% ERROR 'DICT-KEYS': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-KEYS dict)
+==>
+
+; ============================================================
+; error cases: dict-values
+; ============================================================
+
+; error: argument is a list
+>>> (dict-values '(1 2 3))
+
+%%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-VALUES dict)
+==>
+
+; error: argument is an integer
+>>> (dict-values 42)
+
+%%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-VALUES dict)
+==>
+
+; error: argument is NIL
+>>> (dict-values nil)
+
+%%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-VALUES dict)
+==>
+
+; error: too few arguments
+>>> (dict-values)
+
+%%% ERROR 'DICT-VALUES': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-VALUES dict)
+==>
+
+; error: too many arguments
+>>> (dict-values d1 d1)
+
+%%% ERROR 'DICT-VALUES': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-VALUES dict)
+==>
+
+; ============================================================
+; error cases: dict-pairs
+; ============================================================
+
+; error: argument is a list
+>>> (dict-pairs '(1 2 3))
+
+%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>
+
+; error: argument is an integer
+>>> (dict-pairs 42)
+
+%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>
+
+; error: argument is a string
+>>> (dict-pairs "hello")
+
+%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>
+
+; error: argument is NIL
+>>> (dict-pairs nil)
+
+%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>
+
+; error: too few arguments
+>>> (dict-pairs)
+
+%%% ERROR 'DICT-PAIRS': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>
+
+; error: too many arguments
+>>> (dict-pairs d1 d1)
+
+%%% ERROR 'DICT-PAIRS': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>

@@ -243,6 +243,43 @@ def LP_has_key_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
 
    return L_T if aKey in aMap else L_NIL
 
+def _dict_key_to_lisp( k: str ) -> Any:
+   """Convert a dict key string to the appropriate Lisp type.
+   Keys that are all-uppercase with at least one alphabetic character
+   originated from Lisp symbols and are returned as LSymbol.
+   All other keys (lowercase, numeric-only, etc.) are returned as strings."""
+   if k == k.upper() and any( c.isalpha() for c in k ):
+      return LSymbol( k )
+   return k
+
+@primitive( 'dict-keys', '(dict)' )
+def LP_dict_keys( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns a list of all keys in the dict, in insertion order.
+Symbol-originated keys (all-uppercase) are returned as symbols;
+string-literal keys are returned as strings."""
+   aDict = args[0]
+   if not isinstance( aDict, dict ):
+      raise LRuntimePrimError( LP_dict_keys, 'Argument 1 must be a Dict.' )
+   return [ _dict_key_to_lisp(k) for k in aDict.keys() ]
+
+@primitive( 'dict-values', '(dict)' )
+def LP_dict_values( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns a list of all values in the dict, in insertion order."""
+   aDict = args[0]
+   if not isinstance( aDict, dict ):
+      raise LRuntimePrimError( LP_dict_values, 'Argument 1 must be a Dict.' )
+   return list( aDict.values() )
+
+@primitive( 'dict-pairs', '(dict)' )
+def LP_dict_pairs( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+   """Returns a list of (key value) pairs from the dict, in insertion order.
+Each pair is a two-element list (key value).  Symbol-originated keys
+are returned as symbols; string-literal keys are returned as strings."""
+   aDict = args[0]
+   if not isinstance( aDict, dict ):
+      raise LRuntimePrimError( LP_dict_pairs, 'Argument 1 must be a Dict.' )
+   return [ [_dict_key_to_lisp(k), v] for k, v in aDict.items() ]
+
 @primitive( 'sort', '(sequence predicate &key (key nil))',
             mode=LambdaListMode.FULL_BINDING )
 def LP_sort( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:

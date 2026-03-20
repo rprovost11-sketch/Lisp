@@ -7,7 +7,7 @@
 | `(make-dict)` | Empty dict |
 | `(make-dict (key val) ...)` | Dict with initial key-value pairs |
 
-Keys are **not evaluated** — use a symbol or string literal directly.
+Keys are **not evaluated** - use a symbol or string literal directly.
 Symbol keys are interned as uppercase strings. Values **are** evaluated.
 
 ```lisp
@@ -31,6 +31,16 @@ Symbol keys are interned as uppercase strings. Values **are** evaluated.
 | `(has-key-p key dict)` | T if key exists |
 | `(has-value-p val dict)` | T if val exists anywhere in dict |
 | `(dictp x)` | T if x is a dict |
+
+## Introspection
+
+| Expression | Meaning |
+|---|---|
+| `(dict-keys dict)` | List of all keys (strings), in insertion order |
+| `(dict-values dict)` | List of all values, in insertion order |
+| `(dict-pairs dict)` | List of `(key value)` pairs, in insertion order |
+
+All three return NIL for an empty dict.
 
 ## Printing
 
