@@ -397,9 +397,9 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
-   ("X" 0)
-   ("Y" 0)
+   (STRUCT-TYPE POINT)
+   (X 0)
+   (Y 0)
 )
 
 >>> (point-x p0)
@@ -416,9 +416,9 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
-   ("X" 3)
-   ("Y" 4)
+   (STRUCT-TYPE POINT)
+   (X 3)
+   (Y 4)
 )
 
 >>> (point-x p1)
@@ -435,9 +435,9 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
-   ("X" 5)
-   ("Y" 0)
+   (STRUCT-TYPE POINT)
+   (X 5)
+   (Y 0)
 )
 
 >>> (point-x p-partial)
@@ -504,9 +504,9 @@
 ...
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT)
-   ("X" 10)
-   ("Y" 99)
+   (STRUCT-TYPE POINT)
+   (X 10)
+   (Y 99)
 )
 
 >>> (setf (point-x p1) 0)
@@ -548,9 +548,9 @@
 ...
 
 ==> (DICT
-   ("NEXT" NIL)
-   ("STRUCT-TYPE" NODE)
-   ("VALUE" 42)
+   (NEXT NIL)
+   (STRUCT-TYPE NODE)
+   (VALUE 42)
 )
 
 >>> (node-value n1)
@@ -582,9 +582,9 @@
 ...
 
 ==> (DICT
-   ("AGE" 30)
-   ("NAME" "Bob")
-   ("STRUCT-TYPE" PERSON)
+   (AGE 30)
+   (NAME "Bob")
+   (STRUCT-TYPE PERSON)
 )
 
 >>> (person-name bob)
@@ -626,9 +626,9 @@
 ...
 
 ==> (DICT
-   ("COUNT" 0)
-   ("STRUCT-TYPE" LABELED)
-   ("TAG" "none")
+   (COUNT 0)
+   (STRUCT-TYPE LABELED)
+   (TAG "none")
 )
 
 >>> (labeled-tag lbl)
@@ -747,10 +747,10 @@
 ...
 
 ==> (DICT
-   ("B" 0)
-   ("G" 128)
-   ("R" 255)
-   ("STRUCT-TYPE" COLOR)
+   (B 0)
+   (G 128)
+   (R 255)
+   (STRUCT-TYPE COLOR)
 )
 
 >>> (color-p c1)

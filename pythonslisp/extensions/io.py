@@ -83,12 +83,12 @@ output at the Python level."""
    return ctx.outStrm
 
 def is_struct_descriptor( obj ) -> bool:
-   return isinstance(obj, dict) and obj.get('STRUCT-TYPE') == LSymbol('%STRUCT-DESCRIPTOR%')
+   return isinstance(obj, dict) and obj.get(LSymbol('STRUCT-TYPE')) == LSymbol('%STRUCT-DESCRIPTOR%')
 
 def print_struct_help( descriptor, outStrm ) -> None:
-   name    = descriptor.get('NAME', LSymbol('?'))
-   docstr  = descriptor.get('DOCSTRING', L_NIL)
-   fields  = descriptor.get('FIELDS', [])
+   name    = descriptor.get(LSymbol('NAME'), LSymbol('?'))
+   docstr  = descriptor.get(LSymbol('DOCSTRING'), L_NIL)
+   fields  = descriptor.get(LSymbol('FIELDS'), [])
    nameStr = name.name if isinstance(name, LSymbol) else str(name)
    nameLow = nameStr.lower()
    field_names = [ f[0].name.lower()
@@ -207,10 +207,10 @@ def LP_open( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
 :if-does-not-exist controls behaviour when the file is absent:
   :error (default) — signal an error
   nil              — return nil without opening"""
-   filespec  = env.lookup( LSymbol('FILESPEC') )
-   direction = env.lookup( LSymbol('DIRECTION') )
-   if_exists = env.lookup( LSymbol('IF-EXISTS') )
-   if_dne    = env.lookup( LSymbol('IF-DOES-NOT-EXIST') )
+   filespec  = env.lookup( 'FILESPEC' )
+   direction = env.lookup( 'DIRECTION' )
+   if_exists = env.lookup( 'IF-EXISTS' )
+   if_dne    = env.lookup( 'IF-DOES-NOT-EXIST' )
    if not isinstance( filespec, str ):
       raise LRuntimePrimError( LP_open, '1st argument expected to be a filename string.' )
    if direction == LSymbol(':INPUT'):
@@ -257,9 +257,9 @@ def LP_make_string_input_stream( ctx: Context, env: EnvironmentBase, args: list[
    """Creates and returns a readable string stream backed by string.
 Optionally constrained to the substring from start (default 0) up to
 but not including end (default: entire string)."""
-   s     = env.lookup( LSymbol('STRING') )
-   start = env.lookup( LSymbol('START') )
-   end   = env.lookup( LSymbol('END') )
+   s     = env.lookup( 'STRING' )
+   start = env.lookup( 'START' )
+   end   = env.lookup( 'END' )
    if not isinstance( s, str ):
       raise LRuntimePrimError( LP_make_string_input_stream,
                                   '1st argument expected to be a string.' )
@@ -289,7 +289,7 @@ def LP_close( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """Closes a stream and returns T.
 The :abort keyword argument is accepted for CL compatibility but is ignored
 in this implementation (flushing on close cannot be suppressed)."""
-   stream = env.lookup( LSymbol('STREAM') )
+   stream = env.lookup( 'STREAM' )
    if not isinstance(stream, IOBase):
       raise LRuntimePrimError( LP_close, 'Argument expected to be a stream.' )
    stream.close()
@@ -421,7 +421,8 @@ Returns the output string."""
       elif isinstance( dictOrList, list ):
          formattedStr = formatString.format( *dictOrList )
       elif isinstance( dictOrList, dict ):
-         formattedStr = formatString.format( **dictOrList )
+         strDict = { (k.name if isinstance(k, LSymbol) else k): v for k, v in dictOrList.items() }
+         formattedStr = formatString.format( **strDict )
       else:
          raise LRuntimePrimError( LP_writef, "2nd argument expected to be a list or dict." )
    except (IndexError, KeyError, ValueError) as e:
@@ -678,7 +679,8 @@ being raised.  With no second argument the format string is used as-is."""
       if isinstance( dictOrList, list ):
          message = formatString.format( *dictOrList )
       elif isinstance( dictOrList, dict ):
-         message = formatString.format( **dictOrList )
+         strDict = { (k.name if isinstance(k, LSymbol) else k): v for k, v in dictOrList.items() }
+         message = formatString.format( **strDict )
       else:
          raise LRuntimePrimError( LP_error, '2nd argument expected to be a list or dict.' )
    except (IndexError, KeyError, ValueError) as e:

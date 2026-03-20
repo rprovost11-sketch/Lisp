@@ -66,10 +66,10 @@ def _typep_atom( obj, tname: str ) -> bool:
    if tname == 'MODULE':         return isinstance(obj, ModuleEnvironment)
    if tname == 'DICT':           return isinstance(obj, dict)
    if isinstance(obj, dict):
-      struct_type = obj.get('STRUCT-TYPE')
+      struct_type = obj.get(LSymbol('STRUCT-TYPE'))
       if isinstance(struct_type, LSymbol) and struct_type.name == tname:
          return True
-      struct_includes = obj.get('STRUCT-INCLUDES')
+      struct_includes = obj.get(LSymbol('STRUCT-INCLUDES'))
       if isinstance(struct_includes, list):
          if any(isinstance(s, LSymbol) and s.name == tname for s in struct_includes):
             return True
@@ -240,7 +240,7 @@ def LP_typeof( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    elif isinstance( arg, LSymbol ):
       return LSymbol('SYMBOL')
    elif isinstance( arg, dict ):
-      struct_type = arg.get('STRUCT-TYPE')
+      struct_type = arg.get(LSymbol('STRUCT-TYPE'))
       return struct_type if struct_type is not None else LSymbol('DICT')
    elif isinstance( arg, ModuleEnvironment ):
       return LSymbol('MODULE')
@@ -424,8 +424,8 @@ def LP_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """PrettyPrints each argument into programmer readable form and returns the
 results joined by :sep (default \"\").  With :sep, acts like string-join in
 programmer mode: (string 1 2 3 :sep \", \") => \"1, 2, 3\"."""
-   objects = env.lookup( LSymbol('OBJECTS') )
-   sep     = env.lookup( LSymbol('SEP') )
+   objects = env.lookup( 'OBJECTS' )
+   sep     = env.lookup( 'SEP' )
    filtered = _filter_keyword_pairs( objects, {'SEP'} )
    return sep.join( prettyPrintSExpr(o) for o in filtered )
 
@@ -434,8 +434,8 @@ def LP_ustring( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    """PrettyPrints each argument into user readable form and returns the
 results joined by :sep (default \"\").  With :sep, acts like string-join in
 user mode: (ustring \"a\" \"b\" :sep \", \") => \"a, b\"."""
-   objects = env.lookup( LSymbol('OBJECTS') )
-   sep     = env.lookup( LSymbol('SEP') )
+   objects = env.lookup( 'OBJECTS' )
+   sep     = env.lookup( 'SEP' )
    filtered = _filter_keyword_pairs( objects, {'SEP'} )
    return sep.join( prettyPrint(o) for o in filtered )
 

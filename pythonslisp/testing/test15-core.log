@@ -334,9 +334,9 @@
 ...
 
 ==> (DICT
-   ("A" 10)
-   ("B" 20)
-   ("C" 30)
+   (A 10)
+   (B 20)
+   (C 30)
 )
 
 >>> (at-delete 'a tmap)
@@ -348,8 +348,8 @@
 ...
 
 ==> (DICT
-   ("B" 20)
-   ("C" 30)
+   (B 20)
+   (C 30)
 )
 
 ; --- identity vs equality ---
@@ -873,8 +873,8 @@
 ...
 
 ==> (DICT
-   ("X" 10)
-   ("Y" 20)
+   (X 10)
+   (Y 20)
 )
 
 >>> ;;; quoted symbol key is uppercased to match the stored key
@@ -887,8 +887,8 @@
 ...
 
 ==> (DICT
-   ("X" 99)
-   ("Y" 20)
+   (X 99)
+   (Y 20)
 )
 
 >>> ;;; at-set adds a new key when the key is not already present
@@ -901,9 +901,9 @@
 ...
 
 ==> (DICT
-   ("X" 99)
-   ("Y" 20)
-   ("Z" 30)
+   (X 99)
+   (Y 20)
+   (Z 30)
 )
 
 ; --- 9. at-set: map string keys ---
@@ -1028,8 +1028,8 @@
 ...
 
 ==> (DICT
-   ("X" 1)
-   ("Y" 2)
+   (X 1)
+   (Y 2)
 )
 
 >>> (setf (at 'y sf-map) 77)
@@ -1041,8 +1041,8 @@
 ...
 
 ==> (DICT
-   ("X" 1)
-   ("Y" 77)
+   (X 1)
+   (Y 77)
 )
 
 >>> ;;; setf with mixed pairs: symbol then at-form
@@ -1165,8 +1165,8 @@
 ...
 
 ==> (DICT
-   ("A" 1)
-   ("B" 2)
+   (A 1)
+   (B 2)
 )
 
 >>> ;;; setf at on map mutates the value
@@ -1179,8 +1179,8 @@
 ...
 
 ==> (DICT
-   ("A" 99)
-   ("B" 2)
+   (A 99)
+   (B 2)
 )
 
 ; --- setf with at on list ---
@@ -1208,8 +1208,8 @@
 ...
 
 ==> (DICT
-   ("A" 1)
-   ("B" 2)
+   (A 1)
+   (B 2)
 )
 
 ; --- nth edge cases ---
@@ -1668,7 +1668,7 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ... (make-dict (a (+ 1 2)))
 
 ==> (DICT
-   ("A" 3)
+   (A 3)
 )
 
 >>> ;;; at retrieves evaluated dict value
@@ -1680,7 +1680,7 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ... (make-dict (a 1) (a 2))
 
 ==> (DICT
-   ("A" 2)
+   (A 2)
 )
 
 >>> ;;; dict with integer keys
@@ -1932,9 +1932,9 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ... (setf pt23 (make-point23 :x 10 :y 20))
 
 ==> (DICT
-   ("STRUCT-TYPE" POINT23)
-   ("X" 10)
-   ("Y" 20)
+   (STRUCT-TYPE POINT23)
+   (X 10)
+   (Y 20)
 )
 
 >>> ;;; read struct fields
@@ -1980,11 +1980,11 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ... (setf d26 (make-derived26 :x 1 :y 2 :z 3))
 
 ==> (DICT
-   ("STRUCT-INCLUDES" (BASE26))
-   ("STRUCT-TYPE" DERIVED26)
-   ("X" 1)
-   ("Y" 2)
-   ("Z" 3)
+   (STRUCT-INCLUDES (BASE26))
+   (STRUCT-TYPE DERIVED26)
+   (X 1)
+   (Y 2)
+   (Z 3)
 )
 
 >>> ;;; inherited accessor works on derived instance
@@ -2051,11 +2051,11 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ... (setf d26b (copy-derived26 d26))
 
 ==> (DICT
-   ("STRUCT-INCLUDES" (BASE26))
-   ("STRUCT-TYPE" DERIVED26)
-   ("X" 99)
-   ("Y" 2)
-   ("Z" 3)
+   (STRUCT-INCLUDES (BASE26))
+   (STRUCT-TYPE DERIVED26)
+   (X 99)
+   (Y 2)
+   (Z 3)
 )
 
 >>> ;;; copy is independent of original
@@ -2073,12 +2073,12 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ... (setf e26 (make-extra26 :x 1 :y 2 :z 3 :w 4))
 
 ==> (DICT
-   ("STRUCT-INCLUDES" (DERIVED26 BASE26))
-   ("STRUCT-TYPE" EXTRA26)
-   ("W" 4)
-   ("X" 1)
-   ("Y" 2)
-   ("Z" 3)
+   (STRUCT-INCLUDES (DERIVED26 BASE26))
+   (STRUCT-TYPE EXTRA26)
+   (W 4)
+   (X 1)
+   (Y 2)
+   (Z 3)
 )
 
 >>> ;;; grandparent predicate returns T for grandchild

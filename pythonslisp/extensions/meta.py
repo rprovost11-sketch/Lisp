@@ -67,7 +67,7 @@ def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> An
    accessor_sym, field_sym = args
    if not isinstance(accessor_sym, LSymbol) or not isinstance(field_sym, LSymbol):
       raise LRuntimePrimError( LP_defsetf_internal, 'Both arguments must be symbols.' )
-   ctx.setfRegistry[accessor_sym.name] = field_sym.name
+   ctx.setfRegistry[accessor_sym.name] = field_sym
    return accessor_sym
 
 @primitive( 'set-accessor!', '(accessor-symbol instance newValue)' )

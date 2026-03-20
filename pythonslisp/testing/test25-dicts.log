@@ -7,9 +7,9 @@
 ...
 
 ==> (DICT
-   ("A" 1)
-   ("B" 2)
-   ("C" 3)
+   (A 1)
+   (B 2)
+   (C 3)
 )
 
 ; ============================================================
@@ -134,9 +134,9 @@
 ...
 
 ==> (DICT
-   ("COLOR" "red")
-   ("SIZE" 5)
-   ("STRUCT-TYPE" WIDGET)
+   (COLOR "red")
+   (SIZE 5)
+   (STRUCT-TYPE WIDGET)
 )
 
 >>> (dict-keys w1)

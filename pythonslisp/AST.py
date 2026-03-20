@@ -27,10 +27,7 @@ class LSymbol:
    def __eq__( self, other: Any ) -> bool:
       if isinstance(other, LSymbol):
          return self.name == other.name
-      elif isinstance(other, str):
-         return self.name == other
-      else:
-         return False
+      return False
 
    def __hash__( self ) -> int:
       return hash(self.name)
@@ -38,10 +35,7 @@ class LSymbol:
    def __ne__( self, other: Any ) -> bool:
       if isinstance(other, LSymbol):
          return self.name != other.name
-      elif isinstance(other, str):
-         return self.name != other
-      else:
-         return True
+      return True
    
    def startswith( self, asubstr:str ) -> bool:
       return self.name.startswith(asubstr)
@@ -95,11 +89,11 @@ class LPrimitive( LCallable ):
 class LFunction( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST', 'capturedEnvironment')
 
-   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: EnvironmentBase ) -> None:
+   def __init__( self, name: (LSymbol|str), lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: EnvironmentBase ) -> None:
       self.lambdaListAST: list = lambdaListAST
       self.bodyAST: list   = bodyAST
       self.capturedEnvironment: EnvironmentBase = capturedEnvironment
-      super().__init__( name, docString )
+      super().__init__( name.name if isinstance(name, LSymbol) else name, docString )
 
    def typeLabel( self ):
       return 'Function'
@@ -205,7 +199,7 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return resultStr
    elif isinstance(sExpr, dict):
       resultStrLines = [ '(DICT' ]
-      for key in sorted(sExpr.keys()):
+      for key in sorted(sExpr.keys(), key=lambda k: k.name if isinstance(k, LSymbol) else k):
          value = sExpr[ key ]
          key = prettyPrintSExpr(key)
          value = prettyPrintSExpr( value )
@@ -239,7 +233,7 @@ def prettyPrint( sExpr: Any ) -> str:
       return resultStr
    elif isinstance(sExpr, dict):
       resultStrLines = [ '(DICT' ]
-      for key in sorted(sExpr.keys()):
+      for key in sorted(sExpr.keys(), key=lambda k: k.name if isinstance(k, LSymbol) else k):
          value = sExpr[ key ]
          key = prettyPrint(key)
          value = prettyPrint( value )

@@ -115,16 +115,17 @@ def _lquasiquoteExpand( ctx, env, expr, depth=1 ):
    if len(expr) == 0:
       return expr
    head = expr[0]
-   if head == 'QUASIQUOTE':
+   headName = head.name if type(head) is LSymbol else None
+   if headName == 'QUASIQUOTE':
       inner = _lquasiquoteExpand(ctx, env, expr[1], depth + 1)
       return [LSymbol('QUASIQUOTE'), inner]
-   if head == 'UNQUOTE':
+   if headName == 'UNQUOTE':
       if depth == 1:
          return ctx.lEval(env, expr[1])
       else:
          inner = _lquasiquoteExpand(ctx, env, expr[1], depth - 1)
          return [LSymbol('UNQUOTE'), inner]
-   if head == 'UNQUOTE-SPLICING':
+   if headName == 'UNQUOTE-SPLICING':
       if depth == 1:
          result = ctx.lEval(env, expr[1])
          if not isinstance(result, list):
@@ -141,7 +142,8 @@ def _lquasiquoteExpand( ctx, env, expr, depth=1 ):
       if (depth == 1 and
               isinstance(resultListElt, list) and
               len(resultListElt) > 0 and
-              resultListElt[0] == 'UNQUOTE-SPLICING'):
+              type(resultListElt[0]) is LSymbol and
+              resultListElt[0].name == 'UNQUOTE-SPLICING'):
          for elt in resultListElt[1]:
             resultList.append(elt)
       else:
@@ -549,7 +551,7 @@ class NthValueDeliverFrame:
 
 
 class DictBuildFrame:
-   """Collects evaluated dict values; keys are already extracted (strings)."""
+   """Collects evaluated dict values; keys are the raw (unevaluated) key forms."""
    __slots__ = ('current_key', 'remaining', 'built', 'env')
    def __init__( self, current_key, remaining, built, env ):
       self.current_key = current_key
@@ -1036,12 +1038,7 @@ def cek_eval( ctx, env, expr ) -> Any:
             if not pairs:
                C = _Val({})
                continue
-            def _extract_pair( p ):
-               k = p[0]
-               if isinstance(k, LSymbol):
-                  k = k.name
-               return k, p[1]
-            all_pairs             = [_extract_pair(p) for p in pairs]
+            all_pairs             = [(p[0], p[1]) for p in pairs]
             first_key, first_form = all_pairs[0]
             K.append( DictBuildFrame(first_key, all_pairs[1:], {}, E) )
             C = first_form

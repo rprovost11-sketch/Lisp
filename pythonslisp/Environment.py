@@ -109,7 +109,7 @@ class Environment(EnvironmentBase):
       if not isinstance(nextParam, LSymbol):
          raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
-      if nextParam == '&OPTIONAL':
+      if nextParam.name == '&OPTIONAL':
          paramNum, argNum = self._bindOptionalArgs( lambdaListAST, paramNum+1, argList, argNum )
 
          try:
@@ -122,7 +122,7 @@ class Environment(EnvironmentBase):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
       rest_was_bound = False
-      if nextParam == '&REST' or (nextParam == '&BODY' and destructuring):
+      if nextParam.name == '&REST' or (nextParam.name == '&BODY' and destructuring):
          paramNum, argNum = self._bindRestArgs( lambdaListAST, paramNum+1, argList, argNum )
          rest_was_bound = True
 
@@ -133,7 +133,7 @@ class Environment(EnvironmentBase):
          if not isinstance(nextParam, LSymbol):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
-      if nextParam == '&KEY':
+      if nextParam.name == '&KEY':
          paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum,
                                                skip_non_keywords=rest_was_bound )
 
@@ -144,7 +144,7 @@ class Environment(EnvironmentBase):
          if not isinstance(nextParam, LSymbol):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
 
-      if nextParam == '&AUX':
+      if nextParam.name == '&AUX':
          paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
       elif nextParam.startswith('&'):
          _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&BODY', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
@@ -410,7 +410,7 @@ class Environment(EnvironmentBase):
       allowOtherKeys = False
       if paramNum < paramListLength:
          nextParam = lambdaListAST[paramNum]
-         if isinstance(nextParam, LSymbol) and (nextParam == '&ALLOW-OTHER-KEYS'):
+         if isinstance(nextParam, LSymbol) and nextParam.name == '&ALLOW-OTHER-KEYS':
             allowOtherKeys = True
             paramNum += 1
 
