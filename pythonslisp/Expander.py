@@ -8,7 +8,7 @@ and then cek_eval.
 from __future__ import annotations
 
 from typing import Any
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LMacro, L_NIL, prettyPrintSExpr
 from pythonslisp.Environment import Environment
 from pythonslisp.Context import Context

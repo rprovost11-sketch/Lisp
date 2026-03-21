@@ -1,31 +1,32 @@
-"""Environment — EnvironmentBase subclass with Lisp argument binding.
+"""Environment — Lisp lexical environment with argument binding.
 
-Extends EnvironmentBase with the argument-binding methods needed by the evaluator
-and expander.  Keeping them here makes the binding logic part of the environment
-object that it mutates.
+Manages lexical scoping, variable binding, and the argument-binding
+logic needed by the evaluator.  Keeping binding logic here makes it
+part of the environment object that it mutates.
 
-evalFn is stored as an instance attribute so argument-binding methods do not
-need to carry it as a parameter.  Child environments inherit evalFn from their
-parent; the evaluator (Interpreter._lApply) passes ctx.lEval when creating
+evalFn is stored as an instance attribute so argument-binding methods
+do not need to carry it as a parameter.  Child environments inherit
+evalFn from their parent; the evaluator passes ctx.lEval when creating
 a new scope so default-value evaluation always uses the current call context.
 """
 from __future__ import annotations
 
 from typing import Any, Callable, Sequence
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.AST import LSymbol
 from pythonslisp.Exceptions import LArgBindingError
 
 
-class Environment(EnvironmentBase):
-   __slots__ = ('_evalFn', '_MODULE_ENV')
+class Environment:
+   __slots__ = ('_bindings', '_parent', '_GLOBAL_ENV', '_evalFn', '_MODULE_ENV')
 
-   def __init__( self, parent: (EnvironmentBase|None) = None,
+   def __init__( self, parent: (Environment|None) = None,
                  initialBindings: (dict[str, Any]|None) = None,
                  evalFn: (Callable|None) = None,
                  isModuleRoot: bool = False ) -> None:
-      super().__init__( parent, initialBindings )
+      self._bindings: dict[str, Any]    = initialBindings if initialBindings is not None else {}
+      self._parent:   (Environment|None) = parent
+      self._GLOBAL_ENV: Environment      = parent._GLOBAL_ENV if parent else self
       if evalFn is not None:
          self._evalFn = evalFn
       elif parent is not None:
@@ -39,34 +40,89 @@ class Environment(EnvironmentBase):
       else:
          self._MODULE_ENV = self._GLOBAL_ENV
 
+   # -----------------------------------------------------------------------
+   # Basic binding and lookup
+   # -----------------------------------------------------------------------
+
+   def updateLocals( self, newValues: dict[str, Any] ):
+      self._bindings.update( newValues )
+
+   def bindLocal( self, key: str, value: Any ) -> Any:
+      self._bindings[ key ] = value
+      return value
+
+   def bindGlobal( self, key: str, value: Any ) -> Any:
+      self._GLOBAL_ENV._bindings[ key ] = value
+      return value
+
    def bindInModule( self, key: str, value: Any ) -> Any:
       self._MODULE_ENV._bindings[ key ] = value
       return value
 
+   def lookupLocal( self, key: str ) -> Any:
+      return self._bindings[ key ]
+
+   def lookupGlobal( self, key: str ) -> Any:
+      return self._GLOBAL_ENV._bindings[ key ]
+
+   def lookupLocalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
+      return self._bindings.get( key, dfltVal )
+
+   def lookupGlobalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
+      return self._GLOBAL_ENV._bindings.get( key, dfltVal )
+
    def lookupInModule( self, key: str ) -> Any:
       return self._MODULE_ENV._bindings[ key ]
 
+   def unbind( self, key: str ) -> None:
+      scope: (Environment|None) = self
+      while scope:
+         if key in scope._bindings:
+            del scope._bindings[ key ]
+            return
+         scope = scope._parent
+
+   def getGlobalEnv( self ) -> Environment:
+      return self._GLOBAL_ENV
+
+   def localSymbols( self ) -> list[str]:
+      return sorted( self._bindings.keys() )
+
+   def parentEnv( self ) -> (Environment|None):
+      return self._parent
+
+   def findDef( self, key: str ) -> (Environment|None):
+      '''Starting from the local-most scope, searches for the scope in which
+      key is defined and returns that environment.  Returns None if not found.'''
+      scope: (Environment|None) = self
+      while scope:
+         if key in scope._bindings:
+            break
+         scope = scope._parent
+      return scope
+
    def bind( self, key: str, value: Any ) -> Any:
-      '''Bind using lisp semantics.'''
+      '''Bind using Lisp semantics: update existing binding in nearest enclosing
+      scope; if not found, bind at global scope.'''
       scope = self
       while scope:
          if key in scope._bindings:
-            scope._bindings[key] = value
+            scope._bindings[ key ] = value
             return value
          scope = scope._parent
-      self._GLOBAL_ENV._bindings[key] = value
+      self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
-   def lookup( self,  key: str) -> Any:
-      '''Lookup using lisp semantics.'''
-      scope: (EnvironmentBase | None) = self
+   def lookup( self, key: str ) -> Any:
+      '''Lookup using Lisp semantics: walk the scope chain.'''
+      scope: (Environment|None) = self
       while scope:
          if key in scope._bindings:
-            return scope._bindings[key]
+            return scope._bindings[ key ]
          scope = scope._parent
       raise KeyError
 
-   def lookup2( self, key: str) -> Any:
+   def lookup2( self, key: str ) -> Any:
       '''This is slower than lookup() even though lookup2() seems more
       elegant.  While the lookup is fast, the exception handling (which is
       needed to traverse the parent list) is exceedingly slow.  Here's the
@@ -82,18 +138,20 @@ class Environment(EnvironmentBase):
          lookup2() eval time between 4.52 and 6.28 seconds.
       by calling the versions of lookup() from the evaluator
       '''
-      scope: (EnvironmentBase | None) = self
+      scope: (Environment|None) = self
       while scope:
          try:
-            return scope._bindings[key]
+            return scope._bindings[ key ]
          except KeyError:
             scope = scope._parent
       raise KeyError
 
+   # -----------------------------------------------------------------------
+   # Argument binding
+   # -----------------------------------------------------------------------
+
    def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any],
-                      destructuring: bool = False, _validate: bool = True ) -> None:
-      if _validate:
-         self._validateNoDuplicateParams( lambdaListAST, destructuring )
+                      destructuring: bool = False ) -> None:
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
 
@@ -158,7 +216,8 @@ class Environment(EnvironmentBase):
 
    # -----------------------------------------------------------------------
 
-   def _validateNoDuplicateParams( self, lambdaListAST: list[Any],
+   @staticmethod
+   def _validateNoDuplicateParams( lambdaListAST: list[Any],
                                     destructuring: bool = False ) -> None:
       '''Pre-pass: verify no variable name appears more than once in a lambda list.'''
       seen: set[str] = set()
@@ -262,7 +321,7 @@ class Environment(EnvironmentBase):
       if not isinstance( value, list ):
          raise LArgBindingError(
             f'Destructuring pattern expects a list argument, got {type(value).__name__}.' )
-      self.bindArguments( pattern, value, destructuring=True, _validate=False )
+      self.bindArguments( pattern, value, destructuring=True )
 
    def _bindOptionalArgs( self, lambdaListAST: list[Any], paramNum: int,
                           argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
@@ -523,7 +582,7 @@ class ModuleEnvironment(Environment):
    __slots__ = ('name',)
 
    def __init__( self, name: str,
-                 parent: (EnvironmentBase|None) = None,
+                 parent: (Environment|None) = None,
                  evalFn: (Callable|None) = None ) -> None:
       super().__init__( parent=parent, evalFn=evalFn, isModuleRoot=True )
       self.name = name

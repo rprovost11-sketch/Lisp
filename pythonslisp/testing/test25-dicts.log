@@ -1,5 +1,5 @@
 ; ============================================================
-; test25-dicts.log  --  dict-keys, dict-values, dict-pairs
+; test25-dicts.log  --  dict-keys, dict-values, dict-pairs, dict-length
 ; ============================================================
 
 ; --- setup ---
@@ -303,4 +303,53 @@
 
 %%% ERROR 'DICT-PAIRS': 1 argument expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
+==>
+
+; ============================================================
+; dict-length
+; ============================================================
+
+; 3-entry dict
+>>> (dict-length d1)
+
+==> 3
+
+; empty dict
+>>> (dict-length (make-dict))
+
+==> 0
+
+; 1-entry dict
+>>> (dict-length (make-dict (x 42)))
+
+==> 1
+
+; error cases: dict-length
+
+; error: argument is a list
+>>> (dict-length '(1 2 3))
+
+%%% ERROR 'DICT-LENGTH': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-LENGTH dict)
+==>
+
+; error: argument is NIL
+>>> (dict-length nil)
+
+%%% ERROR 'DICT-LENGTH': Argument 1 must be a Dict.
+%%% PRIMITIVE USAGE: (DICT-LENGTH dict)
+==>
+
+; error: too few arguments
+>>> (dict-length)
+
+%%% ERROR 'DICT-LENGTH': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-LENGTH dict)
+==>
+
+; error: too many arguments
+>>> (dict-length d1 d1)
+
+%%% ERROR 'DICT-LENGTH': 1 argument expected.
+%%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>

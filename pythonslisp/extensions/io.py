@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 from io import IOBase, StringIO
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
@@ -66,7 +66,7 @@ def luwrite( outStrm, *values, end='' ):
       print( end=end, file=outStrm )
    return values[-1]
 
-def _get_output_stream( ctx: Context, env: EnvironmentBase ) -> Any:
+def _get_output_stream( ctx: Context, env: Environment ) -> Any:
    """Return the current default output stream.
 If *standard-output* has been locally rebound (e.g. inside a let form)
 to something other than its global value, that stream is used, enabling
@@ -196,7 +196,7 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
 @primitive( 'open',
             '(filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))',
             mode=LambdaListMode.FULL_BINDING )
-def LP_open( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Opens and returns a stream connected to a file.
 :direction :input (default) opens for reading; :output opens for writing.
 :if-exists controls behaviour when an output file already exists:
@@ -246,14 +246,14 @@ def LP_open( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
       raise LRuntimePrimError( LP_open, ':direction must be :input or :output.' )
 
 @primitive( 'make-string-output-stream', '()' )
-def LP_make_string_output_stream( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_make_string_output_stream( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Creates and returns a new string output stream for writing.  Use
 get-output-stream-string to retrieve and clear the accumulated content."""
    return StringIO()
 
 @primitive( 'make-string-input-stream', '(string &optional (start 0) end)',
             mode=LambdaListMode.FULL_BINDING )
-def LP_make_string_input_stream( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_make_string_input_stream( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Creates and returns a readable string stream backed by string.
 Optionally constrained to the substring from start (default 0) up to
 but not including end (default: entire string)."""
@@ -268,7 +268,7 @@ but not including end (default: entire string)."""
    return StringIO( s[start_py:end_py] )
 
 @primitive( 'get-output-stream-string', '(string-stream)' )
-def LP_get_output_stream_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_get_output_stream_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the string accumulated in string-stream since it was created or
 since the last call to get-output-stream-string, then clears the buffer.
 The stream remains open and writable.  (CL semantics.)"""
@@ -285,7 +285,7 @@ The stream remains open and writable.  (CL semantics.)"""
    return content
 
 @primitive( 'close', '(stream &key (abort nil))', mode=LambdaListMode.FULL_BINDING )
-def LP_close( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_close( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Closes a stream and returns T.
 The :abort keyword argument is accepted for CL compatibility but is ignored
 in this implementation (flushing on close cannot be suppressed)."""
@@ -296,7 +296,7 @@ in this implementation (flushing on close cannot be suppressed)."""
    return L_T
 
 @primitive( 'flush', '(&optional stream)' )
-def LP_flush( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_flush( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Flushes a stream and returns t."""
    if len(args) == 1:
       stream = args[0]
@@ -308,7 +308,7 @@ def LP_flush( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return L_T
 
 @primitive( 'open-stream-p', '(stream)' )
-def LP_open_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_open_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the stream is open, NIL if it is closed."""
    stream = args[0]
    if not isinstance(stream, IOBase):
@@ -316,7 +316,7 @@ def LP_open_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> A
    return L_NIL if stream.closed else L_T
 
 @primitive( 'interactive-stream-p', '(stream)' )
-def LP_interactive_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_interactive_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
    stream = args[0]
    if not isinstance(stream, IOBase):
@@ -324,7 +324,7 @@ def LP_interactive_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any]
    return L_T if stream.isatty() else L_NIL
 
 @primitive( 'input-stream-p', '(stream)' )
-def LP_input_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_input_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the stream can be read from, NIL otherwise."""
    stream = args[0]
    if not isinstance(stream, IOBase):
@@ -332,7 +332,7 @@ def LP_input_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> 
    return L_T if stream.readable() else L_NIL
 
 @primitive( 'output-stream-p', '(stream)' )
-def LP_output_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_output_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the stream can be written to, NIL otherwise."""
    stream = args[0]
    if not isinstance(stream, IOBase):
@@ -340,7 +340,7 @@ def LP_output_stream_p( ctx: Context, env: EnvironmentBase, args: list[Any] ) ->
    return L_T if stream.writable() else L_NIL
 
 @primitive( 'stdin', '()' )
-def LP_stdin( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_stdin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the standard input stream (sys.stdin)."""
    if isinstance( sys.stdin, IOBase ):
       return sys.stdin
@@ -349,7 +349,7 @@ def LP_stdin( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return sys.stdin
 
 @primitive( 'stdout', '()' )
-def LP_stdout( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_stdout( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the standard output stream (sys.stdout)."""
    if isinstance( sys.stdout, IOBase ):
       return sys.stdout
@@ -358,7 +358,7 @@ def LP_stdout( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return sys.stdout
 
 @primitive( 'stderr', '()' )
-def LP_stderr( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_stderr( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the standard error stream (sys.stderr)."""
    if isinstance( sys.stderr, IOBase ):
       return sys.stderr
@@ -367,12 +367,12 @@ def LP_stderr( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return sys.stderr
 
 @primitive( 'tmpdir', '()' )
-def LP_tmpdir( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
+def LP_tmpdir( ctx: Context, env: Environment, args: list[Any] ) -> str:
    """Returns the system temporary directory as a string."""
    return tempfile.gettempdir()
 
 @primitive( 'path-join', '(path-segment &rest more-segments)' )
-def LP_path_join( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
+def LP_path_join( ctx: Context, env: Environment, args: list[Any] ) -> str:
    """Joins path-segments using the OS path separator.  Returns the result as a string."""
    for i, arg in enumerate(args):
       if not isinstance(arg, str):
@@ -380,7 +380,7 @@ def LP_path_join( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
    return os.path.join(*args)
 
 @primitive( 'writef', '(formatString &optional dictOrList stream)' )
-def LP_writef( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> str:
+def LP_writef( ctx: Context, env: Environment, args: list[Any] ) -> str:
    """Writes formatted text.  Returns the string that is written.
 Takes a Python format string and an optional map or list of values.
 If no second argument is given, the format string is output unchanged.
@@ -433,7 +433,7 @@ Returns the output string."""
    return outputStr
 
 @primitive( 'write!', '(&optional stream &rest objects)' )
-def LP_write( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_write( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Sequentially prettyPrints in programmer readable text the objects listed.
 Returns the last value printed.  The optional first argument is a stream to which
 the output is written.  If stream is omitted, output goes to stdout."""
@@ -447,7 +447,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
    return lwrite( stream, *args, end='' )
 
 @primitive( 'write-line', '(&optional stream &rest objects)' )
-def LP_write_line( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_write_line( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Sequentially prettyPrints in programmer readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
@@ -462,7 +462,7 @@ Returns the last value printed."""
    return lwrite( stream, *args, end='\n' )
 
 @primitive( 'uwrite!', '(&optional stream &rest objects)' )
-def LP_uwrite( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_uwrite( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Sequentially prettyPrints in user readable text the objects listed.
 The optional first argument is a stream to which the output is written.
 If stream is omitted, output goes to stdout.  Returns the last value printed."""
@@ -476,7 +476,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
    return luwrite( stream, *args, end='' )
 
 @primitive( 'uwrite-line', '(&optional stream &rest objects)' )
-def LP_uwrite_line( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_uwrite_line( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Sequentially prettyPrints in user readable text the objects listed.
 Terminates the output with a newline character.  The optional first argument is
 a stream to which the output is written.  If stream is omitted, output goes to stdout.
@@ -491,7 +491,7 @@ Returns the last value printed."""
    return luwrite( stream, *args, end='\n' )
 
 @primitive( 'terpri', '(&optional stream)' )
-def LP_terpri( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_terpri( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Outputs a newline character.  Returns NIL."""
    if len(args) == 0:
       stream = _get_output_stream( ctx, env )
@@ -505,7 +505,7 @@ def LP_terpri( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return L_NIL
 
 @primitive( 'readall', '(stream)' )
-def LP_readall( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_readall( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Reads and returns the entire contents of a readable stream as a single string."""
    stream = args[0]
    if not isinstance(stream, IOBase):
@@ -515,7 +515,7 @@ def LP_readall( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return stream.read()
 
 @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-def LP_read_line( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_read_line( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Reads one line of text from stream (default: standard input) and
 returns it as a string, without the trailing newline character.
 At end of file: signals an error if eof-error-p is T (default), otherwise
@@ -548,7 +548,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
    return line[:-1] if line.endswith( '\n' ) else line
 
 @primitive( 'read-char', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-def LP_read_char( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_read_char( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Reads and returns the next character from stream (default: standard input)
 as a one-character string.
 At end of file: signals an error if eof-error-p is T (default), otherwise
@@ -581,7 +581,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
    return ch
 
 @primitive( 'read', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
-def LP_read( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_read( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Reads and returns one s-expression from stream (default: standard input),
 without evaluating it.  At end of file, signals an error if eof-error-p is T
 (default), otherwise returns eof-value (default NIL).
@@ -640,7 +640,7 @@ is accumulated."""
          raise LRuntimeError( f'read: {exc}' )
 
 @primitive( 'save', '(filename &rest objects)' )
-def LP_save( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_save( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Saves python object to a text file."""
    filename, *objs = args
    if not isinstance(filename, str):
@@ -651,7 +651,7 @@ def LP_save( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return L_NIL
 
 @primitive( 'load', '(fileName)' )
-def LP_load( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
    filename = args[0]
    if not isinstance(filename, str):
@@ -664,7 +664,7 @@ def LP_load( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return ctx.parse( content )   # (progn form1 form2 ...)
 
 @primitive( 'error', '(formatString &optional dictOrList)' )
-def LP_error( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_error( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Signals a runtime error with the given message string.
 The format string may optionally be followed by a list or map of values,
 in which case the message is formatted using Python str.format() before
@@ -688,7 +688,7 @@ being raised.  With no second argument the format string is used as-is."""
    raise LRuntimeError( message )
 
 @primitive( 'parse', '(string)' )
-def LP_parse( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_parse( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
    theExprStr = args[0]
    if not isinstance(theExprStr, str):
@@ -696,7 +696,7 @@ def LP_parse( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
    return ctx.parse( theExprStr )
 
 @primitive( 'python', '(string)' )
-def LP_python( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_python( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Executes some python code from Lisp."""
    thePythonCode = args[0]
    if not isinstance(thePythonCode, str):
@@ -706,7 +706,7 @@ def LP_python( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
 
 @primitive( 'help', '(&optional target &key (substring nil))',
             mode=LambdaListMode.FULL_BINDING )
-def LP_help( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_help( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Prints a set of tables for all the globally defined symbols and
 topics currently available in Python's Lisp. Or prints the usage and
 documentation for a specific callable (primitive, function or macro) or topic.
@@ -782,7 +782,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    return L_T
 
 @primitive( 'define-help-topic', '(name-string text-string)' )
-def LP_define_help_topic( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_define_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
 as a symbol.  An existing topic with the same name is overwritten."""
@@ -797,7 +797,7 @@ as a symbol.  An existing topic with the same name is overwritten."""
    return LSymbol( name )
 
 @primitive( 'undefine-help-topic', '(name-string)' )
-def LP_undefine_help_topic( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_undefine_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Removes a help topic by deleting its file from the help directory.
 Returns T if the topic existed and was removed, NIL if the topic was not found."""
    name = args[0]
@@ -810,7 +810,7 @@ Returns T if the topic existed and was removed, NIL if the topic was not found."
    return L_NIL
 
 @primitive( 'directory-files', '(dir &optional extension)' )
-def LP_directory_files( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_directory_files( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a sorted list of full file paths in dir.
 With an optional extension string (e.g. \".log\"), only files with that
 extension are returned.  Directories are excluded.  Returns NIL if dir
@@ -837,7 +837,7 @@ does not exist or is empty."""
    return result
 
 @primitive( 'make-directory', '(path)' )
-def LP_make_directory( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_make_directory( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Creates the directory at path, including any missing parent directories.
 Does nothing if the directory already exists.  Returns the path string."""
    path = args[0]
@@ -847,7 +847,7 @@ Does nothing if the directory already exists.  Returns the path string."""
    return path
 
 @primitive( 'file-basename', '(path)' )
-def LP_file_basename( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_file_basename( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the final component of a file path (the filename without
 the directory prefix).  E.g. (file-basename \"/foo/bar/baz.log\") => \"baz.log\"."""
    path = args[0]
@@ -856,7 +856,7 @@ the directory prefix).  E.g. (file-basename \"/foo/bar/baz.log\") => \"baz.log\"
    return os.path.basename( path )
 
 @primitive( 'readline-add-history', '(string)' )
-def LP_readline_add_history( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_readline_add_history( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Adds string to the readline input history.
 Has no effect if readline is not available.  Returns the string."""
    s = args[0]
@@ -867,7 +867,7 @@ Has no effect if readline is not available.  Returns the string."""
    return s
 
 @primitive( 'readline-set-history-length', '(n)' )
-def LP_readline_set_history_length( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_readline_set_history_length( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Sets the maximum number of entries kept in readline history.
 Has no effect if readline is not available.  Returns n."""
    n = args[0]
@@ -880,7 +880,7 @@ Has no effect if readline is not available.  Returns n."""
    return n
 
 @primitive( 'readline-read-history-file', '(&optional path)' )
-def LP_readline_read_history_file( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_readline_read_history_file( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Loads readline history from path (default: ~/.lisp_history).
 Has no effect if readline is not available.  Returns T on success, NIL if
 the file does not exist."""
@@ -896,7 +896,7 @@ the file does not exist."""
       return L_NIL
 
 @primitive( 'readline-write-history-file', '(&optional path)' )
-def LP_readline_write_history_file( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_readline_write_history_file( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Saves readline history to path (default: ~/.lisp_history).
 Has no effect if readline is not available.  Returns T on success."""
    path = args[0] if args else os.path.expanduser( '~/.lisp_history' )
@@ -908,7 +908,7 @@ Has no effect if readline is not available.  Returns T on success."""
    return L_T
 
 @primitive( 'columnize', '(list width &optional stream)' )
-def LP_columnize( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_columnize( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Prints the elements of list as a compact multi-column layout fitting
 within width characters.  Columns are separated by two spaces; each column
 is only as wide as its widest item.  An optional stream argument selects

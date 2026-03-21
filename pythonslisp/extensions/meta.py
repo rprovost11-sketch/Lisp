@@ -3,7 +3,6 @@ import datetime
 import time
 from typing import Any
 
-#from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LMacro
 from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr

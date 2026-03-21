@@ -1,9 +1,10 @@
 from __future__ import annotations
 from fractions import Fraction
 from io import IOBase
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+if TYPE_CHECKING:
+   from pythonslisp.Environment import Environment
 
 # #################
 # Lisp Function API
@@ -46,8 +47,6 @@ class LSymbol:
 
 # Lisp lists will be represented by python list.
 
-# A map type will be introduced to Lisp represented by python dict.
-
 class LCallable:
    __slots__ = ('name', 'docString')
 
@@ -58,10 +57,10 @@ class LCallable:
 class LPrimitive( LCallable ):
    __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'lambdaListAST')
 
-   def __init__( self, fn: Callable[[EnvironmentBase], Any], name: str, paramsString: str, docString: str = '',
+   def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '',
                  min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '',
                  lambdaListAST: (list|None) = None ) -> None:
-      self.pythonFn:Callable[[EnvironmentBase], Any] = fn
+      self.pythonFn:Callable[[Environment], Any] = fn
       self.paramsString:str = paramsString
       self.min_args:int       = min_args
       self.max_args:(int|None) = max_args
@@ -89,10 +88,10 @@ class LPrimitive( LCallable ):
 class LFunction( LCallable ):
    __slots__ = ('lambdaListAST', 'bodyAST', 'capturedEnvironment')
 
-   def __init__( self, name: (LSymbol|str), lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: EnvironmentBase ) -> None:
+   def __init__( self, name: (LSymbol|str), lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: Environment ) -> None:
       self.lambdaListAST: list = lambdaListAST
       self.bodyAST: list   = bodyAST
-      self.capturedEnvironment: EnvironmentBase = capturedEnvironment
+      self.capturedEnvironment: Environment = capturedEnvironment
       super().__init__( name.name if isinstance(name, LSymbol) else name, docString )
 
    def typeLabel( self ):

@@ -37,10 +37,10 @@ from pythonslisp.AST import (
 #   result = ctx.lEval(env, ctx.analyze(env, ctx.expand(env, ctx.parse(source))))
 from pythonslisp.Context import Context
 
-# EnvironmentBase — the scope/binding chain; type for env in all primitive signatures
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+# Environment — the scope/binding chain; type for env in all primitive signatures
+from pythonslisp.Environment import Environment
 
-# Environment — EnvironmentBase subclass with Lisp argument-binding semantics.
+# Environment — Environment subclass with Lisp argument-binding semantics.
 # Import this only if you need to construct a nested scope manually, e.g.:
 #   inner_env = Environment(env, evalFn=ctx.lEval)
 from pythonslisp.Environment import Environment, ModuleEnvironment
@@ -65,7 +65,7 @@ from pythonslisp.extensions import primitive, macro, LambdaListMode
 # -----------------------------------------------------------------------
 
 @primitive( 'greet', '(name &optional (greeting "Hello"))' )
-def LP_greet( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_greet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     """Returns a greeting string.  NAME is required.  GREETING defaults to "Hello"."""
     name = args[0]
     greeting = args[1] if len(args) > 1 else "Hello"
@@ -85,7 +85,7 @@ def LP_greet( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
 
 @primitive( 'repeat-string', '(string &key (count 2) (separator ""))',
             mode=LambdaListMode.FULL_BINDING )
-def LP_repeat_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_repeat_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     """Returns STRING repeated COUNT times with SEPARATOR between each copy.
 :count (default 2) controls how many copies are produced.
 :separator (default empty string) is inserted between copies."""

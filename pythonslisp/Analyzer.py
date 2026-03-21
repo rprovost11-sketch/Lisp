@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LPrimitive
 from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
                                          LRuntimeError,
@@ -23,7 +23,7 @@ class Analyzer:
    """Performs semantic analysis on a fully-expanded, normalized AST."""
 
    @staticmethod
-   def analyze( env: EnvironmentBase, sexpr: Any ) -> None:
+   def analyze( env: Environment, sexpr: Any ) -> None:
       """
       Recursively walk sexpr, raising on structural / semantic problems.
 
@@ -169,7 +169,7 @@ class Analyzer:
    # -----------------------------------------------------------------------
 
    @staticmethod
-   def _analyzeLet( env: EnvironmentBase, name: str, args: list ) -> None:
+   def _analyzeLet( env: Environment, name: str, args: list ) -> None:
       """Structural checks for (let ...) and (let* ...) forms."""
       if len(args) < 1:
          raise LRuntimePrimError(env.lookup(name), '2 or more arguments expected.')
@@ -207,7 +207,7 @@ class Analyzer:
          Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeSetq( env: EnvironmentBase, args: list ) -> None:
+   def _analyzeSetq( env: Environment, args: list ) -> None:
       """Structural checks for (setq ...) forms."""
       numArgs = len(args)
       if numArgs == 0:
@@ -228,7 +228,7 @@ class Analyzer:
       return isinstance(val, list) and not val
 
    @staticmethod
-   def _analyzeBlock( env: EnvironmentBase, args: list ) -> None:
+   def _analyzeBlock( env: Environment, args: list ) -> None:
       """Structural checks for (block ...) forms."""
       if len(args) < 1:
          raise LRuntimeError('block: at least 1 argument (name) expected.')
@@ -238,7 +238,7 @@ class Analyzer:
          Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeReturnFrom( env: EnvironmentBase, args: list ) -> None:
+   def _analyzeReturnFrom( env: Environment, args: list ) -> None:
       """Structural checks for (return-from ...) forms."""
       if len(args) < 1 or len(args) > 2:
          raise LRuntimeError('return-from: 1 or 2 arguments expected.')
@@ -248,7 +248,7 @@ class Analyzer:
          Analyzer.analyze(env, args[1])
 
    @staticmethod
-   def _analyzeCond( env: EnvironmentBase, args: list ) -> None:
+   def _analyzeCond( env: Environment, args: list ) -> None:
       """Structural checks for (cond ...) forms."""
       if len(args) < 1:
          raise LRuntimePrimError(env.lookup('COND'), '1 or more arguments expected.')
@@ -261,7 +261,7 @@ class Analyzer:
             Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeCase( env: EnvironmentBase, args: list ) -> None:
+   def _analyzeCase( env: Environment, args: list ) -> None:
       """Structural checks for (case ...) forms."""
       if len(args) < 2:
          raise LRuntimePrimError(env.lookup('CASE'), '2 or more arguments expected.')
@@ -275,7 +275,7 @@ class Analyzer:
             Analyzer.analyze(env, bodyForm)
 
    @staticmethod
-   def _analyzeMakeDict( env: EnvironmentBase, args: list ) -> None:
+   def _analyzeMakeDict( env: Environment, args: list ) -> None:
       """Structural checks for (make-dict ...) forms."""
       requiredKeyType = None
       for entryNum, pair in enumerate(args):

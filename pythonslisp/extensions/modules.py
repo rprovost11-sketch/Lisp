@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, prettyPrint
 from pythonslisp.Context import Context
 from pythonslisp.Environment import ModuleEnvironment
@@ -60,7 +60,7 @@ def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
 
 @primitive( ':', '(module-or-pkg &rest path)',
             mode=LambdaListMode.DOC_ONLY, min_args=2 )
-def LP_colon( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_colon( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Navigate a module or package hierarchy and return the named value.
 The first argument is evaluated to obtain the root module or package.
 Each subsequent argument must be a symbol naming the next level.
@@ -69,7 +69,7 @@ Each subsequent argument must be a symbol naming the next level.
    raise LRuntimePrimError( LP_colon, 'Handled by CEK machine.' )
 
 @primitive( 'module-set!', '(module symbol value)' )
-def LP_module_set( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_module_set( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Set the value of a symbol in a module.  Called by setf for (: ...) place forms.
 MODULE must be a module object.  SYMBOL must be a symbol naming the binding.
 Returns VALUE."""
@@ -82,7 +82,7 @@ Returns VALUE."""
    return value
 
 @primitive( 'load-module', '(filespec &key name)', mode=LambdaListMode.FULL_BINDING )
-def LP_load_module( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_load_module( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Load a .lisp file into a new module and bind it in the global environment.
 FILESPEC is the path to the .lisp file as a string.
 :name optionally specifies the module name as a symbol or string; otherwise
@@ -130,7 +130,7 @@ Returns the new module object."""
    return module_env
 
 @primitive( 'make-module', '(name)' )
-def LP_make_module( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_make_module( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Create and return a new empty module with the given name.
 NAME may be a symbol or a string.  The module is bound in the global environment."""
    name_arg = args[0]
@@ -146,7 +146,7 @@ NAME may be a symbol or a string.  The module is bound in the global environment
    return module_env
 
 @primitive( 'module-name', '(module)' )
-def LP_module_name( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_module_name( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the name of a module as a string."""
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):
@@ -154,7 +154,7 @@ def LP_module_name( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any
    return module.name
 
 @primitive( 'module-symbols', '(module)' )
-def LP_module_symbols( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_module_symbols( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a sorted list of symbols defined directly in the module."""
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):

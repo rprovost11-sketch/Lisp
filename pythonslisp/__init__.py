@@ -1,5 +1,5 @@
 
-__version__ = '0.39.2'
+__version__ = '0.39.3'
 
 __all__ = [ 'Analyzer',
             'AST',
@@ -10,11 +10,11 @@ __all__ = [ 'Analyzer',
             'Interpreter',
             'Parser',
             'ParserBase',
-            'EnvironmentBase',
+            'Environment',
             'Listener'
             ]
 
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import *
 from pythonslisp.Interpreter import *
 from pythonslisp.Parser import *
