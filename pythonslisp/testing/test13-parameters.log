@@ -330,28 +330,24 @@
 >>> ;;; NC5: duplicate positional parameter names
 ... ((lambda (a a) a) 1 2)
 
-%%% Error binding arguments in call to "(lambda ...)".
 %%% Duplicate parameter name A in positional parameters.
 ==>
 
 >>> ;;; NC5: duplicate across positional and optional (both are plain symbols)
 ... ((lambda (a &optional a) a) 1)
 
-%%% Error binding arguments in call to "(lambda ...)".
 %%% Duplicate parameter name A in positional parameters.
 ==>
 
 >>> ;;; NC5: duplicate positional and &rest name
 ... ((lambda (a &rest a) a) 1)
 
-%%% Error binding arguments in call to "(lambda ...)".
 %%% Duplicate parameter name A in &REST.
 ==>
 
 >>> ;;; NC5: duplicate key variable and its own pvar
 ... ((lambda (&key (a 0 a)) a) :a 5)
 
-%%% Error binding arguments in call to "(lambda ...)".
 %%% Duplicate parameter name A in supplied-p variable.
 ==>
 

@@ -10,11 +10,11 @@ A CEK machine is a formal model of computation introduced by Matthias
 Felleisen and Dan Friedman in 1987 as a rigorous operational semantics for
 call-by-value languages.  The name stands for its three-component state:
 
-- **C — Control**: the current expression to evaluate, *or* a computed value
+- **C - Control**: the current expression to evaluate, *or* a computed value
   ready to be delivered to the next waiting computation
-- **E — Environment**: the current lexical scope — a mapping from variable names
+- **E - Environment**: the current lexical scope — a mapping from variable names
   to values
-- **K — Kontinuation**: an explicit stack of suspended computation frames, each
+- **K - Kontinuation**: an explicit stack of suspended computation frames, each
   representing "what to do with the next value that arrives"
 
 The machine runs as a pure loop.  Each iteration is one reduction step.
@@ -463,7 +463,7 @@ constant handful of frames.
 python pythonslisp/examples/IttyBittyLisp3.py
 ```
 
-The real interpreter's `CEK.py` extends this design with tracing, macros,
+The real interpreter's `Evaluator.py` extends this design with tracing, macros,
 multiple values, continuations, and the full lambda-list argument binding.
 Because K is an explicit Python list, capturing the entire continuation
 at any point — the basis of `call/cc` — requires nothing more than

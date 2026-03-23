@@ -23,6 +23,7 @@ _BWH = '\033[1;97m'   # bold bright white — parentheses and brackets
 _BLD = '\033[1m'      # bold              — Markdown h2/h3 and **bold**
 _UND = '\033[1;4m'    # bold + underline  — Markdown h1
 _ICY = '\033[96m'     # bright cyan       — Markdown inline `code`
+_ITA = '\033[3m'      # italic            — Markdown *italic*
 
 
 # ---------------------------------------------------------------------------
@@ -174,24 +175,102 @@ def highlight(code: str, lang: str) -> str:
 # Markdown renderer
 # ---------------------------------------------------------------------------
 
-_INLINE_RE = re.compile(r'\*\*(.+?)\*\*|``(.+?)``|`([^`]+)`')
+_INLINE_RE = re.compile(
+   r'\*\*(.+?)\*\*'                              # group 1 — **bold**
+   r'|``(.+?)``'                                 # group 2 — ``code``
+   r'|`([^`]+)`'                                 # group 3 — `code`
+   r'|(?<!\*)\*(?!\*)([^*\n]+)(?<!\*)\*(?!\*)'  # group 4 — *italic*
+)
+_ANSI_RE = re.compile(r'\033\[[^m]*m')
+_HR_RE   = re.compile(r'^(-{3,}|\*{3,}|_{3,})\s*$')
+_UL_RE   = re.compile(r'^( *)([-*+]) (.+)')
+_OL_RE   = re.compile(r'^( *)(\d+\.) (.+)')
 
 
 def _render_inline(line: str) -> str:
-   """Apply inline Markdown formatting: **bold**, ``double-backtick code``, and `code`."""
+   """Apply inline Markdown formatting: **bold**, *italic*, ``code``, and `code`."""
    def _replace(m):
       if m.group(1) is not None:
          return _BLD + m.group(1) + _R
+      if m.group(4) is not None:
+         return _ITA + m.group(4) + _R
       content = m.group(2) if m.group(2) is not None else m.group(3)
       return _ICY + content + _R
    return _INLINE_RE.sub(_replace, line)
 
 
+def _visible_len(s: str) -> int:
+   """Return the visible (printable) length of a string, ignoring ANSI escape codes."""
+   return len(_ANSI_RE.sub('', s))
+
+
+def _parse_table_row(line: str) -> list[str]:
+   """Split a Markdown table row '| a | b | c |' into a list of cell strings."""
+   s = line.strip()
+   if s.startswith('|'):
+      s = s[1:]
+   if s.endswith('|'):
+      s = s[:-1]
+   return s.split('|')
+
+
+def _is_separator_row(cells: list[str]) -> bool:
+   """Return True if every non-empty cell matches the --- separator pattern."""
+   return all(re.match(r'^:?-+:?$', c.strip()) for c in cells if c.strip())
+
+
+def _render_table(rows: list[list[str]], use_color: bool) -> list[str]:
+   """Render a list of parsed table rows as an aligned terminal table."""
+   if len(rows) < 2 or not _is_separator_row(rows[1]):
+      # Not a well-formed GFM table — pass through raw
+      return ['|' + '|'.join(row) + '|' for row in rows]
+
+   header = rows[0]
+   data   = rows[2:]
+
+   def render_cell(cell: str) -> str:
+      return _render_inline(cell.strip()) if use_color else cell.strip()
+
+   rendered_header = [render_cell(c) for c in header]
+   rendered_data   = [[render_cell(c) for c in row] for row in data]
+
+   num_cols = max(
+      len(rendered_header),
+      max((len(row) for row in rendered_data), default=0),
+   )
+
+   widths = [0] * num_cols
+   for i, cell in enumerate(rendered_header):
+      if i < num_cols:
+         widths[i] = max(widths[i], _visible_len(cell))
+   for row in rendered_data:
+      for i, cell in enumerate(row):
+         if i < num_cols:
+            widths[i] = max(widths[i], _visible_len(cell))
+
+   def pad_cell(cell: str, width: int) -> str:
+      return cell + ' ' * (width - _visible_len(cell))
+
+   def format_row(cells: list[str]) -> str:
+      parts = []
+      for i in range(num_cols):
+         cell = cells[i] if i < len(cells) else ''
+         parts.append(' ' + pad_cell(cell, widths[i]) + ' ')
+      return '|' + '|'.join(parts) + '|'
+
+   result = [format_row(rendered_header)]
+   result.append('|' + '|'.join('-' * (w + 2) for w in widths) + '|')
+   for row in rendered_data:
+      result.append(format_row(row))
+   return result
+
+
 def render_markdown(text: str, use_color: bool = True) -> str:
    """Render a Markdown string for terminal display.
 
-   Handles: # headings, **bold**, `inline code`, fenced code blocks
-   (tagged with 'python' or 'lisp').
+   Handles: headings (h1–h4), **bold**, *italic*, `inline code`, fenced code
+   blocks (tagged with 'python' or 'lisp'), GFM pipe tables, horizontal rules,
+   and unordered/ordered lists.
 
    When use_color is False, fence markers are stripped and all other
    text is passed through as-is (raw Markdown is readable as plain text)."""
@@ -200,6 +279,12 @@ def render_markdown(text: str, use_color: bool = True) -> str:
    in_code_block = False
    code_lines    = []
    code_lang     = ''
+   table_rows: list[list[str]] = []
+
+   def flush_table() -> None:
+      if table_rows:
+         output.extend(_render_table(table_rows, use_color))
+         table_rows.clear()
 
    for line in lines:
       if in_code_block:
@@ -213,16 +298,35 @@ def render_markdown(text: str, use_color: bool = True) -> str:
          else:
             code_lines.append(line)
       elif line.startswith('```'):
+         flush_table()
          code_lang     = line[3:].strip()
          in_code_block = True
-      elif use_color and line.startswith('# '):
-         output.append(_UND + line[2:] + _R)
-      elif use_color and line.startswith('## '):
-         output.append(_BLD + line[3:] + _R)
-      elif use_color and line.startswith('### '):
-         output.append(_BBL + line[4:] + _R)
+      elif line.startswith('|'):
+         table_rows.append(_parse_table_row(line))
       else:
-         output.append(_render_inline(line) if use_color else line)
+         flush_table()
+         if _HR_RE.match(line):
+            output.append('-' * 78)
+         elif use_color and line.startswith('# '):
+            output.append(_UND + line[2:] + _R)
+         elif use_color and line.startswith('## '):
+            output.append(_BLD + line[3:] + _R)
+         elif use_color and line.startswith('### '):
+            output.append(_BBL + line[4:] + _R)
+         elif use_color and line.startswith('#### '):
+            output.append(_BLD + line[5:] + _R)
+         elif m := _UL_RE.match(line):
+            indent, content = m.group(1), m.group(3)
+            rendered = _render_inline(content) if use_color else content
+            output.append(indent + '- ' + rendered)
+         elif m := _OL_RE.match(line):
+            indent, num, content = m.group(1), m.group(2), m.group(3)
+            rendered = _render_inline(content) if use_color else content
+            output.append(indent + num + ' ' + rendered)
+         else:
+            output.append(_render_inline(line) if use_color else line)
+
+   flush_table()
 
    if in_code_block:
       # Unclosed code block — flush whatever was accumulated

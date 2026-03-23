@@ -1,4 +1,6 @@
-# The Evaluator
+# Evaluator 1a - The Minimal Recursive Evaluator
+
+*Continues in `EVALUATOR1B-DOC`: closures and lexical scoping.*
 
 Python's Lisp is a **tree-walk interpreter**.  To evaluate an expression it
 walks the abstract syntax tree (AST) and interprets each node directly --
@@ -15,8 +17,6 @@ evaluator.  It strips away all the machinery of the full interpreter and
 shows just the essential structure.
 
 ```python
-env = {}       # the global environment: maps names to values
-
 def lEval( expr, env ):
    # A string is a variable name -- look it up in the environment.
    if isinstance(expr, str):
@@ -36,12 +36,21 @@ def lEval( expr, env ):
       condValue = lEval( expr[1], env )
       return lEval( expr[ 2 if condValue else 3 ], env )
 
+   elif head == 'progn':
+      for sub in expr[1:-1]:
+         lEval( sub, env )             # non-tail forms: recurse
+      return lEval( expr[-1], env )
+
    # 'setq' must NOT evaluate the variable name -- only the value expression.
    elif head == 'setq':
       var, valExpr = expr[1:]
       val = lEval(valExpr, env)
       env[var] = val
       return val
+
+   # 'quote' returns its argument unevaluated.
+   elif head == 'quote':
+      return expr[1]
 
    # Regular function call: evaluate everything -- the head and all arguments --
    # then call the resulting function with the resulting argument values.
@@ -56,17 +65,14 @@ by name.  From the evaluator's perspective they are just values that happen
 to be callable.
 
 ```python
-def LP_add( argsList, env ):
-   return argsList[0] + argsList[1]
-env['+'] = LP_add
-
-def LP_sub( argsList, env ):
-   return argsList[0] - argsList[1]
-env['-'] = LP_sub
-
-def LP_isEqualTo( argsList, env ):
-   return 1 if argsList[0] == argsList[1] else 0
-env['='] = LP_isEqualTo
+# the global environment: maps names to values
+global_env = {
+   '+':     lambda args: args[0] + args[1],
+   '-':     lambda args: args[0] - args[1],
+   '*':     lambda args: args[0] * args[1],
+   '=':     lambda args: 1 if args[0] == args[1] else 0,
+   '<':     lambda args: 1 if args[0] <  args[1] else 0,
+}
 ```
 
 ## Equivalent Lisp
@@ -75,7 +81,7 @@ The following expressions exercise all three evaluator paths.
 
 ```python
 def evalLispExpr( expr ):
-   print( f'==> {lEval( expr, env )}' )
+   print( f'==> {lEval( expr, global_env )}' )
 
 def main():
    evalLispExpr( ['setq', 'a', ['+', 1, 1]] )           # ==> 2
@@ -97,19 +103,12 @@ if __name__ == '__main__':
 (if (= a 2) (+ a 1) (- a 1))    ; ==> 3
 ```
 
-## What the Real Interpreter Adds
+## Running the Example
 
-The `lEval` above is the complete conceptual core.  The real `cek_eval` in
-`CEK.py` extends it with:
+The complete working code is in `pythonslisp/examples/IttyBittyLisp1a.py`.
 
-- **More special forms** inlined for performance: `let`, `let*`, `progn`,
-  `cond`, `case`, `funcall`, `apply`
-- **Tail-call optimization (TCO)**: the evaluator loops instead of recursing
-  for tail positions, so deeply recursive Lisp code does not overflow
-  Python's call stack
-- **Macro expansion**: before function dispatch, macro calls are expanded
-  inline and re-evaluated in the same loop iteration
-- **Continuations, tracing, and full argument binding** for the complete
-  feature set
+```
+python pythonslisp/examples/IttyBittyLisp1a.py
+```
 
-**Note:** The complete working code from this document is available as a standalone script in `pythonslisp/examples/IttyBittyLisp.py`. Run it with `python pythonslisp/examples/IttyBittyLisp.py`.
+*Next: `EVALUATOR1B-DOC` adds lexical scopes, `let`, and closures.*

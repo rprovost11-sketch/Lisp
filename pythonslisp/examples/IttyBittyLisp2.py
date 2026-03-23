@@ -4,7 +4,7 @@ IttyBittyLisp2 — A looping Lisp evaluator with tail-call optimization (TCO).
 This is the design used by Python's Lisp before v0.38.  The key idea:
 instead of recursing into tail positions, rebind expr/env and loop.
 
-Compare with IttyBittyLisp.py, which uses a naive recursive evaluator
+Compare with IttyBittyLisp1a.py, which uses a naive recursive evaluator
 and overflows Python's call stack for deeply tail-recursive programs.
 
 Run with: python pythonslisp/examples/IttyBittyLisp2.py
@@ -63,9 +63,9 @@ def lEval( expr, env ):
 
         if isinstance( expr, str ):        # symbol — variable lookup
             return env.lookup( expr )
-        if not isinstance( expr, list ):   # number, bool, etc. — self-evaluate
+        elif not isinstance( expr, list ): # number, bool, etc. — self-evaluate
             return expr
-        if len( expr ) == 0:               # empty list — NIL
+        elif len( expr ) == 0:             # empty list — NIL
             return []
 
         head = expr[0]
@@ -79,13 +79,13 @@ def lEval( expr, env ):
             expr = expr[2] if cond else expr[3]
             continue                          # tail branch: loop
 
-        if head == 'progn':
+        elif head == 'progn':
             for sub in expr[1:-1]:
                 lEval( sub, env )             # non-tail forms: recurse
             expr = expr[-1]
             continue                          # tail: last form
 
-        if head == 'let':
+        elif head == 'let':
             vardefs = expr[1]                 # list of [name, init-expr] pairs
             body    = expr[2:]
             new_env = Env( parent=env )
@@ -97,23 +97,21 @@ def lEval( expr, env ):
             expr = body[-1]
             continue                          # tail: last body form
 
-        if head == 'setq':
+        elif head == 'setq':
             val = lEval( expr[2], env )
             env.set( expr[1], val )
             return val
 
-        if head == 'lambda':
+        elif head == 'lambda':
             return Function( expr[1], expr[2:], env )
 
-        if head == 'quote':
+        elif head == 'quote':
             return expr[1]
 
         # --- Function call ---
         # All sub-expressions (function position + arguments) are non-tail.
 
-        fn   = lEval( head, env )
-        args = [lEval( a, env ) for a in expr[1:]]
-
+        fn, *args = [lEval( subexpr, env ) for subexpr in expr]
         if callable( fn ):                   # Python primitive: return directly
             return fn( args )
 
@@ -175,7 +173,7 @@ def main():
          '(let ((a 3) (b 4)) (+ (* a a) (* b b)))' )
 
     # Tail-recursive countdown.
-    # The naive recursive evaluator in IttyBittyLisp.py would hit Python's
+    # The naive recursive evaluator in IttyBittyLisp1a.py would hit Python's
     # ~1000-frame stack limit and crash.  With TCO each tail call reuses
     # the same Python frame, so 100,000 iterations need only a handful of
     # stack frames.

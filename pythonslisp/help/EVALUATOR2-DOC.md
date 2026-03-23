@@ -104,9 +104,9 @@ def lEval( expr, env ):
 
         if isinstance( expr, str ):        # symbol — variable lookup
             return env.lookup( expr )
-        if not isinstance( expr, list ):   # number, etc. — self-evaluate
+        elif not isinstance( expr, list ): # number, etc. — self-evaluate
             return expr
-        if len( expr ) == 0:
+        elif len( expr ) == 0:
             return []                      # NIL
 
         head = expr[0]
@@ -116,13 +116,13 @@ def lEval( expr, env ):
             expr = expr[2] if cond else expr[3]
             continue
 
-        if head == 'progn':
+        elif head == 'progn':
             for sub in expr[1:-1]:
                 lEval( sub, env )
             expr = expr[-1]
             continue
 
-        if head == 'let':
+        elif head == 'let':
             vardefs = expr[1]
             body    = expr[2:]
             new_env = Env( parent=env )
@@ -134,21 +134,19 @@ def lEval( expr, env ):
             expr = body[-1]
             continue
 
-        if head == 'setq':
+        elif head == 'setq':
             val = lEval( expr[2], env )
             env.set( expr[1], val )
             return val
 
-        if head == 'lambda':
+        elif head == 'lambda':
             return Function( expr[1], expr[2:], env )
 
-        if head == 'quote':
+        elif head == 'quote':
             return expr[1]
 
         # Function call: all sub-expressions are non-tail.
-        fn   = lEval( head, env )
-        args = [lEval( a, env ) for a in expr[1:]]
-
+        fn, *args = [lEval( subexpr, env ) for subexpr in expr]
         if callable( fn ):               # Python primitive
             return fn( args )
 

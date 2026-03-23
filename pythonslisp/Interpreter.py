@@ -2,25 +2,22 @@ from __future__ import annotations
 import importlib.util
 import sys
 import time
-from fractions import Fraction
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from pythonslisp.Parser import Parser
 from pythonslisp.ltk.Listener import InterpreterBase
-from pythonslisp.AST import ( LSymbol, L_T, L_NIL,
-                              LCallable, LFunction, LPrimitive, LMacro, LContinuation,
+from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LMacro,
                               LMultipleValues, prettyPrintSExpr )
-from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError,
-                                         LArgBindingError, ContinuationInvoked,
-                                         ReturnFrom, Thrown, Signaled )
+from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
+                                     ReturnFrom, Thrown, Signaled )
 from pythonslisp.Environment import Environment
 from pythonslisp.Expander import Expander
 from pythonslisp.Analyzer import Analyzer
 from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
 from pythonslisp.extensions import LambdaListMode, primitive as _ext_primitive
-from pythonslisp.CEK import cek_eval as _cek_eval
+from pythonslisp.Evaluator import cek_eval as _cek_eval
 
 
 def _primary( val: Any ) -> Any:
@@ -154,7 +151,7 @@ class Interpreter( InterpreterBase ):
       return returnVal
 
    def _makeContext( self, outStrm ) -> Context:
-      from pythonslisp.CEK import cek_apply as _cek_apply
+      from pythonslisp.Evaluator import cek_apply as _cek_apply
       ctx = Context( outStrm, self._tracer, self._setf_registry )
       ctx.lEval            = lambda env, sexpr: _cek_eval( ctx, env, sexpr )
       ctx.lApply           = lambda ctx_, env_, fn, args: _cek_apply( ctx_, env_, fn, args )
