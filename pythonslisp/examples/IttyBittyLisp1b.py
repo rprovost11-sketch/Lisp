@@ -1,5 +1,5 @@
 """
-IttyBittyLisp1b — A recursive Lisp evaluator with closures.
+IttyBittyLisp1b - A recursive Lisp evaluator with closures.
 
 Extends IttyBittyLisp1a.py (Part 1a) with:
   - Env   : a linked chain of scopes for lexical binding

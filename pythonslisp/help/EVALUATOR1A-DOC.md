@@ -112,3 +112,28 @@ python pythonslisp/examples/IttyBittyLisp1a.py
 ```
 
 *Next: `EVALUATOR1B-DOC` adds lexical scopes, `let`, and closures.*
+
+## Challenges
+
+- **Add list primitives.** Add `car`, `cdr`, `cons`, `list`, and `null?` to
+  `global_env` as Python lambdas.  With these plus `quote` you can write
+  list-processing programs without touching `lEval` at all -- which tells
+  you something about where the boundary between the evaluator and the
+  library really is.
+
+- **Add `not`, `and`, `or`.** `not` is a straightforward primitive, but
+  `and` and `or` require short-circuit evaluation: `(and x y)` must not
+  evaluate `y` if `x` is false.  That means they cannot be plain lambdas.
+  They need to be special forms.  What does that boundary tell you about
+  the difference between a primitive and a special form?
+
+- **Add `cond`.** Implement `(cond (test1 result1) (test2 result2) ...)` as
+  a special form -- it's just nested `if`, but written as a loop over
+  clauses inside `lEval`.  Notice that you are writing the transformation
+  *in Python* rather than in Lisp.  That distinction -- built-in special
+  form versus user-defined macro -- will matter later.
+
+- **Improve error messages.** An unbound variable currently raises a Python
+  `KeyError`.  Catch it and produce a friendlier message.  Then look for
+  the other places a bad program can crash the Python runtime and consider
+  where the right boundary for error handling is.

@@ -195,6 +195,29 @@ recursion.  Note that deep recursion will overflow Python's call stack --
 there is no tail-call optimization here.  That is what `EVALUATOR2-DOC` and
 `IttyBittyLisp2.py` address.
 
+## Challenges
+
+- **Add `let*`.** `let*` is like `let` but each init-form is evaluated in a
+  scope that already includes the previous bindings, so `(let* ((x 1) (y (+ x 1))) y)`
+  works where `let` would fail.  The implementation differs from `let` by
+  exactly one line.  Try to identify it before writing any code.
+
+- **Add `defun`.** `(defun square (x) (* x x))` is sugar for
+  `(setq square (lambda (x) (* x x)))`.  Add it as a special form.  Then
+  ask: could this be implemented as a *macro* instead of a special form?
+  What would that require, and why can't you do it yet?
+
+- **Add variadic functions.** Allow a rest parameter: `(lambda (x . rest) ...)`,
+  where `rest` is bound to the list of any extra arguments.  The parser
+  already tokenizes `.` -- you just need `lEval` to detect it at binding
+  time and collect the remaining args into a list.
+
+- **Implement `apply`.** `(apply + '(1 2 3))` calls `+` with the elements
+  of the list as arguments.  It needs to be a special form rather than a
+  primitive because it calls a user-defined function -- and user-defined
+  calls need to go through `lEval`'s function-call path, not through a
+  Python lambda.
+
 ## What the Real Interpreter Adds
 
 The `lEval` above is the complete conceptual core.  The real `cek_eval` in

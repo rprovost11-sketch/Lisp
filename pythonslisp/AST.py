@@ -286,7 +286,7 @@ def equalp( a: Any, b: Any ) -> bool:
 
 
 class LNil(list):
-   """The canonical NIL singleton.  Immutable — mutation methods raise LRuntimeError."""
+   """The canonical NIL singleton.  Immutable - mutation methods raise LRuntimeError."""
    def _immutable(self, *a, **kw):
       from pythonslisp.Exceptions import LRuntimeError
       raise LRuntimeError("NIL is immutable.")
@@ -304,6 +304,6 @@ class LNil(list):
    __iadd__    = _immutable
    __imul__    = _immutable
 
-# Canonical Lisp constants — defined here so AST has no upstream deps
+# Canonical Lisp constants - defined here so AST has no upstream deps
 L_T: LSymbol = LSymbol('T')
 L_NIL: LNil = LNil()

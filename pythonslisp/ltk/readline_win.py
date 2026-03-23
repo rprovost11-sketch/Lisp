@@ -152,7 +152,7 @@ def input_line(prompt: str = '', continuation_prompt: str = '... ') -> str:
         key = _read_key()
 
         if key is None:
-            pass   # unrecognised escape sequence — ignore
+            pass   # unrecognised escape sequence - ignore
 
         elif key == _KEY_ENTER:
             move_to_end_and_newline()
@@ -166,7 +166,7 @@ def input_line(prompt: str = '', continuation_prompt: str = '... ') -> str:
             if not buf:
                 move_to_end_and_newline()
                 raise EOFError
-            # Ctrl-D with content — ignore (matches GNU readline behaviour)
+            # Ctrl-D with content - ignore (matches GNU readline behaviour)
 
         elif key == _KEY_BACKSPACE:
             if cursor > 0:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
-# AST types — the building blocks of all Lisp values
+# AST types - the building blocks of all Lisp values
 from pythonslisp.AST import (
     LSymbol,          # a Lisp symbol
     LNil,             # the NIL type (also an empty list)
@@ -19,40 +19,40 @@ from pythonslisp.AST import (
     equalp,           # structural equality, case-insensitive strings, numeric type coercion
 )
 
-# Context — carries per-evaluation state; first arg to every primitive.
+# Context - carries per-evaluation state; first arg to every primitive.
 # Commonly used attributes:
-#   ctx.outStrm                    — current output stream; write here instead of print()
-#   ctx.lEval(env, expr)           — evaluate an AST node in a given scope
-#   ctx.lApply(ctx, env, fn, args) — call a Lisp callable with pre-evaluated args
-#   ctx.parse(source)              — parse a Lisp string into an AST (wraps in progn)
-#   ctx.parseFile(filename)        — parse a Lisp file into an AST (wraps in progn)
-#   ctx.parseOne(source)           — parse one s-expression; returns (ast, chars_consumed)
-#   ctx.expand(env, ast)           — macro-expand an AST
-#   ctx.analyze(env, ast)          — statically analyze an AST for errors
-#   ctx.loadExt(path, targetEnv)   — load a single extension file (.py or .lisp);
+#   ctx.outStrm                    - current output stream; write here instead of print()
+#   ctx.lEval(env, expr)           - evaluate an AST node in a given scope
+#   ctx.lApply(ctx, env, fn, args) - call a Lisp callable with pre-evaluated args
+#   ctx.parse(source)              - parse a Lisp string into an AST (wraps in progn)
+#   ctx.parseFile(filename)        - parse a Lisp file into an AST (wraps in progn)
+#   ctx.parseOne(source)           - parse one s-expression; returns (ast, chars_consumed)
+#   ctx.expand(env, ast)           - macro-expand an AST
+#   ctx.analyze(env, ast)          - statically analyze an AST for errors
+#   ctx.loadExt(path, targetEnv)   - load a single extension file (.py or .lisp);
 #                                     optional targetEnv (ModuleEnvironment) binds into a module
-#   ctx.loadExtDir(path)           — load a directory of extensions
+#   ctx.loadExtDir(path)           - load a directory of extensions
 #
 # Full parse/expand/analyze/eval pattern:
 #   result = ctx.lEval(env, ctx.analyze(env, ctx.expand(env, ctx.parse(source))))
 from pythonslisp.Context import Context
 
-# Environment — the scope/binding chain; type for env in all primitive signatures
+# Environment - the scope/binding chain; type for env in all primitive signatures
 from pythonslisp.Environment import Environment
 
-# Environment — Environment subclass with Lisp argument-binding semantics.
+# Environment - Environment subclass with Lisp argument-binding semantics.
 # Import this only if you need to construct a nested scope manually, e.g.:
 #   inner_env = Environment(env, evalFn=ctx.lEval)
 from pythonslisp.Environment import Environment, ModuleEnvironment
 
-# Exceptions — raise these to signal errors back to the interpreter
+# Exceptions - raise these to signal errors back to the interpreter
 from pythonslisp.Exceptions import (
     LRuntimeError,     # general runtime error
     LRuntimePrimError, # runtime error attributed to a specific primitive (preferred)
 )
 
-# primitive — decorator for defining Lisp primitives
-# LambdaListMode — controls how the decorator interprets the lambda list
+# primitive - decorator for defining Lisp primitives
+# LambdaListMode - controls how the decorator interprets the lambda list
 from pythonslisp.extensions import primitive, macro, LambdaListMode
 
 

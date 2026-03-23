@@ -1,6 +1,6 @@
 # The Condition System
 
-*Quick reference: `(help "conditions")` — Full documentation: this file.*
+*Quick reference: `(help "conditions")` - Full documentation: this file.*
 
 
 The condition system provides a structured way to signal and handle
@@ -46,10 +46,10 @@ Three accessors inspect a condition object:
 catches it, the interpreter reports an unhandled condition error.
 
 ```lisp
-; Signal by type and message — most common form
+; Signal by type and message - most common form
 (signal 'file-error "config.txt not found")
 
-; Signal by type alone — message is empty
+; Signal by type alone - message is empty
 (signal 'overflow)
 
 ; Signal a pre-built condition object
@@ -74,10 +74,10 @@ entire `handler-case`.
   ...)
 ```
 
-- `protected-form` — any expression; evaluated with handlers in place
-- `type-N` — a symbol naming the condition type to match
-- `(var)` — a one-element list binding the condition object in the handler body; use `()` if you do not need the object
-- `handler-body` — one or more forms; the value of the last is returned
+- `protected-form` - any expression; evaluated with handlers in place
+- `type-N` - a symbol naming the condition type to match
+- `(var)` - a one-element list binding the condition object in the handler body; use `()` if you do not need the object
+- `handler-body` - one or more forms; the value of the last is returned
 
 ### Basic usage
 
@@ -88,7 +88,7 @@ entire `handler-case`.
     (ustring "Caught: " (condition-message e))))
 ;==> "Caught: log.txt not found"
 
-; Normal execution — handler never runs
+; Normal execution - handler never runs
 (handler-case (* 6 7)
   (file-error (e) 'should-not-run))
 ;==> 42
@@ -196,7 +196,7 @@ otherwise.  It is equivalent to a `handler-case` with a `T` catch-all.
 (ignore-errors (signal 'bad-thing "gone"))   ;==> NIL
 (ignore-errors (* 3 4))                      ;==> 12
 
-; Multiple body forms — value of the last one
+; Multiple body forms - value of the last one
 (ignore-errors
   (setf x (parse-integer input))
   (* x 2))

@@ -1,11 +1,11 @@
 # The Module System
 
-*Quick reference: `(help "modules")` — Full documentation: this file.*
+*Quick reference: `(help "modules")` - Full documentation: this file.*
 
 
 Modules are named namespaces that isolate definitions from the global
-environment.  A module holds any number of symbol bindings — functions,
-macros, variables — that are accessed through the module rather than looked
+environment.  A module holds any number of symbol bindings - functions,
+macros, variables - that are accessed through the module rather than looked
 up globally.  Packages are modules that contain other modules, forming a
 hierarchy navigated with colon notation.
 
@@ -68,7 +68,7 @@ geometry:pi          ;==> 3.14159
 (: geometry pi)      ;==> 3.14159   -- equivalent long form
 ```
 
-These two forms are identical — the shorthand is purely a parser convenience.
+These two forms are identical - the shorthand is purely a parser convenience.
 
 **Important:** a symbol whose name *begins* with a colon is a keyword, not
 colon notation.  `:key` stays as the keyword symbol `:KEY` and is never
@@ -117,7 +117,7 @@ geometry:author   ;==> "R. Provost"
 
 ---
 
-## Packages — Nested Modules
+## Packages - Nested Modules
 
 Modules can be nested to form a package hierarchy.  Use a multi-segment
 colon path to navigate several levels at once:
@@ -199,7 +199,7 @@ already a module, the new primitives are added to it.
 (type-of mod)          ; ==> MODULE
 ```
 
-Example — explore a loaded module:
+Example - explore a loaded module:
 
 ```lisp
 (load-module "geometry.lisp")

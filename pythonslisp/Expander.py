@@ -39,16 +39,16 @@ class Expander:
       if not isinstance(sexpr, list) or len(sexpr) == 0:
          return sexpr
 
-      # Don't expand or normalize inside QUOTE or QUASIQUOTE — they are data / templates
+      # Don't expand or normalize inside QUOTE or QUASIQUOTE - they are data / templates
       if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'QUASIQUOTE'):
          return sexpr
 
       # --- Step 1: macro expand at this level (top-down, fixed-point) ---
       expandedOnce = Expander._expandOnce(ctx, env, sexpr)
       if expandedOnce is not sexpr:
-         # A macro fired — recurse on the result (handles nested macros)
+         # A macro fired - recurse on the result (handles nested macros)
          if maxIterations <= 1:
-            raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
+            raise RuntimeError("Macro expansion limit exceeded - possible infinite macro loop.")
          return Expander._expand(ctx, env, expandedOnce, maxIterations - 1)
 
       # --- Step 2: recurse into sub-elements (bottom-up) ---
@@ -131,7 +131,7 @@ class Expander:
          indent = "  " * depth
 
          if isinstance(sexpr, list) and len(sexpr) > 0:
-            # Don't expand inside quote or quasiquote — content is literal data/template
+            # Don't expand inside quote or quasiquote - content is literal data/template
             if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'QUASIQUOTE'):
                return sexpr
             head = sexpr[0]
@@ -140,7 +140,7 @@ class Expander:
                   fn = env.lookup(head.name)
                   if isinstance(fn, LMacro):
                      if iterationsRemaining[0] <= 0:
-                        raise RuntimeError("Macro expansion limit exceeded — possible infinite macro loop.")
+                        raise RuntimeError("Macro expansion limit exceeded - possible infinite macro loop.")
                      iterationsRemaining[0] -= 1
                      trace.append(f"{indent}Expanding: {Expander._formatSExpr(sexpr)}")
                      expanded_once = Expander._expandOnce(ctx, env, sexpr)

@@ -4,11 +4,11 @@
 |---|---|
 | `(block name body...)` | Named lexical block |
 | `(return-from name val)` | Exit named block, returning val |
-| `(return val)` | Exit `(block nil ...)` — works inside loop macros |
+| `(return val)` | Exit `(block nil ...)` - works inside loop macros |
 | `(catch tag body...)` | Dynamic catch point (crosses function boundaries) |
 | `(throw tag val)` | Exit to nearest `catch` with matching tag |
 | `(call/cc (lambda (k) body))` | Capture escape continuation as k |
-| `(k val)` | Invoke continuation — call/cc immediately returns val |
+| `(k val)` | Invoke continuation - call/cc immediately returns val |
 | `(signal 'type "msg")` | Signal a typed condition |
 | `(handler-case form (type (e) body))` | Catch by condition type |
 

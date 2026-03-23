@@ -1,4 +1,4 @@
-"""Environment — Lisp lexical environment with argument binding.
+"""Environment - Lisp lexical environment with argument binding.
 
 Manages lexical scoping, variable binding, and the argument-binding
 logic needed by the evaluator.  Keeping binding logic here makes it
@@ -297,7 +297,7 @@ class Environment:
             if paramName.startswith('&'):
                break
          elif isinstance( paramName, list ) and destructuring:
-            pass   # destructuring pattern — handled below
+            pass   # destructuring pattern - handled below
          else:
             raise LArgBindingError( f"Positional param {paramNum} expected to be a symbol." )
 
@@ -403,7 +403,7 @@ class Environment:
                      skip_non_keywords: bool = False ) -> tuple[int, int]:
       '''syntax:  &key {var | ( {var | ( keyword var )} [initForm [pvar]])}* [&allow-other-keys]
       skip_non_keywords: when True (after &rest), non-keyword args in the arg list are
-      silently skipped rather than raising an error — they are already captured by &rest.'''
+      silently skipped rather than raising an error - they are already captured by &rest.'''
       paramListLength = len(lambdaListAST)
       argListLength   = len(argList)
 
@@ -502,7 +502,7 @@ class Environment:
             # No value follows this keyword symbol.  When skip_non_keywords is
             # True (i.e. we're in a &rest ... &key lambda list) an undeclared
             # keyword with no value is a keyword symbol that was already captured
-            # by &rest — treat it as data and skip rather than raising an error.
+            # by &rest - treat it as data and skip rather than raising an error.
             if skip_non_keywords and keyArgStr not in keysDict:
                continue
             raise LArgBindingError( f'Keyword {keyArgStr} expected to be followed by a value.' )

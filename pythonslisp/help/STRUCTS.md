@@ -30,7 +30,7 @@ For `(defstruct point (x 0) (y 0))` the following are generated:
 ## Notes
 
 - Defaults are evaluated fresh at construction time, not at `defstruct` time.
-- `copy-name` is shallow — nested structs/lists are shared.
+- `copy-name` is shallow - nested structs/lists are shared.
 - `:include` inherits all parent fields and their defaults; parent accessors work unchanged on child instances.
 - Parent predicates return T for child instances; child predicates return NIL for parent instances.
 - Inheritance chains of any depth are supported.

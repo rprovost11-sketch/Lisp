@@ -1,6 +1,6 @@
 # Errors
 
-*Quick reference: `(help "errors")` — Full documentation: this file.*
+*Quick reference: `(help "errors")` - Full documentation: this file.*
 
 
 Python's Lisp has two ways to report exceptional situations: the `error`

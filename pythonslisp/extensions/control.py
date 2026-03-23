@@ -149,7 +149,7 @@ Use as (raweval-for-display input-string) or (raweval-for-display input-string s
    _UNSET = object()   # sentinel distinct from None so we can detect "did we change ctx.outStrm?"
    stream_val = args[1] if len(args) > 1 else None
    if isinstance( stream_val, IOBase ) and stream_val.writable():
-      old_outStrm = ctx.outStrm   # save old value — may be None if Python listener set it so
+      old_outStrm = ctx.outStrm   # save old value - may be None if Python listener set it so
       ctx.outStrm = stream_val
    else:
       old_outStrm = _UNSET        # sentinel: we did NOT change ctx.outStrm

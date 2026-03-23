@@ -4,7 +4,7 @@
 |---|---|
 | Create a closure | `(lambda ...)` captures the lexical env at that point |
 | Free variable | Looked up in the captured env, not the call site |
-| Named function | `defun` is `(setq name (lambda ...))` — also a closure |
+| Named function | `defun` is `(setq name (lambda ...))` - also a closure |
 | Shared state | Multiple closures over the same `let` binding share it |
 | Mutation | `(setf name val)` updates the captured binding |
 | Call a closure | `(funcall fn arg...)` or `((lambda ...) arg...)` |

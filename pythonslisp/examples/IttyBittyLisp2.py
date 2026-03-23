@@ -1,5 +1,5 @@
 """
-IttyBittyLisp2 — A looping Lisp evaluator with tail-call optimization (TCO).
+IttyBittyLisp2 - A looping Lisp evaluator with tail-call optimization (TCO).
 
 This is the design used by Python's Lisp before v0.38.  The key idea:
 instead of recursing into tail positions, rebind expr/env and loop.
@@ -61,17 +61,17 @@ def lEval( expr, env ):
 
         # --- Atoms ---
 
-        if isinstance( expr, str ):        # symbol — variable lookup
+        if isinstance( expr, str ):        # symbol - variable lookup
             return env.lookup( expr )
-        elif not isinstance( expr, list ): # number, bool, etc. — self-evaluate
+        elif not isinstance( expr, list ): # number, bool, etc. - self-evaluate
             return expr
-        elif len( expr ) == 0:             # empty list — NIL
+        elif len( expr ) == 0:             # empty list - NIL
             return []
 
         head = expr[0]
 
         # --- Special forms ---
-        # Tail positions use `continue` — no new Python frame is pushed.
+        # Tail positions use `continue` - no new Python frame is pushed.
         # Non-tail positions call lEval() recursively as usual.
 
         if head == 'if':
@@ -115,7 +115,7 @@ def lEval( expr, env ):
         if callable( fn ):                   # Python primitive: return directly
             return fn( args )
 
-        # User-defined function: TCO — rebind env and loop.
+        # User-defined function: TCO - rebind env and loop.
         # The new scope is opened on the *captured* (lexical) environment,
         # not the caller's environment.  This is what makes closures work.
         new_env = Env( parent=fn.env, bindings=dict( zip( fn.params, args ) ) )

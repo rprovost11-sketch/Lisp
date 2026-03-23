@@ -20,7 +20,7 @@ def _filter_keyword_pairs( lst: list, declared_keys: set = None ) -> list:
    """Strip keyword/value pairs from a &rest list that also has &key params.
    In CL, &rest captures all args including keyword pairs; callers must filter.
    When declared_keys is provided, only strips pairs whose keyword name (sans colon,
-   uppercased) is in declared_keys — leaving undeclared keyword symbols as data."""
+   uppercased) is in declared_keys - leaving undeclared keyword symbols as data."""
    result = []
    i = 0
    while i < len(lst):

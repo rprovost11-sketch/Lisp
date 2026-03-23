@@ -1,6 +1,6 @@
 # Sequences
 
-*Quick reference: `(help "sequences")` — Full documentation: this file.*
+*Quick reference: `(help "sequences")` - Full documentation: this file.*
 
 
 Python's Lisp sequences are lists and strings.  This document covers the
@@ -60,7 +60,7 @@ Named position accessors (macros):
 
 ## Searching
 
-### member — find a tail by value
+### member - find a tail by value
 
 ```lisp
 (member 3 '(1 2 3 4 5))       ;==> (3 4 5)   -- tail at first match
@@ -68,7 +68,7 @@ Named position accessors (macros):
 (member "b" '("a" "b" "c") :test equal)   ;==> ("b" "c")
 ```
 
-### find and find-if — return the matching element
+### find and find-if - return the matching element
 
 ```lisp
 (find 3 '(1 2 3 4))                ;==> 3
@@ -81,7 +81,7 @@ Named position accessors (macros):
 (find-if 'plusp '(-1 -2 3 4) :start 2)  ;==> 3
 ```
 
-### assoc — look up a key in an association list
+### assoc - look up a key in an association list
 
 ```lisp
 (assoc 'b '((a 1) (b 2) (c 3)))   ;==> (B 2)
@@ -91,7 +91,7 @@ Named position accessors (macros):
 (assoc "b" '(("a" 1) ("b" 2)) :test equal)  ;==> ("b" 2)
 ```
 
-### position and position-if — return the index
+### position and position-if - return the index
 
 ```lisp
 (position 3 '(1 2 3 4))            ;==> 2
@@ -114,7 +114,7 @@ Named position accessors (macros):
 
 ## Filtering
 
-### remove — remove matching elements
+### remove - remove matching elements
 
 ```lisp
 (remove 3 '(1 3 2 3 4))            ;==> (1 2 4)
@@ -165,18 +165,18 @@ Named position accessors (macros):
 
 ## Mapping and Folding
 
-### mapcar — transform each element
+### mapcar - transform each element
 
 ```lisp
 (mapcar '1+ '(1 2 3 4))            ;==> (2 3 4 5)
 (mapcar (lambda (x) (* x x)) '(1 2 3 4 5))
 ;==> (1 4 9 16 25)
 
-; Multiple lists — stops at shortest
+; Multiple lists - stops at shortest
 (mapcar '+ '(1 2 3) '(10 20 30))   ;==> (11 22 33)
 ```
 
-### mapc — side-effect version of mapcar
+### mapc - side-effect version of mapcar
 
 ```lisp
 (mapc 'print '(a b c))
@@ -184,7 +184,7 @@ Named position accessors (macros):
 ;==> (A B C)  -- returns first list, not results
 ```
 
-### reduce — fold to a single value
+### reduce - fold to a single value
 
 ```lisp
 (reduce '+ '(1 2 3 4 5))      ;==> 15

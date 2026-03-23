@@ -1,6 +1,6 @@
 # Scoping
 
-*Quick reference: `(help "scoping")` — Full documentation: this file.*
+*Quick reference: `(help "scoping")` - Full documentation: this file.*
 
 
 Python's Lisp uses **lexical scope**: a variable is resolved by looking
@@ -10,7 +10,7 @@ created and how scope interacts with closures and global state.
 
 ---
 
-## Global Bindings — setf / setq
+## Global Bindings - setf / setq
 
 `setf` (a macro) and `setq` (a primitive) bind or rebind a name in the
 **global** environment when used at the top level:
@@ -35,11 +35,11 @@ enclosing binding for that name (which may be local or global):
 n   ;==> 1
 ```
 
-There is no `defvar` — use `setf` at the top level to define globals.
+There is no `defvar` - use `setf` at the top level to define globals.
 
 ---
 
-## Local Bindings — let
+## Local Bindings - let
 
 ```lisp
 (let ((var1 init1)
@@ -69,7 +69,7 @@ x   ;==> 10
 
 ---
 
-## Sequential Bindings — let*
+## Sequential Bindings - let*
 
 `let*` evaluates and binds each variable in order.  Later bindings can
 reference earlier ones:
@@ -87,7 +87,7 @@ they are independent (clearer intent and avoids order surprises).
 
 ---
 
-## Function Parameters — Local by Default
+## Function Parameters - Local by Default
 
 Function parameters are always local to the function body:
 
@@ -130,7 +130,7 @@ own parameter as the innermost binding:
 (double-x)             ;==> 20  -- closure still holds let's x binding
 ```
 
-Wait — `defun` at top level places the function in the global environment,
+Wait - `defun` at top level places the function in the global environment,
 but the lambda body captures the `let`'s `x`.  See CLOSURES for details
 on captured environments.
 
@@ -162,7 +162,7 @@ Multiple closures over the same `let` binding share state:
 
 ---
 
-## block — Named Lexical Block
+## block - Named Lexical Block
 
 `block` introduces a named scope that can be exited early with
 `return-from`:
@@ -191,10 +191,10 @@ See CONTROL-TRANSFER for the full non-local exit API.
 
 ---
 
-## progn — Sequential Evaluation
+## progn - Sequential Evaluation
 
 `progn` evaluates forms in order and returns the last value.  It does not
-create a new scope — bindings established inside are visible afterward:
+create a new scope - bindings established inside are visible afterward:
 
 ```lisp
 (progn
@@ -213,12 +213,12 @@ Use `let` when you want the bindings to be local.
 
 | Form | Creates new scope? | Bindings visible after? |
 |---|---|---|
-| `let` | Yes | No — bindings end with body |
+| `let` | Yes | No - bindings end with body |
 | `let*` | Yes | No |
-| `lambda` / `defun` | Yes (per call) | No — local to each invocation |
+| `lambda` / `defun` | Yes (per call) | No - local to each invocation |
 | `block` | No (reuses current) | Yes |
 | `progn` | No | Yes (mutates current) |
-| `setf` (top level) | N/A | Yes — global |
+| `setf` (top level) | N/A | Yes - global |
 
 ---
 

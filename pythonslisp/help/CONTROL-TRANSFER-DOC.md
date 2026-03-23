@@ -1,9 +1,9 @@
 # Control Transfer
 
-*Quick reference: `(help "control-transfer")` — Full documentation: this file.*
+*Quick reference: `(help "control-transfer")` - Full documentation: this file.*
 
 
-Python's Lisp provides several mechanisms for non-local exit — returning
+Python's Lisp provides several mechanisms for non-local exit - returning
 from a point other than the normal end of a computation.  Each mechanism
 has a different scope and use case.
 
@@ -16,7 +16,7 @@ has a different scope and use case.
 
 ---
 
-## return and return-from — Exiting a Named Block
+## return and return-from - Exiting a Named Block
 
 `block` establishes a named lexical scope.  `return-from` exits it
 immediately, returning a value.  `return` is shorthand for
@@ -31,7 +31,7 @@ immediately, returning a value.  `return` is shorthand for
 ;==> 5
 ```
 
-### return — exit from block nil
+### return - exit from block nil
 
 ```lisp
 ; while, dotimes, dolist, and for all wrap their body in (block nil ...)
@@ -48,7 +48,7 @@ immediately, returning a value.  `return` is shorthand for
 ;==> 2
 ```
 
-### return-from — exit a named block
+### return-from - exit a named block
 
 ```lisp
 (defun search-matrix (matrix target)
@@ -79,7 +79,7 @@ immediately, returning a value.  `return` is shorthand for
 
 ---
 
-## catch and throw — Dynamic Exit
+## catch and throw - Dynamic Exit
 
 `catch` establishes a dynamic catch point tagged by a value.  `throw`
 unwinds the stack to the nearest `catch` whose tag is `eql` to the throw's
@@ -116,7 +116,7 @@ The tag is evaluated; any value works as a tag:
 ;==> "deep abort"
 ```
 
-### Nested catch — inner tag matches first
+### Nested catch - inner tag matches first
 
 ```lisp
 (catch 'outer
@@ -130,10 +130,10 @@ If no matching `catch` exists the throw is unhandled and an error is raised.
 
 ---
 
-## call/cc — Escape Continuations
+## call/cc - Escape Continuations
 
 `call/cc` (call with current continuation) captures the current
-continuation — what would happen next if this expression returned — and
+continuation - what would happen next if this expression returned - and
 passes it to `procedure`.  Calling the continuation immediately returns
 its argument to the `call/cc` call site.
 
@@ -143,7 +143,7 @@ before `call/cc` itself has returned normally).
 
 ```lisp
 (call/cc (lambda (k)
-  (* 2 (+ 1 (k 42)))))   ; k is called — call/cc returns 42
+  (* 2 (+ 1 (k 42)))))   ; k is called - call/cc returns 42
 ;==> 42   ; the (* 2 ...) is never completed
 ```
 
@@ -175,16 +175,16 @@ explicitly or when adapting algorithms from continuation-passing style.
 ### Early exit from a loop
 
 ```lisp
-; return — simplest, works in loop macros
+; return - simplest, works in loop macros
 (dolist (x '(1 2 3 4 5))
   (when (= x 3) (return x)))
 
-; throw — works when you're inside helper functions too
+; throw - works when you're inside helper functions too
 (catch 'found
   (dolist (x '(1 2 3 4 5))
     (when (= x 3) (throw 'found x))))
 
-; call/cc — captures the return as a value
+; call/cc - captures the return as a value
 (call/cc (lambda (k)
   (dolist (x '(1 2 3 4 5))
     (when (= x 3) (k x)))))
@@ -208,7 +208,7 @@ explicitly or when adapting algorithms from continuation-passing style.
 
 ---
 
-## handler-case and signal — Condition-Based Transfer
+## handler-case and signal - Condition-Based Transfer
 
 `signal` and `handler-case` are the structured alternative to `throw`/
 `catch`.  They add typed conditions, allowing callers to distinguish
@@ -236,7 +236,7 @@ See CONDITIONS for the complete condition system API.
 | `(catch tag body...)` | Dynamic catch point |
 | `(throw tag val)` | Exit to matching catch |
 | `(call/cc (lambda (k) body))` | Escape continuation |
-| `(k val)` | Invoke continuation — returns val to call/cc site |
+| `(k val)` | Invoke continuation - returns val to call/cc site |
 | `(signal 'type "msg")` | Signal a typed condition |
 | `(handler-case form (type (e) body))` | Catch by condition type |
 

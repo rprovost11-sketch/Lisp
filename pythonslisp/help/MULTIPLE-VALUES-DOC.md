@@ -1,6 +1,6 @@
 # Multiple Values
 
-*Quick reference: `(help "multiple-values")` — Full documentation: this file.*
+*Quick reference: `(help "multiple-values")` - Full documentation: this file.*
 
 
 Python's Lisp supports returning more than one value from a function, as
@@ -29,7 +29,7 @@ Use `values` to return more than one value:
 ; Zero values
 (values)        ;==> (no output in REPL)
 
-; One value — same as returning the value directly
+; One value - same as returning the value directly
 (values 42)     ;==> 42
 ```
 
@@ -130,8 +130,8 @@ Returns the Nth value (zero-indexed) from a multiple-values form:
 ## Primary Value in Scalar Context
 
 When a multiple-values expression appears in a position that expects a
-single value — such as a `let` initializer, the condition of an `if`, or
-an argument to a function — only the **primary** (first) value is used.
+single value - such as a `let` initializer, the condition of an `if`, or
+an argument to a function - only the **primary** (first) value is used.
 Remaining values are silently discarded.
 
 ```lisp

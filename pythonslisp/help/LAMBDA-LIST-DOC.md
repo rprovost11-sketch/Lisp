@@ -1,6 +1,6 @@
 # Lambda Lists
 
-*Quick reference: `(help "lambda-list")` — Full documentation: this file.*
+*Quick reference: `(help "lambda-list")` - Full documentation: this file.*
 
 
 A lambda list is the parameter specification that appears in a `lambda`,
@@ -107,7 +107,7 @@ keyword-value pairs:
 ```
 
 **Note:** `&rest` followed by `&key` in the same lambda list has a known
-limitation in this implementation — see LAMBDA-LIST-REF for details.
+limitation in this implementation - see LAMBDA-LIST-REF for details.
 Prefer `DOC_ONLY` with manual keyword scanning in that case (relevant to
 Python extension authors only).
 
@@ -183,7 +183,7 @@ Macro lambda lists extend function lambda lists in two ways:
 1. **`&body`** is an alias for `&rest`.  Use it to signal that the
    collected arguments are body forms.
 
-2. **Destructuring** — positional parameters (and `&body`/`&rest`
+2. **Destructuring** - positional parameters (and `&body`/`&rest`
    patterns) may be nested lists that match against the structure of the
    corresponding argument.
 
@@ -255,14 +255,14 @@ See EXTENSIONS for more on writing primitives.
    `&allow-other-keys` → `&aux`.  Omitting a section is fine; reordering
    is an error.
 
-2. **No duplicate parameter names** across all sections — the validator
+2. **No duplicate parameter names** across all sections - the validator
    catches this before binding.
 
 3. **Defaults are evaluated at call time**, not at definition time.  A
    default of `(list 1 2)` produces a fresh list every call.
 
 4. **`&optional` and `&key` should not be mixed** in the same lambda list
-   (legal but confusing — the `&optional` params consume positional args
+   (legal but confusing - the `&optional` params consume positional args
    that keyword callers might intend as keyword values).
 
 5. **Empty sections are legal**: `(&optional)` is the same as omitting

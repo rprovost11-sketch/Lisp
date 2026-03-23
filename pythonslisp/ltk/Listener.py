@@ -45,7 +45,7 @@ class Listener( object ):
    as testing and rebooting the intepreter.  Partly ripped off from Python's
    cmd module.'''
 
-   # readline state — mirrors Python's former module-level globals
+   # readline state - mirrors Python's former module-level globals
    _HIST_FILE  = os.path.expanduser('~/.lisp_history')
    _rl         = None
    _historyMax = 500
@@ -515,7 +515,7 @@ class Listener( object ):
       print( f'\n{BOLD_WHITE}Test Report{RESET}', flush=True )
       print( f'{BOLD_WHITE}==========={RESET}', flush=True )
 
-      # Conduct the testing — redirect stdout to file
+      # Conduct the testing - redirect stdout to file
       testSummaryList: list[tuple[str, str]] = [ ]
       savedStdout = sys.stdout
       sys.stdout = runFile

@@ -1,10 +1,10 @@
 """
-IttyBittyLisp3 — A CEK machine Lisp evaluator.
+IttyBittyLisp3 - A CEK machine Lisp evaluator.
 
 The CEK machine is named for its three-part state:
-  C — Control:      the current expression to evaluate, OR a Val(value) to deliver
-  E — Environment:  the current lexical scope
-  K — Kontinuation: an explicit stack of continuation frames
+  C - Control:      the current expression to evaluate, OR a Val(value) to deliver
+  E - Environment:  the current lexical scope
+  K - Kontinuation: an explicit stack of continuation frames
 
 Unlike the looping evaluator (IttyBittyLisp2), the CEK machine never calls
 lEval recursively -- not even for non-tail sub-expressions.  Instead it pushes
@@ -34,9 +34,9 @@ def is_value( c ):
     """True when c is a completed value ready to be delivered to the K stack."""
     if isinstance( c, Val ):
         return True
-    if isinstance( c, str ):                    # symbol — still needs lookup
+    if isinstance( c, str ):                    # symbol - still needs lookup
         return False
-    if isinstance( c, list ) and len( c ) > 0:  # non-empty list — code to eval
+    if isinstance( c, list ) and len( c ) > 0:  # non-empty list - code to eval
         return False
     return True                                  # number, empty list, etc.
 
@@ -100,7 +100,7 @@ class IfFrame:
 
     def step( self, value, K ):
         branch = self.then_expr if value else self.else_expr
-        return branch, self.env          # expression — not Val-wrapped (tail position)
+        return branch, self.env          # expression - not Val-wrapped (tail position)
 
 
 class PrognFrame:
@@ -111,7 +111,7 @@ class PrognFrame:
 
     def step( self, value, K ):
         if len( self.remaining ) == 1:
-            return self.remaining[0], self.env   # tail form — TCO
+            return self.remaining[0], self.env   # tail form - TCO
         nxt            = self.remaining[0]
         self.remaining = self.remaining[1:]
         K.append( self )
@@ -137,7 +137,7 @@ class LetFrame:
             self.current_name = name
             self.pending      = self.pending[1:]
             K.append( self )
-            return form, self.outer_env     # next init expr — in outer env
+            return form, self.outer_env     # next init expr - in outer env
         new_env = Env( parent=self.outer_env, bindings=self.bound )
         return _begin_body( self.body, new_env, K )
 
@@ -150,7 +150,7 @@ class SetqFrame:
 
     def step( self, value, K ):
         self.env.set( self.name, value )
-        return Val( value ), self.env    # value — Val-wrapped so it isn't re-evaluated
+        return Val( value ), self.env    # value - Val-wrapped so it isn't re-evaluated
 
 
 class ArgFrame:
@@ -197,9 +197,9 @@ def do_apply( fn, args, env, K ):
     """
     Invoke fn with args.  Returns (C, E) for the machine loop.
 
-    Primitives produce a Val-wrapped result — a value to deliver.
+    Primitives produce a Val-wrapped result - a value to deliver.
     User-defined Functions return the first body form as an expression
-    to reduce — no Python stack frame, pure TCO.
+    to reduce - no Python stack frame, pure TCO.
     """
     if callable( fn ):
         return Val( fn( args ) ), env         # primitive: Val-wrap the result
@@ -215,7 +215,7 @@ def _begin_body( body, env, K ):
         return Val( [] ), env
     if len( body ) > 1:
         K.append( PrognFrame( list( body[1:] ), env ) )
-    return body[0], env                       # first form — NOT Val-wrapped (it's code)
+    return body[0], env                       # first form - NOT Val-wrapped (it's code)
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ def lEval( expr, env ):
 
     while True:
 
-        # Case 1: C is a value — deliver it to the top continuation frame.
+        # Case 1: C is a value - deliver it to the top continuation frame.
         if is_value( C ):
             v = C.v if isinstance( C, Val ) else C
             if not K:
@@ -238,17 +238,17 @@ def lEval( expr, env ):
             C, E  = frame.step( v, K )
             continue
 
-        # Case 2: C is a symbol — look it up and Val-wrap the result.
+        # Case 2: C is a symbol - look it up and Val-wrap the result.
         if isinstance( C, str ):
             C = Val( E.lookup( C ) )
             continue
 
-        # Case 3: C is an empty list — NIL.
+        # Case 3: C is an empty list - NIL.
         if len( C ) == 0:
             C = Val( [] )
             continue
 
-        # Case 4: C is a non-empty list — an expression to reduce.
+        # Case 4: C is a non-empty list - an expression to reduce.
         head = C[0]
 
         if head == 'if':
@@ -263,7 +263,7 @@ def lEval( expr, env ):
                 C = Val( [] )
                 continue
             if len( C ) == 2:
-                C = C[1]                      # single body form — tail position
+                C = C[1]                      # single body form - tail position
                 continue
             K.append( PrognFrame( list( C[2:] ), E ) )
             C = C[1]

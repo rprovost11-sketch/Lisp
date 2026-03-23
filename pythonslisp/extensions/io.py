@@ -200,13 +200,13 @@ def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Opens and returns a stream connected to a file.
 :direction :input (default) opens for reading; :output opens for writing.
 :if-exists controls behaviour when an output file already exists:
-  :supersede (default) — truncate and overwrite
-  :append              — append to existing content
-  :error               — signal an error
-  nil                  — return nil without opening
+  :supersede (default) - truncate and overwrite
+  :append              - append to existing content
+  :error               - signal an error
+  nil                  - return nil without opening
 :if-does-not-exist controls behaviour when the file is absent:
-  :error (default) — signal an error
-  nil              — return nil without opening"""
+  :error (default) - signal an error
+  nil              - return nil without opening"""
    filespec  = env.lookup( 'FILESPEC' )
    direction = env.lookup( 'DIRECTION' )
    if_exists = env.lookup( 'IF-EXISTS' )
@@ -723,7 +723,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
       printHelpListings( ctx.outStrm, env, find=target )
       return L_T
 
-   if isinstance( target, list ) and not target:   # NIL — no target given
+   if isinstance( target, list ) and not target:   # NIL - no target given
       printHelpListings( ctx.outStrm, env )
       return L_T
 

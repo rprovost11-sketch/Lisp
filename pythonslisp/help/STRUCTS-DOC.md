@@ -1,6 +1,6 @@
 # Structs
 
-*Quick reference: `(help "structs")` — Full documentation: this file.*
+*Quick reference: `(help "structs")` - Full documentation: this file.*
 
 
 `defstruct` defines a named record type and generates a complete set of
@@ -21,7 +21,7 @@ bare symbol (field with default NIL) or a `(name default)` pair.  An
 optional docstring may appear as the first element after the typename.
 
 ```lisp
-; Bare symbol fields — all default to NIL
+; Bare symbol fields - all default to NIL
 (defstruct point x y)
 
 ; Fields with explicit defaults
@@ -44,11 +44,11 @@ For `(defstruct point (x 0) (y 0))` the following are created:
 
 | Name | Kind | Purpose |
 |---|---|---|
-| `make-point` | function | Constructor — creates an instance |
-| `point-p` | function | Predicate — T if argument is a POINT |
-| `point-x` | function | Accessor — reads field X |
-| `point-y` | function | Accessor — reads field Y |
-| `copy-point` | function | Copier — makes a shallow copy |
+| `make-point` | function | Constructor - creates an instance |
+| `point-p` | function | Predicate - T if argument is a POINT |
+| `point-x` | function | Accessor - reads field X |
+| `point-y` | function | Accessor - reads field Y |
+| `copy-point` | function | Copier - makes a shallow copy |
 | `point` | variable | Struct descriptor object |
 
 ---
@@ -66,7 +66,7 @@ evaluated fresh at construction time, not at definition time.
 ; Some fields supplied
 (make-point :x 3 :y 4)  ;==> (DICT ("STRUCT-TYPE" POINT) ("X" 3) ("Y" 4))
 
-; Only one field — y gets its default
+; Only one field - y gets its default
 (make-point :x 10)       ;==> (DICT ("STRUCT-TYPE" POINT) ("X" 10) ("Y" 0))
 ```
 
@@ -138,7 +138,7 @@ exact type.  Different struct types are entirely independent.
 ## Copying
 
 `copy-<typename>` returns a new instance with the same field values.  The
-copy is shallow — if a field holds a list or another struct, both the
+copy is shallow - if a field holds a list or another struct, both the
 original and the copy reference the same object.
 
 ```lisp
@@ -210,7 +210,7 @@ default like `(list 1 2)` produces a fresh list each time.
 
 ---
 
-## Struct Inheritance — :include
+## Struct Inheritance - :include
 
 `defstruct` supports single-parent inheritance via the `:include` option.
 Pass a list `(name (:include parent))` as the typename instead of a bare symbol:
@@ -235,7 +235,7 @@ with each field's default coming from the original definition:
 ```
 
 Only accessors for the child's **own** new fields are generated.  The parent's
-accessors are not redefined — they already work on any dict that has those keys.
+accessors are not redefined - they already work on any dict that has those keys.
 
 `setf` works on inherited fields through the parent's accessor:
 
@@ -244,7 +244,7 @@ accessors are not redefined — they already work on any dict that has those key
 (point-x cp)             ;==> 10
 ```
 
-`copy-colored-point` copies all fields — inherited and own:
+`copy-colored-point` copies all fields - inherited and own:
 
 ```lisp
 (setf cp2 (copy-colored-point cp))

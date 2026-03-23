@@ -7,7 +7,7 @@
 | `(load-module "f.lisp" :name 'mod)` | Load into module named MOD |
 | `(load-module "f.lisp" :name 'pkg:mod)` | Load into PKG:MOD, creating PKG |
 | `mod:sym` | Read symbol SYM from module MOD |
-| `(: mod sym)` | Same — long form |
+| `(: mod sym)` | Same - long form |
 | `(setf mod:sym val)` | Set SYM in MOD to VAL |
 | `(mod:fn arg...)` | Call function FN in module MOD |
 | `(load-extension "f.py" :name 'mod)` | Register Python primitives into MOD |
@@ -19,6 +19,6 @@
 
 - Multi-segment paths `pkg:sub:sym` navigate nested modules.
 - `load-module` with `:name 'pkg:mod` creates intermediate packages automatically.
-- `mod:sym` in `quote` — `'mod:sym` expands to `(: MOD SYM)`, not a symbol.
+- `mod:sym` in `quote` - `'mod:sym` expands to `(: MOD SYM)`, not a symbol.
 
 See `(help "modules-doc")` for full documentation and examples.

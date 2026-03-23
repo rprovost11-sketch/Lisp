@@ -19,7 +19,7 @@
 | `(gcd a b ...)` | Greatest common divisor |
 | `(lcm a b ...)` | Least common multiple |
 
-## Rounding — return two values: quotient + remainder
+## Rounding - return two values: quotient + remainder
 
 | Expression | Meaning |
 |---|---|

@@ -1,6 +1,6 @@
 # Strings
 
-*Quick reference: `(help "strings")` — Full documentation: this file.*
+*Quick reference: `(help "strings")` - Full documentation: this file.*
 
 
 Strings in Python's Lisp are immutable sequences of characters represented
@@ -23,12 +23,12 @@ escape sequences (`\n`, `\t`, `\\`, `\"`).
 ### Constructing strings from values
 
 ```lisp
-; string — programmer-readable (strings are quoted, symbols in caps)
+; string - programmer-readable (strings are quoted, symbols in caps)
 (string "hello")    ;==> "\"hello\""
 (string 42)         ;==> "42"
 (string 'foo)       ;==> "FOO"
 
-; ustring — user-readable (strings unquoted, no escaping)
+; ustring - user-readable (strings unquoted, no escaping)
 (ustring "hello")   ;==> "hello"
 (ustring 42 " + " 1 " = " 43)  ;==> "42 + 1 = 43"
 (ustring 'foo)      ;==> "FOO"
@@ -112,10 +112,10 @@ The `char` macro (defined in core.lisp) retrieves a character by index:
 ; Check containment (returns position or nil)
 (position #\h "hello")    ; note: use string form
 
-; Using find on a list of chars — convert first or use predicates
+; Using find on a list of chars - convert first or use predicates
 (some (lambda (c) (string= c "e")) '("h" "e" "l"))  ;==> T
 
-; String comparison — use standard predicates
+; String comparison - use standard predicates
 (string= "abc" "abc")   ; NOTE: Python's Lisp uses equal for strings
 (equal "abc" "abc")     ;==> T
 (equal "abc" "ABC")     ;==> NIL
@@ -148,7 +148,7 @@ Python's Lisp does not include built-in split/join, but you can build them:
 
 ## Formatted Output
 
-### writef — Python str.format() syntax
+### writef - Python str.format() syntax
 
 ```lisp
 (writef "Hello, {0}!\n" (list "World"))
@@ -175,7 +175,7 @@ output (or a stream if supplied as the third argument):
 (uwrite-line "hello" " " "world")  ; prints hello world
 ```
 
-### with-output-to-string — capture as a string
+### with-output-to-string - capture as a string
 
 ```lisp
 (with-output-to-string (s)

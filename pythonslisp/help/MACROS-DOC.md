@@ -1,6 +1,6 @@
 # Macros
 
-*Quick reference: `(help "macros")` — Full documentation: this file.*
+*Quick reference: `(help "macros")` - Full documentation: this file.*
 
 
 Macros are code transformers.  A macro takes unevaluated s-expressions as
@@ -16,7 +16,7 @@ binding forms, and domain-specific syntax.
 (defmacro name (lambda-list) body...)
 ```
 
-The body returns the expansion — the code that will be evaluated.  Use
+The body returns the expansion - the code that will be evaluated.  Use
 quasiquote to construct that code conveniently.
 
 ```lisp
@@ -33,7 +33,7 @@ x   ;==> 2
 y   ;==> 1
 ```
 
-`defmacro` is itself a macro — it expands to a `setq` that binds a
+`defmacro` is itself a macro - it expands to a `setq` that binds a
 `LMacro` object in the global environment.
 
 ---
@@ -49,7 +49,7 @@ These three reader macros are the primary tools for writing macro bodies.
 | `,@expr` | unquote-splice | Evaluate expr (must be a list) and splice its elements here |
 
 ```lisp
-; Quasiquote without any unquotes — same as quote
+; Quasiquote without any unquotes - same as quote
 `(+ 1 2)         ;==> (+ 1 2)
 
 ; Unquote inserts a value
@@ -70,7 +70,7 @@ quasiquote.
 
 ### macroexpand
 
-Returns the fully expanded form — expands all macros recursively until the
+Returns the fully expanded form - expands all macros recursively until the
 result is not a macro call.
 
 ```lisp
@@ -108,12 +108,12 @@ guaranteed not to appear anywhere else.
 Using `gensym` in macros prevents **variable capture**:
 
 ```lisp
-; Unsafe — if caller has a variable named RESULT it will be shadowed
+; Unsafe - if caller has a variable named RESULT it will be shadowed
 (defmacro with-result-bad (expr)
   `(let ((result ,expr))
      (* result result)))
 
-; Safe — uses a fresh uninternable symbol
+; Safe - uses a fresh uninternable symbol
 (defmacro with-result (expr)
   (let ((var (gensym "R")))
     `(let ((,var ,expr))
@@ -237,9 +237,9 @@ want to synthesize code.
 | Expression | Meaning |
 |---|---|
 | `(defmacro name (args) body)` | Define macro NAME |
-| `` `form `` | Quasiquote — data with substitutions |
-| `,expr` | Unquote — insert value of expr |
-| `,@expr` | Unquote-splice — insert list elements |
+| `` `form `` | Quasiquote - data with substitutions |
+| `,expr` | Unquote - insert value of expr |
+| `,@expr` | Unquote-splice - insert list elements |
 | `(macroexpand '(form))` | Fully expand a macro call |
 | `(macroexpand-1 '(form))` | Expand one level |
 | `(gensym)` | Fresh unique symbol G*n* |

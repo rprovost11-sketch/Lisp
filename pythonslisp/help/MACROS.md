@@ -3,9 +3,9 @@
 | Expression | Meaning |
 |---|---|
 | `(defmacro name (args) body)` | Define macro NAME |
-| `` `form `` | Quasiquote — quoted data with substitutions |
-| `,expr` | Unquote — insert value of expr |
-| `,@expr` | Unquote-splice — insert list elements inline |
+| `` `form `` | Quasiquote - quoted data with substitutions |
+| `,expr` | Unquote - insert value of expr |
+| `,@expr` | Unquote-splice - insert list elements inline |
 | `(macroexpand '(form))` | Fully expand all macros in form |
 | `(macroexpand-1 '(form))` | Expand exactly one macro level |
 | `(gensym)` | Fresh unique symbol G*n* |

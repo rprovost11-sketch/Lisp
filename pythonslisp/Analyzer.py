@@ -37,7 +37,7 @@ class Analyzer:
       args = sexpr[1:]
 
       if not isinstance(head, LSymbol):
-         # Compound head — recurse into all elements
+         # Compound head - recurse into all elements
          for elt in sexpr:
             Analyzer.analyze(env, elt)
          return
@@ -183,7 +183,7 @@ class Analyzer:
 
       for varSpec in vardefs:
          if isinstance(varSpec, LSymbol):
-            pass  # bare symbol — valid, no init form
+            pass  # bare symbol - valid, no init form
          elif isinstance(varSpec, list):
             varSpecLen = len(varSpec)
             if varSpecLen == 1:

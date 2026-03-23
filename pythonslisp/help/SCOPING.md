@@ -14,11 +14,11 @@
 
 | Form | New scope? | Bindings escape? |
 |---|---|---|
-| `let` / `let*` | Yes | No — end with body |
-| `lambda` / `defun` | Yes (per call) | No — local per invocation |
+| `let` / `let*` | Yes | No - end with body |
+| `lambda` / `defun` | Yes (per call) | No - local per invocation |
 | `block` | No | Yes (same scope) |
 | `progn` | No | Yes (mutates current) |
-| top-level `setf` | N/A | Yes — global |
+| top-level `setf` | N/A | Yes - global |
 
 Inner `setf` mutates the **nearest enclosing binding**, which may be local or global.
 

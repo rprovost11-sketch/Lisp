@@ -1,6 +1,6 @@
 # Math Library
 
-*Quick reference: `(help "math-lib")` — Full documentation: this file.*
+*Quick reference: `(help "math-lib")` - Full documentation: this file.*
 
 
 The math library consists of primitive operations (built in to the
@@ -78,7 +78,7 @@ Use `float` to convert: `(float (/ 10 4))` → `2.5`.
 
 ---
 
-## Rounding — Multiple Return Values
+## Rounding - Multiple Return Values
 
 `floor`, `ceiling`, `round`, and `truncate` each return **two values**:
 the quotient and the remainder.  Use `multiple-value-bind` to capture both,
@@ -165,7 +165,7 @@ These predicates are all defined in math.lisp:
 (isOdd? 7)      ;==> T
 ```
 
-From types.py — general numeric type predicates:
+From types.py - general numeric type predicates:
 
 ```lisp
 (numberp  42)    ;==> T    ; any number
@@ -225,7 +225,7 @@ From types.py — general numeric type predicates:
 
 ```lisp
 (= 1 1 1)     ;==> T     ; all equal
-(/= 1 2 1)    ;==> NIL   ; 1st and 3rd equal — NIL
+(/= 1 2 1)    ;==> NIL   ; 1st and 3rd equal - NIL
 (< 1 2 3)     ;==> T
 (<= 1 1 2)    ;==> T
 (> 3 2 1)     ;==> T

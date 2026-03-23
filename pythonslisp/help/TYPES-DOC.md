@@ -1,6 +1,6 @@
 # Types
 
-*Quick reference: `(help "types")` — Full documentation: this file.*
+*Quick reference: `(help "types")` - Full documentation: this file.*
 
 
 Python's Lisp is dynamically typed: every value carries its type at
@@ -12,7 +12,7 @@ types, and the full type hierarchy.
 ## Type Hierarchy
 
 ```
-T  (the universal supertype — everything is of type T)
+T  (the universal supertype - everything is of type T)
 ├── NULL       (NIL, the empty list)
 ├── CONS       (non-empty list)
 ├── ATOM       (everything that is not a non-empty list)
@@ -68,7 +68,7 @@ Returns the type of a value as a symbol:
 
 ---
 
-## typep — Test Against a Type Specifier
+## typep - Test Against a Type Specifier
 
 ```lisp
 (typep obj type-specifier)
@@ -102,12 +102,12 @@ Returns T if `obj` belongs to the type, NIL otherwise.
 ### Compound type specifiers
 
 ```lisp
-; OR — union
+; OR - union
 (typep 42  '(or integer string))    ;==> T
 (typep "h" '(or integer string))    ;==> T
 (typep 3.0 '(or integer string))    ;==> NIL
 
-; AND — intersection
+; AND - intersection
 (typep 5 '(and integer (integer 0 10)))  ;==> T  (int in [0,10])
 (typep 15 '(and integer (integer 0 10))) ;==> NIL
 
@@ -115,15 +115,15 @@ Returns T if `obj` belongs to the type, NIL otherwise.
 (typep "x" '(not number))   ;==> T
 (typep 42  '(not number))   ;==> NIL
 
-; MEMBER — explicit set of values
+; MEMBER - explicit set of values
 (typep 'b '(member a b c))   ;==> T
 (typep 'd '(member a b c))   ;==> NIL
 
-; SATISFIES — arbitrary predicate
+; SATISFIES - arbitrary predicate
 (typep 4 '(satisfies evenp))   ;==> T
 (typep 3 '(satisfies evenp))   ;==> NIL
 
-; Numeric ranges — inclusive bound, or (n) for exclusive
+; Numeric ranges - inclusive bound, or (n) for exclusive
 (typep 5 '(integer 1 10))         ;==> T    ; 1 <= 5 <= 10
 (typep 0 '(integer 1 10))         ;==> NIL
 (typep 5 '(integer (0) *))        ;==> T    ; strictly > 0

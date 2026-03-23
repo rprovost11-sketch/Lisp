@@ -1,6 +1,6 @@
 # Closures and Lexical Scope
 
-*Quick reference: `(help "closures")` — Full documentation: this file.*
+*Quick reference: `(help "closures")` - Full documentation: this file.*
 
 
 A closure is a function that captures the lexical environment in which it
@@ -11,14 +11,14 @@ data hiding, and stateful objects in Python's Lisp.
 
 ---
 
-## Lambda — the Core of Closures
+## Lambda - the Core of Closures
 
 ```lisp
 (lambda (lambda-list) body...)
 ```
 
 Every `lambda` captures a reference to the environment at the point of its
-creation.  `defun` is just a macro for `(setq name (lambda ...))` — named
+creation.  `defun` is just a macro for `(setq name (lambda ...))` - named
 functions are closures too.
 
 ```lisp
@@ -53,7 +53,7 @@ binding of `n`.
 
 ## Lexical Scope Rules
 
-Variables are resolved in the **lexical** (static) scope — the structure
+Variables are resolved in the **lexical** (static) scope - the structure
 of the source code, not the call stack.  An inner form can see all names
 introduced by enclosing `let`, `let*`, `lambda`, `defun`, or `defmacro`
 forms.

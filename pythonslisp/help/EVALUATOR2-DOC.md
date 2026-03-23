@@ -1,14 +1,14 @@
 # The Looping Evaluator
 
-Python's Lisp previously used a **looping tree-walk evaluator** — the
+Python's Lisp previously used a **looping tree-walk evaluator** - the
 `_lEval` function present before v0.38.  (See `EVALUATOR-DOC` for the
 simpler recursive baseline it grew from.)
 
 The looping design solves one concrete problem: Python has a ~1000-frame
 call-stack limit.  A naive recursive evaluator overflows for any deeply
 tail-recursive Lisp program.  The looping evaluator avoids this by
-recognizing **tail positions** — places where the return value of a call
-is directly the return value of the caller — and looping there instead of
+recognizing **tail positions** - places where the return value of a call
+is directly the return value of the caller - and looping there instead of
 recursing.
 
 ## The Problem with Naive Recursion
@@ -29,7 +29,7 @@ A tail-recursive Lisp countdown:
 ```
 
 generates 100,000 nested Python calls and crashes with `RecursionError`.
-The recursive call to the tail branch of `if` is the culprit — each call
+The recursive call to the tail branch of `if` is the culprit - each call
 waits for the next one to return, so the stack grows one frame per
 iteration.
 
@@ -43,7 +43,7 @@ def lEval( expr, env ):
     while True:
         ...
         if head == 'if':
-            cond = lEval( expr[1], env )   # condition: NOT tail — recurse
+            cond = lEval( expr[1], env )   # condition: NOT tail - recurse
             expr = expr[2] if cond else expr[3]
             continue                        # tail branch: loop, no new frame
 ```
@@ -51,7 +51,7 @@ def lEval( expr, env ):
 `continue` jumps back to the top of the `while True:` loop.  No new Python
 stack frame is created.  The same pattern applies to every other tail
 position: the last form of a `progn`, the last form of a `let` body, and
-— most importantly — any user-defined function call in tail position.
+- most importantly - any user-defined function call in tail position.
 
 ## Two Kinds of Sub-expression
 
@@ -63,12 +63,12 @@ Every sub-expression falls into one of two categories:
 | Non-tail position | `lEval( sub, env )` | Yes |
 
 The condition in `if`, all arguments to a function call, and all but the
-last form in a `progn` or `let` body are **non-tail** — they recurse
+last form in a `progn` or `let` body are **non-tail** - they recurse
 normally.  Only the final result-producing expression gets the loop.
 
 ## Closures
 
-User-defined functions created by `lambda` are **closures** — they capture
+User-defined functions created by `lambda` are **closures** - they capture
 the environment at the point of definition.  When called, a new scope is
 opened on top of the *captured* environment (not the caller's), so free
 variables resolve lexically.
@@ -90,7 +90,7 @@ env  = new_env
 for sub in fn.body[:-1]:
     lEval( sub, env )        # non-tail body forms: recurse normally
 expr = fn.body[-1]
-continue                     # tail call: loop — no stack growth
+continue                     # tail call: loop - no stack growth
 ```
 
 Tail-calling a function does not grow the Python call stack, regardless of
@@ -102,9 +102,9 @@ how deeply the Lisp recursion goes.
 def lEval( expr, env ):
     while True:
 
-        if isinstance( expr, str ):        # symbol — variable lookup
+        if isinstance( expr, str ):        # symbol - variable lookup
             return env.lookup( expr )
-        elif not isinstance( expr, list ): # number, etc. — self-evaluate
+        elif not isinstance( expr, list ): # number, etc. - self-evaluate
             return expr
         elif len( expr ) == 0:
             return []                      # NIL
@@ -159,10 +159,29 @@ def lEval( expr, env ):
         continue
 ```
 
+## Challenges
+
+- **Add `while`.** Implement `(while condition body...)` as a special form
+  using the looping pattern: evaluate the condition, and if true evaluate
+  the body then `continue` back to the top.  Verify that it can iterate a
+  million times without growing the Python call stack at all.
+
+- **Add `cond` and `case` with correct TCO.** If you implemented `cond` in
+  the 1a evaluator, port it here -- but make sure the chosen branch is in
+  tail position (`expr = branch; continue`).  Test it: a tail-recursive
+  function dispatched through `cond` should handle 100,000 iterations just
+  as well as one dispatched through `if`.
+
+- **Named `let`.** `(let loop ((n 100000)) (if (= n 0) 0 (loop (- n 1))))`
+  binds a local name `loop` to a function and immediately calls it.  It is
+  the standard TCO-friendly looping idiom in Scheme.  Add it as a special
+  form and observe that the recursive call in tail position gets TCO for
+  free -- you do not need to do anything special to make it work.
+
 ## Running the Example
 
 The complete working code is in `pythonslisp/examples/IttyBittyLisp2.py`.
-It demonstrates a tail-recursive countdown from 100,000 — which crashes
+It demonstrates a tail-recursive countdown from 100,000 - which crashes
 the recursive evaluator from `EVALUATOR-DOC` but completes here in one
 flat Python stack frame.
 

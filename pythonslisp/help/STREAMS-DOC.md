@@ -1,6 +1,6 @@
 # Streams
 
-*Quick reference: `(help "streams")` — Full documentation: this file.*
+*Quick reference: `(help "streams")` - Full documentation: this file.*
 
 
 A stream is an object that represents a source or destination for character
@@ -37,7 +37,7 @@ system streams directly.
 
 ## File Streams
 
-### with-open-file — preferred for file I/O
+### with-open-file - preferred for file I/O
 
 `with-open-file` opens a file, binds it to a variable, evaluates the body,
 and closes the file when the body finishes.  This is the preferred way to
@@ -107,7 +107,7 @@ NIL silently rather than signaling an error.
 String streams let you read from or write to an in-memory string using the
 same primitives as file I/O.
 
-### with-output-to-string — preferred for string output
+### with-output-to-string - preferred for string output
 
 Evaluates body forms with a variable bound to a fresh string output stream,
 then returns everything written to that stream as a single string.
@@ -119,7 +119,7 @@ then returns everything written to that stream as a single string.
 ;==> "hello\nvalue = 42\n"
 ```
 
-### with-input-from-string — preferred for string input
+### with-input-from-string - preferred for string input
 
 Creates a readable stream from a string, binds it to a variable, and
 evaluates body forms.
@@ -225,7 +225,7 @@ When omitted, output goes to the current output stream.
 
 ### write! and write-line
 
-Print values in **programmer-readable** form — strings are quoted and escape
+Print values in **programmer-readable** form - strings are quoted and escape
 sequences are shown.  `write-line` appends a newline.
 
 ```lisp
@@ -236,7 +236,7 @@ sequences are shown.  `write-line` appends a newline.
 
 ### uwrite! and uwrite-line
 
-Print values in **user-readable** form — strings are printed without quotes
+Print values in **user-readable** form - strings are printed without quotes
 and escape sequences are decoded.  `uwrite-line` appends a newline.
 
 ```lisp

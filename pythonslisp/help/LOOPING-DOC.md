@@ -1,6 +1,6 @@
 # Looping and Iteration
 
-*Quick reference: `(help "looping")` — Full documentation: this file.*
+*Quick reference: `(help "looping")` - Full documentation: this file.*
 
 
 Python's Lisp provides four looping macros for imperative iteration, a set
@@ -204,10 +204,10 @@ Test whether a predicate holds for all or any elements of a sequence.
 
 The interpreter applies tail-call optimization (TCO) to all tail-position
 calls.  A tail-recursive function therefore iterates in constant stack space
-— it will not overflow the call stack regardless of how many iterations it
+- it will not overflow the call stack regardless of how many iterations it
 performs.
 
-The key rule: the recursive call must be in **tail position** — the last
+The key rule: the recursive call must be in **tail position** - the last
 thing the function does before returning.  Wrapping the call in `+`, `cons`,
 or any other form takes it out of tail position.
 

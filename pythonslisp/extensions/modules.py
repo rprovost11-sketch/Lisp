@@ -97,14 +97,14 @@ Returns the new module object."""
    # :name may be NIL, a symbol, a string, or a quoted (: ...) path form.
    try:
       if isinstance( name_arg, list ) and len(name_arg) == 0:
-         # NIL — derive name from filename, bind in global env
+         # NIL - derive name from filename, bind in global env
          module_name = Path(filespec).stem.upper()
          container   = global_env
       elif ( isinstance( name_arg, list )
              and len(name_arg) >= 3
              and isinstance( name_arg[0], LSymbol )
              and name_arg[0].name == ':' ):
-         # Quoted (: pkg subpkg ... module) path — navigate/create intermediate packages
+         # Quoted (: pkg subpkg ... module) path - navigate/create intermediate packages
          path = name_arg[1:]
          if not all( isinstance(s, LSymbol) for s in path ):
             raise LRuntimePrimError( LP_load_module,

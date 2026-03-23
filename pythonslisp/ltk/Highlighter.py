@@ -1,8 +1,8 @@
 """Syntax highlighting and Markdown rendering for terminal display.
 
 Public API:
-   highlight(code, lang)          — ANSI-color a code snippet by language
-   render_markdown(text, use_color) — render a Markdown string for the terminal
+   highlight(code, lang)          - ANSI-color a code snippet by language
+   render_markdown(text, use_color) - render a Markdown string for the terminal
 """
 from __future__ import annotations
 import re
@@ -11,19 +11,19 @@ import sys
 
 # ANSI escape codes
 _R   = '\033[0m'      # reset
-_DIM = '\033[2;37m'   # dim gray          — comments
-_GRN = '\033[32m'     # green             — strings
-_CYN = '\033[36m'     # cyan              — Lisp :keywords
-_YEL = '\033[33m'     # yellow            — numbers; Python decorators
-_BCY = '\033[1;36m'   # bold cyan         — Lisp special operators; Python def/class names
-_BMA = '\033[1;35m'   # bold magenta      — Lisp definition forms
-_BYE = '\033[1;33m'   # bold yellow       — T  NIL
-_BBL = '\033[1;34m'   # bold blue         — Python keywords
-_BWH = '\033[1;97m'   # bold bright white — parentheses and brackets
-_BLD = '\033[1m'      # bold              — Markdown h2/h3 and **bold**
-_UND = '\033[1;4m'    # bold + underline  — Markdown h1
-_ICY = '\033[96m'     # bright cyan       — Markdown inline `code`
-_ITA = '\033[3m'      # italic            — Markdown *italic*
+_DIM = '\033[2;37m'   # dim gray          - comments
+_GRN = '\033[32m'     # green             - strings
+_CYN = '\033[36m'     # cyan              - Lisp :keywords
+_YEL = '\033[33m'     # yellow            - numbers; Python decorators
+_BCY = '\033[1;36m'   # bold cyan         - Lisp special operators; Python def/class names
+_BMA = '\033[1;35m'   # bold magenta      - Lisp definition forms
+_BYE = '\033[1;33m'   # bold yellow       - T  NIL
+_BBL = '\033[1;34m'   # bold blue         - Python keywords
+_BWH = '\033[1;97m'   # bold bright white - parentheses and brackets
+_BLD = '\033[1m'      # bold              - Markdown h2/h3 and **bold**
+_UND = '\033[1;4m'    # bold + underline  - Markdown h1
+_ICY = '\033[96m'     # bright cyan       - Markdown inline `code`
+_ITA = '\033[3m'      # italic            - Markdown *italic*
 
 
 # ---------------------------------------------------------------------------
@@ -176,10 +176,10 @@ def highlight(code: str, lang: str) -> str:
 # ---------------------------------------------------------------------------
 
 _INLINE_RE = re.compile(
-   r'\*\*(.+?)\*\*'                              # group 1 — **bold**
-   r'|``(.+?)``'                                 # group 2 — ``code``
-   r'|`([^`]+)`'                                 # group 3 — `code`
-   r'|(?<!\*)\*(?!\*)([^*\n]+)(?<!\*)\*(?!\*)'  # group 4 — *italic*
+   r'\*\*(.+?)\*\*'                              # group 1 - **bold**
+   r'|``(.+?)``'                                 # group 2 - ``code``
+   r'|`([^`]+)`'                                 # group 3 - `code`
+   r'|(?<!\*)\*(?!\*)([^*\n]+)(?<!\*)\*(?!\*)'  # group 4 - *italic*
 )
 _ANSI_RE = re.compile(r'\033\[[^m]*m')
 _HR_RE   = re.compile(r'^(-{3,}|\*{3,}|_{3,})\s*$')
@@ -222,7 +222,7 @@ def _is_separator_row(cells: list[str]) -> bool:
 def _render_table(rows: list[list[str]], use_color: bool) -> list[str]:
    """Render a list of parsed table rows as an aligned terminal table."""
    if len(rows) < 2 or not _is_separator_row(rows[1]):
-      # Not a well-formed GFM table — pass through raw
+      # Not a well-formed GFM table - pass through raw
       return ['|' + '|'.join(row) + '|' for row in rows]
 
    header = rows[0]
@@ -329,7 +329,7 @@ def render_markdown(text: str, use_color: bool = True) -> str:
    flush_table()
 
    if in_code_block:
-      # Unclosed code block — flush whatever was accumulated
+      # Unclosed code block - flush whatever was accumulated
       code = '\n'.join(code_lines)
       output.append(highlight(code, code_lang) if use_color else code)
 

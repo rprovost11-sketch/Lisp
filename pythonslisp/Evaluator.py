@@ -1,14 +1,14 @@
 """CEK Machine evaluator for Python's Lisp.
 
 The machine state is a triple (C, E, K):
-  C — Control     : current expression to reduce, OR a _Val-wrapped value to deliver
-  E — Environment : current lexical environment
-  K — Kontinuation: explicit continuation stack (Python list of frame objects)
+  C - Control     : current expression to reduce, OR a _Val-wrapped value to deliver
+  E - Environment : current lexical environment
+  K - Kontinuation: explicit continuation stack (Python list of frame objects)
 
 Key invariant
 -------------
 In _lEval a recursive call always returns a value directly (return result).
-In the CEK loop, a looked-up or computed value would be set as C and looped —
+In the CEK loop, a looked-up or computed value would be set as C and looped -
 but then _is_value would misidentify a data list as code to evaluate.
 
 Solution: wrap every computed value in _Val().  The loop's first check is
@@ -94,11 +94,11 @@ def _eval_body( body, env, K ) -> tuple:
    Pushes PrognFrame for all but the last form (which is in tail position).
    Always returns an expression (source AST node), never a _Val."""
    if not body:
-      return L_NIL, env         # L_NIL is an empty list — _is_value → True, delivered as NIL
+      return L_NIL, env         # L_NIL is an empty list - _is_value → True, delivered as NIL
    if len(body) == 1:
-      return body[0], env       # tail form — expression
+      return body[0], env       # tail form - expression
    K.append( PrognFrame(list(body[1:]), env) )
-   return body[0], env          # first non-tail form — expression
+   return body[0], env          # first non-tail form - expression
 
 
 def _block_name( obj ):
@@ -165,7 +165,7 @@ class IfFrame:
       self.env       = env
 
    def step( self, value, E, K, ctx ):
-      # Returns an expression (AST node) — not _Val-wrapped.
+      # Returns an expression (AST node) - not _Val-wrapped.
       branch = self.then_expr if _lTrue(_primary(value)) else self.else_expr
       return branch, self.env
 
@@ -180,9 +180,9 @@ class PrognFrame:
 
    def step( self, value, E, K, ctx ):
       # The incoming value (previous form's result) is discarded.
-      # Returns an expression — not _Val-wrapped.
+      # Returns an expression - not _Val-wrapped.
       if len(self.remaining) == 1:
-         return self.remaining[0], self.env        # tail — TCO
+         return self.remaining[0], self.env        # tail - TCO
       nxt            = self.remaining[0]
       self.remaining = self.remaining[1:]
       K.append(self)
@@ -255,7 +255,7 @@ class SetqFrame:
          self.pending   = self.pending[1:]
          K.append(self)
          return form, self.env          # expression
-      return _Val(rval), self.env       # value — wrap so it isn't re-evaluated
+      return _Val(rval), self.env       # value - wrap so it isn't re-evaluated
 
 
 class CondFrame:
@@ -307,9 +307,9 @@ class ArgFrame:
    """Collect the function value then each argument value for a call.
 
    mode:
-     'call'    — common call path; macros are inline-expanded
-     'funcall' — FUNCALL; rejects macros
-     'apply'   — APPLY;   like funcall but spreads the final list arg
+     'call'    - common call path; macros are inline-expanded
+     'funcall' - FUNCALL; rejects macros
+     'apply'   - APPLY;   like funcall but spreads the final list arg
    """
    __slots__ = ('fn', 'pending', 'done', 'env', 'mode')
 
@@ -367,7 +367,7 @@ class ArgFrame:
                K.append( _ContinuationInvokeFrame(fn) )
                return self.pending[0], self.env   # expression
             if type(fn) is LMacro:
-               # Inline macro expansion — return the expansion as an expression.
+               # Inline macro expansion - return the expansion as an expression.
                expansion = Expander.expandMacroCall( ctx, self.env, fn, self.pending )
                return expansion, self.env         # expression (code to evaluate)
 
@@ -433,7 +433,7 @@ class BodyFrame:
          return nxt, self.env         # expression
       self.tracer.setMaxTraceDepth( self.depth )
       self.tracer.trace( 'exit', self.fn, value, self.depth, ctx.outStrm )
-      return _Val(value), E           # VALUE — wrap so it isn't re-evaluated
+      return _Val(value), E           # VALUE - wrap so it isn't re-evaluated
 
 
 # ---------------------------------------------------------------------------
@@ -626,7 +626,7 @@ class CallCCGuardFrame:
 def _do_apply( fn, args, env, K, ctx ) -> tuple:
    """Perform a function application.  Returns (C, E) for the machine loop.
    LPrimitive results are _Val-wrapped (values).
-   LFunction results are expressions (body to evaluate) — no wrapping."""
+   LFunction results are expressions (body to evaluate) - no wrapping."""
    tracer  = ctx.tracer
    printed = False
    if tracer.isActive():
@@ -646,7 +646,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
          if printed:
             tracer.setMaxTraceDepth( depth )
             tracer.trace( 'exit', fn, result, depth, ctx.outStrm )
-         return _Val(result), env   # VALUE — wrap; LMultipleValues preserved for frames to strip
+         return _Val(result), env   # VALUE - wrap; LMultipleValues preserved for frames to strip
 
       else:  # LFunction
          new_env = Environment( fn.capturedEnvironment, evalFn=ctx.lEval )
@@ -658,7 +658,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
                tracer.trace( 'exit', fn, L_NIL, depth, ctx.outStrm )
             return L_NIL, env         # L_NIL → _is_value True, delivered as NIL
          if printed:
-            # Traced: cannot TCO — BodyFrame observes the return value.
+            # Traced: cannot TCO - BodyFrame observes the return value.
             K.append( BodyFrame(list(body[1:]), fn, depth, new_env, tracer) )
             return body[0], new_env   # expression
          return _eval_body( body, new_env, K )   # expression (TCO)
@@ -785,14 +785,14 @@ def cek_eval( ctx, env, expr ) -> Any:
             continue
 
          # ----------------------------------------------------------------
-         # Empty list — NIL
+         # Empty list - NIL
          # ----------------------------------------------------------------
          if len(C) == 0:
             C = L_NIL
             continue
 
          # ----------------------------------------------------------------
-         # Non-empty list — expression to reduce
+         # Non-empty list - expression to reduce
          # ----------------------------------------------------------------
          head    = C[0]
          headStr = head.name if type(head) is LSymbol else None
@@ -803,7 +803,7 @@ def cek_eval( ctx, env, expr ) -> Any:
             continue
 
          # ----------------------------------------------------------------
-         # Special operators — existing
+         # Special operators - existing
          # ----------------------------------------------------------------
 
          if headStr == 'QUOTE':
@@ -896,7 +896,7 @@ def cek_eval( ctx, env, expr ) -> Any:
             continue
 
          # ----------------------------------------------------------------
-         # Special operators — new
+         # Special operators - new
          # ----------------------------------------------------------------
 
          if headStr == 'LAMBDA':
@@ -1067,7 +1067,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                C = _Val(e.value)
                break
          else:
-            raise   # no block in this machine — propagate to outer cek_eval or rawEval
+            raise   # no block in this machine - propagate to outer cek_eval or rawEval
          continue
 
       except Thrown as e:
@@ -1077,7 +1077,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                C = _Val(e.value)
                break
          else:
-            raise   # no catch in this machine — propagate to outer cek_eval or rawEval
+            raise   # no catch in this machine - propagate to outer cek_eval or rawEval
          continue
 
       except Signaled as e:
@@ -1122,5 +1122,5 @@ def cek_eval( ctx, env, expr ) -> Any:
                C = _Val(e.value)
                break
          else:
-            raise   # no matching guard — propagate to outer cek_eval or rawEval
+            raise   # no matching guard - propagate to outer cek_eval or rawEval
          continue
