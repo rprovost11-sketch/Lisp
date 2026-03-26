@@ -10,6 +10,9 @@ The AST uses standard Python types.  Numbers and strings are Python `int`,
 `float`, `Fraction`, or `str`.  Symbols are `LSymbol` objects.  Lists are
 Python `list`.  The environment is a plain dictionary mapping names to values.
 
+This series will introduce you to the implementation of a lisp interpreter in
+Python.
+
 ## A Minimal Lisp Evaluator
 
 The following self-contained Python program implements a working Lisp
@@ -77,7 +80,7 @@ global_env = {
 
 ## Equivalent Lisp
 
-The following expressions exercise all three evaluator paths.
+The following expressions exercise the evaluator.
 
 ```python
 def evalLispExpr( expr ):

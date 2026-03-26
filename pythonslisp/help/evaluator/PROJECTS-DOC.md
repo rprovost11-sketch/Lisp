@@ -79,10 +79,10 @@ With `defmacro` you can add `when`, `unless`, `and`, `or`, `cond`, and
 `let*` entirely in Lisp, without touching the Python evaluator:
 
 ```lisp
-(defmacro when (condition . body)
+(defmacro when (condition &rest body)
   (list 'if condition (cons 'progn body) '()))
 
-(defmacro let* (bindings . body)
+(defmacro let* (bindings &rest body)
   (if (null? bindings)
       (cons 'progn body)
       (list 'let (list (car bindings))

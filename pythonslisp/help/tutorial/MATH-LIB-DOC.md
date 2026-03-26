@@ -176,6 +176,21 @@ From types.py - general numeric type predicates:
 
 ---
 
+## 1+ and 1-
+
+`1+` and `1-` return a value one greater or one less than their argument without
+mutating anything.
+
+```lisp
+(1+ 5)      ;==> 6
+(1- 5)      ;==> 4
+(1+ -1)     ;==> 0
+(1- 0)      ;==> -1
+(1+ 1/2)    ;==> 3/2
+```
+
+---
+
 ## Increment and Decrement
 
 `incf` and `decf` mutate a place in the environment and return the new value.
@@ -267,6 +282,8 @@ pairs (or all pairs for `/=`).
 | `(min a b ...)` / `(max a b ...)` | Minimum/maximum |
 | `(random n)` | Random number in [0, n) |
 | `(average a b ...)` | Arithmetic mean |
+| `(1+ n)` | n + 1 (returns new value) |
+| `(1- n)` | n - 1 (returns new value) |
 | `(incf place)` | Increment by 1 |
 | `(decf place)` | Decrement by 1 |
 | `PI` / `E` | Math constants |

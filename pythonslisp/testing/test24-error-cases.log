@@ -1483,12 +1483,10 @@
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
->>> ;;; make-symbol with string starting with a digit
+>>> ;;; make-symbol with string starting with a digit (valid symbol since lexer update)
 ... (make-symbol "123foo")
 
-%%% ERROR 'MAKE-SYMBOL': "123foo" is not a valid symbol name.
-%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
-==>
+==> 123FOO
 
 ; --- python errors ---
 

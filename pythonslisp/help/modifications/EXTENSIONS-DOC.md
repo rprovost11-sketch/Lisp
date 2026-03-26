@@ -39,8 +39,10 @@ def LP_my_func( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
 ```
 
 The first argument to `@primitive` is the name the primitive will have inside
-the Lisp interpreter.  The second argument is a lambda-list string that
-specifies the parameter list.  Every primitive function must return a value.
+the Lisp interpreter.  Case is not important.  The interpreter converts them all
+to upper case.  However, it must be a Python's Lisp correct symbol.  The second
+argument is a lambda-list string that specifies the parameter list.  Every
+primitive function must return a value.
 
 The Python function's docstring becomes the documentation text shown by
 `(help my-func)`.
@@ -48,7 +50,7 @@ The Python function's docstring becomes the documentation text shown by
 ### Lambda-list modes
 
 The `mode` keyword argument to primitive controls how the lambda-list string
-is interpreted.  The following modes are supported:
+is used.  The following modes are supported:
 
 **`LambdaListMode.ARITY_ONLY` (default)** the lambda list is used to
 auto-compute min/max argument counts, and it's used for documentation.  Your
@@ -99,21 +101,6 @@ def LP_comment( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
     return L_NIL
 ```
 
-### Special forms (preEvalArgs=False)
-
-By default arguments are evaluated before your function is called.  Use the
-@primitive argument `preEvalArgs=False` to receive the raw unevaluated AST
-arguments instead.  Use this for forms that must control their own evaluation:
-primarily macros and control structures.
-
-```python
-@primitive( 'my-if', '(test then else)', preEvalArgs=False )
-def LP_my_if( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
-    """Evaluates THEN if TEST is true, ELSE otherwise."""
-    test, then, else_ = args
-    return ctx.lEval( env, then ) if ctx.lEval( env, test ) else ctx.lEval( env, else_ )
-```
-
 ### Raising errors
 
 Use `LRuntimePrimError` to raise an error attributed to your primitive:
@@ -127,8 +114,8 @@ Use `LRuntimeError` for errors not attributed to a specific primitive.
 ### Full annotated example
 
 A fully annotated example covering all three `LambdaListMode` cases is
-available at `pythonslisp/examples/my_extension.py`.  It includes the
-complete set of imports and can be used as a starting point.
+available in `pythonslisp/examples/my_extension.py`.  It includes the
+complete set of imports and can be copied for use as a starting point.
 
 ---
 

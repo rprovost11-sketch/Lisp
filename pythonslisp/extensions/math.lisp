@@ -67,6 +67,14 @@
 
 (alias isZero? zerop)
 
+(defun 1+ (n)
+   "Returns n incremented by 1."
+   (+ n 1))
+
+(defun 1- (n)
+   "Returns n decremented by 1."
+   (- n 1))
+
 (defmacro incf (var &optional (delta 1))
    "Increase the variable argument's value by 1 or delta."
    `(setf ,var (+ ,var ,delta)))

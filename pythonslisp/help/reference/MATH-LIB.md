@@ -48,6 +48,7 @@
 | `(min a b ...)` / `(max a b ...)` | Minimum / maximum |
 | `(random n)` | Random number in [0, n) |
 | `(average a b ...)` | Arithmetic mean |
+| `(1+ n)` / `(1- n)` | n+1 / n-1 (return new value) |
 | `(incf place)` / `(decf place)` | Increment / decrement by 1 |
 
 ## Constants and Predicates

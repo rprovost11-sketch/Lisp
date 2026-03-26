@@ -26,6 +26,8 @@ Lexemes
                          )   # Supports integers, floats and fractions
       StringLiteral:  '"' { ^["] } '"'   # Supports all python string escape sequences
       Symbol:         SYMBOL_FIRST {SYMBOL_REST}
+                    | any token starting with SIGN_OR_DIGIT that is not a valid NumberLiteral,
+                      or a valid NumberLiteral immediately followed by SYMBOL_REST chars
 
 Grammar
    Start:
@@ -195,11 +197,11 @@ class Lexer( LexerBase ):
                          | 'e' [SIGN] DIGIT+                   # <-- exponentiation case
                          | '.' DIGIT+ [ 'e' [SIGN] DIGIT+ ]    # <-- decimal/exponentiation case
                          )
+      If the token does not match a NumberLiteral, or if SYMBOL_REST characters
+      trail a valid number, the entire token is returned as SYMBOL_TOK.
       '''
-      SIGN = Lexer.SIGN
+      SIGN  = Lexer.SIGN
       DIGIT = Lexer.DIGIT
-      
-      SAVE = self.saveState( self._savedState )  # Save the lexer state
 
       buf = self.buffer
       buf.markStartOfLexeme( )
@@ -208,8 +210,8 @@ class Lexer( LexerBase ):
          buf.consume()
          secondChar = buf.peekNextChar( )
          if (secondChar == '') or (secondChar not in DIGIT):
-            self.restoreState( SAVE )         # Restore the lexer state
-            return self._scanSymbol( )
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
       buf.consumePast( DIGIT )
       nextChar = buf.peekNextChar()
@@ -220,10 +222,14 @@ class Lexer( LexerBase ):
 
          nextChar = buf.peekNextChar( )
          if nextChar not in DIGIT:
-            self.restoreState( SAVE )         # Restore the lexer state
-            return self._scanSymbol( )
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
          buf.consumePast( DIGIT )
+         nextChar = buf.peekNextChar()
+         if nextChar in Lexer.SYMBOL_REST:
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
          return Lexer.FRAC_TOK
 
       elif nextChar in ('e', 'E'):
@@ -232,55 +238,67 @@ class Lexer( LexerBase ):
 
          nextChar = buf.peekNextChar( )
          if (nextChar not in SIGN) and (nextChar not in DIGIT):
-            self.restoreState( SAVE )
-            return self._scanSymbol( )
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
          if nextChar in SIGN:
             buf.consume( )
             nextChar = buf.peekNextChar( )
 
-         if (nextChar not in DIGIT):
-            self.restoreState( SAVE )
-            return self._scanSymbol( )
+         if nextChar not in DIGIT:
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
          buf.consumePast( DIGIT )
+         nextChar = buf.peekNextChar()
+         if nextChar in Lexer.SYMBOL_REST:
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
          return Lexer.FLOAT_TOK
 
       elif nextChar == '.':
          # Possibly a floating point number
          # '.' ('0' .. '9')+ [ 'e' ['+'|'-'] ('0' .. '9')+ ]    # <-- decimal/exponentiation case
-         #self.saveState( SAVE )
          buf.consume()
          nextChar = buf.peekNextChar()
          if nextChar not in DIGIT:
-            # Integer
-            self.restoreState( SAVE )
-            return self._scanSymbol( )
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
          buf.consumePast( DIGIT )
          nextChar = buf.peekNextChar( )
 
          if nextChar not in ('e', 'E'):
+            if nextChar in Lexer.SYMBOL_REST:
+               buf.consumePast( Lexer.SYMBOL_REST )
+               return Lexer.SYMBOL_TOK
             return Lexer.FLOAT_TOK
 
          buf.consume( )
          nextChar = buf.peekNextChar( )
 
          if (nextChar not in SIGN) and (nextChar not in DIGIT):
-            self.restoreState( SAVE )
-            return self._scanSymbol( )
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
          if nextChar in SIGN:
             buf.consume( )
             nextChar = buf.peekNextChar( )
 
-         if (nextChar not in DIGIT):
-            self.restoreState( SAVE )
-            return self._scanSymbol( )
+         if nextChar not in DIGIT:
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
 
          buf.consumePast( DIGIT )
+         nextChar = buf.peekNextChar()
+         if nextChar in Lexer.SYMBOL_REST:
+            buf.consumePast( Lexer.SYMBOL_REST )
+            return Lexer.SYMBOL_TOK
          return Lexer.FLOAT_TOK
 
+      if nextChar in Lexer.SYMBOL_REST:
+         buf.consumePast( Lexer.SYMBOL_REST )
+         return Lexer.SYMBOL_TOK
       return Lexer.INTEGER_TOK
 
    def _scanSymbol( self ) -> int:
@@ -298,11 +316,10 @@ class Lexer( LexerBase ):
 
    def _skipWhitespaceAndComments( self ) -> None:
       buf = self.buffer
-
       while True:
          buf.consumePast( Lexer.WHITESPACE )
          if buf.peekNextChar() != ';':
-            break
+            return
          buf.consumeUpTo( Lexer.NEWLINE )
 
 

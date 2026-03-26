@@ -138,14 +138,14 @@ the same AST as `(quote ...)`.
   small character-by-character scan for the quoted region before handing
   off to `split()` for everything else.
 
-- **Add `#t` / `#f` booleans.** Extend `atom` to convert the tokens `#t`
-  and `#f` to Python `True` and `False`.  Then add `not` as a primitive.
+- **Add `#t` / `#f` booleans.** Extend `atom` to convert the tokens `t`
+  and `nil` to Python `True` and `False`.  Then add `not` as a primitive.
   When you try to add `and` and `or`, you will find they need short-circuit
   evaluation -- which means they belong in the evaluator as special forms,
   not in the parser or `global_env`.
 
 - **Add backquote and unquote.** `` ` `` and `,` are reader syntax for
-  building list templates: `` `(a ,b c) `` expands to `['list', ['quote', 'a'], 'b', ['quote', 'c']]`.
+  building list templates: `` `(a ,b c) `` expands to `['list', ['quote', 'a'] 'b', ['quote', 'c']]`.
   Implement them in `read_from` alongside the `'` expansion.  This is the
   foundation of macro template syntax -- once you have it, writing a macro
   expander becomes much more natural.

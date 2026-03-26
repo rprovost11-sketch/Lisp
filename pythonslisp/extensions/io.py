@@ -126,14 +126,20 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
    typesList    = []
    findUpper = find.upper() if find is not None else None
    if HELP_DIR.exists():
-      txt_stems = {f.stem.upper() for f in HELP_DIR.glob('*.txt')}
-      md_stems  = {f.stem.upper() for f in HELP_DIR.glob('*.md')}
-      all_stems = sorted(txt_stems | md_stems)
+      from collections import defaultdict
+      raw_groups: dict[str, set] = defaultdict(set)
+      for f in list(HELP_DIR.glob('**/*.txt')) + list(HELP_DIR.glob('**/*.md')):
+         rel   = f.relative_to(HELP_DIR)
+         group = rel.parts[0] if len(rel.parts) > 1 else ''
+         raw_groups[group].add(f.stem.upper())
+      if findUpper is not None:
+         topic_groups = {g: sorted(s for s in stems if findUpper in s)
+                         for g, stems in raw_groups.items()}
+         topic_groups = {g: v for g, v in topic_groups.items() if v}
+      else:
+         topic_groups = {g: sorted(stems) for g, stems in raw_groups.items()}
    else:
-      all_stems = []
-   if findUpper is not None:
-      all_stems = [s for s in all_stems if findUpper in s]
-   topicsList = [f'"{s}"' for s in all_stems]
+      topic_groups = {}
    outFile  = outStrm or sys.stdout
    useColor = hasattr(outFile, 'isatty') and outFile.isatty()
 
@@ -186,7 +192,16 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
    columnize( typesList, 78, file=outStrm, itemColor=YELLOW or None )
    print( file=outStrm )
    hdr( "TOPICS" )
-   columnize( topicsList, 78, file=outStrm, itemColor=YELLOW or None )
+   def subhdr( text: str ) -> None:
+      ul = '-' * len(text)
+      print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
+      print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
+   for group in sorted(topic_groups):
+      label = group.title() if group else 'General'
+      items = [f'"{s}"' for s in topic_groups[group]]
+      print( file=outStrm )
+      subhdr( label )
+      columnize( items, 78, file=outStrm, itemColor=YELLOW or None )
    print( file=outStrm )
    print( "Type '(help callable)' for available documentation on a callable.", file=outStrm )
    print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )
@@ -732,9 +747,9 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    # Positional arg: show specific callable or topic
    if isinstance(pos_arg, str):
       topicName = pos_arg.upper()
-      topicMd   = HELP_DIR / f'{topicName}.md'
-      topicTxt  = HELP_DIR / f'{topicName}.txt'
-      if topicMd.exists():
+      topicMd  = next(HELP_DIR.glob(f'**/{topicName}.md'),  None)
+      topicTxt = next(HELP_DIR.glob(f'**/{topicName}.txt'), None)
+      if topicMd is not None:
          outFile   = ctx.outStrm or sys.stdout
          use_color = ( hasattr(outFile, 'isatty')
                        and outFile.isatty()
@@ -743,7 +758,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
          content  = topicMd.read_text( encoding='utf-8' )
          rendered = render_markdown( content, use_color=use_color )
          print( rendered, file=ctx.outStrm )
-      elif topicTxt.exists():
+      elif topicTxt is not None:
          print( topicTxt.read_text( encoding='utf-8' ), file=ctx.outStrm )
       else:
          print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
@@ -781,18 +796,25 @@ Type '(help "substring" :substring t)' to search all names by substring."""
 
    return L_T
 
-@primitive( 'define-help-topic', '(name-string text-string)' )
+@primitive( 'define-help-topic', '(name-string text-string &key (category ""))',
+            mode=LambdaListMode.FULL_BINDING )
 def LP_define_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Defines a new help topic by writing a text file to the help directory.
 The topic is immediately available via (help \"name\").  Returns the topic name
-as a symbol.  An existing topic with the same name is overwritten."""
-   name, text = args
+as a symbol.  An existing topic with the same name is overwritten.
+:category names a subdirectory within the help directory (created if needed)."""
+   name     = env.lookup( 'NAME-STRING' )
+   text     = env.lookup( 'TEXT-STRING' )
+   category = env.lookup( 'CATEGORY' )
    if not isinstance( name, str ):
       raise LRuntimePrimError( LP_define_help_topic, 'Argument 1 must be a string (topic name).' )
    if not isinstance( text, str ):
       raise LRuntimePrimError( LP_define_help_topic, 'Argument 2 must be a string (topic text).' )
-   HELP_DIR.mkdir( exist_ok=True )
-   topicFile = HELP_DIR / f'{name.upper()}.txt'
+   if not isinstance( category, str ):
+      raise LRuntimePrimError( LP_define_help_topic, ':category must be a string.' )
+   target_dir = HELP_DIR / category if category else HELP_DIR
+   target_dir.mkdir( parents=True, exist_ok=True )
+   topicFile  = target_dir / f'{name.upper()}.txt'
    topicFile.write_text( text, encoding='utf-8' )
    return LSymbol( name )
 
@@ -803,8 +825,8 @@ Returns T if the topic existed and was removed, NIL if the topic was not found."
    name = args[0]
    if not isinstance( name, str ):
       raise LRuntimePrimError( LP_undefine_help_topic, 'Argument 1 must be a string (topic name).' )
-   topicFile = HELP_DIR / f'{name.upper()}.txt'
-   if topicFile.exists():
+   topicFile = next(HELP_DIR.glob(f'**/{name.upper()}.txt'), None)
+   if topicFile is not None:
       topicFile.unlink()
       return L_T
    return L_NIL
