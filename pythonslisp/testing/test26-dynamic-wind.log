@@ -893,3 +893,84 @@
 ...     (lambda () (throw :done nil))
 ...     (lambda () (error "after-error"))))
 %%% after-error
+
+
+; --------------------------------------------------------
+; unwind-protect
+; --------------------------------------------------------
+
+; basic: returns value of protected form
+>>> (unwind-protect 42 nil)
+==> 42
+
+; no cleanup forms
+>>> (unwind-protect 7)
+==> 7
+
+; cleanup runs after protected; return value is protected value
+>>> (let ((log (list)))
+...   (list (unwind-protect (progn (setf log (append log (list 1))) 99)
+...                         (setf log (append log (list 2))))
+...         log))
+==> (99 (1 2))
+
+; multiple cleanup forms run in order
+>>> (let ((log (list)))
+...   (unwind-protect nil
+...     (setf log (append log (list "a")))
+...     (setf log (append log (list "b"))))
+...   log)
+==> ("a" "b")
+
+; cleanup runs on throw
+>>> (let ((log (list)))
+...   (catch :done
+...     (unwind-protect (throw :done 99)
+...       (setf log (append log (list "cleanup")))))
+...   log)
+==> ("cleanup")
+
+; cleanup runs on return-from
+>>> (let ((log (list)))
+...   (block done
+...     (unwind-protect (return-from done nil)
+...       (setf log (append log (list "cleanup")))))
+...   log)
+==> ("cleanup")
+
+; cleanup runs on error
+>>> (let ((log (list)))
+...   (handler-case
+...     (unwind-protect (error "boom")
+...       (setf log (append log (list "cleanup"))))
+...     (t (e) nil))
+...   log)
+==> ("cleanup")
+
+; nested: inner cleanup runs before outer on normal exit
+>>> (let ((log (list)))
+...   (unwind-protect
+...     (unwind-protect nil
+...       (setf log (append log (list "inner"))))
+...     (setf log (append log (list "outer"))))
+...   log)
+==> ("inner" "outer")
+
+; nested: both cleanups run on throw, inner before outer
+>>> (let ((log (list)))
+...   (catch :done
+...     (unwind-protect
+...       (unwind-protect (throw :done nil)
+...         (setf log (append log (list "inner"))))
+...       (setf log (append log (list "outer")))))
+...   log)
+==> ("inner" "outer")
+
+; cleanup runs on continuation escape
+>>> (let ((log (list))
+...       (k nil))
+...   (call/cc (lambda (exit)
+...     (unwind-protect (exit nil)
+...       (setf log (append log (list "cleanup"))))))
+...   log)
+==> ("cleanup")

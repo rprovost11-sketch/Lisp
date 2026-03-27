@@ -239,6 +239,14 @@ Multiple (place value) pairs expand to a progn of individual setfs."
                                          (copy-tree (rest  expr)))) ))
 
 
+(defmacro unwind-protect (protected &rest cleanup)
+   "Evaluate protected; run cleanup forms on any exit (normal or non-local).
+cleanup always runs, even if protected exits via throw, return-from, or error."
+   `(dynamic-wind
+      (lambda () nil)
+      (lambda () ,protected)
+      (lambda () ,@(if cleanup cleanup '(nil)))))
+
 (defmacro when (condition &rest body)
    "Executes body if c is truthy (non-nil)."
    `(if ,condition (progn ,@body)))

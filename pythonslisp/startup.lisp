@@ -30,15 +30,14 @@
 spec is (var filespec &rest open-options) where open-options are keyword args
 passed directly to open.  Default direction is :input.
 Returns the value of the last body form.
-Note: file is closed normally; on error the file may remain open
-(no unwind-protect)."
+File is always closed — safe on throw, return-from, or error."
    (let ((var      (car spec))
          (filespec (car (cdr spec)))
          (options  (cdr (cdr spec))))
       `(let ((,var (open ,filespec ,@options)))
-          (let ((_wof_result_ (progn ,@body)))
-             (when ,var (close ,var))
-             _wof_result_))))
+          (unwind-protect
+             (progn ,@body)
+             (when ,var (close ,var))))))
 
 (defmacro with-output-to-string (var-spec &rest body)
    "Creates a string output stream, evaluates body forms with the first element

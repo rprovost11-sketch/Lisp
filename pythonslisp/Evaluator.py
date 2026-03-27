@@ -413,14 +413,16 @@ class ArgFrame:
             spread = self.done + list_arg
             if len(spread) != 1:
                raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(spread)}.' )
-            raise ContinuationInvoked( self.fn.saved_k, self.fn.wind_stack, spread[0] )
+            _do_wind_transition( ctx, self.fn.wind_stack, E )
+            K[:] = _copy_k( self.fn.saved_k )
+            return _Val( spread[0] ), E
          self.done.extend(list_arg)
 
       return _do_apply( self.fn, self.done, self.env, K, ctx )
 
 
 class _ContinuationInvokeFrame:
-   """Receives the single argument and raises ContinuationInvoked."""
+   """Receives the single argument and performs the continuation jump inline."""
    __slots__ = ('continuation',)
 
    def __init__( self, continuation ):
@@ -429,7 +431,9 @@ class _ContinuationInvokeFrame:
    def copy( self ): return self
 
    def step( self, value, E, K, ctx ):
-      raise ContinuationInvoked( self.continuation.saved_k, self.continuation.wind_stack, _primary(value) )
+      _do_wind_transition( ctx, self.continuation.wind_stack, E )
+      K[:] = _copy_k( self.continuation.saved_k )
+      return _Val( _primary(value) ), E
 
 
 class BodyFrame:
