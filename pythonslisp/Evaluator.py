@@ -705,7 +705,7 @@ def _run_loop( C, E, K, ctx ) -> Any:
          try:
             C = _Val( E.lookup(C.name) )
          except KeyError:
-            if C.isKeyArg():
+            if C.isKeyword():
                C = _Val(C)
             else:
                raise LRuntimeError( f'Unbound Variable: {C.name}.' )
@@ -778,7 +778,7 @@ def cek_eval( ctx, env, expr ) -> Any:
             try:
                C = _Val( E.lookup(C.name) )
             except KeyError:
-               if C.isKeyArg():
+               if C.isKeyword():
                   C = _Val(C)
                else:
                   raise LRuntimeError( f'Unbound Variable: {C.name}.' )

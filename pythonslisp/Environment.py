@@ -18,12 +18,11 @@ from pythonslisp.Exceptions import LArgBindingError
 
 
 class Environment:
-   __slots__ = ('_bindings', '_parent', '_GLOBAL_ENV', '_evalFn', '_MODULE_ENV')
+   __slots__ = ('_bindings', '_parent', '_GLOBAL_ENV', '_evalFn')
 
    def __init__( self, parent: (Environment|None) = None,
                  initialBindings: (dict[str, Any]|None) = None,
-                 evalFn: (Callable|None) = None,
-                 isModuleRoot: bool = False ) -> None:
+                 evalFn: (Callable|None) = None ) -> None:
       self._bindings: dict[str, Any]    = initialBindings if initialBindings is not None else {}
       self._parent:   (Environment|None) = parent
       self._GLOBAL_ENV: Environment      = parent._GLOBAL_ENV if parent else self
@@ -33,12 +32,6 @@ class Environment:
          self._evalFn = parent._evalFn
       else:
          self._evalFn = None
-      if isModuleRoot:
-         self._MODULE_ENV = self
-      elif parent is not None and hasattr( parent, '_MODULE_ENV' ):
-         self._MODULE_ENV = parent._MODULE_ENV
-      else:
-         self._MODULE_ENV = self._GLOBAL_ENV
 
    # -----------------------------------------------------------------------
    # Basic binding and lookup
@@ -55,10 +48,6 @@ class Environment:
       self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
-   def bindInModule( self, key: str, value: Any ) -> Any:
-      self._MODULE_ENV._bindings[ key ] = value
-      return value
-
    def lookupLocal( self, key: str ) -> Any:
       return self._bindings[ key ]
 
@@ -71,16 +60,8 @@ class Environment:
    def lookupGlobalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
       return self._GLOBAL_ENV._bindings.get( key, dfltVal )
 
-   def lookupInModule( self, key: str ) -> Any:
-      return self._MODULE_ENV._bindings[ key ]
-
    def unbind( self, key: str ) -> None:
-      scope: (Environment|None) = self
-      while scope:
-         if key in scope._bindings:
-            del scope._bindings[ key ]
-            return
-         scope = scope._parent
+      self._bindings.pop( key, None )
 
    def getGlobalEnv( self ) -> Environment:
       return self._GLOBAL_ENV
@@ -120,30 +101,6 @@ class Environment:
          if key in scope._bindings:
             return scope._bindings[ key ]
          scope = scope._parent
-      raise KeyError
-
-   def lookup2( self, key: str ) -> Any:
-      '''This is slower than lookup() even though lookup2() seems more
-      elegant.  While the lookup is fast, the exception handling (which is
-      needed to traverse the parent list) is exceedingly slow.  Here's the
-      code I tested these functions on:
-         (defun test ()
-            (let ()
-               (let ()
-                  (dotimes (i 1000000)
-                     pi))))
-      Looking up pi and e 1,000,000 times.  pi is defined globally, but the
-      search for pi is started three scope levels in.
-         lookup()  eval time between 0.44 and 0.74 seconds.
-         lookup2() eval time between 4.52 and 6.28 seconds.
-      by calling the versions of lookup() from the evaluator
-      '''
-      scope: (Environment|None) = self
-      while scope:
-         try:
-            return scope._bindings[ key ]
-         except KeyError:
-            scope = scope._parent
       raise KeyError
 
    # -----------------------------------------------------------------------
@@ -584,7 +541,7 @@ class ModuleEnvironment(Environment):
    def __init__( self, name: str,
                  parent: (Environment|None) = None,
                  evalFn: (Callable|None) = None ) -> None:
-      super().__init__( parent=parent, evalFn=evalFn, isModuleRoot=True )
+      super().__init__( parent=parent, evalFn=evalFn )
       self.name = name
 
    def bind( self, key: str, value: Any ) -> Any:

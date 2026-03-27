@@ -41,7 +41,7 @@ class LSymbol:
    def startswith( self, asubstr:str ) -> bool:
       return self.name.startswith(asubstr)
    
-   def isKeyArg( self ):
+   def isKeyword( self ):
       return self.name.startswith(':')
 
 

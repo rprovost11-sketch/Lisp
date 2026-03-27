@@ -24,7 +24,7 @@ def _filter_keyword_pairs( lst: list, declared_keys: set = None ) -> list:
    result = []
    i = 0
    while i < len(lst):
-      if isinstance(lst[i], LSymbol) and lst[i].isKeyArg():
+      if isinstance(lst[i], LSymbol) and lst[i].isKeyword():
          key = lst[i].name[1:]   # strip leading colon; already uppercased
          if declared_keys is None or key in declared_keys:
             i += 2               # skip this declared key-value pair

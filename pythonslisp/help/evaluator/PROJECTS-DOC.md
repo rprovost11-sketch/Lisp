@@ -152,6 +152,11 @@ the language is powerful enough to describe itself.
 Getting it to work requires:
 - A complete environment representation in Lisp (association lists or
   a Lisp-level hash table)
+- A `lookup` function written in Lisp that navigates that representation.
+  For an association-list environment it is a short recursive search;
+  for a dict environment it collapses to `(at sym env)`.  Either way,
+  `lookup` is not a primitive -- it is part of the meta-evaluator you
+  are building.
 - Lisp-level `apply` that can call both primitive and user-defined
   functions
 - Bootstrapping: the meta-evaluator runs on top of your Python
