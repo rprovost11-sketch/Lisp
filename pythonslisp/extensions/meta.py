@@ -8,6 +8,7 @@ from pythonslisp.AST import LSymbol, LMacro
 from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
+from pythonslisp.Parser import ParseError
 from pythonslisp.Expander import Expander
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.extensions.modules import resolve_module_path
@@ -172,8 +173,15 @@ numeric suffix and *gensym-counter* is left unchanged."""
       return LSymbol( f'G{counter}' )
    x = args[0]
    if isinstance( x, str ):
+      combined = f'{x}{counter}'
+      try:
+         sym, _ = ctx.parseOne( combined )
+      except ParseError:
+         raise LRuntimePrimError( LP_gensym, f'"{x}" is not a valid symbol prefix.' )
+      if not isinstance( sym, LSymbol ):
+         raise LRuntimePrimError( LP_gensym, f'"{x}" is not a valid symbol prefix.' )
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
-      return LSymbol( f'{x}{counter}' )
+      return sym
    if isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
       return LSymbol( f'G{x}' )
    raise LRuntimePrimError( LP_gensym, 'Argument must be a string prefix or non-negative integer.' )

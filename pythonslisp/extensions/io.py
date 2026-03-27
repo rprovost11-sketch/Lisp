@@ -12,9 +12,7 @@ from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, p
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError
-from pythonslisp.Parser import Parser, ParseError
-
-_LISP_PARSER = Parser()
+from pythonslisp.Parser import ParseError
 from pythonslisp.ltk.Utils import columnize
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.ltk.Highlighter import render_markdown
@@ -627,7 +625,7 @@ is accumulated."""
             raise LRuntimeError( 'read: end of file.' )
          return eof_value
       try:
-         ast, chars_consumed = _LISP_PARSER.parseOne( content )
+         ast, chars_consumed = ctx.parseOne( content )
       except ParseError as exc:
          raise LRuntimeError( f'read: {exc}' )
       stream.seek( pos + chars_consumed )
@@ -644,12 +642,12 @@ is accumulated."""
             break
          accumulated += line
          try:
-            ast, _ = _LISP_PARSER.parseOne( accumulated )
+            ast, _ = ctx.parseOne( accumulated )
             return ast
          except ParseError:
             continue
       try:
-         ast, _ = _LISP_PARSER.parseOne( accumulated )
+         ast, _ = ctx.parseOne( accumulated )
          return ast
       except ParseError as exc:
          raise LRuntimeError( f'read: {exc}' )

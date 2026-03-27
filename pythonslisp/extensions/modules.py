@@ -7,6 +7,7 @@ from pythonslisp.AST import LSymbol, prettyPrint
 from pythonslisp.Context import Context
 from pythonslisp.Environment import ModuleEnvironment
 from pythonslisp.Exceptions import LRuntimePrimError
+from pythonslisp.Parser import ParseError
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.AST import L_NIL
 
@@ -116,6 +117,12 @@ Returns the new module object."""
          container   = global_env
       elif isinstance( name_arg, str ):
          module_name = name_arg.upper()
+         try:
+            sym, _ = ctx.parseOne( module_name )
+         except ParseError:
+            raise LRuntimePrimError( LP_load_module, f'"{name_arg}" is not a valid module name.' )
+         if not isinstance( sym, LSymbol ):
+            raise LRuntimePrimError( LP_load_module, f'"{name_arg}" is not a valid module name.' )
          container   = global_env
       else:
          raise LRuntimePrimError( LP_load_module,
@@ -138,6 +145,12 @@ NAME may be a symbol or a string.  The module is bound in the global environment
       module_name = name_arg.name
    elif isinstance( name_arg, str ):
       module_name = name_arg.upper()
+      try:
+         sym, _ = ctx.parseOne( module_name )
+      except ParseError:
+         raise LRuntimePrimError( LP_make_module, f'"{name_arg}" is not a valid module name.' )
+      if not isinstance( sym, LSymbol ):
+         raise LRuntimePrimError( LP_make_module, f'"{name_arg}" is not a valid module name.' )
    else:
       raise LRuntimePrimError( LP_make_module, 'name must be a symbol or string.' )
    global_env = env.getGlobalEnv()

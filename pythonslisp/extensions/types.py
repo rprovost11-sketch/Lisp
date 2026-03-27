@@ -446,10 +446,9 @@ def LP_make_symbol( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if not isinstance(arg, str):
       raise LRuntimePrimError( LP_make_symbol, '1st argument expected to be a string.' )
    try:
-      parsed = ctx.parse(arg)
+      sym, _ = ctx.parseOne(arg)
    except ParseError:
       raise LRuntimePrimError( LP_make_symbol, f'"{arg}" is not a valid symbol name.' )
-   sym = parsed[1] if isinstance(parsed, list) and len(parsed) == 2 else parsed
    if not isinstance(sym, LSymbol):
       raise LRuntimePrimError( LP_make_symbol, f'"{arg}" is not a valid symbol name.' )
    return sym
