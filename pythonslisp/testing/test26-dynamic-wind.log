@@ -1,0 +1,895 @@
+; test26-dynamic-wind.log  --  dynamic-wind tests
+
+; --------------------------------------------------------
+; Basic execution order and return value
+; --------------------------------------------------------
+
+; before -> thunk -> after, in that order
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda () (setf log (append log (list "thunk"))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "thunk" "after")
+
+; return value is the thunk's value, not before's or after's
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () 42)
+...   (lambda () nil))
+==> 42
+
+; before's return value is discarded
+>>> (dynamic-wind
+...   (lambda () 999)
+...   (lambda () 42)
+...   (lambda () nil))
+==> 42
+
+; after's return value is discarded
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () 42)
+...   (lambda () 888))
+==> 42
+
+; thunk returning NIL
+>>> (dynamic-wind (lambda () nil) (lambda () nil) (lambda () nil))
+==> NIL
+
+; before sees state before thunk runs; after sees state after thunk runs
+>>> (let ((x 0) (log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list x))))
+...     (lambda () (setf x 42))
+...     (lambda () (setf log (append log (list x)))))
+...   log)
+==> (0 42)
+
+; thunk with multiple body forms: all run, last is returned
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 1))))
+...     (lambda ()
+...       (setf log (append log (list 2)))
+...       (setf log (append log (list 3)))
+...       99)
+...     (lambda () (setf log (append log (list 4)))))
+...   log)
+==> (1 2 3 4)
+
+; before/after can mutate shared state in order
+>>> (let ((x 0))
+...   (dynamic-wind
+...     (lambda () (setf x (+ x 1)))
+...     (lambda () (setf x (+ x 10)))
+...     (lambda () (setf x (+ x 100))))
+...   x)
+==> 111
+
+; return value unaffected by after's side effects
+>>> (let ((x 0))
+...   (list
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda () 77)
+...       (lambda () (setf x 99)))
+...     x))
+==> (77 99)
+
+; three sequential dynamic-winds run independently
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 1))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list 2)))))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 3))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list 4)))))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 5))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list 6)))))
+...   log)
+==> (1 2 3 4 5 6)
+
+; --------------------------------------------------------
+; Non-local exits via throw/catch
+; --------------------------------------------------------
+
+; throw from thunk: after runs
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (throw :done nil))
+...       (lambda () (setf log (append log (list "after"))))))
+...   log)
+==> ("before" "after")
+
+; catch INSIDE thunk handles throw; after still runs (no non-local exit)
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (let ((v (catch :x (throw :x 42))))
+...         (setf log (append log (list v)))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" 42 "after")
+
+; throw from thunk of OUTER; both afters run, inner first
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () nil)
+...           (lambda () (throw :done nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after"))))))
+...   log)
+==> ("inner-after" "outer-after")
+
+; throw from before: thunk and after do NOT run
+>>> (let ((log (list)))
+...   (catch :escape
+...     (dynamic-wind
+...       (lambda () (throw :escape nil))
+...       (lambda () (setf log (append log (list "thunk"))))
+...       (lambda () (setf log (append log (list "after"))))))
+...   log)
+==> NIL
+
+; throw from innermost of 3 nested: all three afters run, innermost first
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () nil)
+...           (lambda ()
+...             (dynamic-wind
+...               (lambda () nil)
+...               (lambda () (throw :done nil))
+...               (lambda () (setf log (append log (list "C-out"))))))
+...           (lambda () (setf log (append log (list "B-out"))))))
+...       (lambda () (setf log (append log (list "A-out"))))))
+...   log)
+==> ("C-out" "B-out" "A-out")
+
+; --------------------------------------------------------
+; Non-local exits via return-from/block
+; --------------------------------------------------------
+
+; return-from exits thunk: after runs
+>>> (let ((log (list)))
+...   (block outer
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (return-from outer nil))
+...       (lambda () (setf log (append log (list "after"))))))
+...   log)
+==> ("before" "after")
+
+; block INSIDE thunk catches return-from; after still runs
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (let ((v (block inner (return-from inner 55))))
+...         (setf log (append log (list v)))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" 55 "after")
+
+; return-from exits two nested dynamic-winds: both afters run, inner first
+>>> (let ((log (list)))
+...   (block escape
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "B-before"))))
+...           (lambda () (return-from escape nil))
+...           (lambda () (setf log (append log (list "B-after"))))))
+...       (lambda () (setf log (append log (list "A-after"))))))
+...   log)
+==> ("A-before" "B-before" "B-after" "A-after")
+
+; return-from exits nested A and B; A runs before B does
+>>> (let ((log (list)))
+...   (block done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "outer-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "inner-before"))))
+...           (lambda () (return-from done nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after"))))))
+...   log)
+==> ("outer-before" "inner-before" "inner-after" "outer-after")
+
+; --------------------------------------------------------
+; Non-local exits via error/signal
+; --------------------------------------------------------
+
+; error exits thunk: after runs
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (error "boom"))
+...       (lambda () (setf log (append log (list "after")))))
+...     (t (e) nil))
+...   log)
+==> ("before" "after")
+
+; handler-case INSIDE thunk catches error; after still runs
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (handler-case (error "caught-inside")
+...         (t (e) (setf log (append log (list "caught"))))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "caught" "after")
+
+; signal caught OUTSIDE dynamic-wind: after runs
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (signal (make-condition 'test-err "msg")))
+...       (lambda () (setf log (append log (list "after")))))
+...     (t (e) nil))
+...   log)
+==> ("before" "after")
+
+; signal caught INSIDE thunk: after still runs (no unwind)
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (handler-case
+...         (signal (make-condition 'test-err "msg"))
+...         (t (e) (setf log (append log (list "caught"))))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "caught" "after")
+
+; error in before: thunk and after do NOT run
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (error "before-error"))
+...       (lambda () (setf log (append log (list "thunk"))))
+...       (lambda () (setf log (append log (list "after")))))
+...     (t (e) nil))
+...   log)
+==> NIL
+
+; error exits both nested dws: both afters run, inner first
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () nil)
+...           (lambda () (error "boom"))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after")))))
+...     (t (e) nil))
+...   log)
+==> ("inner-after" "outer-after")
+
+; --------------------------------------------------------
+; Non-local exits via continuation
+; --------------------------------------------------------
+
+; continuation escape from thunk: after runs
+>>> (let ((log (list)))
+...   (call/cc (lambda (escape)
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (escape nil))
+...       (lambda () (setf log (append log (list "after")))))))
+...   log)
+==> ("before" "after")
+
+; continuation captured BEFORE dynamic-wind, called from INSIDE: after runs
+>>> (let ((log (list)) (outer nil) (entered nil))
+...   (call/cc (lambda (k) (setq outer k)))
+...   (when (not entered)
+...     (setf entered t)
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "in"))))
+...       (lambda () (outer nil))
+...       (lambda () (setf log (append log (list "out"))))))
+...   log)
+==> ("in" "out")
+
+; continuation escape exits nested: both afters run
+>>> (let ((log (list)))
+...   (call/cc (lambda (escape)
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "outer-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "inner-before"))))
+...           (lambda () (escape nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after")))))))
+...   log)
+==> ("outer-before" "inner-before" "inner-after" "outer-after")
+
+; --------------------------------------------------------
+; Re-invocable continuations: before and after run on each crossing
+; --------------------------------------------------------
+
+; stored continuation re-invoked twice: 3 before/after pairs total
+>>> (let ((log (list)) (resume nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "in"))))
+...     (lambda ()
+...       (call/cc (lambda (k) (setq resume k)))
+...       (setf n (+ n 1)))
+...     (lambda () (setf log (append log (list "out")))))
+...   (when (< n 3) (resume nil))
+...   log)
+==> ("in" "out" "in" "out" "in" "out")
+
+; 4 re-entries: before and after called exactly 4 times each
+>>> (let ((bc 0) (ac 0) (k nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf bc (+ bc 1)))
+...     (lambda () (call/cc (lambda (c) (setq k c))) (setf n (+ n 1)))
+...     (lambda () (setf ac (+ ac 1))))
+...   (when (< n 4) (k nil))
+...   (list bc ac n))
+==> (4 4 4)
+
+; value delivered to call/cc expression when continuation is called
+>>> (let ((k nil) (log (list)))
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda ()
+...       (let ((v (call/cc (lambda (c) (setq k c) 1))))
+...         (setf log (append log (list v)))))
+...     (lambda () nil))
+...   (when (= (length log) 1) (k 2))
+...   log)
+==> (1 2)
+
+; continuation called with a sequence of different values
+>>> (let ((k nil) (results (list)))
+...   (let ((v (call/cc (lambda (c) (setq k c) 10))))
+...     (setf results (append results (list v))))
+...   (when (= (length results) 1) (k 20))
+...   (when (= (length results) 2) (k 30))
+...   results)
+==> (10 20 30)
+
+; re-entry into NESTED dynamic-wind: inner before/after run each crossing
+>>> (let ((log (list)) (k nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "outer-in"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "inner-in"))))
+...         (lambda ()
+...           (call/cc (lambda (c) (setq k c)))
+...           (setf n (+ n 1)))
+...         (lambda () (setf log (append log (list "inner-out"))))))
+...     (lambda () (setf log (append log (list "outer-out")))))
+...   (when (< n 2) (k nil))
+...   log)
+==> ("outer-in" "inner-in" "inner-out" "outer-out" "outer-in" "inner-in" "inner-out" "outer-out")
+
+; --------------------------------------------------------
+; Wind-stack transitions across dynamic-wind scopes
+; --------------------------------------------------------
+
+; continuation stored inside dw A, called from inside dw B:
+; B's after runs (exit B), A's before runs (enter A), A's after runs (exit A),
+; then B's before runs again (re-enter B), B's after runs (normal exit)
+>>> (let ((log (list)) (kA nil) (done nil))
+...   (defun run-A ()
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-in"))))
+...       (lambda () (call/cc (lambda (k) (setq kA k))))
+...       (lambda () (setf log (append log (list "A-out"))))))
+...   (defun run-B ()
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "B-in"))))
+...       (lambda ()
+...         (when (not done)
+...           (setf done t)
+...           (kA nil)))
+...       (lambda () (setf log (append log (list "B-out"))))))
+...   (run-A)
+...   (run-B)
+...   log)
+==> ("A-in" "A-out" "B-in" "B-out" "A-in" "A-out" "B-in" "B-out")
+
+; --------------------------------------------------------
+; Nested dynamic-wind: execution order
+; --------------------------------------------------------
+
+; normal exit: outer-before, inner-before, thunk, inner-after, outer-after
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "A-before"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "B-before"))))
+...         (lambda () (setf log (append log (list "thunk"))))
+...         (lambda () (setf log (append log (list "B-after"))))))
+...     (lambda () (setf log (append log (list "A-after")))))
+...   log)
+==> ("A-before" "B-before" "thunk" "B-after" "A-after")
+
+; throw from inner - both afters run innermost first
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "B-before"))))
+...           (lambda () (throw :done nil))
+...           (lambda () (setf log (append log (list "B-after"))))))
+...       (lambda () (setf log (append log (list "A-after"))))))
+...   log)
+==> ("A-before" "B-before" "B-after" "A-after")
+
+; three-level nesting, throw from deepest: C-out, B-out, A-out
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-in"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "B-in"))))
+...           (lambda ()
+...             (dynamic-wind
+...               (lambda () (setf log (append log (list "C-in"))))
+...               (lambda () (throw :done nil))
+...               (lambda () (setf log (append log (list "C-out"))))))
+...           (lambda () (setf log (append log (list "B-out"))))))
+...       (lambda () (setf log (append log (list "A-out"))))))
+...   log)
+==> ("A-in" "B-in" "C-in" "C-out" "B-out" "A-out")
+
+; catch inside thunk of outer dw handles throw from inner dw's thunk
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "outer-before"))))
+...     (lambda ()
+...       (catch :x
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "inner-before"))))
+...           (lambda () (throw :x nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (setf log (append log (list "outer-thunk-continued"))))
+...     (lambda () (setf log (append log (list "outer-after")))))
+...   log)
+==> ("outer-before" "inner-before" "inner-after" "outer-thunk-continued" "outer-after")
+
+; --------------------------------------------------------
+; Closure semantics: before/after capture their defining environment
+; --------------------------------------------------------
+
+; closures in before/after correctly capture the loop variable
+>>> (let ((i 0))
+...   (dotimes (n 3)
+...     (let ((captured n))
+...       (dynamic-wind
+...         (lambda () (setf i (+ i captured)))
+...         (lambda () nil)
+...         (lambda () (setf i (+ i captured))))))
+...   i)
+==> 6
+
+; --------------------------------------------------------
+; Interaction with other control operators
+; --------------------------------------------------------
+
+; dynamic-wind inside a dolist body
+>>> (let ((log (list)))
+...   (dolist (x '(a b c))
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list x))))
+...       (lambda () nil)
+...       (lambda () (setf log (append log (list x))))))
+...   log)
+==> (A A B B C C)
+
+; dynamic-wind inside a dotimes body
+>>> (let ((sum 0))
+...   (dotimes (i 3)
+...     (dynamic-wind
+...       (lambda () (setf sum (+ sum i)))
+...       (lambda () nil)
+...       (lambda () (setf sum (+ sum i)))))
+...   sum)
+==> 6
+
+; block/return-from inside thunk exits only the thunk's block, not dw
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (block nil
+...         (return nil))
+...       (setf log (append log (list "thunk-continued"))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "thunk-continued" "after")
+
+; call/cc inside before (unusual but should work)
+>>> (let ((k nil))
+...   (dynamic-wind
+...     (lambda () (when (null k) (call/cc (lambda (c) (setq k c)))))
+...     (lambda () 42)
+...     (lambda () nil)))
+==> 42
+
+; --------------------------------------------------------
+; Error cases
+; --------------------------------------------------------
+
+>>> (dynamic-wind (lambda () nil) (lambda () nil))
+%%% dynamic-wind: requires exactly 3 arguments (before thunk after).
+
+>>> (dynamic-wind (lambda () nil) (lambda () nil) (lambda () nil) (lambda () nil))
+%%% dynamic-wind: requires exactly 3 arguments (before thunk after).
+
+>>> (dynamic-wind 42 (lambda () nil) (lambda () nil))
+%%% dynamic-wind: before argument must be a callable.
+
+>>> (dynamic-wind (lambda () nil) 42 (lambda () nil))
+%%% dynamic-wind: thunk argument must be a callable.
+
+>>> (dynamic-wind (lambda () nil) (lambda () nil) 42)
+%%% dynamic-wind: after argument must be a callable.
+
+>>> (dynamic-wind "hello" (lambda () nil) (lambda () nil))
+%%% dynamic-wind: before argument must be a callable.
+
+>>> (let ((m (defmacro _dw_test_mac () nil)))
+...   (dynamic-wind m (lambda () nil) (lambda () nil)))
+%%% dynamic-wind: before argument must be a callable.
+
+; --------------------------------------------------------
+; Resource management patterns
+; --------------------------------------------------------
+
+; "finally" pattern: after always runs (resource closed)
+>>> (let ((open nil) (result nil))
+...   (dynamic-wind
+...     (lambda () (setf open t))
+...     (lambda () (setf result 42))
+...     (lambda () (setf open nil)))
+...   (list result open))
+==> (42 NIL)
+
+; "finally" pattern: resource closed even when thunk errors
+>>> (let ((open nil))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf open t))
+...       (lambda () (error "oops"))
+...       (lambda () (setf open nil)))
+...     (t (e) nil))
+...   open)
+==> NIL
+
+; thunk sees state set by before
+>>> (let ((ready nil) (result nil))
+...   (dynamic-wind
+...     (lambda () (setf ready t))
+...     (lambda () (setf result ready))
+...     (lambda () nil))
+...   result)
+==> T
+
+; after cleans up state set by thunk
+>>> (let ((x 0))
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda () (setf x 99))
+...     (lambda () (setf x 0)))
+...   x)
+==> 0
+
+; dynamic-wind result usable in enclosing expression
+>>> (+ 10 (dynamic-wind
+...         (lambda () nil)
+...         (lambda () 5)
+...         (lambda () nil)))
+==> 15
+
+; dynamic-wind in tail position of a defun
+>>> (defun compute ()
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda () (+ 2 3))
+...     (lambda () nil)))
+==> (FUNCTION COMPUTE () ...)
+>>> (compute)
+==> 5
+
+; before/after can call helper functions
+>>> (let ((log (list)))
+...   (defun log-it (x) (setf log (append log (list x))))
+...   (dynamic-wind
+...     (lambda () (log-it "setup"))
+...     (lambda () (log-it "work"))
+...     (lambda () (log-it "cleanup")))
+...   log)
+==> ("setup" "work" "cleanup")
+
+; --------------------------------------------------------
+; Interaction with loops and recursion
+; --------------------------------------------------------
+
+; dynamic-wind in dolist body: before/after run for each element
+>>> (let ((log (list)))
+...   (dolist (x '(a b c))
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list x))))
+...       (lambda () nil)
+...       (lambda () (setf log (append log (list x))))))
+...   log)
+==> (A A B B C C)
+
+; dynamic-wind in dotimes
+>>> (let ((sum 0))
+...   (dotimes (i 3)
+...     (dynamic-wind
+...       (lambda () (setf sum (+ sum i)))
+...       (lambda () nil)
+...       (lambda () (setf sum (+ sum i)))))
+...   sum)
+==> 6
+
+; dynamic-wind in loop counts entries correctly with dotimes
+>>> (let ((bc 0) (ac 0))
+...   (dotimes (i 4)
+...     (dynamic-wind
+...       (lambda () (setf bc (+ bc 1)))
+...       (lambda () nil)
+...       (lambda () (setf ac (+ ac 1)))))
+...   (list bc ac))
+==> (4 4)
+
+; recursive function called inside thunk
+>>> (let ((log (list)))
+...   (defun count-down (n)
+...     (when (> n 0)
+...       (setf log (append log (list n)))
+...       (count-down (- n 1))))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "start"))))
+...     (lambda () (count-down 3))
+...     (lambda () (setf log (append log (list "end")))))
+...   log)
+==> ("start" 3 2 1 "end")
+
+; depth tracking with dynamic-wind (entry/exit invariant)
+>>> (let ((depth 0) (max-depth 0))
+...   (defun guarded ()
+...     (dynamic-wind
+...       (lambda () (setf depth (+ depth 1))
+...                  (when (> depth max-depth) (setf max-depth depth)))
+...       (lambda () (when (< depth 3) (guarded)))
+...       (lambda () (setf depth (- depth 1)))))
+...   (guarded)
+...   (list depth max-depth))
+==> (0 3)
+
+; --------------------------------------------------------
+; Additional continuation tests
+; --------------------------------------------------------
+
+; continuation called 3 times from inside dw: 3 before/after pairs
+>>> (let ((k nil) (log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "dw-before"))))
+...     (lambda ()
+...       (call/cc (lambda (c) (setq k c)))
+...       (setf log (append log (list "in-thunk"))))
+...     (lambda () (setf log (append log (list "dw-after")))))
+...   (when (< (length log) 6) (k nil))
+...   log)
+==> ("dw-before" "in-thunk" "dw-after" "dw-before" "in-thunk" "dw-after")
+
+; re-entry from outside: each re-entry triggers before then after
+>>> (let ((log (list)) (k nil))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "in"))))
+...     (lambda () (call/cc (lambda (c) (setq k c))))
+...     (lambda () (setf log (append log (list "out")))))
+...   (when (= (length log) 2) (k nil))
+...   log)
+==> ("in" "out" "in" "out")
+
+; count tracks each before/after via let-loop with continuation
+>>> (let ((total 0) (k nil) (i 0))
+...   (dynamic-wind
+...     (lambda () (setf total (+ total 1)))
+...     (lambda ()
+...       (when (null k) (call/cc (lambda (c) (setq k c))))
+...       (setf i (+ i 1)))
+...     (lambda () (setf total (+ total 10))))
+...   (when (< i 3) (k nil))
+...   total)
+==> 33
+
+; continuation captures value from call/cc on each re-entry
+>>> (let ((k nil) (log (list)))
+...   (let ((v (call/cc (lambda (c) (setq k c) 10))))
+...     (setf log (append log (list v))))
+...   (when (= (length log) 1) (k 20))
+...   (when (= (length log) 2) (k 30))
+...   log)
+==> (10 20 30)
+
+; --------------------------------------------------------
+; More behavioral coverage
+; --------------------------------------------------------
+
+; before count always equals after count even with re-entry
+>>> (let ((bc 0) (ac 0) (k nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf bc (+ bc 1)))
+...     (lambda ()
+...       (call/cc (lambda (c) (setq k c)))
+...       (setf n (+ n 1)))
+...     (lambda () (setf ac (+ ac 1))))
+...   (when (< n 3) (k nil))
+...   (= bc ac))
+==> T
+
+; thunk returning a list
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () (list 1 2 3))
+...   (lambda () nil))
+==> (1 2 3)
+
+; thunk returning a symbol
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () 'hello)
+...   (lambda () nil))
+==> HELLO
+
+; thunk returning T
+>>> (dynamic-wind (lambda () nil) (lambda () t) (lambda () nil))
+==> T
+
+; three-level normal exit: 1-in, 2-in, 3-in, 3-out, 2-out, 1-out
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "1-in"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "2-in"))))
+...         (lambda ()
+...           (dynamic-wind
+...             (lambda () (setf log (append log (list "3-in"))))
+...             (lambda () nil)
+...             (lambda () (setf log (append log (list "3-out"))))))
+...         (lambda () (setf log (append log (list "2-out"))))))
+...     (lambda () (setf log (append log (list "1-out")))))
+...   log)
+==> ("1-in" "2-in" "3-in" "3-out" "2-out" "1-out")
+
+; three sequential dws each increment n twice (before + after)
+>>> (let ((n 0))
+...   (dynamic-wind (lambda () (setf n (+ n 1))) (lambda () nil) (lambda () (setf n (+ n 1))))
+...   (dynamic-wind (lambda () (setf n (+ n 1))) (lambda () nil) (lambda () (setf n (+ n 1))))
+...   (dynamic-wind (lambda () (setf n (+ n 1))) (lambda () nil) (lambda () (setf n (+ n 1))))
+...   n)
+==> 6
+
+; second dw runs normally even when first dw's thunk errored (with handler)
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-before"))))
+...       (lambda () (error "e"))
+...       (lambda () (setf log (append log (list "A-after")))))
+...     (t (ex) nil))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "B-before"))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list "B-after")))))
+...   log)
+==> ("A-before" "A-after" "B-before" "B-after")
+
+; error in second of two sequential dws: first runs fully, second's after runs
+>>> (let ((log (list)))
+...   (handler-case
+...     (progn
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "A"))))
+...         (lambda () nil)
+...         (lambda () (setf log (append log (list "B")))))
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "C"))))
+...         (lambda () (error "e"))
+...         (lambda () (setf log (append log (list "D"))))))
+...     (t (ex) nil))
+...   log)
+==> ("A" "B" "C" "D")
+
+; throw from AFTER: value delivered to catch
+>>> (let ((log (list)))
+...   (let ((v (catch :x
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda () (setf log (append log (list "thunk"))))
+...       (lambda () (throw :x 99))))))
+...     (list v log)))
+==> (99 ("thunk"))
+
+; funcall on a function returned by dynamic-wind's thunk
+>>> (let ((f (dynamic-wind
+...            (lambda () nil)
+...            (lambda () (lambda (x) (* x 2)))
+...            (lambda () nil))))
+...   (funcall f 5))
+==> 10
+
+; continuation that escapes from inside nested dw: after runs once
+>>> (let ((log (list)) (calls 0))
+...   (call/cc (lambda (k)
+...     (setf calls (+ calls 1))
+...     (when (< calls 3)
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "wrap"))))
+...         (lambda () (k nil))
+...         (lambda () (setf log (append log (list "unwrap"))))))))
+...   log)
+==> ("wrap" "unwrap")
+
+; nested dw with normal exit: verify before order is outer then inner
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "outer-first"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "inner-second"))))
+...         (lambda () nil)
+...         (lambda () (setf log (append log (list "inner-third"))))))
+...     (lambda () (setf log (append log (list "outer-fourth")))))
+...   log)
+==> ("outer-first" "inner-second" "inner-third" "outer-fourth")
+
+; dynamic-wind where before and after both modify the same counter
+>>> (let ((n 0))
+...   (dynamic-wind
+...     (lambda () (setf n (+ n 1)))
+...     (lambda () n)
+...     (lambda () (setf n (- n 1))))
+...   n)
+==> 0
+
+; error inside after during throw unwind - after's error propagates
+; (handler-case cannot intercept it because error exits the except handler)
+>>> (catch :done
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda () (throw :done nil))
+...     (lambda () (error "after-error"))))
+%%% after-error

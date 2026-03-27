@@ -294,6 +294,68 @@ the previous `*fail*` is restored and backtracking continues further up.
 
 ---
 
+## Use Case 7: dynamic-wind — Guaranteed Cleanup
+
+`(dynamic-wind before thunk after)` guarantees that `before` and `after` run
+on **every entry and exit** of the thunk, including non-local exits via
+`throw`, `return-from`, errors, and — crucially — continuation invocations.
+
+```lisp
+; after always runs, even when the thunk throws
+(let ((log '()))
+  (catch :done
+    (dynamic-wind
+      (lambda () (setf log (append log '("before"))))
+      (lambda () (throw :done nil))
+      (lambda () (setf log (append log '("after"))))))
+  log)
+;==> ("before" "after")
+```
+
+**With continuations** — `dynamic-wind` tracks every boundary crossing:
+
+```lisp
+; before and after run on each re-entry and re-exit via continuation
+(let ((log '()) (resume nil) (n 0))
+  (dynamic-wind
+    (lambda () (setf log (append log '("in"))))
+    (lambda ()
+      (call/cc (lambda (k) (setf resume k)))
+      (setf n (+ n 1)))
+    (lambda () (setf log (append log '("out")))))
+  (when (< n 3) (resume nil))
+  log)
+;==> ("in" "out" "in" "out" "in" "out")
+```
+
+Each call to `resume` re-enters the dynamic-wind scope, triggering `before`
+again.  Each exit — whether via normal return or continuation jump — triggers
+`after`.
+
+**Nested `dynamic-wind`** — afters run innermost first, matching the structure
+of the dynamic extent:
+
+```lisp
+(let ((log '()))
+  (dynamic-wind
+    (lambda () (setf log (append log '("outer-before"))))
+    (lambda ()
+      (dynamic-wind
+        (lambda () (setf log (append log '("inner-before"))))
+        (lambda () (setf log (append log '("thunk"))))
+        (lambda () (setf log (append log '("inner-after"))))))
+    (lambda () (setf log (append log '("outer-after")))))
+  log)
+;==> ("outer-before" "inner-before" "thunk" "inner-after" "outer-after")
+```
+
+**Typical uses:** resource cleanup, lock acquire/release, transaction
+brackets, instrumentation, and any situation where setup and teardown must
+be symmetric even under non-local control flow.
+
+
+---
+
 ## call/cc vs catch/throw
 
 | | `call/cc` | `catch`/`throw` |
@@ -318,6 +380,7 @@ Reach for `call/cc` when you need to *store* or *resume* a computation.
 | `(k value)` | Deliver value to the call/cc site; resume saved computation |
 | `(setf saved k)` | Store continuation for later use |
 | `(saved value)` | Re-instate saved computation, delivering value |
+| `(dynamic-wind before thunk after)` | Run before; run thunk; run after — even on non-local exit or re-entry |
 
 See also: `(help "control-transfer-doc")` for `block`/`return-from`,
 `catch`/`throw`, and `handler-case`.

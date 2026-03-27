@@ -36,11 +36,12 @@ class ReturnFrom( Exception ):
 
 class ContinuationInvoked( Exception ):
    """Raised when a continuation is invoked.  Propagates up to cek_eval's handler, which restores K."""
-   __slots__ = ('saved_k', 'value')
+   __slots__ = ('saved_k', 'saved_wind_stack', 'value')
 
-   def __init__( self, saved_k: list, value ) -> None:
-      self.saved_k = saved_k
-      self.value   = value
+   def __init__( self, saved_k: list, saved_wind_stack: list, value ) -> None:
+      self.saved_k          = saved_k
+      self.saved_wind_stack = saved_wind_stack
+      self.value            = value
       super().__init__()
 
 

@@ -156,10 +156,11 @@ Use multiple-value-bind or nth-value to capture all values."""
 
 class LContinuation( LCallable ):
    """A first-class continuation captured by call/cc.  Invoking it raises ContinuationInvoked."""
-   __slots__ = ('saved_k',)
+   __slots__ = ('saved_k', 'wind_stack')
 
-   def __init__( self, saved_k: list ) -> None:
-      self.saved_k = saved_k
+   def __init__( self, saved_k: list, wind_stack: list ) -> None:
+      self.saved_k    = saved_k
+      self.wind_stack = wind_stack
       super().__init__( 'continuation', '' )
 
    def typeLabel( self ) -> str:

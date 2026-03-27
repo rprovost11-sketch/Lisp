@@ -413,7 +413,7 @@ class ArgFrame:
             spread = self.done + list_arg
             if len(spread) != 1:
                raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(spread)}.' )
-            raise ContinuationInvoked( self.fn.saved_k, spread[0] )
+            raise ContinuationInvoked( self.fn.saved_k, self.fn.wind_stack, spread[0] )
          self.done.extend(list_arg)
 
       return _do_apply( self.fn, self.done, self.env, K, ctx )
@@ -429,7 +429,7 @@ class _ContinuationInvokeFrame:
    def copy( self ): return self
 
    def step( self, value, E, K, ctx ):
-      raise ContinuationInvoked( self.continuation.saved_k, _primary(value) )
+      raise ContinuationInvoked( self.continuation.saved_k, self.continuation.wind_stack, _primary(value) )
 
 
 class BodyFrame:
@@ -479,6 +479,7 @@ class ReturnFromFrame:
    def step( self, value, E, K, ctx ):
       for i in reversed(range(len(K))):
          if isinstance(K[i], BlockFrame) and K[i].name == self.name:
+            _unwind_dynwind_above(K, i + 1, ctx, E)
             del K[i:]   # removes BlockFrame and everything above it
             return _Val(value), E
       raise ReturnFrom(self.name, _primary(value))
@@ -651,6 +652,129 @@ def _copy_k( K: list ) -> list:
 
 
 # ---------------------------------------------------------------------------
+# dynamic-wind helpers
+# ---------------------------------------------------------------------------
+
+def _common_prefix_len( s1: list, s2: list ) -> int:
+   """Return the length of the longest common prefix of two wind stacks,
+   comparing entries by identity."""
+   n = min( len(s1), len(s2) )
+   for i in range(n):
+      if s1[i] is not s2[i]:
+         return i
+   return n
+
+
+def _unwind_dynwind_above( K: list, from_idx: int, ctx, env ) -> None:
+   """Call after thunks for all DynWindFrames at indices >= from_idx in K.
+   Removes those frames from K.  Calls innermost (rightmost) first."""
+   above      = K[from_idx:]
+   dw_frames  = [ f for f in reversed(above) if isinstance(f, DynWindFrame) ]
+   K[from_idx:] = [ f for f in above if not isinstance(f, DynWindFrame) ]
+   for frame in dw_frames:
+      if frame.wind_entry in ctx.wind_stack:
+         ctx.wind_stack.remove( frame.wind_entry )
+      cek_apply( ctx, env, frame.after_fn, [] )
+
+
+def _do_wind_transition( ctx, target_wind_stack: list, env ) -> None:
+   """Transition ctx.wind_stack from its current state to target_wind_stack.
+   Calls after thunks for entries being exited (innermost first) and
+   before thunks for entries being entered (outermost first)."""
+   common = _common_prefix_len( ctx.wind_stack, target_wind_stack )
+   while len(ctx.wind_stack) > common:
+      entry = ctx.wind_stack.pop()
+      cek_apply( ctx, env, entry[1], [] )   # after
+   for entry in target_wind_stack[common:]:
+      ctx.wind_stack.append( entry )
+      cek_apply( ctx, env, entry[0], [] )   # before
+
+
+# ---------------------------------------------------------------------------
+# dynamic-wind frame classes
+# ---------------------------------------------------------------------------
+
+class DynWindCollectFrame:
+   """Collect before/thunk/after callables; call before; chain to DynWindExecuteFrame."""
+   __slots__ = ('forms', 'done', 'env')
+
+   def __init__( self, forms, done, env ):
+      self.forms = forms   # remaining unevaluated forms (thunk, after)
+      self.done  = done    # evaluated callables so far
+      self.env   = env
+
+   def copy( self ): return DynWindCollectFrame( list(self.forms), list(self.done), self.env )
+
+   def step( self, value, E, K, ctx ):
+      self.done.append( _primary(value) )
+      if self.forms:
+         nxt        = self.forms[0]
+         self.forms = self.forms[1:]
+         K.append( self )
+         return nxt, self.env
+      # All three args collected
+      before_fn, thunk_fn, after_fn = self.done
+      for fn, label in ( (before_fn, 'before'), (thunk_fn, 'thunk'), (after_fn, 'after') ):
+         if not isinstance(fn, LCallable) or type(fn) is LMacro:
+            raise LRuntimeError( f"dynamic-wind: {label} argument must be a callable." )
+      wind_entry = [before_fn, after_fn]
+      K.append( DynWindExecuteFrame(thunk_fn, after_fn, wind_entry, self.env) )
+      return _do_apply( before_fn, [], self.env, K, ctx )
+
+
+class DynWindExecuteFrame:
+   """Before thunk done; push wind entry and call the thunk."""
+   __slots__ = ('thunk_fn', 'after_fn', 'wind_entry', 'env')
+
+   def __init__( self, thunk_fn, after_fn, wind_entry, env ):
+      self.thunk_fn   = thunk_fn
+      self.after_fn   = after_fn
+      self.wind_entry = wind_entry
+      self.env        = env
+
+   def copy( self ): return DynWindExecuteFrame( self.thunk_fn, self.after_fn, list(self.wind_entry), self.env )
+
+   def step( self, before_result, E, K, ctx ):
+      ctx.wind_stack.append( self.wind_entry )
+      K.append( DynWindFrame(self.after_fn, self.wind_entry, self.env) )
+      return _do_apply( self.thunk_fn, [], self.env, K, ctx )
+
+
+class DynWindFrame:
+   """Marks the active dynamic-wind scope while the thunk runs.
+   On normal exit: pops the wind entry and calls after."""
+   __slots__ = ('after_fn', 'wind_entry', 'env')
+
+   def __init__( self, after_fn, wind_entry, env ):
+      self.after_fn   = after_fn
+      self.wind_entry = wind_entry
+      self.env        = env
+
+   def copy( self ): return DynWindFrame( self.after_fn, list(self.wind_entry), self.env )
+
+   def step( self, thunk_result, E, K, ctx ):
+      thunk_val = _primary(thunk_result)
+      if self.wind_entry in ctx.wind_stack:
+         ctx.wind_stack.remove( self.wind_entry )
+      K.append( DynWindReturnFrame(thunk_val, self.env) )
+      return _do_apply( self.after_fn, [], self.env, K, ctx )
+
+
+class DynWindReturnFrame:
+   """After thunk completed normally; deliver the saved thunk value."""
+   __slots__ = ('thunk_val', 'env')
+
+   def __init__( self, thunk_val, env ):
+      self.thunk_val = thunk_val
+      self.env       = env
+
+   def copy( self ): return self
+
+   def step( self, after_result, E, K, ctx ):
+      return _Val(self.thunk_val), self.env
+
+
+# ---------------------------------------------------------------------------
 # Apply helper
 # ---------------------------------------------------------------------------
 
@@ -712,7 +836,7 @@ def cek_apply( ctx, env, function, args ) -> Any:
    if isinstance( function, LContinuation ):
       if len(args) != 1:
          raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
-      raise ContinuationInvoked( function.saved_k, args[0] )
+      raise ContinuationInvoked( function.saved_k, function.wind_stack, args[0] )
 
    # Use _do_apply directly; run the full loop with the returned state.
    K = []
@@ -778,7 +902,7 @@ _SPECIAL_OPERATOR_SET = frozenset({
    'HANDLER-CASE',
    'MULTIPLE-VALUE-BIND', 'MULTIPLE-VALUE-LIST', 'NTH-VALUE',
    'MAKE-DICT',
-   ':', 'CALL/CC',
+   ':', 'CALL/CC', 'DYNAMIC-WIND',
 })
 
 
@@ -1085,67 +1209,93 @@ def cek_eval( ctx, env, expr ) -> Any:
             continue
 
          if headStr == 'CALL/CC':
-            cont = LContinuation( _copy_k(K) )
+            cont = LContinuation( _copy_k(K), list(ctx.wind_stack) )
             K.append( CallCCProcFrame(cont) )
             C = C[1]   # eval the procedure
             continue
 
+         if headStr == 'DYNAMIC-WIND':
+            if len(C) != 4:
+               raise LRuntimeError( 'dynamic-wind: requires exactly 3 arguments (before thunk after).' )
+            K.append( DynWindCollectFrame( [C[2], C[3]], [], E ) )
+            C = C[1]   # eval before first
+            continue
+
       except ReturnFrom as e:
+         handler_idx = None
          for i in reversed(range(len(K))):
             if isinstance(K[i], BlockFrame) and K[i].name == e.name:
-               del K[i:]
-               C = _Val(e.value)
+               handler_idx = i
                break
-         else:
+         if handler_idx is None:
+            _unwind_dynwind_above(K, 0, ctx, E)
             raise   # no block in this machine - propagate to outer cek_eval or rawEval
+         _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
+         del K[handler_idx:]
+         C = _Val(e.value)
          continue
 
       except Thrown as e:
+         handler_idx = None
          for i in reversed(range(len(K))):
             if isinstance(K[i], CatchBodyFrame) and eql(K[i].tag, e.tag):
-               del K[i:]
-               C = _Val(e.value)
+               handler_idx = i
                break
-         else:
+         if handler_idx is None:
+            _unwind_dynwind_above(K, 0, ctx, E)
             raise   # no catch in this machine - propagate to outer cek_eval or rawEval
+         _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
+         del K[handler_idx:]
+         C = _Val(e.value)
          continue
 
       except Signaled as e:
-         ctype_sym = e.condition.get('CONDITION-TYPE', LSymbol('ERROR'))
-         type_name = ctype_sym.name if isinstance(ctype_sym, LSymbol) else 'ERROR'
+         ctype_sym   = e.condition.get('CONDITION-TYPE', LSymbol('ERROR'))
+         type_name   = ctype_sym.name if isinstance(ctype_sym, LSymbol) else 'ERROR'
+         handler_idx = None
+         handler_frame = None
          for i in reversed(range(len(K))):
             if isinstance(K[i], HandlerCaseBodyFrame):
                var, body = K[i].find_handler(type_name)
                if body is not None:
-                  frame   = K[i]
-                  del K[i:]
-                  new_env = Environment(frame.env, evalFn=ctx.lEval)
-                  if var is not None:
-                     new_env.bindLocal(var.name, e.condition)
-                  C, E = _eval_body(body, new_env, K)
+                  handler_idx   = i
+                  handler_frame = K[i]
                   break
-         else:
+         if handler_idx is None:
+            _unwind_dynwind_above(K, 0, ctx, E)
             raise
+         _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
+         del K[handler_idx:]
+         new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
+         if var is not None:
+            new_env.bindLocal(var.name, e.condition)
+         C, E = _eval_body(body, new_env, K)
          continue
 
       except LRuntimeError as e:
+         handler_idx   = None
+         handler_frame = None
          for i in reversed(range(len(K))):
             if isinstance(K[i], HandlerCaseBodyFrame):
                var, body = K[i].find_handler('ERROR')
                if body is not None:
-                  frame   = K[i]
-                  del K[i:]
-                  new_env = Environment(frame.env, evalFn=ctx.lEval)
-                  cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': str(e)}
-                  if var is not None:
-                     new_env.bindLocal(var.name, cond)
-                  C, E = _eval_body(body, new_env, K)
+                  handler_idx   = i
+                  handler_frame = K[i]
                   break
-         else:
+         if handler_idx is None:
+            _unwind_dynwind_above(K, 0, ctx, E)
             raise
+         _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
+         del K[handler_idx:]
+         new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
+         cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': str(e)}
+         if var is not None:
+            new_env.bindLocal(var.name, cond)
+         C, E = _eval_body(body, new_env, K)
          continue
 
       except ContinuationInvoked as e:
+         _do_wind_transition(ctx, e.saved_wind_stack, E)
          K[:] = _copy_k( e.saved_k )
          C    = _Val( e.value )
          continue
