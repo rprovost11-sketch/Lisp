@@ -35,12 +35,12 @@ class ReturnFrom( Exception ):
 
 
 class ContinuationInvoked( Exception ):
-   """Raised when an escape continuation is invoked.  Propagates up to the matching call/cc handler."""
-   __slots__ = ('token', 'value')
+   """Raised when a continuation is invoked.  Propagates up to cek_eval's handler, which restores K."""
+   __slots__ = ('saved_k', 'value')
 
-   def __init__( self, token: object, value ) -> None:
-      self.token = token
-      self.value = value
+   def __init__( self, saved_k: list, value ) -> None:
+      self.saved_k = saved_k
+      self.value   = value
       super().__init__()
 
 

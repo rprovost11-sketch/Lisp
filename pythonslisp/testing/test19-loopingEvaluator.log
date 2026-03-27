@@ -310,11 +310,14 @@
 >>> (string (call/cc (lambda (k) k)))
 ==> "#<CONTINUATION>"
 
-; Stale continuation: invoking after call/cc has already returned is an error
->>> (let ((saved nil))
-...    (call/cc (lambda (k) (setq saved k)))
-...    (saved 42))
-%%% Continuation invoked outside its dynamic extent.
+; Re-invocable continuation: counter via call/cc
+; k captures the state at the call/cc point (n=0); each (k nil) restores that
+; state and re-runs the body.  When n reaches 4 the if falls through to n.
+>>> (let ((n 0) (k nil))
+...    (call/cc (lambda (c) (setq k c)))
+...    (setq n (+ n 1))
+...    (if (< n 4) (k nil) n))
+==> 4
 
 ; call/cc requires exactly 1 argument
 >>> (call/cc)

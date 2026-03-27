@@ -6,7 +6,7 @@ from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.extensions.sequences import _validate_bounds
-from pythonslisp.AST import prettyPrintSExpr
+from pythonslisp.AST import prettyPrint, prettyPrintSExpr
 
 
 @primitive( 'string-upcase', '(string)' )
@@ -106,7 +106,7 @@ used as-is (without surrounding quotes)."""
       raise LRuntimePrimError( LP_string_join, 'Argument 1 (separator) must be a String.' )
    if not isinstance( args[1], list ):
       raise LRuntimePrimError( LP_string_join, 'Argument 2 must be a List.' )
-   parts = [ (elt if isinstance( elt, str ) else prettyPrintSExpr( elt ).strip())
+   parts = [ (elt if isinstance( elt, str ) else prettyPrint( elt ))
              for elt in args[1] ]
    return args[0].join( parts )
 

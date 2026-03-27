@@ -481,10 +481,13 @@ copying K.
 - **Implement `call/cc`.** `(call/cc (lambda (k) ...))` captures the current
   continuation -- the entire K stack -- and passes it as an argument.
   Calling `k` with a value discards the current K and reinstates the
-  captured one.  Because K is already a plain Python list, capturing it is
-  just `list(K)`.  Reinstating it is setting `K = captured`.  Start with
-  escape continuations (calling `k` only from within the dynamic extent of
-  the `call/cc`) before attempting full reifiable continuations.
+  captured one.  Start with escape continuations (calling `k` only from
+  within the dynamic extent of the `call/cc`): capturing is `list(K)` and
+  reinstating is `K[:] = captured`.  For **full re-invocable continuations**,
+  each mutable frame must also be copied so that re-invocation cannot corrupt
+  the saved state; add a `copy()` method to every frame class (mutable frames
+  return a new instance; immutable frames return `self`), then capture with
+  `[f.copy() for f in K]`.  Python's Lisp uses this full approach.
 
 - **Implement `dynamic-wind`.** `(dynamic-wind before thunk after)` guarantees
   that `after` runs whenever control leaves the thunk -- whether by normal

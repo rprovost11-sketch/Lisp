@@ -191,9 +191,9 @@ class Listener( object ):
       for exprNum,exprPackage in enumerate(Listener._parseLog(inputText)):
          exprStr,expectedOutputStr,expectedRetValStr,expectedErrStr = exprPackage
          if verbosity == 2:
-            print( f'{str(exprNum+1).rjust(8)}.' )
+            print( f'{str(exprNum+1).rjust(8)}.', flush=True)
          elif verbosity == 3:
-            print( f'{str(exprNum+1).rjust(8)}> {exprStr}' )
+            print( f'{str(exprNum+1).rjust(8)}> {exprStr}', flush=True)
          
          expectedErrStr = expectedErrStr.rstrip()
 

@@ -59,7 +59,7 @@ The exception types are in `pythonslisp/Exceptions.py`:
 - `Signaled` - a Lisp condition signal; carries a condition object
 - `Thrown` - a `throw` with a tag and value; caught by `catch`
 - `ReturnFrom` - a `return-from`; caught by `block`
-- `ContinuationInvoked` - an escape continuation; raised by `call/cc`
+- `ContinuationInvoked` - a full re-invocable continuation; raised by `call/cc`
 
 ---
 

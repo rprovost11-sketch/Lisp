@@ -155,11 +155,11 @@ Use multiple-value-bind or nth-value to capture all values."""
 
 
 class LContinuation( LCallable ):
-   """An escape continuation captured by call/cc.  Invoking it raises ContinuationInvoked."""
-   __slots__ = ('token',)
+   """A first-class continuation captured by call/cc.  Invoking it raises ContinuationInvoked."""
+   __slots__ = ('saved_k',)
 
-   def __init__( self, token: object ) -> None:
-      self.token = token
+   def __init__( self, saved_k: list ) -> None:
+      self.saved_k = saved_k
       super().__init__( 'continuation', '' )
 
    def typeLabel( self ) -> str:

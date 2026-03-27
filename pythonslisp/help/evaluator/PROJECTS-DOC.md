@@ -243,8 +243,11 @@ completed computations) require that the entire continuation stack be
 *copied*, not just referenced.  The copying version enables coroutines,
 generators, and `amb`.
 
-Start with escape continuations (simpler, useful immediately), then
-consider what copying would require.
+Python's Lisp implements **full re-invocable continuations**: K is
+deep-copied at capture time (mutable frames get new instances; immutable
+frames are shared).  Start with escape continuations to get the basic
+mechanism working, then add the per-frame `copy()` protocol to reach
+full continuations.
 
 
 ## 7. `dynamic-wind`

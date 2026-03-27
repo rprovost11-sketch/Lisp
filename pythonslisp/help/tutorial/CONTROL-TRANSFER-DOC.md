@@ -11,7 +11,7 @@ has a different scope and use case.
 |---|---|---|---|
 | `return` / `return-from` | Lexical | Enclosing `block` | Early loop/function exit |
 | `catch` / `throw` | Dynamic | Nearest `catch` with matching tag | Cross-function exit |
-| `call/cc` | Escape only | The calling context | Abort a computation |
+| `call/cc` | First-class | Any context | Generators, coroutines, complex control |
 | `handler-case` / `signal` | Dynamic | Nearest matching handler | Structured error handling |
 
 ---
@@ -130,43 +130,35 @@ If no matching `catch` exists the throw is unhandled and an error is raised.
 
 ---
 
-## call/cc - Escape Continuations
+## call/cc - First-Class Continuations
 
 `call/cc` (call with current continuation) captures the current
-continuation - what would happen next if this expression returned - and
-passes it to `procedure`.  Calling the continuation immediately returns
-its argument to the `call/cc` call site.
-
-Python's Lisp supports **escape continuations only**: the continuation
-may only be called during the dynamic extent of the `call/cc` call (i.e.,
-before `call/cc` itself has returned normally).
+continuation — everything that still needs to happen — as a callable
+value and passes it to `procedure`.
 
 ```lisp
-(call/cc (lambda (k)
-  (* 2 (+ 1 (k 42)))))   ; k is called - call/cc returns 42
-;==> 42   ; the (* 2 ...) is never completed
+(+ 1 (call/cc (lambda (k)
+                (+ 10 (k 42)))))
+;==> 43   ; k delivers 42 to the call/cc site; (+ 10 ...) is abandoned
 ```
 
-### abort a search
+Continuations are **fully re-invocable**: they can be stored and called
+multiple times, each time restoring the saved computation state.
 
 ```lisp
-(defun find-even (lst)
-  (call/cc (lambda (return)
-    (dolist (x lst)
-      (when (evenp x)
-        (return x)))
-    nil)))
-
-(find-even '(1 3 5 4 7))   ;==> 4
-(find-even '(1 3 5))        ;==> NIL
+; Early exit (escape) - simplest use
+(call/cc (lambda (exit)
+  (dolist (x '(1 3 5 4 7))
+    (when (evenp x) (exit x)))
+  nil))
+;==> 4
 ```
 
-### Differences from catch/throw
+`catch`/`throw` is simpler for plain early-exit patterns.  `call/cc`
+becomes essential when you need to store or resume a computation — for
+generators, coroutines, and similar patterns.
 
-`call/cc` is more general in concept but limited to escape use here.
-`catch`/`throw` is simpler and preferred for most cross-function exit
-patterns.  Use `call/cc` when you need to capture the continuation
-explicitly or when adapting algorithms from continuation-passing style.
+See `(help "continuations-doc")` for the full guide with worked examples.
 
 ---
 
@@ -235,12 +227,13 @@ See CONDITIONS for the complete condition system API.
 | `(return val)` | Exit `(block nil ...)` |
 | `(catch tag body...)` | Dynamic catch point |
 | `(throw tag val)` | Exit to matching catch |
-| `(call/cc (lambda (k) body))` | Escape continuation |
-| `(k val)` | Invoke continuation - returns val to call/cc site |
+| `(call/cc (lambda (k) body))` | Capture continuation as k; run body |
+| `(k val)` | Deliver val to the call/cc site; resume saved state |
 | `(signal 'type "msg")` | Signal a typed condition |
 | `(handler-case form (type (e) body))` | Catch by condition type |
 
-See also: LOOPING for `return` in loop macros; CONDITIONS for the full condition API.
+See also: LOOPING for `return` in loop macros; CONDITIONS for the full
+condition API; CONTINUATIONS-DOC for the full `call/cc` guide.
 
 ---
 

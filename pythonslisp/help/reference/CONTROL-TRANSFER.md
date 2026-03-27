@@ -7,8 +7,8 @@
 | `(return val)` | Exit `(block nil ...)` - works inside loop macros |
 | `(catch tag body...)` | Dynamic catch point (crosses function boundaries) |
 | `(throw tag val)` | Exit to nearest `catch` with matching tag |
-| `(call/cc (lambda (k) body))` | Capture escape continuation as k |
-| `(k val)` | Invoke continuation - call/cc immediately returns val |
+| `(call/cc (lambda (k) body))` | Capture continuation as k; run body |
+| `(k val)` | Deliver val to call/cc site; resume saved state |
 | `(signal 'type "msg")` | Signal a typed condition |
 | `(handler-case form (type (e) body))` | Catch by condition type |
 
@@ -18,7 +18,8 @@
 |---|---|---|---|---|
 | `block`/`return-from` | Lexical | No | Named | Early loop/fn exit |
 | `catch`/`throw` | Dynamic | Yes | Any value | Cross-function abort |
-| `call/cc` | Escape only | Yes | N/A | Abort a computation |
+| `call/cc` | First-class | Yes | N/A | Generators, coroutines, complex control |
 | `handler-case`/`signal` | Dynamic | Yes | Typed | Structured errors |
 
 See `(help "control-transfer-doc")` for full documentation and examples.
+See `(help "continuations-doc")` for the full `call/cc` guide with generators and coroutines.

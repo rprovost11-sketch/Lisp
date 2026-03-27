@@ -164,6 +164,8 @@ class IfFrame:
       self.else_expr = else_expr
       self.env       = env
 
+   def copy( self ): return self
+
    def step( self, value, E, K, ctx ):
       # Returns an expression (AST node) - not _Val-wrapped.
       branch = self.then_expr if _lTrue(_primary(value)) else self.else_expr
@@ -177,6 +179,8 @@ class PrognFrame:
    def __init__( self, remaining, env ):
       self.remaining = remaining   # list of forms; the last IS the tail form
       self.env       = env
+
+   def copy( self ): return PrognFrame( list(self.remaining), self.env )
 
    def step( self, value, E, K, ctx ):
       # The incoming value (previous form's result) is discarded.
@@ -199,6 +203,8 @@ class LetFrame:
       self.bound        = bound
       self.body         = body
       self.outer_env    = outer_env
+
+   def copy( self ): return LetFrame( self.current_name, list(self.pending), dict(self.bound), self.body, self.outer_env )
 
    def step( self, value, E, K, ctx ):
       self.bound[self.current_name] = _primary(value)
@@ -224,6 +230,8 @@ class LetStarFrame:
       self.inner_env    = inner_env
       self.body         = body
 
+   def copy( self ): return LetStarFrame( self.current_name, list(self.pending), self.inner_env, self.body )
+
    def step( self, value, E, K, ctx ):
       self.inner_env.bindLocal( self.current_name, _primary(value) )
       if self.pending:
@@ -243,6 +251,8 @@ class SetqFrame:
       self.lval_name = lval_name
       self.pending   = pending
       self.env       = env
+
+   def copy( self ): return SetqFrame( self.lval_name, list(self.pending), self.env )
 
    def step( self, value, E, K, ctx ):
       rval = _primary(value)
@@ -267,6 +277,8 @@ class CondFrame:
       self.remaining_clauses = remaining_clauses
       self.env               = env
 
+   def copy( self ): return CondFrame( list(self.clause_body), list(self.remaining_clauses), self.env )
+
    def step( self, value, E, K, ctx ):
       if _lTrue( _primary(value) ):
          return _eval_body( self.clause_body, self.env, K )   # expression
@@ -286,6 +298,8 @@ class CaseFrame:
    def __init__( self, clauses, env ):
       self.clauses = clauses
       self.env     = env
+
+   def copy( self ): return self
 
    def step( self, value, E, K, ctx ):
       value = _primary(value)
@@ -319,6 +333,8 @@ class ArgFrame:
       self.done    = done
       self.env     = env
       self.mode    = mode
+
+   def copy( self ): return ArgFrame( self.fn, list(self.pending), list(self.done), self.env, self.mode )
 
    def step( self, value, E, K, ctx ):
       # ------------------------------------------------------------------
@@ -397,7 +413,7 @@ class ArgFrame:
             spread = self.done + list_arg
             if len(spread) != 1:
                raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(spread)}.' )
-            raise ContinuationInvoked( self.fn.token, spread[0] )
+            raise ContinuationInvoked( self.fn.saved_k, spread[0] )
          self.done.extend(list_arg)
 
       return _do_apply( self.fn, self.done, self.env, K, ctx )
@@ -410,8 +426,10 @@ class _ContinuationInvokeFrame:
    def __init__( self, continuation ):
       self.continuation = continuation
 
+   def copy( self ): return self
+
    def step( self, value, E, K, ctx ):
-      raise ContinuationInvoked( self.continuation.token, _primary(value) )
+      raise ContinuationInvoked( self.continuation.saved_k, _primary(value) )
 
 
 class BodyFrame:
@@ -424,6 +442,8 @@ class BodyFrame:
       self.depth     = depth
       self.env       = env
       self.tracer    = tracer
+
+   def copy( self ): return BodyFrame( list(self.remaining), self.fn, self.depth, self.env, self.tracer )
 
    def step( self, value, E, K, ctx ):
       if self.remaining:
@@ -445,6 +465,7 @@ class BlockFrame:
    __slots__ = ('name',)
    def __init__( self, name ):
       self.name = name
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       return _Val(value), E
 
@@ -454,6 +475,7 @@ class ReturnFromFrame:
    __slots__ = ('name',)
    def __init__( self, name ):
       self.name = name
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       for i in reversed(range(len(K))):
          if isinstance(K[i], BlockFrame) and K[i].name == self.name:
@@ -468,6 +490,7 @@ class CatchTagFrame:
    def __init__( self, body, env ):
       self.body = body
       self.env  = env
+   def copy( self ): return self
    def step( self, tag, E, K, ctx ):
       K.append( CatchBodyFrame(_primary(tag)) )
       return _eval_body(self.body, self.env, K)
@@ -478,6 +501,7 @@ class CatchBodyFrame:
    __slots__ = ('tag',)
    def __init__( self, tag ):
       self.tag = tag
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       return _Val(_primary(value)), E
 
@@ -489,6 +513,7 @@ class HandlerCaseBodyFrame:
       # clauses: list of (type_sym, var_sym_or_None, body_forms)
       self.clauses = clauses
       self.env     = env
+   def copy( self ): return self
    def find_handler( self, type_name ):
       for ctype, var, body in self.clauses:
          if isinstance(ctype, LSymbol):
@@ -508,6 +533,7 @@ class MVBindFrame:
       self.var_list  = var_list
       self.body      = body
       self.outer_env = outer_env
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       vals = value.values if type(value) is LMultipleValues else [value]
       new_env = Environment(self.outer_env, evalFn=ctx.lEval)
@@ -519,6 +545,7 @@ class MVBindFrame:
 class MVListFrame:
    """Receives form result; returns all values as a list."""
    __slots__ = ()
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       if type(value) is LMultipleValues:
          return _Val(list(value.values)), E
@@ -531,6 +558,7 @@ class NthValueBodyFrame:
    def __init__( self, form, env ):
       self.form = form
       self.env  = env
+   def copy( self ): return self
    def step( self, n_raw, E, K, ctx ):
       n = _primary(n_raw)
       if not isinstance(n, int) or isinstance(n, bool) or n < 0:
@@ -544,6 +572,7 @@ class NthValueDeliverFrame:
    __slots__ = ('n',)
    def __init__( self, n ):
       self.n = n
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       if type(value) is LMultipleValues:
          return _Val(value.values[self.n] if self.n < len(value.values) else L_NIL), E
@@ -558,6 +587,7 @@ class DictBuildFrame:
       self.remaining   = remaining
       self.built       = built
       self.env         = env
+   def copy( self ): return DictBuildFrame( self.current_key, list(self.remaining), dict(self.built), self.env )
    def step( self, value, E, K, ctx ):
       self.built[self.current_key] = _primary(value)
       if self.remaining:
@@ -575,6 +605,7 @@ class ColonFrame:
    def __init__( self, path, env ):
       self.path = path
       self.env  = env
+   def copy( self ): return self
    def step( self, root, E, K, ctx ):
       from pythonslisp.AST import prettyPrint
       _USAGE = "PRIMITIVE USAGE: (: module-or-pkg &rest path)"
@@ -593,10 +624,10 @@ class ColonFrame:
 
 class CallCCProcFrame:
    """Receives evaluated procedure for call/cc; validates it; sets up the continuation call."""
-   __slots__ = ('token', 'cont')
-   def __init__( self, token, cont ):
-      self.token = token
-      self.cont  = cont
+   __slots__ = ('cont',)
+   def __init__( self, cont ):
+      self.cont = cont
+   def copy( self ): return self
    def step( self, value, E, K, ctx ):
       proc = _primary(value)
       if not isinstance( proc, LCallable ):
@@ -605,18 +636,18 @@ class CallCCProcFrame:
          raise LRuntimeError( "ERROR 'CALL/CC': Argument may not be a macro.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
       if type(proc) is LPrimitive and proc.name in _SPECIAL_OPERATOR_SET:
          raise LRuntimeError( "ERROR 'CALL/CC': Argument may not be a special form.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
-      K.append( CallCCGuardFrame(self.token) )
       K.append( ArgFrame(None, [_Val(self.cont)], [], E, 'funcall') )
       return _Val(proc), E
 
 
-class CallCCGuardFrame:
-   """Boundary marker for call/cc. Passes normal return through; matched by ContinuationInvoked handler."""
-   __slots__ = ('token',)
-   def __init__( self, token ):
-      self.token = token
-   def step( self, value, E, K, ctx ):
-      return _Val(_primary(value)), E
+# ---------------------------------------------------------------------------
+# Continuation helpers
+# ---------------------------------------------------------------------------
+
+def _copy_k( K: list ) -> list:
+   """Return a snapshot of K suitable for storing in an LContinuation.
+   Mutable frames are copied; immutable frames share the original instance."""
+   return [ f.copy() for f in K ]
 
 
 # ---------------------------------------------------------------------------
@@ -681,7 +712,7 @@ def cek_apply( ctx, env, function, args ) -> Any:
    if isinstance( function, LContinuation ):
       if len(args) != 1:
          raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
-      raise ContinuationInvoked( function.token, args[0] )
+      raise ContinuationInvoked( function.saved_k, args[0] )
 
    # Use _do_apply directly; run the full loop with the returned state.
    K = []
@@ -1054,9 +1085,8 @@ def cek_eval( ctx, env, expr ) -> Any:
             continue
 
          if headStr == 'CALL/CC':
-            token = object()
-            cont  = LContinuation(token)
-            K.append( CallCCProcFrame(token, cont) )
+            cont = LContinuation( _copy_k(K) )
+            K.append( CallCCProcFrame(cont) )
             C = C[1]   # eval the procedure
             continue
 
@@ -1116,11 +1146,6 @@ def cek_eval( ctx, env, expr ) -> Any:
          continue
 
       except ContinuationInvoked as e:
-         for i in reversed(range(len(K))):
-            if isinstance(K[i], CallCCGuardFrame) and K[i].token is e.token:
-               del K[i:]
-               C = _Val(e.value)
-               break
-         else:
-            raise   # no matching guard - propagate to outer cek_eval or rawEval
+         K[:] = _copy_k( e.saved_k )
+         C    = _Val( e.value )
          continue

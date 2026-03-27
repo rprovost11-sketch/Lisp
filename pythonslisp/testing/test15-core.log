@@ -2291,7 +2291,15 @@ Type '(help "substring" :substring t)' to search all names by substring.
 ...     g))
 ==> X0
 
+; symbol arg: symbol name becomes the prefix
+>>> (let ((saved *gensym-counter*))
+...   (setq *gensym-counter* 0)
+...   (let ((g (gensym 'MY-PREFIX)))
+...     (setq *gensym-counter* saved)
+...     g))
+==> MY-PREFIX0
+
 ; error: invalid arg type
 >>> (gensym 3.14)
-%%% ERROR 'GENSYM': Argument must be a string prefix or non-negative integer.
+%%% ERROR 'GENSYM': Argument must be a string prefix, a symbol, or a non-negative integer.
 %%% PRIMITIVE USAGE: (GENSYM &optional x)

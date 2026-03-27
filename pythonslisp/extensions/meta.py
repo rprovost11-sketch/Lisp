@@ -142,10 +142,11 @@ return value.  Returns T if tracing is now on, NIL if now off."""
 
 @primitive( 'call/cc', '(procedure)' )
 def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Calls procedure with one argument: an escape continuation object.
-Invoking the continuation with a value causes call/cc to immediately return
-that value, unwinding any intermediate computation.  Only upward (escape)
-continuations are supported; invoking a stale continuation is an error."""
+   """Calls procedure with one argument: a first-class continuation object.
+Invoking the continuation with a value restores the captured computation
+state and delivers that value as the result of the original call/cc expression.
+Continuations are fully re-invocable: the same continuation may be called
+multiple times, reinstating the saved state each time."""
    raise LRuntimePrimError( LP_callcc, 'Handled by CEK machine.' )
 
 @primitive( 'boundp', '(symbol)' )
@@ -163,10 +164,12 @@ def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 @primitive( 'gensym', '(&optional x)' )
 def LP_gensym( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Generate and return a new, unique symbol.
-If x is a string it is used as the prefix (default \"G\").  The current
-value of *gensym-counter* is appended and then *gensym-counter* is
-incremented.  If x is a non-negative integer it is used directly as the
-numeric suffix and *gensym-counter* is left unchanged."""
+With no argument, uses prefix \"G\" and appends the current *gensym-counter*,
+then increments it.  If x is a string, it is used as the prefix and validated
+as a legal symbol prefix via the parser; an error is raised if it is not valid.
+If x is a symbol, its name is used as the prefix directly (no validation
+needed).  If x is a non-negative integer it is used as the numeric suffix
+directly and *gensym-counter* is left unchanged."""
    counter = env.lookupGlobalWithDefault( '*GENSYM-COUNTER*', 0 )
    if not args:
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
@@ -182,9 +185,12 @@ numeric suffix and *gensym-counter* is left unchanged."""
          raise LRuntimePrimError( LP_gensym, f'"{x}" is not a valid symbol prefix.' )
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
       return sym
-   if isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
+   elif isinstance( x, LSymbol ):
+      env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
+      return LSymbol( f'{x.name}{counter}' )
+   elif isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
       return LSymbol( f'G{x}' )
-   raise LRuntimePrimError( LP_gensym, 'Argument must be a string prefix or non-negative integer.' )
+   raise LRuntimePrimError( LP_gensym, 'Argument must be a string prefix, a symbol, or a non-negative integer.' )
 
 _ITUPS = 1_000_000
 
