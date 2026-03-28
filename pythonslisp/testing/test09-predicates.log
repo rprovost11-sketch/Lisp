@@ -1,0 +1,1354 @@
+>>> (null 1)
+...
+
+==> NIL
+
+>>> (null 6.7)
+...
+
+==> NIL
+
+>>> (null nil)
+...
+
+==> T
+
+>>> (numberp 15)
+...
+
+==> T
+
+>>> (numberp -3.8)
+...
+
+==> T
+
+>>> (numberp pi)
+...
+
+==> T
+
+>>> (numberp 2/3)
+...
+
+==> T
+
+>>> (numberp "hello")
+...
+
+==> NIL
+
+>>> (symbolp 'x)
+...
+
+==> T
+
+>>> (symbolp 13)
+...
+
+==> NIL
+
+>>> (symbolp nil)
+...
+
+==> NIL
+
+>>> (symbolp e)
+...
+
+==> NIL
+
+>>> (symbolp 'xy)
+...
+
+==> T
+
+>>> (atom nil)
+...
+
+==> T
+
+>>> (atom 0)
+...
+
+==> T
+
+>>> (atom 3/4)
+...
+
+==> T
+
+>>> (numberp nil)
+...
+
+==> NIL
+
+>>> (numberp 'randomSymbol)
+...
+
+==> NIL
+
+>>> (numberp '())
+...
+
+==> NIL
+
+>>> (atom e)
+...
+
+==> T
+
+>>> (atom pi)
+...
+
+==> T
+
+>>> (atom 1/2)
+...
+
+==> T
+
+>>> (atom 2.8)
+...
+
+==> T
+
+>>> (atom 'aSymbol)
+...
+
+==> T
+
+>>> (atom "hello")
+...
+
+==> T
+
+>>> (atom '())
+...
+
+==> T
+
+>>> (listp nil)
+...
+
+==> T
+
+>>> (listp 0)
+...
+
+==> NIL
+
+>>> (listp pi)
+...
+
+==> NIL
+
+>>> (listp -5/7)
+...
+
+==> NIL
+
+>>> (listp 62.3)
+...
+
+==> NIL
+
+>>> (listp '())
+...
+
+==> T
+
+>>> (isDict? nil)
+...
+
+==> NIL
+
+>>> (isDict? 0)
+...
+
+==> NIL
+
+>>> (isDict? pi)
+...
+
+==> NIL
+
+>>> (isDict? 7)
+...
+
+==> NIL
+
+>>> (isDict? 52/3)
+...
+
+==> NIL
+
+>>> (isDict? '())
+...
+
+==> NIL
+
+>>> (isDict? "something")
+...
+
+==> NIL
+
+>>> (stringp nil)
+...
+
+==> NIL
+
+>>> (stringp 1)
+...
+
+==> NIL
+
+>>> (stringp pi)
+...
+
+==> NIL
+
+>>> (stringp 3)
+...
+
+==> NIL
+
+>>> (stringp 4.7)
+...
+
+==> NIL
+
+>>> (stringp 8/9)
+...
+
+==> NIL
+
+>>> (stringp 'someSymbol)
+...
+
+==> NIL
+
+>>> (stringp "some string")
+...
+
+==> T
+
+>>> (stringp '())
+...
+
+==> NIL
+
+>>> (functionp nil)
+...
+
+==> NIL
+
+>>> (functionp 0)
+...
+
+==> NIL
+
+>>> (functionp e)
+...
+
+==> NIL
+
+>>> (functionp 2)
+...
+
+==> NIL
+
+>>> (functionp -8.49)
+...
+
+==> NIL
+
+>>> (functionp 7/8)
+...
+
+==> NIL
+
+>>> (functionp 'aSymbol)
+...
+
+==> NIL
+
+>>> (functionp "a string")
+...
+
+==> NIL
+
+>>> (functionp '())
+...
+
+==> NIL
+
+>>> (functionp (lambda (x) x))
+...
+
+==> T
+
+>>> (functionp list)
+...
+
+==> T
+
+>>> (functionp reverse)
+...
+
+==> T
+
+>>> (integerp 42)
+...
+
+==> T
+
+>>> (integerp 3.14)
+...
+
+==> NIL
+
+>>> (integerp 1/2)
+...
+
+==> NIL
+
+>>> (rationalp 1/3)
+...
+
+==> T
+
+>>> (rationalp 42)
+...
+
+==> T
+
+>>> (rationalp 3.14)
+...
+
+==> NIL
+
+>>> (floatp 3.14)
+...
+
+==> T
+
+>>> (floatp 42)
+...
+
+==> NIL
+
+>>> (floatp 1/2)
+...
+
+==> NIL
+
+>>> (macrop when)
+...
+
+==> T
+
+>>> (macrop incf)
+...
+
+==> T
+
+>>> (macrop defstruct)
+...
+
+==> T
+
+>>> (macrop car)
+...
+
+==> NIL
+
+>>> (macrop +)
+...
+
+==> NIL
+
+>>> (isInteger? 5)
+...
+
+==> T
+
+>>> (isRational? 1/4)
+...
+
+==> T
+
+>>> (isFloat? 2.5)
+...
+
+==> T
+
+>>> (isNil? nil)
+...
+
+==> T
+
+>>> (isNil? t)
+...
+
+==> NIL
+
+>>> (isNumber? 42)
+...
+
+==> T
+
+>>> (isNumber? "hello")
+...
+
+==> NIL
+
+>>> (isString? "abc")
+...
+
+==> T
+
+>>> (isSymbol? 'foo)
+...
+
+==> T
+
+>>> ;;; Error: predicates require exactly one argument
+... (numberp)
+
+%%% ERROR 'NUMBERP': 1 argument expected.
+%%% PRIMITIVE USAGE: (NUMBERP sexpr)
+==>
+
+>>> (numberp 1 2)
+
+%%% ERROR 'NUMBERP': 1 argument expected.
+%%% PRIMITIVE USAGE: (NUMBERP sexpr)
+==>
+
+>>> (integerp)
+
+%%% ERROR 'INTEGERP': 1 argument expected.
+%%% PRIMITIVE USAGE: (INTEGERP sexpr)
+==>
+
+>>> (floatp)
+
+%%% ERROR 'FLOATP': 1 argument expected.
+%%% PRIMITIVE USAGE: (FLOATP sexpr)
+==>
+
+>>> (rationalp)
+
+%%% ERROR 'RATIONALP': 1 argument expected.
+%%% PRIMITIVE USAGE: (RATIONALP sexpr)
+==>
+
+>>> (symbolp)
+
+%%% ERROR 'SYMBOLP': 1 argument expected.
+%%% PRIMITIVE USAGE: (SYMBOLP sexpr)
+==>
+
+>>> (listp)
+
+%%% ERROR 'LISTP': 1 argument expected.
+%%% PRIMITIVE USAGE: (LISTP sexpr)
+==>
+
+>>> (stringp)
+
+%%% ERROR 'STRINGP': 1 argument expected.
+%%% PRIMITIVE USAGE: (STRINGP sexpr)
+==>
+
+>>> (functionp)
+
+%%% ERROR 'FUNCTIONP': 1 argument expected.
+%%% PRIMITIVE USAGE: (FUNCTIONP sexpr)
+==>
+
+>>> (macrop)
+
+%%% ERROR 'MACROP': 1 argument expected.
+%%% PRIMITIVE USAGE: (MACROP sexpr)
+==>
+
+; --- consp ---
+
+>>> (consp '(1 2 3))
+==> T
+
+>>> (consp '(1))
+==> T
+
+>>> (consp nil)
+==> NIL
+
+>>> (consp '())
+==> NIL
+
+>>> (consp 42)
+==> NIL
+
+>>> (consp "hello")
+==> NIL
+
+>>> (consp 'foo)
+==> NIL
+
+>>> (consp (cons 1 '(2)))
+==> T
+
+>>> ;;; consp error: no args
+... (consp)
+
+%%% ERROR 'CONSP': 1 argument expected.
+%%% PRIMITIVE USAGE: (CONSP sexpr)
+==>
+
+>>> ;;; consp error: too many args
+... (consp 1 2)
+
+%%% ERROR 'CONSP': 1 argument expected.
+%%% PRIMITIVE USAGE: (CONSP sexpr)
+==>
+
+; --- notany / notevery ---
+
+>>> (notany oddp '(2 4 6))
+==> T
+
+>>> (notany oddp '(1 2 3))
+==> NIL
+
+>>> (notany oddp '())
+==> T
+
+>>> (notevery oddp '(1 3 5))
+==> NIL
+
+>>> (notevery oddp '(1 2 3))
+==> T
+
+>>> (notevery oddp '())
+==> NIL
+>>> (is? nil nil)
+...
+
+==> T
+
+>>> (is? 1 0)
+...
+
+==> NIL
+
+>>> (is? 1 1)
+...
+
+==> T
+
+>>> (is? 3 3)
+...
+
+==> T
+
+>>> (is? 3 3/1)
+...
+
+==> NIL
+
+>>> (is? 3.0 3)
+...
+
+==> NIL
+
+>>> (is? 5 6)
+...
+
+==> NIL
+
+>>> (is? "one" "one")
+...
+
+==> NIL
+
+>>> (is? "a string" 'aSymbol)
+...
+
+==> NIL
+
+>>> (= 1 1)
+...
+
+==> T
+
+>>> (= 1 0)
+...
+
+==> NIL
+
+>>> (= 1 3/2)
+...
+
+==> NIL
+
+>>> (= 1 nil)
+...
+
+==> NIL
+
+>>> (= 1 make-symbol)
+...
+
+==> NIL
+
+>>> (= 1 "string")
+...
+
+==> NIL
+
+>>> (= "string" "string")
+...
+
+==> T
+
+>>> (= "string1" "string2")
+...
+
+==> NIL
+
+>>> (/= 1 1)
+...
+
+==> NIL
+
+>>> (/= 0 6)
+...
+
+==> T
+
+>>> (/= "string" "string")
+...
+
+==> NIL
+
+>>> (/= "string1" "string2")
+...
+
+==> T
+
+>>> (< 6 2)
+...
+
+==> NIL
+
+>>> (< 4 4)
+...
+
+==> NIL
+
+>>> (< 2 3)
+...
+
+==> T
+
+>>> (< 2 4 6 8)
+...
+
+==> T
+
+>>> (< 2 4 8 5)
+...
+
+==> NIL
+
+>>> (= 4 4)
+...
+
+==> T
+
+>>> (= 2 3)
+...
+
+==> NIL
+
+>>> (= 4 4 4 4)
+...
+
+==> T
+
+>>> (= 2 2 3 2)
+...
+
+==> NIL
+
+>>> (<= 5 3)
+...
+
+==> NIL
+
+>>> (<= 2 2)
+...
+
+==> T
+
+>>> (<= 3 8)
+...
+
+==> T
+
+>>> (<= 2 2 3 2 4)
+...
+
+==> NIL
+
+>>> (<= 2 2 3 3 4)
+...
+
+==> T
+
+>>> (/= 2 4)
+...
+
+==> T
+
+>>> (/= 2 2)
+...
+
+==> NIL
+
+>>> (/= 2 5 8 4)
+...
+
+==> T
+
+>>> (/= 4 6 4 4)
+...
+
+==> NIL
+
+>>> ;;; /= non-adjacent duplicate: 1st and 3rd are equal
+... (/= 1 2 1)
+...
+
+==> NIL
+
+>>> ;;; /= three all-distinct values
+... (/= 1 2 3)
+...
+
+==> T
+
+>>> (> 5 3)
+...
+
+==> T
+
+>>> (> 3 5)
+...
+
+==> NIL
+
+>>> (> 5 5)
+...
+
+==> NIL
+
+>>> (> 5 3 2)
+...
+
+==> T
+
+>>> (> 5 3 3)
+...
+
+==> NIL
+
+>>> (>= 5 3)
+...
+
+==> T
+
+>>> (>= 5 5)
+...
+
+==> T
+
+>>> (>= 3 5)
+...
+
+==> NIL
+
+>>> (>= 5 5 4)
+...
+
+==> T
+
+>>> (>= 5 5 6)
+...
+
+==> NIL
+
+>>> ;;; Error: relational operators need at least 2 arguments
+... (= 1)
+
+%%% ERROR '=': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (= expr1 expr2 &rest exprs)
+==>
+
+>>> (/= 1)
+
+%%% ERROR '/=': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (/= expr1 expr2 &rest exprs)
+==>
+
+>>> (< 1)
+
+%%% ERROR '<': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (< expr1 expr2 &rest exprs)
+==>
+
+>>> (<= 1)
+
+%%% ERROR '<=': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (<= expr1 expr2 &rest exprs)
+==>
+
+>>> (> 1)
+
+%%% ERROR '>': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (> expr1 expr2 &rest exprs)
+==>
+
+>>> (>= 1)
+
+%%% ERROR '>=': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (>= expr1 expr2 &rest exprs)
+==>
+
+; --- eq (identity) ---
+
+>>> (eq 'foo 'foo)
+==> T
+
+>>> (eq 'foo 'bar)
+==> NIL
+
+>>> (eq nil nil)
+==> T
+
+>>> (eq t t)
+==> T
+
+; same object is eq to itself
+>>> (let ((x '(1 2))) (eq x x))
+==> T
+
+; two separately constructed lists are not eq
+>>> (eq '(1 2) '(1 2))
+==> NIL
+
+; is? is an alias for eq
+>>> (is? nil nil)
+==> T
+
+>>> (is? '(1 2) '(1 2))
+==> NIL
+
+; --- eql ---
+
+>>> (eql 'foo 'foo)
+==> T
+
+>>> (eql 'foo 'bar)
+==> NIL
+
+>>> (eql 1 1)
+==> T
+
+; different numeric types are not eql
+>>> (eql 1 1.0)
+==> NIL
+
+>>> (eql 1/3 1/3)
+==> T
+
+>>> (eql nil nil)
+==> T
+
+>>> (eql t t)
+==> T
+
+; strings: eql is identity, not content
+>>> (eql "hello" "hello")
+==> NIL
+
+; --- equal ---
+
+; lists compared structurally
+>>> (equal '(1 2 3) '(1 2 3))
+==> T
+
+>>> (equal '(1 (2 3)) '(1 (2 3)))
+==> T
+
+>>> (equal '(1 2) '(1 2 3))
+==> NIL
+
+; strings compared by content
+>>> (equal "hello" "hello")
+==> T
+
+>>> (equal "Hello" "hello")
+==> NIL
+
+; numbers: equal uses eql at leaves same type required
+>>> (equal 1 1)
+==> T
+
+>>> (equal 1 1.0)
+==> NIL
+
+; nil and empty list
+>>> (equal nil nil)
+==> T
+
+>>> (equal nil '())
+==> T
+
+; symbols
+>>> (equal 'foo 'foo)
+==> T
+
+>>> (equal 'foo 'bar)
+==> NIL
+
+; --- equalp ---
+
+; lists
+>>> (equalp '(1 2 3) '(1 2 3))
+==> T
+
+; case-insensitive strings
+>>> (equalp "hello" "HELLO")
+==> T
+
+>>> (equalp "hello" "world")
+==> NIL
+
+; cross-type numeric comparison
+>>> (equalp 1 1.0)
+==> T
+
+>>> (equalp 1 1)
+==> T
+
+>>> (equalp 1 2)
+==> NIL
+
+>>> (equalp nil nil)
+==> T
+
+; nested list with mixed string case
+>>> (equalp '("a" "b") '("A" "B"))
+==> T
+
+; --- numeric predicates ---
+
+>>> (evenp 4)
+...
+
+==> T
+
+>>> (evenp 5)
+...
+
+==> NIL
+
+>>> (oddp 5)
+...
+
+==> T
+
+>>> (oddp 4)
+...
+
+==> NIL
+
+>>> (minusp -3)
+...
+
+==> T
+
+>>> (minusp 3)
+...
+
+==> NIL
+
+>>> (plusp 5)
+...
+
+==> T
+
+>>> (plusp -5)
+...
+
+==> NIL
+
+>>> (zerop 0)
+...
+
+==> T
+
+>>> (zerop 1)
+...
+
+==> NIL
+
+>>> (isEven? 4)
+...
+
+==> T
+
+>>> (isOdd? 3)
+...
+
+==> T
+
+>>> (isPositive? 5)
+...
+
+==> T
+
+>>> (isNegative? -5)
+...
+
+==> T
+
+>>> (isZero? 0)
+...
+
+==> T
+
+; --- predicate alias tests ---
+
+>>> ;;; isFunction? on lambda returns T
+... (isFunction? (lambda (x) x))
+
+==> T
+
+>>> ;;; isFunction? on integer returns NIL
+... (isFunction? 42)
+
+==> NIL
+
+>>> ;;; isAtom? on integer returns T
+... (isAtom? 42)
+
+==> T
+
+>>> ;;; isAtom? on list returns NIL
+... (isAtom? '(1))
+
+==> NIL
+
+>>> ;;; isList? on list returns T
+... (isList? '(1 2))
+
+==> T
+
+>>> ;;; isList? on integer returns NIL
+... (isList? 42)
+
+==> NIL
+
+; --- equality across types ---
+
+>>> ;;; int equals float
+... (= 1 1.0)
+
+==> T
+
+>>> ;;; int equals rational
+... (= 1 1/1)
+
+==> T
+
+>>> ;;; rational less than float
+... (< 1/2 0.6)
+
+==> T
+
+; --- boundp ---
+
+>>> (setf bptest 42)
+...
+
+==> 42
+
+>>> (boundp 'bptest)
+...
+
+==> T
+
+>>> (boundp 'no-such-var-xyz)
+...
+
+==> NIL
+
+; --- Relational type errors ---
+
+>>> ;;; less-than with incomparable types
+... (< "a" 1)
+
+%%% ERROR '<': Invalid argument.  Arguments are not comparable.
+%%% PRIMITIVE USAGE: (< expr1 expr2 &rest exprs)
+==>
+
+>>> ;;; greater-than with incomparable types
+... (> "a" 1)
+
+%%% ERROR '>': Invalid argument.  Arguments are not comparable.
+%%% PRIMITIVE USAGE: (> expr1 expr2 &rest exprs)
+==>
+
+>>> ;;; less-equal with incomparable types
+... (<= "a" 1)
+
+%%% ERROR '<=': Invalid argument.  Arguments are not comparable.
+%%% PRIMITIVE USAGE: (<= expr1 expr2 &rest exprs)
+==>
+
+>>> ;;; greater-equal with incomparable types
+... (>= "a" 1)
+
+%%% ERROR '>=': Invalid argument.  Arguments are not comparable.
+%%% PRIMITIVE USAGE: (>= expr1 expr2 &rest exprs)
+==>
+
+; --- Predicate argument count errors ---
+
+>>> ;;; atom with no arguments
+... (atom)
+
+%%% ERROR 'ATOM': 1 argument expected.
+%%% PRIMITIVE USAGE: (ATOM sexpr)
+==>
+
+>>> ;;; atom with too many arguments
+... (atom 1 2)
+
+%%% ERROR 'ATOM': 1 argument expected.
+%%% PRIMITIVE USAGE: (ATOM sexpr)
+==>
+
+; --- eq / is? argument count errors (is? is an alias for eq) ---
+
+>>> ;;; is? with no arguments
+... (is?)
+
+%%% ERROR 'EQ': 2 arguments expected.
+%%% PRIMITIVE USAGE: (EQ a b)
+==>
+
+>>> ;;; is? with one argument
+... (is? 1)
+
+%%% ERROR 'EQ': 2 arguments expected.
+%%% PRIMITIVE USAGE: (EQ a b)
+==>
+
+>>> ;;; is? with too many arguments
+... (is? 1 2 3)
+
+%%% ERROR 'EQ': 2 arguments expected.
+%%% PRIMITIVE USAGE: (EQ a b)
+==>
+
+; --- library function argument count errors ---
+
+>>> ;;; evenp with no arguments
+... (evenp)
+
+%%% Error binding arguments in call to function "EVENP".
+%%% Too few positional arguments.
+==>
+
+>>> ;;; oddp with no arguments
+... (oddp)
+
+%%% Error binding arguments in call to function "ODDP".
+%%% Too few positional arguments.
+==>
+
+>>> ;;; zerop with no arguments
+... (zerop)
+
+%%% Error binding arguments in call to function "ZEROP".
+%%% Too few positional arguments.
+==>
+
+>>> ;;; minusp with no arguments
+... (minusp)
+
+%%% Error binding arguments in call to function "MINUSP".
+%%% Too few positional arguments.
+==>
+
+>>> ;;; plusp with no arguments
+... (plusp)
+
+%%% Error binding arguments in call to function "PLUSP".
+%%% Too few positional arguments.
+==>
+
+; ============================================================
+; not / and / or — Boolean logic operators
+; ============================================================
+
+>>> (not 1)
+...
+
+==> NIL
+
+>>> (not make-symbol)
+...
+
+==> NIL
+
+>>> (not "string")
+...
+
+==> NIL
+
+>>> (not "")
+...
+
+==> NIL
+
+>>> (not nil)
+...
+
+==> T
+
+>>> (and t t t )
+...
+
+==> T
+
+>>> (and t NIL t t t)
+...
+
+==> NIL
+
+>>> (or nil nil nil nil)
+...
+
+==> NIL
+
+>>> (or t nil nil nil)
+...
+
+==> T
+
+>>> (not (and t t))
+...
+
+==> NIL
+
+>>> (not (and t nil))
+...
+
+==> T
+
+>>> (and 1 2 3)
+...
+
+==> 3
+
+>>> (and 1 nil 3)
+...
+
+==> NIL
+
+>>> (or nil 2)
+...
+
+==> 2
+
+>>> (or nil nil)
+...
+
+==> NIL
+
+>>> (or nil nil 3)
+...
+
+==> 3
+
+>>> (and nil (write-line "should not print"))
+...
+
+==> NIL
+
+>>> (and t (write-line "should print"))
+"should print"
+
+==> "should print"
+
+>>> (or t (write-line "should not print"))
+...
+
+==> T
+
+>>> (or nil (write-line "should print"))
+"should print"
+
+==> "should print"
+
+>>> (and (write-line "first") nil (write-line "third"))
+"first"
+
+==> NIL
+
+>>> (or (write-line "first") t (write-line "third"))
+"first"
+
+==> "first"
+
+>>> ;;; Error: not requires exactly one argument
+... (not)
+
+%%% ERROR 'NOT': 1 argument expected.
+%%% PRIMITIVE USAGE: (NOT object)
+==>
+
+>>> (not 1 2)
+
+%%% ERROR 'NOT': 1 argument expected.
+%%% PRIMITIVE USAGE: (NOT object)
+==>
+
+; Single-arg: returns the value of the form
+>>> (and 42)
+==> 42
+
+>>> (or 42)
+==> 42
+
+; Zero-arg: (and) = T, (or) = NIL
+>>> (and)
+==> T
+
+>>> (or)
+==> NIL
+
+; and returns value of last form (not just T)
+>>> (and 1 2)
+==> 2
+
+; or returns value of first truthy form (not just T)
+>>> (or nil 99)
+==> 99
+

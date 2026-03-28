@@ -1,0 +1,1040 @@
+; --- eval ---
+
+>>> ;;; eval on a quoted expression
+... (eval '(+ 10 20))
+...
+
+==> 30
+
+; --- python ---
+
+>>> ;;; python evaluates a python expression
+... (python "3 + 4")
+...
+
+==> 7
+
+>>> ;;; python with string expression
+... (python "'hello' + ' world'")
+...
+
+==> "hello world"
+
+; --- python errors ---
+
+>>> ;;; Error: python with no arguments
+... (python)
+
+%%% ERROR 'PYTHON': 1 argument expected.
+%%% PRIMITIVE USAGE: (PYTHON string)
+==>
+
+>>> ;;; Error: python with non-string
+... (python 1)
+
+%%% ERROR 'PYTHON': Argument expected to be a string.
+%%% PRIMITIVE USAGE: (PYTHON string)
+==>
+
+; --- eval errors ---
+
+>>> ;;; Error: eval with no arguments
+... (eval)
+
+%%% ERROR 'EVAL': 1 argument expected.
+%%% PRIMITIVE USAGE: (EVAL sexpr)
+==>
+
+>>> ;;; Error: eval with too many arguments
+... (eval 1 2)
+
+%%% ERROR 'EVAL': 1 argument expected.
+%%% PRIMITIVE USAGE: (EVAL sexpr)
+==>
+
+; --- parse ---
+
+>>> (parse "(+ 1 2)")
+...
+
+==> (PROGN (+ 1 2))
+
+; --- derivative function setup ---
+
+>>> (defun d (expr)
+...    (cond ((isNumber? expr) 0)
+...          ((isSymbol? expr) 1)
+...          ((isList? expr)
+...           (case (first expr)
+...              (+    (list '+ (d (at 1 expr)) (d (at 2 expr))))
+...              (*    (list '+ (list '* (at 2 expr) (d (at 1 expr))) (list '* (at 1 expr) (d (at 2 expr)))))
+...              (sin  (list '* (list 'cos (at 1 expr)) (d (at 1 expr))))
+...              (cos  (list '* (list '- (list 'sin (at 1 expr))) (d (at 1 expr))))
+...              (expt (list '* (list '* (at 2 expr) (list 'expt (at 1 expr) (- (at 2 expr) 1))) (d (at 1 expr))))))))
+...
+
+==> (FUNCTION D (EXPR) ...)
+
+; --- derivative function ---
+
+>>> (d 5)
+...
+
+==> 0
+
+>>> (d 'x)
+...
+
+==> 1
+
+>>> (d '(+ x 3))
+...
+
+==> (+ 1 0)
+
+>>> (d '(* x x))
+...
+
+==> (+ (* X 1) (* X 1))
+
+>>> (d '(sin x))
+...
+
+==> (* (COS X) 1)
+
+>>> (d '(expt x 3))
+...
+
+==> (* (* 3 (EXPT X 2)) 1)
+
+; ============================================================
+; test22-additional-coverage.lisp
+; Additional edge case and coverage tests for primitives
+; and library functions not exercised elsewhere.
+; ============================================================
+
+; --- setf with at on list ---
+
+>>> (setf slist22 (list 10 20 30))
+...
+
+==> (10 20 30)
+
+>>> ;;; setf at on list mutates the element
+... (setf (at 1 slist22) 99)
+...
+
+==> 99
+
+>>> slist22
+...
+
+==> (10 99 30)
+
+; --- length ---
+
+>>> ;;; length counts top-level elements only
+... (length '((1 2) 3))
+...
+
+==> 2
+
+>>> ;;; length of a string
+... (length "abc")
+...
+
+==> 3
+
+>>> ;;; list-length alias still works
+... (list-length '(1 2 3))
+...
+
+==> 3
+
+; --- internal-time-units-per-second / get-internal-real-time ---
+
+>>> (= (internal-time-units-per-second) 1000000)
+==> T
+
+>>> (integerp (get-internal-real-time))
+==> T
+
+; elapsed time is non-negative
+>>> (>= (get-internal-real-time) 0)
+==> T
+
+; two successive calls are non-decreasing
+>>> (let ((t1 (get-internal-real-time))
+...       (t2 (get-internal-real-time)))
+...   (>= t2 t1))
+==> T
+
+; --- error ---
+
+>>> (error "something went wrong")
+
+%%% something went wrong
+==>
+
+>>> ;;; error with positional format args
+... (error "bad value: {0}" (list 42))
+
+%%% bad value: 42
+==>
+
+>>> ;;; error with map format args
+... (error "expected {TYPE} but got {GOT}" (make-dict (type "integer") (got "string")))
+
+%%% expected integer but got string
+==>
+
+; ============================================================
+; test23-coverage-gaps.lisp
+; Edge case and happy path tests for under-tested features.
+; ============================================================
+
+; --- help happy path tests ---
+
+>>> ;;; help with primitive shows usage and returns T
+... (help +)
+Built-in Function  |  args: pre-evaluated
+
+   Usage: (+ &rest numbers)
+
+Returns the sum of numbers.
+==> T
+
+>>> ;;; help with unknown topic string
+... (help "unknown-topic")
+Unknown topic: "UNKNOWN-TOPIC"
+==> T
+
+>>> ;;; help substring search returns T
+... (help "car" :substring t)
+Predefined Symbols
+==================
+
+Primitives
+==========
+CAR  MAPCAR
+
+Functions
+=========
+
+Macros
+======
+
+Types
+=====
+
+TOPICS
+======
+
+Type '(help callable)' for available documentation on a callable.
+Type '(help "topic")' for available documentation on the named topic.
+Type '(help "substring" :substring t)' to search all names by substring.
+==> T
+
+; --- alias macro tests ---
+
+>>> ;;; alias creates a working alias for +
+... (alias myadd23 +)
+
+==> (PRIMITIVE + (&rest numbers) ...)
+
+>>> ;;; alias for + works
+... (myadd23 1 2)
+
+==> 3
+
+; --- eval edge cases ---
+
+>>> ;;; eval self-evaluating integer
+... (eval 42)
+
+==> 42
+
+>>> ;;; eval self-evaluating string
+... (eval "hello")
+
+==> "hello"
+
+>>> ;;; eval T symbol
+... (eval 't)
+
+==> T
+
+>>> ;;; eval empty list (NIL)
+... (eval '())
+
+==> NIL
+
+>>> ;;; eval special form through eval
+... (eval '(if t 1 2))
+
+==> 1
+
+; --- parse edge cases ---
+
+>>> ;;; parse quoted list
+... (parse "'(1 2 3)")
+
+==> (PROGN (QUOTE (1 2 3)))
+
+; --- python edge cases ---
+
+>>> ;;; python None returns None
+... (python "None")
+
+==> None
+
+>>> ;;; python list expression returns Lisp list
+... (python "[1,2,3]")
+
+==> (1 2 3)
+
+; --- multi-pair setf ---
+
+>>> ;;; setf with multiple pairs
+... (progn (setf sa23 10 sb23 20) (list sa23 sb23))
+
+==> (10 20)
+
+; --- toggle-global-trace ---
+
+; toggle on then immediately off; verify first return is T
+>>> (let ((result (toggle-global-trace)))
+...   (toggle-global-trace)
+...   result)
+==> T
+
+; --- eval-for-display ---
+
+; single value wrapped in a one-element list
+>>> (eval-for-display '(+ 1 2))
+==> (3)
+
+; multiple values returned as a list
+>>> (eval-for-display '(values 1 2 3))
+==> (1 2 3)
+
+; (values) with no args -> NIL
+>>> (eval-for-display '(values))
+==> NIL
+
+; --- raweval-for-display ---
+
+; parses and evals a string; single value -> one-element list
+>>> (raweval-for-display "(+ 1 2)")
+==> (3)
+
+; multiple values
+>>> (raweval-for-display "(values 1 2 3)")
+==> (1 2 3)
+
+; (values) -> NIL
+>>> (raweval-for-display "(values)")
+==> NIL
+
+; type error caught before eval
+>>> (raweval-for-display 42)
+%%% ERROR 'RAWEVAL-FOR-DISPLAY': Argument must be a string.
+%%% PRIMITIVE USAGE: (RAWEVAL-FOR-DISPLAY string &optional stream)
+
+; --- gensym ---
+
+>>> (symbolp (gensym))
+==> T
+
+>>> (symbolp (gensym "FOO"))
+==> T
+
+; each call returns a distinct symbol
+>>> (let ((g1 (gensym)) (g2 (gensym)))
+...   (not (eq g1 g2)))
+==> T
+
+; prefix is upper-cased like all symbols
+>>> (let ((g (gensym "test")))
+...   (string= (ustring g) (string-upcase (ustring g))))
+==> T
+
+; integer arg: uses n as suffix, does not increment *gensym-counter*
+>>> (let ((before *gensym-counter*))
+...   (gensym 99)
+...   (= *gensym-counter* before))
+==> T
+
+; *gensym-counter* is settable; counter is used-then-incremented
+>>> (let ((saved *gensym-counter*))
+...   (setq *gensym-counter* 0)
+...   (let ((g (gensym "X")))
+...     (setq *gensym-counter* saved)
+...     g))
+==> X0
+
+; symbol arg: symbol name becomes the prefix
+>>> (let ((saved *gensym-counter*))
+...   (setq *gensym-counter* 0)
+...   (let ((g (gensym 'MY-PREFIX)))
+...     (setq *gensym-counter* saved)
+...     g))
+==> MY-PREFIX0
+
+; error: invalid arg type
+>>> (gensym 3.14)
+%%% ERROR 'GENSYM': Argument must be a string prefix, a symbol, or a non-negative integer.
+%%% PRIMITIVE USAGE: (GENSYM &optional x)
+==>
+
+>>> (setf var1 35)
+...
+
+==> 35
+
+>>> var1
+...
+
+==> 35
+
+>>> (+ var1 5)
+...
+
+==> 40
+
+>>> (+ 5 var1)
+...
+
+==> 40
+
+>>> (setf var2 6.2)
+...
+
+==> 6.2
+
+>>> var2
+...
+
+==> 6.2
+
+>>> (- var2 var1)
+...
+
+==> -28.8
+
+>>> var1
+...
+
+==> 35
+
+>>> (setf myList '(apple banana orange cherry))
+...
+
+==> (APPLE BANANA ORANGE CHERRY)
+
+>>> myList
+...
+
+==> (APPLE BANANA ORANGE CHERRY)
+
+>>> (first myList)
+...
+
+==> APPLE
+
+>>> (rest myList)
+...
+
+==> (BANANA ORANGE CHERRY)
+
+>>> (if (= (first myList) 'apple)
+... "It's true!")
+...
+
+==> "It's true!"
+
+>>> (setf var1 "some string value")
+...
+
+==> "some string value"
+
+>>> var1
+...
+
+==> "some string value"
+
+>>> (setf var1 "some string value")
+...
+
+==> "some string value"
+
+>>> var1
+...
+
+==> "some string value"
+
+>>> (setf var1 "some string value")
+...
+
+==> "some string value"
+
+>>> var1
+...
+
+==> "some string value"
+
+>>> (let ()
+...    (- var2)
+...    (if (= var1 "my value")
+...        (* 7 3)
+...        (write-line var1)
+...        )
+...    var1
+...    )
+...
+"some string value"
+
+==> "some string value"
+
+>>> (let ( (var1 -22/7) )
+...    (write-line var1)
+...    )
+...
+-22/7
+
+==> -22/7
+
+>>> var1
+...
+
+==> "some string value"
+
+>>> var3
+...
+
+%%% Unbound Variable: VAR3.
+==>
+
+>>> (let ( (var3 "true") )
+...    (write-line var3)
+...    )
+...
+"true"
+
+==> "true"
+
+>>> var3
+...
+
+%%% Unbound Variable: VAR3.
+==>
+
+>>> (setf var1 15)
+...
+
+==> 15
+
+>>> (setf var2 2)
+...
+
+==> 2
+
+>>> (makunbound 'var3)
+...
+
+==> NIL
+
+>>> (let ( (var3 'var3) )
+...    (write-line var1)
+...    (write-line var2)
+...    (write-line var3)
+...    (setf var2 -22/7)
+...    (setf var3 "a value")
+...    (write-line var1)
+...    (write-line var2)
+...    (write-line var3)
+...    (let ( (var3 T) )
+...       (write-line var1)
+...       (write-line var2)
+...       (write-line var3)
+...       (symTab!)
+...       )
+...    )
+...
+15
+2
+VAR3
+15
+-22/7
+"a value"
+15
+-22/7
+T
+==> NIL
+
+>>> var1
+...
+
+==> 15
+
+>>> var2
+...
+
+==> -22/7
+
+>>> var3
+...
+
+%%% Unbound Variable: VAR3.
+==>
+
+>>> ;;; Error: makunbound requires exactly one symbol argument
+... (makunbound 1 2)
+
+%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
+==>
+
+>>> (makunbound 1)
+
+%%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
+%%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
+==>
+
+>>> ;;; undef! is an alias for makunbound
+... (setf _tmp_var_ 99)
+
+==> 99
+
+>>> (undef! '_tmp_var_)
+...
+
+==> NIL
+
+>>> ;;; Error: setf requires an even number of arguments
+... (setf myvar1 10 myvar2)
+
+%%% Too few positional arguments.
+==>
+
+; --- defparameter ---
+
+>>> (defparameter dp-x 42)
+==> 42
+
+>>> dp-x
+==> 42
+
+>>> ;;; defparameter always rebinds
+... (defparameter dp-x 99)
+==> 99
+
+>>> dp-x
+==> 99
+
+; --- defvar ---
+
+>>> (defvar dv-x 10)
+==> NIL
+
+>>> dv-x
+==> 10
+
+>>> ;;; defvar does NOT rebind if already bound
+... (defvar dv-x 999)
+==> NIL
+
+>>> dv-x
+==> 10
+
+>>> ;;; defvar with no value initializes to nil
+... (defvar dv-y)
+==> NIL
+
+>>> dv-y
+==> NIL
+
+; --- setf / makunbound / symtab! errors ---
+
+>>> (setf)
+
+%%% Too few positional arguments.
+==>
+
+>>> ;;; setf with odd number of args
+... (setf x)
+
+%%% Too few positional arguments.
+==>
+
+>>> ;;; setf with 3 args (odd)
+... (setf x 1 y)
+
+%%% Too few positional arguments.
+==>
+
+>>> (makunbound)
+
+%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
+==>
+
+>>> ;;; makunbound with non-symbol
+... (makunbound 1)
+
+%%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
+%%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
+==>
+
+>>> ;;; makunbound with too many args
+... (makunbound 'a 'b)
+
+%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
+==>
+
+>>> ;;; symtab! with args
+... (symtab! 1)
+
+%%% ERROR 'SYMTAB!': 0 arguments expected.
+%%% PRIMITIVE USAGE: (SYMTAB!)
+==>
+
+>>> (make-symbol)
+
+%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+>>> (make-symbol "a" "b")
+
+%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+>>> ;;; make-symbol with non-string argument
+... (make-symbol 42)
+
+%%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+>>> (make-symbol '())
+
+%%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+>>> ;;; make-symbol from numeric string is not a valid symbol name
+... (make-symbol "42")
+
+%%% ERROR 'MAKE-SYMBOL': "42" is not a valid symbol name.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+; --- SETF additional error paths ---
+
+>>> ;;; setf with NIL lvalue
+... (setf () 5)
+
+%%% setf: lvalue cannot be NIL or ()
+==>
+
+>>> ;;; setf (at ...) form with wrong element count
+... (setf (at 1) 5)
+
+%%% setf: (at ...) place form expected 3 elements
+==>
+
+>>> ;;; setf with unrecognized accessor (not in defsetf registry)
+... (setf (blah 42) 5)
+
+%%% ERROR 'SET-ACCESSOR!': No setf expander registered for BLAH.
+%%% PRIMITIVE USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
+==>
+
+; --- makunbound ---
+
+>>> ;;; makunbound - happy path: undefine a variable
+... (setf _mk_test_ 42)
+
+==> 42
+
+>>> (makunbound '_mk_test_)
+...
+
+==> NIL
+
+>>> ;;; the variable should now be unbound
+... _mk_test_
+
+%%% Unbound Variable: _MK_TEST_.
+==>
+
+>>> ;;; undef! alias also works
+... (setf _ud_test_ 77)
+
+==> 77
+
+>>> (undef! '_ud_test_)
+...
+
+==> NIL
+
+; --- EVAL additional error path ---
+
+>>> ;;; eval with too many arguments
+... (eval 1 2)
+
+%%% ERROR 'EVAL': 1 argument expected.
+%%% PRIMITIVE USAGE: (EVAL sexpr)
+==>
+
+; --- SETF AT: container type and key/index errors ---
+
+>>> ;;; setf at with non-list non-map container
+... (setf (at 0 42) 5)
+
+%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+>>> ;;; setf at with out-of-range index
+... (setf (at 99 (list 1 2)) 5)
+
+%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+; --- DEFSETF-INTERNAL errors ---
+
+>>> ;;; defsetf-internal with no arguments
+... (defsetf-internal)
+
+%%% ERROR 'DEFSETF-INTERNAL': 2 arguments expected.
+%%% PRIMITIVE USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
+==>
+
+>>> ;;; defsetf-internal with non-symbol arguments
+... (defsetf-internal 1 2)
+
+%%% ERROR 'DEFSETF-INTERNAL': Both arguments must be symbols.
+%%% PRIMITIVE USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
+==>
+
+; --- HELP errors ---
+
+>>> ;;; help with two positional args errors at argument binding
+... (help 1 2)
+
+%%% Error binding arguments in call to function "HELP".
+%%% Keyword expected, found 2.
+==>
+
+>>> ;;; help with non-callable argument
+... (help 42)
+
+%%% ERROR 'HELP': First argument expected to be a callable or struct type.
+%%% PRIMITIVE USAGE: (HELP &optional target &key (substring nil))
+==>
+
+>>> ;;; help :substring t requires a string target
+... (help :substring t)
+
+%%% ERROR 'HELP': :substring t requires a string target.
+%%% PRIMITIVE USAGE: (HELP &optional target &key (substring nil))
+==>
+
+>>> ;;; make-symbol with empty string
+... (make-symbol "")
+
+%%% ERROR 'MAKE-SYMBOL': "" is not a valid symbol name.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+>>> ;;; make-symbol with string starting with a digit (valid symbol since lexer update)
+... (make-symbol "123foo")
+
+==> 123FOO
+
+; --- python errors ---
+
+>>> ;;; python with non-string argument
+... (python 42)
+
+%%% ERROR 'PYTHON': Argument expected to be a string.
+%%% PRIMITIVE USAGE: (PYTHON string)
+==>
+
+; --- readall errors ---
+
+>>> (readall)
+
+%%% ERROR 'READALL': 1 argument expected.
+%%% PRIMITIVE USAGE: (READALL stream)
+==>
+
+>>> (readall 42)
+
+%%% ERROR 'READALL': Argument expected to be a stream.
+%%% PRIMITIVE USAGE: (READALL stream)
+==>
+
+; --- tmpdir and path-join errors ---
+
+>>> (tmpdir 1)
+
+%%% ERROR 'TMPDIR': 0 arguments expected.
+%%% PRIMITIVE USAGE: (TMPDIR)
+==>
+
+>>> (path-join)
+
+%%% ERROR 'PATH-JOIN': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
+==>
+
+>>> (path-join 42)
+
+%%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
+%%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
+==>
+
+>>> (path-join "a" 42)
+
+%%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
+%%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
+==>
+
+; --- raweval-for-display converts parse errors to catchable LRuntimeError ---
+
+>>> (handler-case
+...   (raweval-for-display "(defun")
+...   (t (e) "caught"))
+==> "caught"
+
+>>> (handler-case
+...   (raweval-for-display "(+ 1 (")
+...   (t (e) "caught"))
+==> "caught"
+
+; ============================================================
+; Multiple values: values, multiple-value-bind, nth-value,
+; values-list, multiple-value-list
+; ============================================================
+
+
+; Basic values — single value passes through unchanged
+>>> (values 42)
+==> 42
+
+; Two values displayed one per line
+>>> (values 1 2)
+==> 1
+2
+
+; Three values
+>>> (values 'a 'b 'c)
+==> A
+B
+C
+
+; Zero values
+>>> (values)
+==>
+
+
+; values-list — converts list to multiple values
+>>> (multiple-value-bind (a b c) (values-list '(10 20 30))
+...   (+ a b c))
+==> 60
+
+; values-list — single element
+>>> (values-list '(99))
+==> 99
+
+
+; floor, ceiling, round, truncate — multiple-value returns
+
+; floor 1-arg: quotient and remainder
+>>> (floor 7)
+==> 7
+0
+
+>>> (floor -7)
+==> -7
+0
+
+>>> (floor 7.5)
+==> 7
+0.5
+
+>>> (floor -7.5)
+==> -8
+0.5
+
+; floor 2-arg
+>>> (multiple-value-bind (q r) (floor 17 5)
+...   (list q r))
+==> (3 2)
+
+>>> (multiple-value-bind (q r) (floor -17 5)
+...   (list q r))
+==> (-4 3)
+
+; floor scalar context — primary value only
+>>> (+ (floor 7.9) 1)
+==> 8
+
+; ceiling 1-arg
+>>> (ceiling 7.2)
+==> 8
+-0.7999999999999998
+
+>>> (ceiling -7.2)
+==> -7
+-0.20000000000000018
+
+; ceiling 2-arg
+>>> (multiple-value-bind (q r) (ceiling 17 5)
+...   (list q r))
+==> (4 -3)
+
+; round 1-arg (ties to even)
+>>> (round 2.5)
+==> 2
+0.5
+
+>>> (round 3.5)
+==> 4
+-0.5
+
+; round 2-arg
+>>> (multiple-value-bind (q r) (round 17 5)
+...   (list q r))
+==> (3 2)
+
+; truncate 1-arg
+>>> (truncate 7.9)
+==> 7
+0.9000000000000004
+
+>>> (truncate -7.9)
+==> -7
+-0.9000000000000004
+
+; truncate 2-arg
+>>> (multiple-value-bind (q r) (truncate 17 5)
+...   (list q r))
+==> (3 2)
+
+>>> (multiple-value-bind (q r) (truncate -17 5)
+...   (list q r))
+==> (-3 -2)
+
+; nth-value on floor
+>>> (nth-value 0 (floor 17 5))
+==> 3
+
+>>> (nth-value 1 (floor 17 5))
+==> 2

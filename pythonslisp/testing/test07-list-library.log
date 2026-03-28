@@ -1,0 +1,1829 @@
+>>> (first '(a b c))
+...
+
+==> A
+
+>>> (car '())
+...
+
+==> NIL
+
+>>> (rest '(a b c))
+...
+
+==> (B C)
+
+>>> (rest '())
+...
+
+==> NIL
+
+>>> (cons "yes" '(a b c))
+...
+
+==> ("yes" A B C)
+
+>>> (cons 3 '())
+...
+
+==> (3)
+
+>>> (rest '(c))
+...
+
+==> NIL
+
+>>> (first '((a b) (c d)))
+...
+
+==> (A B)
+
+>>> (first (rest '(a b c)))
+...
+
+==> B
+
+>>> (first '(rest (a b c)))
+...
+
+==> REST
+
+>>> (cons 'a '(b c))
+...
+
+==> (A B C)
+
+>>> (car (list 10 20 30))
+...
+
+==> 10
+
+>>> (cdr (list 10 20 30))
+...
+
+==> (20 30)
+
+>>> (setf mylist (list 10 20 30))
+...
+
+==> (10 20 30)
+
+>>> (at-delete 1 mylist)
+...
+
+==> T
+
+>>> mylist
+...
+
+==> (10 30)
+
+>>> (setf mylist2 (list 10 30))
+...
+
+==> (10 30)
+
+>>> (at-insert 1 mylist2 20)
+...
+
+==> 20
+
+>>> mylist2
+...
+
+==> (10 20 30)
+
+>>> (sort (list 3 1 2) <)
+...
+
+==> (1 2 3)
+
+>>> (sort (list "b" "a" "c") string<)
+...
+
+==> ("a" "b" "c")
+
+>>> ;;; Error: car/cdr require a list argument
+... (car 1)
+
+%%% ERROR 'CAR': 1st argument expected to be a list.
+%%% PRIMITIVE USAGE: (CAR list)
+==>
+
+>>> (cdr "str")
+
+%%% ERROR 'CDR': 1st argument expected to be a list.
+%%% PRIMITIVE USAGE: (CDR list)
+==>
+
+>>> ;;; Error: cons requires exactly two arguments
+... (cons 1)
+
+%%% ERROR 'CONS': 2 arguments expected.
+%%% PRIMITIVE USAGE: (CONS obj list)
+==>
+
+>>> ;;; append with no arguments returns NIL
+... (append)
+...
+
+==> NIL
+
+>>> ;;; append with one argument returns it unchanged
+... (append '(1 2 3))
+...
+
+==> (1 2 3)
+
+>>> ;;; Error: append requires list arguments
+... (append 1 '(2 3))
+
+%%% ERROR 'APPEND': Invalid argument.
+%%% PRIMITIVE USAGE: (APPEND &rest lists)
+==>
+
+>>> ;;; Error: at with out-of-range index
+... (at 5 '(1 2 3))
+
+%%% ERROR 'AT': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+>>> ;;; Error: sort requires a list argument (predicate now required)
+... (sort 1 <)
+
+%%% ERROR 'SORT': Argument 1 expected to be a list.
+%%% PRIMITIVE USAGE: (SORT sequence predicate &key (key nil))
+==>
+
+; --- subseq ---
+
+>>> (subseq '(a b c d e) 1 3)
+==> (B C)
+
+>>> (subseq '(a b c d e) 0 3)
+==> (A B C)
+
+>>> (subseq '(a b c d e) 2)
+==> (C D E)
+
+>>> (subseq '(a b c d e) 0)
+==> (A B C D E)
+
+>>> (subseq '(a b c d e) 5)
+==> NIL
+
+>>> (subseq '(a b c d e) 1 1)
+==> NIL
+
+>>> (subseq "hello" 1 3)
+==> "el"
+
+>>> (subseq "hello" 0)
+==> "hello"
+
+>>> (subseq "hello" 2)
+==> "llo"
+
+>>> (subseq "hello" 0 0)
+==> ""
+
+>>> (subseq '() 0)
+==> NIL
+
+; --- subseq errors ---
+
+>>> ;;; not a list or string
+... (subseq 42 0)
+
+%%% ERROR 'SUBSEQ': 1st argument must be a list or string.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+>>> ;;; start not integer
+... (subseq '(1 2 3) 1.0)
+
+%%% ERROR 'SUBSEQ': 2nd argument must be an integer.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+>>> ;;; negative start
+... (subseq '(1 2 3) -1)
+
+%%% ERROR 'SUBSEQ': Start index must be non-negative.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+>>> ;;; start out of bounds
+... (subseq '(1 2 3) 4)
+
+%%% ERROR 'SUBSEQ': Start index out of bounds.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+>>> ;;; end < start
+... (subseq '(1 2 3) 2 1)
+
+%%% ERROR 'SUBSEQ': End index must be >= start index.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+>>> ;;; too few args
+... (subseq '(1 2 3))
+
+%%% ERROR 'SUBSEQ': 2 or 3 arguments expected.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+>>> ;;; too many args
+... (subseq '(1 2 3) 0 2 99)
+
+%%% ERROR 'SUBSEQ': 2 or 3 arguments expected.
+%%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
+==>
+
+; --- remove-if / remove-if-not ---
+
+>>> (remove-if oddp '(1 2 3 4 5))
+==> (2 4)
+
+>>> (remove-if evenp '(1 2 3 4 5))
+==> (1 3 5)
+
+>>> (remove-if oddp '())
+==> NIL
+
+>>> (remove-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+==> (1 2 3)
+
+>>> (remove-if-not oddp '(1 2 3 4 5))
+==> (1 3 5)
+
+>>> (remove-if-not evenp '(1 2 3 4 5))
+==> (2 4)
+
+>>> (remove-if-not oddp '())
+==> NIL
+
+; --- find / find-if ---
+
+>>> (find 3 '(1 2 3 4 5))
+==> 3
+
+>>> (find 9 '(1 2 3 4 5))
+==> NIL
+
+>>> (find 3 '())
+==> NIL
+
+>>> (find-if evenp '(1 2 3 4 5))
+==> 2
+
+>>> (find-if oddp '(2 4 6))
+==> NIL
+
+>>> (find-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+==> 4
+
+; --- position / position-if ---
+
+>>> (position 3 '(1 2 3 4 5))
+==> 2
+
+>>> (position 9 '(1 2 3 4 5))
+==> NIL
+
+>>> (position 3 '())
+==> NIL
+
+>>> (position-if evenp '(1 2 3 4 5))
+==> 1
+
+>>> (position-if oddp '(2 4 6))
+==> NIL
+
+>>> (position-if (lambda (x) (> x 3)) '(1 2 3 4 5))
+==> 3
+
+; --- count / count-if ---
+
+>>> (count 2 '(1 2 3 2 4 2))
+==> 3
+
+>>> (count 9 '(1 2 3))
+==> 0
+
+>>> (count 2 '())
+==> 0
+
+>>> (count-if evenp '(1 2 3 4 5))
+==> 2
+
+>>> (count-if oddp '(2 4 6))
+==> 0
+
+; --- substitute / substitute-if ---
+
+>>> (substitute 99 2 '(1 2 3 2 4))
+==> (1 99 3 99 4)
+
+>>> (substitute 99 9 '(1 2 3))
+==> (1 2 3)
+
+>>> (substitute 99 2 '())
+==> NIL
+
+>>> (substitute-if 99 evenp '(1 2 3 4 5))
+==> (1 99 3 99 5)
+
+>>> (substitute-if 99 oddp '(2 4 6))
+==> (2 4 6)
+
+; --- char ---
+
+>>> (char "hello" 0)
+==> "h"
+
+>>> (char "hello" 4)
+==> "o"
+
+>>> (char "hello" 2)
+==> "l"
+
+; --------------------------------------------------------
+; basic list construction and access
+; --------------------------------------------------------
+
+>>> (list (+ 1 3) '(apple pear "string") 22/7 'false)
+...
+
+==> (4 (APPLE PEAR "string") 22/7 FALSE)
+
+>>> (rest '(donkey))
+...
+
+==> NIL
+
+>>> (cons 'apple '(banana orange pear))
+...
+
+==> (APPLE BANANA ORANGE PEAR)
+
+>>> (remove 'orange '(apple banana orange pear))
+...
+
+==> (APPLE BANANA PEAR)
+
+>>> (push! '(1 2 3 4) 6)
+...
+
+==> (1 2 3 4 6)
+
+>>> (setf a '(1 2 3 4))
+...
+
+==> (1 2 3 4)
+
+>>> a
+...
+
+==> (1 2 3 4)
+
+>>> (pop! a)
+...
+
+==> 4
+
+>>> a
+...
+
+==> (1 2 3)
+
+>>> (setf mylist '("a" "b" "c" "d"))
+...
+
+==> ("a" "b" "c" "d")
+
+>>> mylist
+...
+
+==> ("a" "b" "c" "d")
+
+>>> (at 2 mylist)
+...
+
+==> "c"
+
+>>> (setf (at 1 mylist) 1)
+...
+
+==> 1
+
+>>> mylist
+...
+
+==> ("a" 1 "c" "d")
+
+>>> (append mylist '(pi e))
+...
+
+==> ("a" 1 "c" "d" PI E)
+
+>>> (has-value-p pi '(a b c d))
+...
+
+==> NIL
+
+>>> (has-value-p 'c '(a b c d))
+...
+
+==> T
+
+>>> (length nil)
+...
+
+==> 0
+
+>>> (length '(a b c d))
+...
+
+==> 4
+
+>>> (length "hello")
+...
+
+==> 5
+
+>>> (reverse '(1 2 3 4 5))
+...
+
+==> (5 4 3 2 1)
+
+; --------------------------------------------------------
+; c*r accessors and positional selectors
+; --------------------------------------------------------
+
+>>> (caar (list (list 1 2) 3))
+...
+
+==> 1
+
+>>> (cadr (list 1 2 3))
+...
+
+==> 2
+
+>>> (cdar (list (list 1 2) 3))
+...
+
+==> (2)
+
+>>> (cddr (list 1 2 3))
+...
+
+==> (3)
+
+>>> (caaar (list (list (list 1)) 2))
+...
+
+==> 1
+
+>>> (caddr (list 1 2 3 4))
+...
+
+==> 3
+
+>>> (cdddr (list 1 2 3 4))
+...
+
+==> (4)
+
+>>> (cadddr (list 1 2 3 4))
+...
+
+==> 4
+
+>>> (cddddr (list 1 2 3 4 5))
+...
+
+==> (5)
+
+>>> (second (list 10 20 30))
+...
+
+==> 20
+
+>>> (third (list 10 20 30))
+...
+
+==> 30
+
+>>> (fourth (list 10 20 30 40))
+...
+
+==> 40
+
+>>> (fifth (list 10 20 30 40 50))
+...
+
+==> 50
+
+>>> (sixth (list 10 20 30 40 50 60))
+...
+
+==> 60
+
+>>> (seventh (list 10 20 30 40 50 60 70))
+...
+
+==> 70
+
+>>> (eighth (list 10 20 30 40 50 60 70 80))
+...
+
+==> 80
+
+>>> (ninth (list 10 20 30 40 50 60 70 80 90))
+...
+
+==> 90
+
+>>> (tenth (list 10 20 30 40 50 60 70 80 90 100))
+...
+
+==> 100
+
+>>> (nth 0 (list 10 20 30))
+...
+
+==> 10
+
+>>> (nth 2 (list 10 20 30))
+...
+
+==> 30
+
+>>> (copy-list (list 1 2 3))
+...
+
+==> (1 2 3)
+
+>>> (mapcar (lambda (x) (* x x)) (list 1 2 3 4))
+...
+
+==> (1 4 9 16)
+
+>>> (mapcar (lambda (x) (+ x 1)) (list 10 20 30))
+...
+
+==> (11 21 31)
+
+; --------------------------------------------------------
+; higher-level list operations
+; --------------------------------------------------------
+
+>>> (length (list 1 2 3))
+...
+
+==> 3
+
+>>> (length nil)
+...
+
+==> 0
+
+>>> (reverse (list 1 2 3))
+...
+
+==> (3 2 1)
+
+; --- endp ---
+
+>>> (endp '())
+...
+
+==> T
+
+>>> (endp '(1 2 3))
+...
+
+==> NIL
+
+; --- last ---
+
+>>> (last '(1 2 3))
+...
+
+==> (3)
+
+>>> (last '(1 2 3) 1)
+...
+
+==> (3)
+
+>>> (last '(1 2 3) 2)
+...
+
+==> (2 3)
+
+>>> (last '(1 2 3) 3)
+...
+
+==> (1 2 3)
+
+>>> (last '(1 2 3) 0)
+...
+
+==> NIL
+
+>>> (last '(1 2 3) 10)
+...
+
+==> (1 2 3)
+
+>>> (last '(a))
+...
+
+==> (A)
+
+>>> (last '())
+...
+
+==> NIL
+
+>>> (last nil)
+...
+
+==> NIL
+
+>>> (last '(42))
+...
+
+==> (42)
+
+; --- nthcdr ---
+
+>>> (nthcdr 0 '(a b c d))
+...
+
+==> (A B C D)
+
+>>> (nthcdr 2 '(a b c d))
+...
+
+==> (C D)
+
+>>> (nthcdr 4 '(a b c d))
+...
+
+==> NIL
+
+; --- butlast ---
+
+>>> (butlast '(1 2 3 4))
+...
+
+==> (1 2 3)
+
+>>> (butlast '(1 2 3 4) 2)
+...
+
+==> (1 2)
+
+>>> (butlast '(1 2 3) 3)
+...
+
+==> NIL
+
+; --- every / some ---
+
+>>> (every numberp '(1 2 3))
+...
+
+==> T
+
+>>> (every numberp '(1 "a" 3))
+...
+
+==> NIL
+
+>>> (every numberp '())
+...
+
+==> T
+
+>>> (some numberp '(a 1 b))
+...
+
+==> T
+
+>>> (some numberp '(a b c))
+...
+
+==> NIL
+
+>>> (some numberp '())
+...
+
+==> NIL
+
+; --- reduce ---
+
+>>> (reduce + '(1 2 3 4))
+...
+
+==> 10
+
+>>> (reduce * '(1 2 3 4))
+...
+
+==> 24
+
+>>> (reduce + '(42))
+...
+
+==> 42
+
+; --- mapc ---
+
+>>> (setf mresult '())
+...
+
+==> NIL
+
+>>> (mapc (lambda (x) (setf mresult (cons (* x x) mresult))) '(1 2 3))
+...
+
+==> (1 2 3)
+
+>>> mresult
+...
+
+==> (9 4 1)
+
+; --------------------------------------------------------
+; push!/pop! edge cases
+; --------------------------------------------------------
+
+>>> (setf plist (list 1 2 3))
+...
+
+==> (1 2 3)
+
+>>> ;;; push! mutates and returns list
+... (push! plist 4)
+...
+
+==> (1 2 3 4)
+
+>>> plist
+...
+
+==> (1 2 3 4)
+
+>>> ;;; pop! removes and returns last element
+... (pop! plist)
+...
+
+==> 4
+
+>>> plist
+...
+
+==> (1 2 3)
+
+; --- copy-list vs original ---
+
+>>> (setf orig (list 1 2 3))
+...
+
+==> (1 2 3)
+
+>>> (setf cop (copy-list orig))
+...
+
+==> (1 2 3)
+
+>>> ;;; copy-list is not identity-equal
+... (is? orig cop)
+...
+
+==> NIL
+
+>>> ;;; copy-list is value-equal
+... (= orig cop)
+...
+
+==> T
+
+; --- copy-tree ---
+
+>>> (copy-tree '(1 (2 3) 4))
+...
+
+==> (1 (2 3) 4)
+
+; --- additional list edge cases ---
+
+>>> ;;; append with 3+ lists
+... (append '(1) '(2) '(3))
+...
+
+==> (1 2 3)
+
+>>> ;;; sort on single-element list
+... (sort (list 3) <)
+...
+
+==> (3)
+
+>>> ;;; copy-tree preserves map structure
+... (copy-tree (make-dict (a 1) (b 2)))
+...
+
+==> (DICT
+   (A 1)
+   (B 2)
+)
+
+>>> ;;; nth with negative index (Python-style)
+... (nth -1 '(1 2 3))
+...
+
+==> 3
+
+>>> ;;; sort works on string lists
+... (sort '("c" "a" "b") string<)
+...
+
+==> ("a" "b" "c")
+
+>>> ;;; cons a list onto a list
+... (cons '(1 2) '(3 4))
+...
+
+==> ((1 2) 3 4)
+
+>>> ;;; cons NIL onto a list
+... (cons nil '(1 2))
+...
+
+==> (NIL 1 2)
+
+; --- sort edge cases ---
+
+>>> ;;; sort with duplicates preserved
+... (sort '(3 1 2 1) <)
+
+==> (1 1 2 3)
+
+>>> ;;; sort with rationals
+... (sort (list 1/2 1/3 1/4) <)
+
+==> (1/4 1/3 1/2)
+
+>>> ;;; sort with mixed int/float
+... (sort (list 1 2.5 3) <)
+
+==> (1 2.5 3)
+
+>>> ;;; sort empty list
+... (sort '() <)
+
+==> NIL
+
+; --- copy-list / copy-tree edge cases ---
+
+>>> ;;; copy-list empty list
+... (copy-list '())
+
+==> NIL
+
+>>> ;;; copy-tree empty list
+... (copy-tree '())
+
+==> NIL
+
+>>> ;;; copy-tree atom passthrough
+... (copy-tree 42)
+
+==> 42
+
+>>> ;;; copy-tree string passthrough
+... (copy-tree "hello")
+
+==> "hello"
+
+>>> ;;; copy-tree independence: mutating original does not affect copy
+... (let ((orig23 (list 1 (list 2 3) 4))
+...       (cp23 (copy-tree (list 1 (list 2 3) 4))))
+...    (setf (at 0 (at 1 orig23)) 99)
+...    (at 1 cp23))
+
+==> (2 3)
+
+; --- mapcar with named functions ---
+
+>>> ;;; mapcar with car extracts first elements
+... (mapcar car '((1 2) (3 4) (5 6)))
+
+==> (1 3 5)
+
+>>> ;;; mapcar with cdr extracts tails
+... (mapcar cdr '((1 2) (3 4)))
+
+==> ((2) (4))
+
+; --------------------------------------------------------
+; sequence functions with keyword arguments
+; --------------------------------------------------------
+
+; ── member ────────────────────────────────────────────────────────────────────
+
+; basic: symbols use eql (same as old = for symbols)
+>>> (member 'b '(a b c))
+...
+
+==> (B C)
+
+>>> (member 2 '(1 2 3 4))
+...
+
+==> (2 3 4)
+
+>>> (member 9 '(1 2 3))
+...
+
+==> NIL
+
+; eql default: strings are NOT eql unless same object
+>>> (member "hi" '("hi" "there"))
+...
+
+==> NIL
+
+; :test equal allows string matching
+>>> (member "hi" '("hi" "there") :test equal)
+...
+
+==> ("hi" "there")
+
+; :key extracts before comparing
+>>> (member 2 '((1 a) (2 b) (3 c)) :key car)
+...
+
+==> ((2 B) (3 C))
+
+; ── assoc ─────────────────────────────────────────────────────────────────────
+
+>>> (assoc 'b '((a 1) (b 2) (c 3)))
+...
+
+==> (B 2)
+
+>>> (assoc 'z '((a 1) (b 2)))
+...
+
+==> NIL
+
+; :test equal for string keys
+>>> (assoc "b" '(("a" 1) ("b" 2) ("c" 3)) :test equal)
+...
+
+==> ("b" 2)
+
+; :key applied to each pair's key (keys are lists so car works)
+>>> (assoc 2 '(((0 1) a) ((2 3) b) ((4 5) c)) :key car)
+...
+
+==> ((2 3) B)
+
+; ── find ──────────────────────────────────────────────────────────────────────
+
+; :from-end — rightmost match
+>>> (find 2 '(1 2 3 2 1) :from-end t)
+...
+
+==> 2
+
+; :start and :end bound the search
+>>> (find 1 '(1 2 3 1) :start 1)
+...
+
+==> 1
+
+>>> (find 3 '(1 2 3 4) :end 2)
+...
+
+==> NIL
+
+; :key
+>>> (find 3 '((1 a) (2 b) (3 c)) :key car)
+...
+
+==> (3 C)
+
+; ── find-if ───────────────────────────────────────────────────────────────────
+
+>>> (find-if numberp '(a b 3 c))
+...
+
+==> 3
+
+>>> (find-if numberp '(a b c))
+...
+
+==> NIL
+
+; :from-end
+
+>>> (find-if evenp '(1 2 3 4 5) :from-end t)
+...
+
+==> 4
+
+; :start
+>>> (find-if evenp '(2 3 4 5) :start 1)
+...
+
+==> 4
+
+; :key
+>>> (find-if evenp '((1 a) (2 b) (3 c)) :key car)
+...
+
+==> (2 B)
+
+; ── position ──────────────────────────────────────────────────────────────────
+
+>>> (position 'b '(a b c))
+...
+
+==> 1
+
+>>> (position 9 '(1 2 3))
+...
+
+==> NIL
+
+; :from-end — rightmost index
+>>> (position 'a '(a b a c a))
+...
+
+==> 0
+
+>>> (position 'a '(a b a c a) :from-end t)
+...
+
+==> 4
+
+; :start / :end
+>>> (position 'a '(a b a c a) :start 1)
+...
+
+==> 2
+
+>>> (position 'a '(a b a c a) :start 1 :end 2)
+...
+
+==> NIL
+
+; :key
+>>> (position 3 '((1 x) (2 y) (3 z)) :key car)
+...
+
+==> 2
+
+; ── position-if ───────────────────────────────────────────────────────────────
+
+>>> (position-if numberp '(a b 3 c 5))
+...
+
+==> 2
+
+>>> (position-if numberp '(a b c))
+...
+
+==> NIL
+
+; :from-end
+>>> (position-if evenp '(1 2 3 4 5) :from-end t)
+...
+
+==> 3
+
+; :start
+>>> (position-if evenp '(2 3 4 5) :start 1)
+...
+
+==> 2
+
+; ── count ─────────────────────────────────────────────────────────────────────
+
+>>> (count 'a '(a b a c a))
+...
+
+==> 3
+
+>>> (count 9 '(1 2 3))
+...
+
+==> 0
+
+; :start / :end
+>>> (count 'a '(a b a c a) :start 1 :end 4)
+...
+
+==> 1
+
+; :key
+>>> (count 1 '((1 x) (1 y) (2 z)) :key car)
+...
+
+==> 2
+
+; :test
+>>> (count "x" '("x" "y" "x") :test equal)
+...
+
+==> 2
+
+; ── count-if ──────────────────────────────────────────────────────────────────
+
+>>> (count-if evenp '(1 2 3 4 5 6))
+...
+
+==> 3
+
+>>> (count-if numberp '(a b c))
+...
+
+==> 0
+
+; :start / :end
+>>> (count-if evenp '(2 3 4 5 6) :start 1 :end 4)
+...
+
+==> 1
+
+; :key
+>>> (count-if evenp '((1 a) (2 b) (3 c) (4 d)) :key car)
+...
+
+==> 2
+
+; ── remove ────────────────────────────────────────────────────────────────────
+
+; basic (backward-compatible with old Lisp version)
+>>> (remove 'b '(a b c))
+...
+
+==> (A C)
+
+>>> (remove 'a '(a b c))
+...
+
+==> (B C)
+
+; removes ALL matching (no :count)
+>>> (remove 'a '(a b a c a))
+...
+
+==> (B C)
+
+; :test
+>>> (remove "x" '("x" "y" "x") :test equal)
+...
+
+==> ("y")
+
+; :count
+>>> (remove 'a '(a b a c a) :count 2)
+...
+
+==> (B C A)
+
+; :from-end with :count — remove from right
+>>> (remove 'a '(a b a c a) :count 2 :from-end t)
+...
+
+==> (A B C)
+
+; :start / :end — only consider bounded region
+>>> (remove 'a '(a b a c a) :start 1 :end 4)
+...
+
+==> (A B C A)
+
+; :key
+>>> (remove 2 '((1 x) (2 y) (3 z) (2 w)) :key car)
+...
+
+==> ((1 X) (3 Z))
+
+; ── remove-if ─────────────────────────────────────────────────────────────────
+
+>>> (remove-if evenp '(1 2 3 4 5))
+...
+
+==> (1 3 5)
+
+>>> (remove-if numberp '(a 1 b 2 c))
+...
+
+==> (A B C)
+
+; :count
+>>> (remove-if evenp '(1 2 3 4 5 6) :count 2)
+...
+
+==> (1 3 5 6)
+
+; :from-end with :count
+>>> (remove-if evenp '(1 2 3 4 5 6) :count 2 :from-end t)
+...
+
+==> (1 2 3 5)
+
+; :start / :end
+>>> (remove-if evenp '(2 3 4 5 6) :start 1 :end 4)
+...
+
+==> (2 3 5 6)
+
+; :key
+>>> (remove-if evenp '((1 a) (2 b) (3 c) (4 d)) :key car)
+...
+
+==> ((1 A) (3 C))
+
+; ── remove-if-not ─────────────────────────────────────────────────────────────
+
+>>> (remove-if-not evenp '(1 2 3 4 5 6))
+...
+
+==> (2 4 6)
+
+>>> (remove-if-not numberp '(a 1 b 2 c))
+...
+
+==> (1 2)
+
+; :count limits removals (removes at most 2 failing elements)
+>>> (remove-if-not evenp '(1 2 3 4 5 6) :count 2)
+...
+
+==> (2 4 5 6)
+
+; ── substitute ────────────────────────────────────────────────────────────────
+
+>>> (substitute 'x 'a '(a b a c a))
+...
+
+==> (X B X C X)
+
+>>> (substitute 0 99 '(1 2 3))
+...
+
+==> (1 2 3)
+
+; :count
+>>> (substitute 'x 'a '(a b a c a) :count 2)
+...
+
+==> (X B X C A)
+
+; :from-end with :count
+>>> (substitute 'x 'a '(a b a c a) :count 2 :from-end t)
+...
+
+==> (A B X C X)
+
+; :start / :end
+>>> (substitute 'x 'a '(a b a c a) :start 1 :end 4)
+...
+
+==> (A B X C A)
+
+; :test
+>>> (substitute 'match "hi" '("hi" "bye" "hi") :test equal)
+...
+
+==> (MATCH "bye" MATCH)
+
+; :key
+>>> (substitute '(99 z) 2 '((1 x) (2 y) (3 z)) :key car)
+...
+
+==> ((1 X) (99 Z) (3 Z))
+
+; ── substitute-if ─────────────────────────────────────────────────────────────
+
+>>> (substitute-if 0 evenp '(1 2 3 4 5))
+...
+
+==> (1 0 3 0 5)
+
+>>> (substitute-if 0 evenp '(1 3 5))
+...
+
+==> (1 3 5)
+
+; :count
+>>> (substitute-if 0 evenp '(1 2 3 4 5 6) :count 2)
+...
+
+==> (1 0 3 0 5 6)
+
+; :from-end with :count
+>>> (substitute-if 0 evenp '(1 2 3 4 5 6) :count 2 :from-end t)
+...
+
+==> (1 2 3 0 5 0)
+
+; :key
+>>> (substitute-if '(99) evenp '((1 a) (2 b) (3 c) (4 d)) :key car)
+...
+
+==> ((1 A) (99) (3 C) (99))
+
+; ── search ─────────────────────────────────────────────────────────────────────
+
+; string: leftmost match
+>>> (search "lo" "hello world")
+==> 3
+
+; string: not found
+>>> (search "xyz" "hello world")
+==> NIL
+
+; string: :from-end — rightmost "l"
+>>> (search "l" "hello world" :from-end t)
+==> 9
+
+; string: bounded region excludes the match
+>>> (search "llo" "hello" :start2 0 :end2 3)
+==> NIL
+
+; string: empty pattern matches at start2
+>>> (search "" "hello")
+==> 0
+
+; string: :start2 shifts the search window
+>>> (search "lo" "hello world" :start2 4)
+==> NIL
+
+; list: leftmost match
+>>> (search '(2 3) '(1 2 3 4))
+==> 1
+
+; list: not found
+>>> (search '(5 6) '(1 2 3 4))
+==> NIL
+
+; list: :from-end returns rightmost match
+>>> (search '(1) '(1 2 1 3) :from-end t)
+==> 2
+
+; list: empty pattern
+>>> (search '() '(1 2 3))
+==> 0
+
+; error: mixed types
+>>> (search "hello" '(1 2 3))
+%%% ERROR 'SEARCH': Both sequences must be the same type.
+%%% PRIMITIVE USAGE: (SEARCH sequence1 sequence2 &key (test eql) (key nil) (from-end nil) (start1 0) (end1 nil) (start2 0) (end2 nil))
+
+; --- List operation edge cases ---
+
+>>> ;;; at with negative index (Python-style)
+... (at -1 (list 10 20 30))
+...
+
+==> 30
+
+>>> ;;; at on a string
+... (at 0 "hello")
+...
+
+==> "h"
+
+>>> ;;; at on string with negative index
+... (at -1 "hello")
+...
+
+==> "o"
+
+>>> ;;; sort on empty list
+... (sort '() <)
+...
+
+==> NIL
+
+>>> ;;; cons 3 onto empty list
+... (cons 3 '())
+...
+
+==> (3)
+
+>>> ;;; has-value-p on list (true)
+... (has-value-p 2 '(1 2 3))
+...
+
+==> T
+
+>>> ;;; has-value-p on list (false)
+... (has-value-p 5 '(1 2 3))
+...
+
+==> NIL
+
+; --- identity vs equality ---
+
+>>> (setf lst1 (list 1 2))
+...
+
+==> (1 2)
+
+>>> ;;; is? on same object returns T
+... (is? lst1 lst1)
+...
+
+==> T
+
+>>> ;;; is? on equal but different objects returns NIL
+... (is? (list 1 2) (list 1 2))
+...
+
+==> NIL
+
+; --- 6. at-set: list basic mutation ---
+
+>>> (setf asl (list 10 20 30 40 50))
+...
+
+==> (10 20 30 40 50)
+
+>>> ;;; set first element; returns new value
+... (at-set 0 asl 99)
+...
+
+==> 99
+
+>>> ;;; mutation is in-place
+... asl
+...
+
+==> (99 20 30 40 50)
+
+>>> (at-set 2 asl 77)
+...
+
+==> 77
+
+>>> asl
+...
+
+==> (99 20 77 40 50)
+
+>>> (at-set 4 asl 55)
+...
+
+==> 55
+
+>>> asl
+...
+
+==> (99 20 77 40 55)
+
+>>> ;;; negative index follows Python semantics: -1 is the last element
+... (at-set -1 asl 11)
+...
+
+==> 11
+
+>>> asl
+...
+
+==> (99 20 77 40 11)
+
+; --- 7. at-set: list aliasing (shared reference) ---
+
+>>> (setf orig (list 1 2 3))
+...
+
+==> (1 2 3)
+
+>>> (setf aliased orig)
+...
+
+==> (1 2 3)
+
+>>> ;;; mutation through alias is visible via the original binding
+... (at-set 0 aliased 99)
+...
+
+==> 99
+
+>>> orig
+...
+
+==> (99 2 3)
+
+; --- 10. at-set: error cases ---
+
+>>> ;;; too few arguments
+... (at-set 0 (list 1 2 3))
+
+%%% ERROR 'AT-SET': 3 arguments expected.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+>>> ;;; too many arguments
+... (at-set 0 (list 1 2 3) 9 9)
+
+%%% ERROR 'AT-SET': 3 arguments expected.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+>>> ;;; second argument is an integer (not a list or map)
+... (at-set 0 42 9)
+
+%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+>>> ;;; second argument is a string (strings are immutable)
+... (at-set 0 "abc" 9)
+
+%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+>>> ;;; list index out of range
+... (at-set 99 (list 1 2 3) 0)
+
+%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+>>> ;;; float index into a list
+... (at-set 1.5 (list 1 2 3) 0)
+
+%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
+==>
+
+; --- mapcar edge cases ---
+
+>>> ;;; mapcar on empty list
+... (mapcar (lambda (x) (* x 2)) '())
+...
+
+==> NIL
+
+>>> ;;; mapcar with lambda (double each)
+... (mapcar (lambda (x) (* x 2)) '(1 2 3))
+...
+
+==> (2 4 6)
+
+; --- remove edge cases ---
+
+>>> ;;; remove non-existent element returns original
+... (remove 5 '(1 2 3))
+...
+
+==> (1 2 3)
+
+>>> ;;; remove from empty list
+... (remove 1 '())
+...
+
+==> NIL
+
+; --- car/cdr on empty list ---
+
+>>> ;;; car of empty list is NIL
+... (car '())
+...
+
+==> NIL
+
+>>> ;;; cdr of empty list is NIL
+... (cdr '())
+...
+
+==> NIL
+
+; --- List operation errors ---
+
+>>> ;;; push! with non-list
+... (push! 1 2)
+
+%%% ERROR 'PUSH!': 1st argument expected to be a list.
+%%% PRIMITIVE USAGE: (PUSH! list value)
+==>
+
+>>> ;;; pop! with non-list
+... (pop! 1)
+
+%%% ERROR 'POP!': 1st argument expected to be a list.
+%%% PRIMITIVE USAGE: (POP! list)
+==>
+
+>>> ;;; pop! on empty list
+... (pop! '())
+
+%%% ERROR 'POP!': Invalid argument.
+%%% PRIMITIVE USAGE: (POP! list)
+==>
+
+>>> ;;; cons with non-list second arg
+... (cons 1 2)
+
+%%% ERROR 'CONS': 2nd argument expected to be a list.
+%%% PRIMITIVE USAGE: (CONS obj list)
+==>
+
+>>> ;;; at-insert with non-integer index
+... (at-insert "a" '(1 2) 3)
+
+%%% ERROR 'AT-INSERT': Argument 1 expected to be an integer index.
+%%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
+==>
+
+>>> ;;; at-insert with non-list
+... (at-insert 0 1 3)
+
+%%% ERROR 'AT-INSERT': Argument 2 expected to be a list.
+%%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
+==>
+
+>>> ;;; at on non-collection
+... (at 0 42)
+
+%%% ERROR 'AT': Invalid argument.  List, Dict, or String expected.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+>>> ;;; at-delete with bad index
+... (at-delete 5 '(1 2 3))
+
+%%% ERROR 'AT-DELETE': Bad index or key into collection.
+%%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
+==>
+
+>>> ;;; at-delete on non-collection
+... (at-delete 1 1)
+
+%%% ERROR 'AT-DELETE': Argument 2 expected to be a list or dict.
+%%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
+==>
+
+>>> ;;; sort requires a predicate argument
+... (sort (list 3 "a" 1))
+
+%%% ERROR 'SORT': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (SORT sequence predicate &key (key nil))
+==>
+
+; --- Arg count errors for list ops ---
+
+>>> (push!)
+
+%%% ERROR 'PUSH!': 2 arguments expected.
+%%% PRIMITIVE USAGE: (PUSH! list value)
+==>
+
+>>> (push! '() 1 2)
+
+%%% ERROR 'PUSH!': 2 arguments expected.
+%%% PRIMITIVE USAGE: (PUSH! list value)
+==>
+
+>>> (pop!)
+
+%%% ERROR 'POP!': 1 argument expected.
+%%% PRIMITIVE USAGE: (POP! list)
+==>
+
+>>> (pop! '() 1)
+
+%%% ERROR 'POP!': 1 argument expected.
+%%% PRIMITIVE USAGE: (POP! list)
+==>
+
+>>> (at)
+
+%%% ERROR 'AT': 2 arguments expected.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+>>> (at 1)
+
+%%% ERROR 'AT': 2 arguments expected.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+>>> (at 1 2 3)
+
+%%% ERROR 'AT': 2 arguments expected.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+>>> (at-delete)
+
+%%% ERROR 'AT-DELETE': 2 arguments expected.
+%%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
+==>
+
+>>> (at-delete 1)
+
+%%% ERROR 'AT-DELETE': 2 arguments expected.
+%%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
+==>
+
+>>> (at-insert)
+
+%%% ERROR 'AT-INSERT': 3 arguments expected.
+%%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
+==>
+
+>>> (at-insert 1)
+
+%%% ERROR 'AT-INSERT': 3 arguments expected.
+%%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
+==>
+
+>>> (at-insert 1 2)
+
+%%% ERROR 'AT-INSERT': 3 arguments expected.
+%%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
+==>
+
+; --- CAR/CDR argument count errors ---
+
+>>> ;;; car with no arguments
+... (car)
+
+%%% ERROR 'CAR': 1 argument expected.
+%%% PRIMITIVE USAGE: (CAR list)
+==>
+
+>>> ;;; car with too many arguments
+... (car 1 2)
+
+%%% ERROR 'CAR': 1 argument expected.
+%%% PRIMITIVE USAGE: (CAR list)
+==>
+
+>>> ;;; cdr with no arguments
+... (cdr)
+
+%%% ERROR 'CDR': 1 argument expected.
+%%% PRIMITIVE USAGE: (CDR list)
+==>
+
+>>> ;;; cdr with too many arguments
+... (cdr 1 2)
+
+%%% ERROR 'CDR': 1 argument expected.
+%%% PRIMITIVE USAGE: (CDR list)
+==>
+
+; --- NTH out-of-range error ---
+
+>>> ;;; nth with out-of-range index
+... (nth 10 '(1 2 3))
+
+%%% ERROR 'AT': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+; --- APPEND: non-list argument in middle ---
+
+>>> ;;; append with non-list in middle
+... (append '(1) 2 '(3))
+
+%%% ERROR 'APPEND': Invalid argument.
+%%% PRIMITIVE USAGE: (APPEND &rest lists)
+==>
+
+; --- SORT: non-list argument ---
+
+>>> ;;; sort with non-list argument
+... (sort 'abc <)
+
+%%% ERROR 'SORT': Argument 1 expected to be a list.
+%%% PRIMITIVE USAGE: (SORT sequence predicate &key (key nil))
+==>
+
+; --- at-delete additional errors ---
+
+>>> ;;; at-delete out of range on list
+... (at-delete 10 '(1 2))
+
+%%% ERROR 'AT-DELETE': Bad index or key into collection.
+%%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
+==>

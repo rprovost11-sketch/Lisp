@@ -1,0 +1,1207 @@
+>>> (+ 3 4)
+...
+
+==> 7
+
+>>> (+ 2 3.1)
+...
+
+==> 5.1
+
+>>> (+ 2.1 3)
+...
+
+==> 5.1
+
+>>> (+ 3 1/2)
+...
+
+==> 7/2
+
+>>> (+ 1/2 3)
+...
+
+==> 7/2
+
+>>> (+ 9 2 5 6)
+...
+
+==> 22
+
+>>> (+ 1/2 1/3)
+...
+
+==> 5/6
+
+>>> (+ 2 0.5 1/2)
+...
+
+==> 3.0
+
+>>> (+ 4)
+...
+
+==> 4
+
+>>> ( - 1067 60)
+...
+
+==> 1007
+
+>>> (- 5 2.5
+... )
+...
+
+==> 2.5
+
+>>> (- 10 2 3)
+...
+
+==> 5
+
+>>> (- 4)
+...
+
+==> -4
+
+>>> (* 9 6)
+...
+
+==> 54
+
+>>> (* 2 5 3 4)
+...
+
+==> 120
+
+>>> (* 1/2 1/3 1/10)
+...
+
+==> 1/60
+
+>>> (/ 16 1/2)
+...
+
+==> 32
+
+>>> (// 29 7)
+...
+
+==> 4
+
+>>> (mod 29 7)
+...
+
+==> 1
+
+>>> ;;; mod: sign follows divisor
+... (mod -13 4)
+...
+
+==> 3
+
+>>> (mod 13 -4)
+...
+
+==> -3
+
+>>> ;;; rem: sign follows dividend
+... (rem 13 4)
+...
+
+==> 1
+
+>>> (rem -13 4)
+...
+
+==> -1
+
+>>> (rem 13 -4)
+...
+
+==> 1
+
+>>> (rem -13 -4)
+...
+
+==> -1
+
+>>> (integer 5.893072)
+...
+
+==> 5
+
+>>> (integer pi)
+...
+
+==> 3
+
+>>> (integer e)
+...
+
+==> 2
+
+>>> (abs 3)
+...
+
+==> 3
+
+>>> (abs -1/2)
+...
+
+==> 1/2
+
+>>> (log 5/32 10)
+...
+
+==> -0.8061799739838872
+
+>>> (expt 2 8)
+...
+
+==> 256
+
+>>> (expt 10 -2)
+...
+
+==> 0.01
+
+>>> (expt 9 1/2)
+...
+
+==> 3.0
+
+>>> (expt 16 1/2)
+...
+
+==> 4.0
+
+>>> (expt 1/4 1/2)
+...
+
+==> 0.5
+
+>>> (sin 3)
+...
+
+==> 0.1411200080598672
+
+>>> (cos -52.1)
+...
+
+==> -0.2606749092650805
+
+>>> (tan 32/35)
+...
+
+==> 1.297810006713956
+
+>>> (float 1/4)
+...
+
+==> 0.25
+
+>>> (* 2 1000 1000 1000)
+...
+
+==> 2000000000
+
+>>> (float (* 2 1000 1000 1000))
+...
+
+==> 2000000000.0
+
+>>> (* 2 1/1000 1/1000)
+...
+
+==> 1/500000
+
+>>> (float (* 2 1/1000 1/1000))
+...
+
+==> 2e-06
+
+>>> (min 0 -1/2 3.69)
+...
+
+==> -1/2
+
+>>> (max -1/2 3.69 0)
+...
+
+==> 3.69
+
+>>> (+ 3 (- 7 4))
+...
+
+==> 6
+
+>>> (/ 12 2 3)
+...
+
+==> 2
+
+>>> (/ 10 4)
+...
+
+==> 5/2
+
+>>> ;;; Error: non-numeric argument to +
+... (+ "a" 1)
+
+%%% ERROR '+': Invalid argument.
+%%% PRIMITIVE USAGE: (+ &rest numbers)
+==>
+
+>>> ;;; reciprocal: (/ n) = 1/n
+... (/ 4)
+...
+
+==> 1/4
+
+>>> ;;; (/ 1) = 1
+... (/ 1)
+...
+
+==> 1
+
+>>> ;;; (/ 2.0) = float reciprocal
+... (/ 2.0)
+...
+
+==> 0.5
+
+>>> ;;; Error: division by zero
+... (/ 1 0)
+
+%%% ERROR '/': division by zero
+%%% PRIMITIVE USAGE: (/ number &rest more-numbers)
+==>
+
+>>> ;;; Error: atan with no arguments
+... (atan)
+
+%%% ERROR 'ATAN': 1 or 2 arguments expected.
+%%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
+==>
+
+; --- Arithmetic edge cases ---
+
+>>> ;;; (+) with no arguments returns 0
+... (+)
+...
+
+==> 0
+
+>>> ;;; expt with power 0 returns 1
+... (expt 2 0)
+...
+
+==> 1
+
+>>> ;;; expt 0^0 returns 1
+... (expt 0 0)
+...
+
+==> 1
+
+>>> ;;; abs of zero
+... (abs 0)
+...
+
+==> 0
+
+>>> ;;; abs of negative rational
+... (abs -3/4)
+...
+
+==> 3/4
+
+>>> ;;; gcd with no args returns 0
+... (gcd)
+...
+
+==> 0
+
+>>> ;;; lcm with no args returns 1
+... (lcm)
+...
+
+==> 1
+>>> (gcd 12 8)
+...
+
+==> 4
+
+>>> (gcd 12 8 6)
+...
+
+==> 2
+
+>>> (lcm 4 6)
+...
+
+==> 12
+
+>>> (lcm 3 4 6)
+...
+
+==> 12
+
+>>> (log 100)
+...
+
+==> 4.605170185988092
+
+>>> (log 100 10)
+...
+
+==> 2.0
+
+>>> (log 8 2)
+...
+
+==> 3.0
+
+>>> (asin 0)
+...
+
+==> 0.0
+
+>>> (asin 1)
+...
+
+==> 1.5707963267948966
+
+>>> (acos 0)
+...
+
+==> 1.5707963267948966
+
+>>> (acos 1)
+...
+
+==> 0.0
+
+>>> (atan 0)
+...
+
+==> 0.0
+
+>>> (atan 1)
+...
+
+==> 0.7853981633974483
+
+>>> (rational 0.5)
+...
+
+==> 1/2
+
+>>> (rational 3)
+...
+
+==> 3/1
+
+>>> (rational 3/4)
+...
+
+==> 3/4
+
+>>> (rational 1.5)
+...
+
+==> 3/2
+
+>>> (signum 5)
+...
+
+==> 1
+
+>>> (signum -3)
+...
+
+==> -1
+
+>>> (signum 0)
+...
+
+==> 0
+
+>>> (sqrt 9)
+...
+
+==> 3.0
+
+>>> (sqrt 2)
+...
+
+==> 1.4142135623730951
+
+>>> (isqrt 9)
+...
+
+==> 3
+
+>>> (isqrt 10)
+...
+
+==> 3
+
+>>> (exp 0)
+...
+
+==> 1.0
+
+>>> (exp 1)
+...
+
+==> 2.718281828459045
+
+>>> (ln 1)
+...
+
+==> 0.0
+
+>>> (ln e)
+...
+
+==> 1.0
+
+>>> (let ((n 5)) (incf n) n)
+...
+
+==> 6
+
+>>> (let ((n 5)) (incf n 3) n)
+...
+
+==> 8
+
+>>> (let ((n 5)) (decf n) n)
+...
+
+==> 4
+
+>>> (let ((n 5)) (decf n 2) n)
+...
+
+==> 3
+
+>>> (average 2 4 6)
+...
+
+==> 4
+
+>>> (average 1 2 3 4)
+...
+
+==> 5/2
+
+; --- fact / fib setup ---
+
+>>> (defun fact (n)
+...    (if (= n 0) 1 (* n (fact (- n 1)))))
+...
+
+==> (FUNCTION FACT (N) ...)
+
+>>> (defun fib (n)
+...    (if (<= n 2) 1 (+ (fib (- n 1)) (fib (- n 2)))))
+...
+
+==> (FUNCTION FIB (N) ...)
+
+>>> (fact 5)
+...
+
+==> 120
+
+>>> (fact 0)
+...
+
+==> 1
+
+>>> (fib 10)
+...
+
+==> 55
+
+>>> (fib 1)
+...
+
+==> 1
+
+; --- floor / ceiling / round ---
+
+>>> (floor 3.7)
+...
+
+==> 3
+0.7000000000000002
+
+>>> (floor -3.7)
+...
+
+==> -4
+0.2999999999999998
+
+>>> (ceiling 3.2)
+...
+
+==> 4
+-0.7999999999999998
+
+>>> (ceiling -3.2)
+...
+
+==> -3
+-0.20000000000000018
+
+>>> (round 3.5)
+...
+
+==> 4
+-0.5
+
+>>> (round 2.5)
+...
+
+==> 2
+0.5
+
+>>> ;;; floor with divisor
+... (floor 7 2)
+...
+
+==> 3
+1
+
+>>> ;;; ceiling with divisor
+... (ceiling 7 2)
+...
+
+==> 4
+-1
+
+; --- truncate ---
+
+>>> (truncate 3.7)
+==> 3
+0.7000000000000002
+
+>>> (truncate -3.7)
+==> -3
+-0.7000000000000002
+
+>>> (truncate 3.0)
+==> 3
+0.0
+
+>>> (truncate 5)
+==> 5
+0
+
+>>> (truncate -0.9)
+==> 0
+-0.9
+
+; --- 1+ and 1- ---
+
+>>> (1+ 5)
+...
+
+==> 6
+
+>>> (1- 5)
+...
+
+==> 4
+
+>>> (1+ -1)
+...
+
+==> 0
+
+>>> (1- 0)
+...
+
+==> -1
+
+>>> (1+ 1/2)
+...
+
+==> 3/2
+
+>>> (1- 3/2)
+...
+
+==> 1/2
+
+; --- isqrt boundary values ---
+
+>>> ;;; isqrt of 0
+... (isqrt 0)
+...
+
+==> 0
+
+>>> ;;; isqrt of 1
+... (isqrt 1)
+...
+
+==> 1
+
+>>> ;;; isqrt of 4 (perfect square)
+... (isqrt 4)
+...
+
+==> 2
+
+; --- signum with floats ---
+
+>>> ;;; signum of positive float
+... (signum 3.14)
+...
+
+==> 1
+
+>>> ;;; signum of negative float
+... (signum -0.5)
+...
+
+==> -1
+
+; --- integer truncation ---
+
+>>> ;;; integer truncation of negative float
+... (integer -3.7)
+...
+
+==> -3
+
+; --- atan2 (two-argument atan) ---
+
+>>> ;;; atan with two arguments (atan2)
+... (atan 1 1)
+...
+
+==> 0.7853981633974483
+
+; --- evenp / oddp / zerop / minusp / plusp edge cases ---
+
+>>> ;;; evenp zero is even
+... (evenp 0)
+
+==> T
+
+>>> ;;; oddp negative odd number
+... (oddp -3)
+
+==> T
+
+>>> ;;; evenp type error on float
+... (evenp 2.0)
+
+%%% evenp: argument must be an integer
+
+>>> ;;; oddp type error on float
+... (oddp 3.0)
+
+%%% oddp: argument must be an integer
+
+>>> ;;; zerop float zero
+... (zerop 0.0)
+
+==> T
+
+>>> ;;; minusp zero is not negative
+... (minusp 0)
+
+==> NIL
+
+>>> ;;; plusp zero is not positive
+... (plusp 0)
+
+==> NIL
+
+>>> ;;; minusp negative float
+... (minusp -0.5)
+
+==> T
+
+>>> ;;; plusp positive rational
+... (plusp 1/2)
+
+==> T
+
+; --- trig domain errors ---
+
+>>> ;;; asin out of domain
+... (asin 2)
+
+%%% ERROR 'ASIN': Invalid argument.
+%%% PRIMITIVE USAGE: (ASIN number)
+==>
+
+>>> ;;; acos out of domain
+... (acos 2)
+
+%%% ERROR 'ACOS': Invalid argument.
+%%% PRIMITIVE USAGE: (ACOS number)
+==>
+
+; --- trig argument count errors ---
+
+>>> ;;; sin with no arguments
+... (sin)
+
+%%% ERROR 'SIN': 1 argument expected.
+%%% PRIMITIVE USAGE: (SIN radians)
+==>
+
+>>> ;;; sin with too many arguments
+... (sin 1 2)
+
+%%% ERROR 'SIN': 1 argument expected.
+%%% PRIMITIVE USAGE: (SIN radians)
+==>
+
+>>> ;;; cos with no arguments
+... (cos)
+
+%%% ERROR 'COS': 1 argument expected.
+%%% PRIMITIVE USAGE: (COS radians)
+==>
+
+>>> ;;; cos with too many arguments
+... (cos 1 2)
+
+%%% ERROR 'COS': 1 argument expected.
+%%% PRIMITIVE USAGE: (COS radians)
+==>
+
+>>> ;;; asin with no arguments
+... (asin)
+
+%%% ERROR 'ASIN': 1 argument expected.
+%%% PRIMITIVE USAGE: (ASIN number)
+==>
+
+>>> ;;; acos with no arguments
+... (acos)
+
+%%% ERROR 'ACOS': 1 argument expected.
+%%% PRIMITIVE USAGE: (ACOS number)
+==>
+
+; --- trig type errors ---
+
+>>> ;;; cos with non-number
+... (cos "a")
+
+%%% ERROR 'COS': Invalid argument.
+%%% PRIMITIVE USAGE: (COS radians)
+==>
+
+>>> ;;; sin with non-number
+... (sin "a")
+
+%%% ERROR 'SIN': Invalid argument.
+%%% PRIMITIVE USAGE: (SIN radians)
+==>
+
+; --- arithmetic argument count and type errors ---
+
+>>> ;;; integer division with too many arguments
+... (// 1 2 3)
+
+%%% ERROR '//': 2 arguments expected.
+%%% PRIMITIVE USAGE: (// dividend divisor)
+==>
+
+>>> ;;; modulo with too many arguments
+... (mod 1 2 3)
+
+%%% ERROR 'MOD': 2 arguments expected.
+%%% PRIMITIVE USAGE: (MOD number divisor)
+==>
+
+>>> ;;; rem by zero
+... (rem 7 0)
+
+%%% ERROR 'REM': division by zero
+%%% PRIMITIVE USAGE: (REM number divisor)
+==>
+
+>>> ;;; rem with non-number
+... (rem "a" 2)
+
+%%% ERROR 'REM': Invalid argument.
+%%% PRIMITIVE USAGE: (REM number divisor)
+==>
+
+>>> ;;; rem with too many arguments
+... (rem 1 2 3)
+
+%%% ERROR 'REM': 2 arguments expected.
+%%% PRIMITIVE USAGE: (REM number divisor)
+==>
+
+>>> ;;; gcd with non-number
+... (gcd "a" 2)
+
+%%% ERROR 'GCD': Invalid argument.
+%%% PRIMITIVE USAGE: (GCD &rest integers)
+==>
+
+>>> ;;; lcm with non-number
+... (lcm "a" 2)
+
+%%% ERROR 'LCM': Invalid argument.
+%%% PRIMITIVE USAGE: (LCM &rest integers)
+==>
+
+>>> ;;; min with non-number
+... (min "a" 1)
+
+%%% ERROR 'MIN': Invalid argument.
+%%% PRIMITIVE USAGE: (MIN &rest numbers)
+==>
+
+>>> ;;; max with non-number
+... (max "a" 1)
+
+%%% ERROR 'MAX': Invalid argument.
+%%% PRIMITIVE USAGE: (MAX &rest numbers)
+==>
+
+>>> ;;; expt with non-number base
+... (expt "a" 2)
+
+%%% ERROR 'EXPT': Invalid argument type.  Arguments expected to be numbers.
+%%% PRIMITIVE USAGE: (EXPT base power)
+==>
+
+>>> ;;; expt with no arguments
+... (expt)
+
+%%% ERROR 'EXPT': 2 arguments expected.
+%%% PRIMITIVE USAGE: (EXPT base power)
+==>
+
+>>> ;;; expt with three arguments
+... (expt 1 2 3)
+
+%%% ERROR 'EXPT': 2 arguments expected.
+%%% PRIMITIVE USAGE: (EXPT base power)
+==>
+
+>>> ;;; log with no arguments
+... (log)
+
+%%% ERROR 'LOG': 1 or 2 arguments expected.
+%%% PRIMITIVE USAGE: (LOG number &optional (base e))
+==>
+
+>>> ;;; log with too many arguments
+... (log 1 2 3)
+
+%%% ERROR 'LOG': 1 or 2 arguments expected.
+%%% PRIMITIVE USAGE: (LOG number &optional (base e))
+==>
+
+>>> ;;; log with non-number
+... (log "a")
+
+%%% ERROR 'LOG': Invalid argument.
+%%% PRIMITIVE USAGE: (LOG number &optional (base e))
+==>
+
+; --- random produces correct types ---
+
+>>> (integerp (random 10))
+...
+
+==> T
+
+>>> (floatp (random 10.0))
+...
+
+==> T
+
+; --- Additional arithmetic edge cases ---
+
+>>> ;;; single argument to multiply
+... (* 5)
+...
+
+==> 5
+
+>>> ;;; negation of zero
+... (- 0)
+...
+
+==> 0
+
+>>> ;;; division produces exact fraction
+... (/ 1 2)
+...
+
+==> 1/2
+
+; --- average edge cases ---
+
+>>> ;;; average of single value
+... (average 5)
+...
+
+==> 5
+
+>>> ;;; average with rationals
+... (average 1/2 3/2)
+...
+
+==> 1
+
+; --- random zero edge cases ---
+
+>>> ;;; random of 0 is an error (must be positive)
+... (random 0)
+
+%%% ERROR 'RANDOM': Argument expected to be positive.
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
+==>
+
+>>> ;;; random of 0.0 is an error (must be positive)
+... (random 0.0)
+
+%%% ERROR 'RANDOM': Argument expected to be positive.
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
+==>
+
+; --- Arithmetic errors ---
+
+>>> ;;; (*) with no args
+... (*)
+
+%%% ERROR '*': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (* number &rest numbers)
+==>
+
+>>> ;;; (-) with no args
+... (-)
+
+%%% ERROR '-': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (- number &rest numbers)
+==>
+
+>>> ;;; (/) with no args
+... (/)
+
+%%% ERROR '/': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (/ number &rest more-numbers)
+==>
+
+>>> ;;; integer division by zero
+... (// 7 0)
+
+%%% ERROR '//': division by zero
+%%% PRIMITIVE USAGE: (// dividend divisor)
+==>
+
+>>> ;;; modulo by zero
+... (mod 7 0)
+
+%%% ERROR 'MOD': division by zero
+%%% PRIMITIVE USAGE: (MOD number divisor)
+==>
+
+>>> ;;; integer division with non-number
+... (// "a" 2)
+
+%%% ERROR '//': Invalid argument.
+%%% PRIMITIVE USAGE: (// dividend divisor)
+==>
+
+>>> ;;; modulo with non-number
+... (mod "a" 2)
+
+%%% ERROR 'MOD': Invalid argument.
+%%% PRIMITIVE USAGE: (MOD number divisor)
+==>
+
+>>> ;;; negation of non-number
+... (- "a")
+
+%%% ERROR '-': Invalid argument.
+%%% PRIMITIVE USAGE: (- number &rest numbers)
+==>
+
+>>> ;;; division with non-number
+... (/ "a" 2)
+
+%%% ERROR '/': Invalid argument.
+%%% PRIMITIVE USAGE: (/ number &rest more-numbers)
+==>
+
+>>> ;;; min with no args
+... (min)
+
+%%% ERROR 'MIN': Invalid argument.
+%%% PRIMITIVE USAGE: (MIN &rest numbers)
+==>
+
+>>> ;;; max with no args
+... (max)
+
+%%% ERROR 'MAX': Invalid argument.
+%%% PRIMITIVE USAGE: (MAX &rest numbers)
+==>
+
+; --- Random errors ---
+
+>>> ;;; random with negative
+... (random -1)
+
+%%% ERROR 'RANDOM': Argument expected to be positive.
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
+==>
+
+>>> ;;; random with string
+... (random "a")
+
+%%% ERROR 'RANDOM': Invalid argument type.
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
+==>
+
+>>> ;;; random with no args
+... (random)
+
+%%% ERROR 'RANDOM': 1 argument expected.
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
+==>
+
+>>> ;;; random with too many args
+... (random 1 2)
+
+%%% ERROR 'RANDOM': 1 argument expected.
+%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
+==>
+
+>>> ;;; integer from invalid string
+... (integer "hello")
+
+%%% ERROR 'INTEGER': Invalid argument.
+%%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
+==>
+
+; --- Conversion argument count errors ---
+
+>>> ;;; float with no arguments
+... (float)
+
+%%% ERROR 'FLOAT': 1 argument expected.
+%%% PRIMITIVE USAGE: (FLOAT number)
+==>
+
+>>> ;;; float with too many arguments
+... (float 1 2)
+
+%%% ERROR 'FLOAT': 1 argument expected.
+%%% PRIMITIVE USAGE: (FLOAT number)
+==>
+
+>>> ;;; integer with no arguments
+... (integer)
+
+%%% ERROR 'INTEGER': 1 or 2 arguments expected.
+%%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
+==>
+
+>>> ;;; integer with too many arguments
+... (integer 1 2 3)
+
+%%% ERROR 'INTEGER': 1 or 2 arguments expected.
+%%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
+==>
+
+>>> ;;; rational with non-number
+... (rational "hello")
+
+%%% ERROR 'RATIONAL': Invalid argument.
+%%% PRIMITIVE USAGE: (RATIONAL number)
+==>
+
+; --- ATAN additional error paths ---
+
+>>> ;;; atan with too many arguments
+... (atan 1 2 3)
+
+%%% ERROR 'ATAN': 1 or 2 arguments expected.
+%%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
+==>
+
+>>> ;;; atan with non-number
+... (atan "a")
+
+%%% ERROR 'ATAN': Invalid argument.
+%%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
+==>
+
+; --- ASIN/ACOS: too many arguments ---
+
+>>> ;;; asin with too many arguments
+... (asin 0 1)
+
+%%% ERROR 'ASIN': 1 argument expected.
+%%% PRIMITIVE USAGE: (ASIN number)
+==>
+
+>>> ;;; acos with too many arguments
+... (acos 0 1)
+
+%%% ERROR 'ACOS': 1 argument expected.
+%%% PRIMITIVE USAGE: (ACOS number)
+==>
+
+; --- Division: zero by zero ---
+
+>>> ;;; division zero by zero
+... (/ 0 0)
+
+%%% ERROR '/': division by zero
+%%% PRIMITIVE USAGE: (/ number &rest more-numbers)
+==>
+
+; --- log domain errors ---
+
+>>> ;;; log of zero is domain error
+... (log 0)
+
+%%% ERROR 'LOG': Invalid argument.
+%%% PRIMITIVE USAGE: (LOG number &optional (base e))
+==>
+
+>>> ;;; log of negative is domain error
+... (log -1)
+
+%%% ERROR 'LOG': Invalid argument.
+%%% PRIMITIVE USAGE: (LOG number &optional (base e))
+==>
+
+; --- conversion errors ---
+
+>>> ;;; float on list (non-numeric)
+... (float (list 1))
+
+%%% ERROR 'FLOAT': Invalid argument.
+%%% PRIMITIVE USAGE: (FLOAT number)
+==>
+
+>>> ;;; rational on list (non-numeric)
+... (rational (list 1))
+
+%%% ERROR 'RATIONAL': Invalid argument.
+%%% PRIMITIVE USAGE: (RATIONAL number)
+==>

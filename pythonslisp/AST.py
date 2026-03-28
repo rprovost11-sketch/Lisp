@@ -180,12 +180,7 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
    '''Return a printable, formatted string representation
    of a lisp object.'''
    if isinstance(sExpr, str):
-      escaped = ( sExpr
-                  .replace('\\', '\\\\')
-                  .replace('"',  '\\"')
-                  .replace('\n', '\\n')
-                  .replace('\t', '\\t')
-                  .replace('\r', '\\r') )
+      escaped = sExpr.encode( 'unicode_escape' ).decode( 'ascii' ).replace( '"', '\\"' )
       return f'"{escaped}"'
    elif isinstance(sExpr, Fraction):
       return f'{sExpr.numerator}/{sExpr.denominator}'

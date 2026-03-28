@@ -3,11 +3,6 @@
 
 ==> NIL
 
->>> NIL
-...
-
-==> NIL
-
 >>> Pi
 ...
 
@@ -40,26 +35,6 @@
 
 ==> 1
 
->>> 2
-...
-
-==> 2
-
->>> 3
-...
-
-==> 3
-
->>> 4
-...
-
-==> 4
-
->>> 5
-...
-
-==> 5
-
 >>> -15
 ...
 
@@ -69,11 +44,6 @@
 ...
 
 ==> 5.25
-
->>> 6.1
-...
-
-==> 6.1
 
 >>> 6.02e23
 ...
@@ -85,27 +55,45 @@
 
 ==> 1/32
 
->>> 5/16
-...
-
-==> 5/16
-
 >>> "Hello world"
 ...
 
 ==> "Hello world"
-
->>> "another test string"
-...
-
-==> "another test string"
 
 >>> ()
 ...
 
 ==> NIL
 
->>> (    )
+; --- symbol case insensitivity ---
+
+>>> ;;; uppercase NIL is the same symbol as lowercase nil
+... NIL
 ...
 
 ==> NIL
+
+>>> ;;; lowercase t self-evaluates to T
+... t
+...
+
+==> T
+
+>>> ;;; quoted symbols are case-folded: 'pi and 'PI name the same symbol
+... (is? 'pi 'PI)
+...
+
+==> T
+
+>>> ;;; extreme mixed case also folds identically
+... (is? 'Hello 'hElLo)
+...
+
+==> T
+
+>>> ;;; strings are NOT case-folded — contrast with symbols
+... (is? "abc" "ABC")
+...
+
+==> NIL
+

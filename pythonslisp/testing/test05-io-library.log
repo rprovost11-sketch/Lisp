@@ -231,14 +231,11 @@ ab
 
 ==> "b"
 
-
 ; --- terpri ---
 
 >>> (terpri)
 
-
 ==> NIL
-
 
 ; ============================================================
 ; flush with no argument (flushes stdout)
@@ -614,7 +611,6 @@ ab
 %%% ERROR 'OPEN': File already exists "_wof_test_ifexists_.tmp".
 %%% PRIMITIVE USAGE: (OPEN filespec &key (direction :input) (if-exists :supersede) (if-does-not-exist :error))
 ==>
-
 
 >>> ;;; :if-exists nil returns nil when file exists
 ... (open (path-join (tmpdir) "test14-stream.tmp") :direction :output :if-exists nil)
@@ -1352,3 +1348,76 @@ ab
 ; single item
 >>> (with-output-to-string (s) (columnize (list "x") 40 s))
 ==> "x\n"
+
+; --- writef with map ---
+
+>>> ;;; writef using map keys (uppercased)
+... (writef "{X} {Y}" (make-dict (x 10) (y 20)))
+10 20
+==> "10 20"
+
+; --- write!/write-line with multiple arguments ---
+
+>>> ;;; write! with multiple args concatenates output
+... (write! 1 2 3)
+123
+==> 3
+
+>>> ;;; write-line with multiple args
+... (write-line 4 5 6)
+456
+
+==> 6
+
+; --- WRITEF format error ---
+
+>>> ;;; writef with out-of-range format index
+... (writef "{2}" (list 1))
+
+%%% ERROR 'WRITEF': Format error: Replacement index 2 out of range for positional args tuple
+%%% PRIMITIVE USAGE: (WRITEF formatString &optional dictOrList stream)
+==>
+
+; ============================================================
+; String escape sequences
+; ============================================================
+
+; --- User mode: escape sequences converted to actual characters ---
+
+>>> ;;; \n outputs an actual newline
+... (uwrite! "\n")
+
+==> "\n"
+
+>>> ;;; \t outputs an actual tab
+... (uwrite! "\t")
+
+==> "\t"
+
+>>> ;;; \x hex escape outputs the corresponding character
+... (uwrite! "\x41\x42\x43")
+ABC
+==> "ABC"
+
+>>> ;;; programmer mode preserves \n as escape notation
+... (write! "\n")
+"\n"
+==> "\n"
+
+>>> ;;; programmer mode preserves \t as escape notation
+... (write! "\t")
+"\t"
+==> "\t"
+
+>>> ;;; programmer mode shows \x41 as the actual character A
+... (write! "\x41")
+"A"
+==> "A"
+
+>>> ;;; writef with \n escape in format string
+... (writef "line1\nline2\n")
+line1
+line2
+
+==> "line1\nline2\n"
+

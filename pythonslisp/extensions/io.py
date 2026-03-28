@@ -34,20 +34,11 @@ else:
 HELP_DIR = Path(__file__).parent.parent / 'help'
 
 
-def _decode_escapes( s: str ) -> str:
-   """Interpret standard escape sequences without corrupting non-ASCII text."""
-   return ( s.replace('\\\\', '\x00')
-             .replace('\\n', '\n')
-             .replace('\\t', '\t')
-             .replace('\\"', '"')
-             .replace('\x00', '\\') )
-
 def lwrite( outStrm, *values, end='' ):
    if not values:
       return []
    for value in values:
       valueStr = prettyPrintSExpr( value )
-      valueStr = _decode_escapes( valueStr )
       print( valueStr, end='', file=outStrm )
    if end:
       print( end=end, file=outStrm )
@@ -58,7 +49,6 @@ def luwrite( outStrm, *values, end='' ):
       return []
    for value in values:
       valueStr = prettyPrint( value )
-      valueStr = _decode_escapes( valueStr )
       print( valueStr, end='', file=outStrm )
    if end:
       print( end=end, file=outStrm )
@@ -441,9 +431,8 @@ Returns the output string."""
    except (IndexError, KeyError, ValueError) as e:
       raise LRuntimePrimError( LP_writef, f"Format error: {e}" )
 
-   outputStr = _decode_escapes( formattedStr )
-   print( outputStr, end='', file=stream )
-   return outputStr
+   print( formattedStr, end='', file=stream )
+   return formattedStr
 
 @primitive( 'write!', '(&optional stream &rest objects)' )
 def LP_write( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -789,7 +778,6 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    print( file=outStrm )
    if callableObj.docString != '':
       valueStr = prettyPrint( callableObj.docString )
-      valueStr = _decode_escapes( valueStr )
       print( valueStr, file=outStrm )
 
    return L_T

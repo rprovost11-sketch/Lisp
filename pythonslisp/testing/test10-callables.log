@@ -1,3 +1,480 @@
+; ============================================================
+; test10-callables.log
+; Functions, closures, macros, macro destructuring, lambda lists,
+; and argument binding.
+; ============================================================
+
+; ============================================================
+; Functions and closures
+; ============================================================
+
+>>> ((lambda (x) (* 2 x)) 16)
+...
+
+==> 32
+
+>>> ;;; Test Closures
+... (defun adder (x)
+...    (lambda (y) (+ x y)))
+... 
+
+==> (FUNCTION ADDER (X) ...)
+
+>>> (setf add5 (adder 5))
+... 
+
+==> (FUNCTION ADD5 (Y) ...)
+
+>>> (add5 8)
+... 
+
+==> 13
+
+>>> (defun int-seq ()
+...    (let ((i 0))
+...       (lambda ()
+...          (incf i))))
+... 
+
+==> (FUNCTION INT-SEQ () ...)
+
+>>> (defun main ()
+...    (let ((next-int (int-seq)))
+...       (uwrite-line (next-int))
+...       (uwrite-line (next-int))
+...       (uwrite-line (next-int))))
+... 
+
+==> (FUNCTION MAIN () ...)
+
+>>> (main)
+... 
+1
+2
+3
+
+==> 3
+
+>>> (defun make-counter ()
+...    (let ((n 0))
+...       (lambda () (incf n))))
+... 
+
+==> (FUNCTION MAKE-COUNTER () ...)
+
+>>> (setf c1 (make-counter))
+... 
+
+==> (FUNCTION C1 () ...)
+
+>>> (setf c2 (make-counter))
+... 
+
+==> (FUNCTION C2 () ...)
+
+>>> (c1)
+... 
+
+==> 1
+
+>>> (c1)
+... 
+
+==> 2
+
+>>> (c1)
+... 
+
+==> 3
+
+>>> (c2)
+... 
+
+==> 1
+
+>>> (c2)
+... 
+
+==> 2
+
+>>> (defun make-account (balance)
+...    (let ((bal balance))
+...       (list (lambda (amt) (setf bal (- bal amt)) bal)
+...             (lambda () bal))))
+... 
+
+==> (FUNCTION MAKE-ACCOUNT (BALANCE) ...)
+
+>>> (setf acct (make-account 100))
+... 
+
+==> ((FUNCTION  (AMT) ...) (FUNCTION  () ...))
+
+>>> (setf withdraw (at 0 acct))
+... 
+
+==> (FUNCTION WITHDRAW (AMT) ...)
+
+>>> (setf get-bal (at 1 acct))
+... 
+
+==> (FUNCTION GET-BAL () ...)
+
+>>> (get-bal)
+... 
+
+==> 100
+
+>>> (withdraw 30)
+... 
+
+==> 70
+
+>>> (get-bal)
+... 
+
+==> 70
+
+>>> (withdraw 20)
+... 
+
+==> 50
+
+>>> (get-bal)
+... 
+
+==> 50
+
+>>> (setf multiplier (let ((factor 3)) (lambda (x) (* factor x))))
+... 
+
+==> (FUNCTION MULTIPLIER (X) ...)
+
+>>> (multiplier 5)
+... 
+
+==> 15
+
+>>> (multiplier 7)
+... 
+
+==> 21
+
+>>> (defun make-adder (x) (lambda (y) (lambda (z) (+ x y z))))
+... 
+
+==> (FUNCTION MAKE-ADDER (X) ...)
+
+>>> (setf add1-2 ((make-adder 1) 2))
+... 
+
+==> (FUNCTION ADD1-2 (Z) ...)
+
+>>> (add1-2 10)
+... 
+
+==> 13
+
+>>> (add1-2 20)
+... 
+
+==> 23
+
+>>> ;;; Error: first element of a list must be callable
+... (1 2 3)
+
+%%% Badly formed list expression '1'.  The first element should evaluate to a callable.
+==>
+
+>>> ;;; Error: eval requires exactly one argument
+... (eval)
+
+%%% ERROR 'EVAL': 1 argument expected.
+%%% PRIMITIVE USAGE: (EVAL sexpr)
+==>
+
+; --- Lambda/macro with docstrings ---
+
+>>> ;;; lambda with docstring still works
+... ((lambda () "a docstring" 42))
+...
+
+==> 42
+
+; --- defun with docstring ---
+
+>>> ;;; defun with docstring
+... (defun square22 (x) "Returns x squared" (* x x))
+...
+
+==> (FUNCTION SQUARE22 (X) ...)
+
+>>> (square22 7)
+...
+
+==> 49
+
+; --- lambda with &rest used standalone ---
+
+>>> ;;; lambda with &rest captures all args
+... ((lambda (&rest args) args) 1 2 3)
+...
+
+==> (1 2 3)
+
+; ============================================================
+; Macros
+; ============================================================
+
+>>> ;;; macro-generating-macro using nested quasiquote
+... (defmacro make-adder-macro (name amount)
+...    `(defmacro ,name (x)
+...       `(+ ,x ,,amount)))
+...
+
+==> (MACRO MAKE-ADDER-MACRO (NAME AMOUNT) ...)
+
+>>> (make-adder-macro add10 10)
+...
+
+==> (MACRO ADD10 (X) ...)
+
+>>> (add10 5)
+...
+
+==> 15
+
+>>> (defmacro zero (var) `(setf ,var 0))
+...
+
+==> (MACRO ZERO (VAR) ...)
+
+>>> x
+...
+
+%%% Unbound Variable: X.
+==> 
+
+>>> (zero x)
+...
+
+==> 0
+
+>>> x
+...
+
+==> 0
+
+>>> (defmacro foo (a &rest b) `(a ,a ,@b))
+...
+
+==> (MACRO FOO (A &REST B) ...)
+
+>>> (macroexpand '(foo 1 (a b c) (x y z)))
+...
+
+==> (A 1 (A B C) (X Y Z))
+
+>>> (macroexpand '(foo 1 "a" "b" "c"))
+...
+
+==> (A 1 "a" "b" "c")
+
+>>> ;;; macroexpand fully expands through multiple macro layers
+... (macroexpand '(unless t 42))
+...
+
+==> (IF (NOT T) (PROGN 42))
+
+>>> ;;; macroexpand-1 stops after one expansion step
+... (macroexpand-1 '(unless t 42))
+...
+
+==> (WHEN (NOT T) 42)
+
+>>> ;;; macroexpand-1 on a non-macro returns form unchanged
+... (macroexpand-1 '(if t 42))
+...
+
+==> (IF T 42)
+
+>>> ;;; macroexpand on a non-macro returns form unchanged
+... (macroexpand '(if t 42))
+...
+
+==> (IF T 42)
+
+>>> ;;; macroexpand on non-list returns unchanged
+... (macroexpand 1)
+...
+
+==> 1
+
+>>> ;;; macroexpand on empty list returns NIL
+... (macroexpand '())
+...
+
+==> NIL
+
+>>> ;;; macroexpand on non-macro head returns form unchanged
+... (macroexpand '(1))
+...
+
+==> (1)
+
+>>> ;;; Error: macroexpand requires exactly one argument
+... (macroexpand)
+
+%%% ERROR 'MACROEXPAND': 1 argument expected.
+%%% PRIMITIVE USAGE: (MACROEXPAND 'form)
+==>
+
+>>> ;;; Error: macroexpand-1 requires exactly one argument
+... (macroexpand-1)
+
+%%% ERROR 'MACROEXPAND-1': 1 argument expected.
+%%% PRIMITIVE USAGE: (MACROEXPAND-1 'form)
+==>
+
+; ============================================================
+; Macro lambda list destructuring
+; ============================================================
+
+>>> ;;; basic required destructuring
+... (defmacro test-destruct1 ((a b) c)
+...    `(list ,a ,b ,c))
+
+==> (MACRO TEST-DESTRUCT1 ((A B) C) ...)
+
+>>> (test-destruct1 (10 20) 30)
+
+==> (10 20 30)
+
+>>> ;;; nested destructuring
+... (defmacro test-destruct2 ((a (b c)) d)
+...    `(list ,a ,b ,c ,d))
+
+==> (MACRO TEST-DESTRUCT2 ((A (B C)) D) ...)
+
+>>> (test-destruct2 (1 (2 3)) 4)
+
+==> (1 2 3 4)
+
+>>> ;;; &optional inside nested pattern — arg supplied
+... (defmacro test-destruct3 ((a &optional b) c)
+...    `(list ,a ,b ,c))
+
+==> (MACRO TEST-DESTRUCT3 ((A &OPTIONAL B) C) ...)
+
+>>> (test-destruct3 (1 2) 3)
+
+==> (1 2 3)
+
+>>> ;;; &optional inside nested pattern — arg defaulted
+... (test-destruct3 (1) 3)
+
+==> (1 NIL 3)
+
+>>> ;;; &rest inside nested pattern
+... (defmacro test-destruct4 ((a &rest bs) c)
+...    `(list ,a ',bs ,c))
+
+==> (MACRO TEST-DESTRUCT4 ((A &REST BS) C) ...)
+
+>>> (test-destruct4 (1 2 3) 4)
+
+==> (1 (2 3) 4)
+
+>>> ;;; destructuring with remaining required params
+... (defmacro test-destruct5 (x (a b) y)
+...    `(list ,x ,a ,b ,y))
+
+==> (MACRO TEST-DESTRUCT5 (X (A B) Y) ...)
+
+>>> (test-destruct5 0 (1 2) 3)
+
+==> (0 1 2 3)
+
+>>> ;;; defmacro with docstring still works
+... (defmacro test-docmacro19 (x) "a docstring" `(+ ,x 1))
+...
+
+==> (MACRO TEST-DOCMACRO19 (X) ...)
+
+>>> (test-docmacro19 5)
+...
+
+==> 6
+
+; --- Macro / lambda errors ---
+
+>>> (defmacro)
+
+%%% ERROR 'DEFMACRO': 3 or more arguments expected.
+%%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
+==>
+
+>>> ;;; defmacro first arg must be symbol
+... (defmacro 1 () 1)
+
+%%% ERROR 'DEFMACRO': Argument 1 expected to be a symbol.
+%%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
+==>
+
+>>> ;;; defmacro second arg must be list
+... (defmacro foo 1 1)
+
+%%% ERROR 'DEFMACRO': Argument 2 expected to be a list of params.
+%%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
+==>
+
+; --- Macroexpand errors ---
+
+>>> (macroexpand)
+
+%%% ERROR 'MACROEXPAND': 1 argument expected.
+%%% PRIMITIVE USAGE: (MACROEXPAND 'form)
+==>
+
+>>> ;;; macroexpand non-list returns unchanged
+... (macroexpand 1)
+
+==> 1
+
+>>> ;;; macroexpand non-macro head returns form unchanged
+... (macroexpand '(1))
+
+==> (1)
+
+; --- MACROEXPAND additional error path ---
+
+>>> ;;; macroexpand empty list returns NIL
+... (macroexpand '())
+
+==> NIL
+
+; --- DEFMACRO docstring-only error ---
+
+>>> ;;; defmacro with docstring but no body
+... (defmacro foo () "docstring")
+
+%%% ERROR 'DEFMACRO': At least one body expression expected after docstring.
+%%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
+==>
+
+; --- DEFMACRO: empty body without docstring ---
+
+>>> ;;; defmacro with empty body (no docstring)
+... (defmacro emptyb22 ())
+
+%%% ERROR 'DEFMACRO': At least one body expression expected.
+%%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
+==>
+
+; ============================================================
+; Lambda lists and argument binding
+; ============================================================
+
 >>> (list)
 
 ==> NIL
@@ -175,7 +652,6 @@
 %%% Error binding arguments in call to function "PARAM-TEST-POSIT".
 %%% Too many arguments.  Received 3.
 ==>
-
 
 >>> ;;; Fix 1: bare (var) spec with no default in &key
 ... ((lambda (&key (a)) a))
@@ -428,3 +904,34 @@
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Lambda list keyword &AUX cannot be used as a supplied-p variable in &KEY spec.
 ==>
+
+>>> (lambda)
+
+%%% ERROR 'LAMBDA': 1 or more arguments expected.
+%%% PRIMITIVE USAGE: (LAMBDA lambda-list &rest body)
+==>
+
+>>> ;;; lambda with no body valid in CL, returns NIL when called
+... (lambda ())
+
+==> (FUNCTION  () ...)
+
+>>> ;;; unquote-splicing result must be a list
+... `(a ,@1 c)
+
+%%% ERROR 'UNQUOTE-SPLICING': Argument 1 must evaluate to a List.
+%%% PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)
+==>
+
+>>> ;;; unquote-splicing at top level of quasiquote: splice requires a list context
+... `,@(list 1 2)
+
+%%% Ill-placed ,@ (UNQUOTE-SPLICING): splice requires a list context.
+==>
+
+; --- LAMBDA docstring-only error ---
+
+>>> ;;; lambda with docstring but no body valid in CL, returns NIL when called
+... (lambda () "docstring")
+
+==> (FUNCTION  () ...)

@@ -1,0 +1,443 @@
+; test04-string-library.log  --  string library tests
+
+; --------------------------------------------------------
+; string / ustring — basic conversion
+; --------------------------------------------------------
+
+>>> (string 3.5 "Hello" 1/2 )
+...
+
+==> "3.5\"Hello\"1/2"
+
+>>> (ustring 42)
+...
+
+==> "42"
+
+>>> (ustring "hello")
+...
+
+==> "hello"
+
+>>> (ustring 'foo)
+...
+
+==> "FOO"
+
+>>> (string "hello")
+...
+
+==> "\"hello\""
+
+; string of a string wraps with quotes — length of "hello" is 7
+>>> (= (length (string "hello")) 7)
+...
+
+==> T
+
+; --------------------------------------------------------
+; string / ustring with :sep
+; --------------------------------------------------------
+
+; numbers joined with separator
+>>> (string 1 2 3 :sep ", ")
+==> "1, 2, 3"
+
+>>> (ustring 1 2 3 :sep ", ")
+==> "1, 2, 3"
+
+; strings: ustring joins without surrounding quotes, string adds them
+>>> (ustring "hello" "world" :sep " ")
+==> "hello world"
+
+>>> (string "hello" "world" :sep " ")
+==> "\"hello\" \"world\""
+
+; symbols uppercased in user mode
+>>> (ustring 'a 'b 'c :sep "->")
+==> "A->B->C"
+
+; :sep defaults to "" — existing behaviour preserved
+>>> (ustring "x" "y")
+==> "xy"
+
+; --------------------------------------------------------
+; string-upcase / string-downcase / string-capitalize
+; --------------------------------------------------------
+
+>>> (string-upcase "hello")
+...
+
+==> "HELLO"
+
+>>> (string-downcase "WORLD")
+...
+
+==> "world"
+
+>>> (string-upcase "already UP")
+...
+
+==> "ALREADY UP"
+
+>>> (string-downcase "mixed Case 123")
+...
+
+==> "mixed case 123"
+
+>>> (string-capitalize "hello world")
+==> "Hello World"
+
+>>> (string-capitalize "HELLO WORLD")
+==> "Hello World"
+
+>>> (string-capitalize "hello")
+==> "Hello"
+
+>>> (string-capitalize "")
+==> ""
+
+>>> (string-capitalize "already Capitalized words")
+==> "Already Capitalized Words"
+
+; --------------------------------------------------------
+; string-trim / string-left-trim / string-right-trim
+; --------------------------------------------------------
+
+>>> (string-trim " " "  hello  ")
+...
+
+==> "hello"
+
+>>> (string-left-trim " " "  hello  ")
+...
+
+==> "hello  "
+
+>>> (string-right-trim " " "  hello  ")
+...
+
+==> "  hello"
+
+>>> (string-trim "xy" "xyhelloyx")
+...
+
+==> "hello"
+
+; --------------------------------------------------------
+; char-code / code-char
+; --------------------------------------------------------
+
+>>> (char-code "a")
+...
+
+==> 97
+
+>>> (char-code "A")
+...
+
+==> 65
+
+>>> (code-char 97)
+...
+
+==> "a"
+
+>>> (code-char 65)
+...
+
+==> "A"
+
+>>> ;;; round-trip
+... (code-char (char-code "z"))
+...
+
+==> "z"
+
+; --------------------------------------------------------
+; string comparisons
+; --------------------------------------------------------
+
+>>> (= "abc" "abc")
+...
+
+==> T
+
+>>> (= "abc" "ABC")
+...
+
+==> NIL
+
+>>> (< "abc" "abd")
+...
+
+==> T
+
+>>> (> "z" "a")
+...
+
+==> T
+
+>>> (string= "hello" "hello")
+...
+
+==> T
+
+>>> (string< "apple" "banana")
+...
+
+==> T
+
+>>> (string> "zebra" "apple")
+...
+
+==> T
+
+>>> (string<= "abc" "abc")
+...
+
+==> T
+
+>>> (string>= "b" "a")
+...
+
+==> T
+
+; --------------------------------------------------------
+; string-join
+; --------------------------------------------------------
+
+>>> (string-join ", " (list 1 2 3))
+==> "1, 2, 3"
+
+>>> (string-join " " (list 'hello 'world))
+==> "HELLO WORLD"
+
+; strings are joined without surrounding quotes
+>>> (string-join ", " (list "a" "b" "c"))
+==> "a, b, c"
+
+; mixed types
+>>> (string-join " | " (list 1 "two" 'three))
+==> "1 | two | THREE"
+
+; empty list
+>>> (string-join ", " (list))
+==> ""
+
+; single element
+>>> (string-join "-" (list 42))
+==> "42"
+
+; error: separator must be a string
+>>> (string-join 42 (list 1 2))
+%%% ERROR 'STRING-JOIN': Argument 1 (separator) must be a String.
+%%% PRIMITIVE USAGE: (STRING-JOIN separator list)
+
+; error: second arg must be a list
+>>> (string-join ", " 99)
+%%% ERROR 'STRING-JOIN': Argument 2 must be a List.
+%%% PRIMITIVE USAGE: (STRING-JOIN separator list)
+
+; --------------------------------------------------------
+; string-split
+; --------------------------------------------------------
+
+; whitespace split — runs of spaces collapsed, empties omitted
+>>> (string-split "hello world")
+==> ("hello" "world")
+
+>>> (string-split "  foo  bar  baz  ")
+==> ("foo" "bar" "baz")
+
+; empty string → NIL
+>>> (string-split "")
+==> NIL
+
+; explicit separator
+>>> (string-split "a,b,c" ",")
+==> ("a" "b" "c")
+
+; separator that produces empty fields
+>>> (string-split "a,,b" ",")
+==> ("a" "" "b")
+
+; no occurrence of separator → single-element list
+>>> (string-split "no-split" ",")
+==> ("no-split")
+
+; error: first arg must be a string
+>>> (string-split 42)
+%%% ERROR 'STRING-SPLIT': Argument 1 must be a String.
+%%% PRIMITIVE USAGE: (STRING-SPLIT string &optional separator)
+
+; --------------------------------------------------------
+; string-lines
+; --------------------------------------------------------
+
+; real newlines via code-char
+>>> (string-lines (string-join "" (list "hello" (code-char 10) "world")))
+==> ("hello" "world")
+
+>>> (string-lines (string-join "" (list "a" (code-char 10) "b" (code-char 10) "c")))
+==> ("a" "b" "c")
+
+; empty string → NIL
+>>> (string-lines "")
+==> NIL
+
+; error: arg must be a string
+>>> (string-lines 42)
+%%% ERROR 'STRING-LINES': Argument 1 must be a String.
+%%% PRIMITIVE USAGE: (STRING-LINES string)
+
+; --------------------------------------------------------
+; now-string
+; --------------------------------------------------------
+
+; returns a string
+>>> (stringp (now-string))
+==> T
+
+; format string produces a string of the right length (4-digit year)
+>>> (= (length (now-string "%Y")) 4)
+==> T
+
+>>> (stringp (now-string "%H:%M"))
+==> T
+
+; error: arg must be a string
+>>> (now-string 42)
+%%% ERROR 'NOW-STRING': Argument must be a format string.
+%%% PRIMITIVE USAGE: (NOW-STRING &optional format)
+
+; --------------------------------------------------------
+; error cases
+; --------------------------------------------------------
+
+>>> ;;; Error: string requires at least one argument
+... (string)
+
+%%% ERROR 'STRING': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (STRING &rest objects &key (sep ""))
+==>
+
+; --- string concatenation ---
+
+>>> (string 1 2 3)
+...
+
+==> "123"
+
+>>> (ustring 1 2 3)
+...
+
+==> "123"
+
+; --- string/ustring from symbol ---
+
+>>> ;;; string converts symbol to string (programmer mode)
+... (string 'abc)
+...
+
+==> "ABC"
+
+>>> ;;; ustring converts symbol to string (user mode)
+... (ustring 'abc)
+...
+
+==> "ABC"
+
+; --- make-symbol from string ---
+
+>>> ;;; make-symbol from a single string
+... (make-symbol "hello-world")
+...
+
+==> HELLO-WORLD
+
+; --- make-symbol from string edge case ---
+
+>>> ;;; make-symbol from ustring of symbol
+... (make-symbol (ustring 'abc))
+...
+
+==> ABC
+
+; --- string repetition via * ---
+
+>>> ;;; string times integer (Python repeat)
+... (* "ab" 3)
+...
+
+==> "ababab"
+
+; --- at on strings ---
+
+>>> ;;; at first char of string
+... (at 0 "hello")
+
+==> "h"
+
+>>> ;;; at last char of string
+... (at 4 "hello")
+
+==> "o"
+
+>>> (string)
+
+%%% ERROR 'STRING': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (STRING &rest objects &key (sep ""))
+==>
+
+>>> (ustring)
+
+%%% ERROR 'USTRING': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (USTRING &rest objects &key (sep ""))
+==>
+
+; --- at errors on strings ---
+
+>>> ;;; at out of range on string
+... (at 5 "hi")
+
+%%% ERROR 'AT': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+>>> ;;; at on empty string
+... (at 0 "")
+
+%%% ERROR 'AT': Invalid argument key/index.
+%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
+==>
+
+; ============================================================
+; String escape sequences — actual-character storage model
+; ============================================================
+
+>>> ;;; \n is 1 character (actual newline), not 2
+... (length "\n")
+
+==> 1
+
+>>> ;;; \t is 1 character (actual tab)
+... (length "\t")
+
+==> 1
+
+>>> ;;; \x41 is 1 character (letter A)
+... (length "\x41")
+
+==> 1
+
+>>> ;;; escape sequence resolves to correct character
+... (= (at 0 "\x41") "A")
+
+==> T
+
+>>> ;;; \n resolves to char-code 10
+... (char-code (at 0 "\n"))
+
+==> 10
+

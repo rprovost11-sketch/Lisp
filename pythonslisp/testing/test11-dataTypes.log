@@ -1,228 +1,3 @@
->>> (list (+ 1 3) '(apple pear "string") 22/7 'false)
-...
-
-==> (4 (APPLE PEAR "string") 22/7 FALSE)
-
->>> (first '(apple banana cake))
-...
-
-==> APPLE
-
->>> (rest '(apple banana cake donut))
-...
-
-==> (BANANA CAKE DONUT)
-
->>> (rest '(donkey))
-...
-
-==> NIL
-
->>> (cons 'apple '(banana orange pear))
-...
-
-==> (APPLE BANANA ORANGE PEAR)
-
->>> (remove 'orange '(apple banana orange pear))
-...
-
-==> (APPLE BANANA PEAR)
-
->>> (push! '(1 2 3 4) 6)
-...
-
-==> (1 2 3 4 6)
-
->>> (setf a '(1 2 3 4))
-...
-
-==> (1 2 3 4)
-
->>> a
-...
-
-==> (1 2 3 4)
-
->>> (pop! a)
-...
-
-==> 4
-
->>> a
-...
-
-==> (1 2 3)
-
->>> (setf mylist '("a" "b" "c" "d"))
-...
-
-==> ("a" "b" "c" "d")
-
->>> mylist
-...
-
-==> ("a" "b" "c" "d")
-
->>> (at 2 mylist)
-...
-
-==> "c"
-
->>> (setf (at 1 mylist) 1)
-...
-
-==> 1
-
->>> mylist
-...
-
-==> ("a" 1 "c" "d")
-
->>> (append mylist '(pi e))
-...
-
-==> ("a" 1 "c" "d" PI E)
-
->>> (has-value-p pi '(a b c d))
-...
-
-==> NIL
-
->>> (has-value-p 'c '(a b c d))
-...
-
-==> T
-
->>> (length nil)
-...
-
-==> 0
-
->>> (length '(a b c d))
-...
-
-==> 4
-
->>> (length "hello")
-...
-
-==> 5
-
->>> (reverse '(1 2 3 4 5))
-...
-
-==> (5 4 3 2 1)
-
->>> (setf mymap (make-dict ("a" 1) ("b" 2) ("c" 3) ) )
-...
-
-==> (DICT
-   ("a" 1)
-   ("b" 2)
-   ("c" 3)
-)
-
->>> mymap
-...
-
-==> (DICT
-   ("a" 1)
-   ("b" 2)
-   ("c" 3)
-)
-
->>> (at "b" mymap)
-...
-
-==> 2
-
->>> (setf (at "b" mymap) e)
-...
-
-==> 2.718281828459045
-
->>> mymap
-...
-
-==> (DICT
-   ("a" 1)
-   ("b" 2.718281828459045)
-   ("c" 3)
-)
-
->>> (has-value-p 1 mymap)
-...
-
-==> T
-
->>> (has-value-p 10 mymap)
-...
-
-==> NIL
-
->>> (update! mymap (make-dict ("b" 5) ("d" 10)))
-...
-
-==> (DICT
-   ("a" 1)
-   ("b" 5)
-   ("c" 3)
-   ("d" 10)
-)
-
->>> mymap
-...
-
-==> (DICT
-   ("a" 1)
-   ("b" 5)
-   ("c" 3)
-   ("d" 10)
-)
-
->>> (has-key-p "a" mymap)
-...
-
-==> T
-
->>> (has-key-p 3 mymap)
-...
-
-==> NIL
-
->>> ;;; Error: has-key-p requires a map as second argument
-... (has-key-p "a" 1)
-
-%%% ERROR 'HAS-KEY-P': Invalid argument 2.  Dict expected.
-%%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
-==>
-
->>> ;;; Error: has-value-p requires a list or map as second argument
-... (has-value-p 2 1)
-
-%%% ERROR 'HAS-VALUE-P': Invalid argument.  Argument 2 expected to be a list or dict.
-%%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
-==>
-
->>> ;;; Error: update! requires map arguments
-... (update! 1 (make-dict))
-
-%%% ERROR 'UPDATE!': Argument 1 expected to be a dict.
-%%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
-==>
-
->>> (update! (make-dict) 1)
-
-%%% ERROR 'UPDATE!': Argument 2 expected to be a dict.
-%%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
-==>
-
->>> (update!)
-
-%%% ERROR 'UPDATE!': 2 arguments expected.
-%%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
-==>
-
 ; ========================
 ; type-of mainstream cases
 ; ------------------------
@@ -455,27 +230,7 @@
 
 ==> T
 
->>> (point-p p1)
-...
-
-==> T
-
 >>> (point-p 42)
-...
-
-==> NIL
-
->>> (point-p "hello")
-...
-
-==> NIL
-
->>> (point-p nil)
-...
-
-==> NIL
-
->>> (point-p '(1 2 3))
 ...
 
 ==> NIL
@@ -602,11 +357,6 @@
 
 ==> T
 
->>> (point-p bob)
-...
-
-==> NIL
-
 >>> (person-p p1)
 ...
 
@@ -648,11 +398,6 @@
 
 ; type-of for struct instances
 >>> (type-of p0)
-...
-
-==> POINT
-
->>> (type-of p1)
 ...
 
 ==> POINT
@@ -986,3 +731,345 @@
 ...   (integer "int")
 ...   (string "str"))
 %%% etypecase: no matching clause for value: 3.14
+
+>>> (float 3)
+...
+
+==> 3.0
+
+>>> (float 1/3)
+...
+
+==> 0.3333333333333333
+
+>>> (float "0.9")
+...
+
+==> 0.9
+
+>>> (float -1/4)
+...
+
+==> -0.25
+
+>>> (integer 6.982)
+
+==> 6
+
+>>> (integer "24")
+
+==> 24
+
+>>> (list pi 3/4 'asymbol "a string")
+...
+
+==> (3.141592653589793 3/4 ASYMBOL "a string")
+
+>>> (rational 0.5)
+...
+
+==> 1/2
+
+>>> (rational 3)
+...
+
+==> 3/1
+
+>>> (rational 3/4)
+...
+
+==> 3/4
+
+>>> (rational 1.5)
+...
+
+==> 3/2
+
+>>> (make-symbol "hello")
+...
+
+==> HELLO
+
+>>> (make-symbol "MAKE-POINT")
+...
+
+==> MAKE-POINT
+
+>>> ;;; Error: float rejects non-numeric strings
+... (float "hello")
+
+%%% ERROR 'FLOAT': Invalid argument.
+%%% PRIMITIVE USAGE: (FLOAT number)
+==>
+
+>>> ;;; Error: rational requires exactly one argument
+... (rational)
+
+%%% ERROR 'RATIONAL': 1 argument expected.
+%%% PRIMITIVE USAGE: (RATIONAL number)
+==>
+
+>>> (rational 1 2)
+
+%%% ERROR 'RATIONAL': 1 argument expected.
+%%% PRIMITIVE USAGE: (RATIONAL number)
+==>
+
+>>> ;;; Error: make-symbol requires exactly one argument
+... (make-symbol)
+
+%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
+==>
+
+; --- make-symbol happy-path tests ---
+
+>>> (make-symbol "foo")
+...
+
+==> FOO
+
+>>> (make-symbol "hello-world")
+...
+
+==> HELLO-WORLD
+
+>>> (make-symbol "x")
+...
+
+==> X
+
+>>> (make-symbol "abc123")
+...
+
+==> ABC123
+
+>>> (make-symbol "+")
+...
+
+==> +
+
+>>> (make-symbol "nil")
+...
+
+==> NIL
+
+>>> (make-symbol "FOO")
+...
+
+==> FOO
+
+>>> (make-symbol "foo-bar-baz")
+...
+
+==> FOO-BAR-BAZ
+
+; --- integer conversion with base ---
+
+>>> ;;; integer with base 16 (hex)
+... (integer "ff" 16)
+...
+
+==> 255
+
+>>> ;;; integer with base 2 (binary)
+... (integer "10" 2)
+...
+
+==> 2
+
+; --- struct interactions ---
+
+>>> ;;; define a struct for interaction tests
+... (defstruct point23 x y)
+
+==> POINT23
+
+>>> ;;; create a struct instance
+... (setf pt23 (make-point23 :x 10 :y 20))
+
+==> (DICT
+   (STRUCT-TYPE POINT23)
+   (X 10)
+   (Y 20)
+)
+
+>>> ;;; read struct fields
+... (point23-x pt23)
+
+==> 10
+
+>>> ;;; modify struct field via setf
+... (setf (point23-x pt23) 99)
+
+==> 99
+
+>>> ;;; verify struct field was modified
+... (point23-x pt23)
+
+==> 99
+
+>>> ;;; mapcar over struct accessor extracts field from list of structs
+... (mapcar point23-x (list (make-point23 :x 1 :y 2) (make-point23 :x 3 :y 4)))
+
+==> (1 3)
+
+>>> ;;; closure capturing struct: lambda reads and modifies struct fields
+... (let ((p23 (make-point23 :x 0 :y 0)))
+...    (setf (point23-x p23) 42)
+...    (point23-x p23))
+
+==> 42
+
+; --- defstruct :include ---
+
+>>> ;;; base struct for include tests
+... (defstruct base26 (x 0) (y 0))
+
+==> BASE26
+
+>>> ;;; derived struct inherits base fields
+... (defstruct (derived26 (:include base26)) (z 0))
+
+==> DERIVED26
+
+>>> ;;; constructor accepts inherited and own fields
+... (setf d26 (make-derived26 :x 1 :y 2 :z 3))
+
+==> (DICT
+   (STRUCT-INCLUDES (BASE26))
+   (STRUCT-TYPE DERIVED26)
+   (X 1)
+   (Y 2)
+   (Z 3)
+)
+
+>>> ;;; inherited accessor works on derived instance
+... (base26-x d26)
+
+==> 1
+
+>>> ;;; inherited accessor works on derived instance
+... (base26-y d26)
+
+==> 2
+
+>>> ;;; own accessor works
+... (derived26-z d26)
+
+==> 3
+
+>>> ;;; derived predicate returns T for derived instance
+... (derived26-p d26)
+
+==> T
+
+>>> ;;; parent predicate returns T for derived instance
+... (base26-p d26)
+
+==> T
+
+>>> ;;; parent predicate returns T for base instance
+... (base26-p (make-base26 :x 9 :y 9))
+
+==> T
+
+>>> ;;; derived predicate returns NIL for base instance
+... (derived26-p (make-base26 :x 9 :y 9))
+
+==> NIL
+
+>>> ;;; type-of returns the most specific type
+... (type-of d26)
+
+==> DERIVED26
+
+>>> ;;; typep works for own type
+... (typep d26 'derived26)
+
+==> T
+
+>>> ;;; typep works for ancestor type
+... (typep d26 'base26)
+
+==> T
+
+>>> ;;; setf on inherited field
+... (setf (base26-x d26) 99)
+
+==> 99
+
+>>> ;;; verify inherited field was modified
+... (base26-x d26)
+
+==> 99
+
+>>> ;;; copy preserves all fields including inherited
+... (setf d26b (copy-derived26 d26))
+
+==> (DICT
+   (STRUCT-INCLUDES (BASE26))
+   (STRUCT-TYPE DERIVED26)
+   (X 99)
+   (Y 2)
+   (Z 3)
+)
+
+>>> ;;; copy is independent of original
+... (setf (base26-x d26) 0)
+... (base26-x d26b)
+
+==> 99
+
+>>> ;;; two-level inheritance
+... (defstruct (extra26 (:include derived26)) (w 0))
+
+==> EXTRA26
+
+>>> ;;; three-level constructor
+... (setf e26 (make-extra26 :x 1 :y 2 :z 3 :w 4))
+
+==> (DICT
+   (STRUCT-INCLUDES (DERIVED26 BASE26))
+   (STRUCT-TYPE EXTRA26)
+   (W 4)
+   (X 1)
+   (Y 2)
+   (Z 3)
+)
+
+>>> ;;; grandparent predicate returns T for grandchild
+... (base26-p e26)
+
+==> T
+
+>>> ;;; parent predicate returns T for grandchild
+... (derived26-p e26)
+
+==> T
+
+>>> ;;; own predicate returns T for grandchild
+... (extra26-p e26)
+
+==> T
+
+>>> ;;; base instance does not satisfy grandchild predicate
+... (extra26-p (make-base26))
+
+==> NIL
+
+; --- Conversion: symbol arguments ---
+
+>>> ;;; float with symbol argument
+... (float 'abc)
+
+%%% ERROR 'FLOAT': Invalid argument.
+%%% PRIMITIVE USAGE: (FLOAT number)
+==>
+
+>>> ;;; integer with symbol argument
+... (integer 'abc)
+
+%%% ERROR 'INTEGER': Invalid argument.
+%%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
+==>

@@ -1,0 +1,2672 @@
+; test02-specialOperators.log
+; Tests for special operators (excluding lambda and defmacro,
+; which have their own test files).
+; Covered: QUOTE, IF, PROGN, COND, CASE, LET, LET*, SETQ,
+;   FUNCALL, APPLY, QUASIQUOTE, BLOCK, RETURN-FROM, CATCH/THROW,
+;   HANDLER-CASE, MULTIPLE-VALUE-BIND, NTH-VALUE,
+;   MULTIPLE-VALUE-LIST, MAKE-DICT, : (module access),
+;   CALL/CC, DYNAMIC-WIND
+; ============================================================
+
+; ============================================================
+; QUOTE
+; ============================================================
+
+; symbol
+>>> (quote x)
+==> X
+
+; list
+>>> (quote (1 2 3))
+==> (1 2 3)
+
+; nil
+>>> (quote nil)
+==> NIL
+
+; reader shorthand: single symbol
+>>> 'x
+==> X
+
+; reader shorthand: list
+>>> '(a b c)
+==> (A B C)
+
+>>> (quote)
+
+%%% ERROR 'QUOTE': 1 argument expected.
+%%% PRIMITIVE USAGE: (QUOTE sexpr)
+==>
+
+>>> (quote 1 2)
+
+%%% ERROR 'QUOTE': 1 argument expected.
+%%% PRIMITIVE USAGE: (QUOTE sexpr)
+==>
+
+; ============================================================
+; IF
+; ============================================================
+
+; two-branch true
+>>> (if t 'yes 'no)
+==> YES
+
+; two-branch false
+>>> (if nil 'yes 'no)
+==> NO
+
+>>> (if nil 42)
+...
+
+==> NIL
+
+>>> (if nil 42 99)
+...
+
+==> 99
+
+>>> (if t 1)
+...
+
+==> 1
+
+; ============================================================
+; PROGN
+; ============================================================
+
+; empty progn returns NIL
+>>> (progn)
+==> NIL
+
+>>> (progn 1 2 3)
+...
+
+==> 3
+
+>>> (let ((n 5)) (progn (setf n (* n n)) n))
+...
+
+==> 25
+
+; ============================================================
+; COND
+; ============================================================
+
+; no matching clause returns NIL
+>>> (cond ((= 1 99) 'nope))
+==> NIL
+
+; t clause as default
+>>> (cond ((= 1 99) 'nope) (t 'default))
+==> DEFAULT
+
+>>> (setf val1 3)
+...
+
+==> 3
+
+>>> (cond
+...    ((= val1 1)
+...                 "one")
+...    ((= val1 2)
+...                 "two")
+...    ((= val1 3)
+...                 "three"))
+...
+
+==> "three"
+
+>>> ;;; Error: cond requires at least one clause
+... (cond)
+
+%%% ERROR 'COND': 1 or more arguments expected.
+%%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
+==>
+
+; ============================================================
+; CASE
+; ============================================================
+
+>>> (case val1
+...    (1
+...        "one")
+...    (2
+...        "two")
+...    (3
+...        "three")
+...    )
+...
+
+==> "three"
+
+; case: list of keys — matches first key in group
+>>> (case 1
+...    ((1 2 3) "low")
+...    ((4 5 6) "high")
+...    (t       "other"))
+...
+
+==> "low"
+
+; case: list of keys — matches second key in group
+>>> (case 5
+...    ((1 2 3) "low")
+...    ((4 5 6) "high")
+...    (t       "other"))
+...
+
+==> "high"
+
+; case: list of keys — falls through to t
+>>> (case 9
+...    ((1 2 3) "low")
+...    ((4 5 6) "high")
+...    (t       "other"))
+...
+
+==> "other"
+
+; case: list of symbol keys
+>>> (case 'b
+...    ((a b)   "ab")
+...    ((c d)   "cd")
+...    (otherwise "other"))
+...
+
+==> "ab"
+
+; case: list of symbol keys — no match, otherwise clause
+>>> (case 'z
+...    ((a b)   "ab")
+...    ((c d)   "cd")
+...    (otherwise "other"))
+...
+
+==> "other"
+
+>>> (case)
+
+%%% ERROR 'CASE': 2 or more arguments expected.
+%%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
+==>
+
+; ============================================================
+; LET
+; ============================================================
+
+; uninitialized var defaults to NIL
+>>> (let ((x)) x)
+==> NIL
+
+; empty binding list
+>>> (let () 42)
+==> 42
+
+; parallel binding: y sees outer x (10), not inner x (1)
+>>> (let ((x 10))
+...    (let ((x 1) (y x))
+...       y))
+==> 10
+
+; scoping: inner let shadows outer x
+>>> (let ((x 1))
+...    (let ((y (+ x 1)))
+...       (+ x y)))
+==> 3
+
+; --- let / let* errors ---
+
+>>> (let)
+
+%%% ERROR 'LET': 2 or more arguments expected.
+%%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+>>> ;;; let first arg must be list
+... (let 1 2)
+
+%%% ERROR 'LET': The first argument to let expected to be a list of variable initializations.
+%%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+>>> ;;; let var spec first element must be symbol
+... (let ((1 2)) 1)
+
+%%% ERROR 'LET': First element of a variable initializer pair expected to be a symbol.
+%%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+>>> ;;; let var spec must be 1 or 2 elements
+... (let ((x 1 2)) 1)
+
+%%% ERROR 'LET': Variable initializer spec expected to be 1 or 2 elements long.
+%%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+; ============================================================
+; LET*
+; ============================================================
+
+; empty binding list
+>>> (let* () 42)
+==> 42
+
+>>> (let* ((a 2) (b (* a 3))) b)
+...
+
+==> 6
+
+>>> (let* ((x 10) (y (+ x 5))) y)
+...
+
+==> 15
+
+>>> (let*)
+
+%%% ERROR 'LET*': 2 or more arguments expected.
+%%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+>>> ;;; let* first arg must be list
+... (let* 1 2)
+
+%%% ERROR 'LET*': The first argument to let expected to be a list of variable initializations.
+%%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+
+; ============================================================
+; SETQ
+; ============================================================
+
+; --- 1. setq: basic assignment ---
+
+>>> (setq sq1 99)
+...
+
+==> 99
+
+>>> sq1
+...
+
+==> 99
+
+>>> (setq sq1 100)
+...
+
+==> 100
+
+>>> sq1
+...
+
+==> 100
+
+>>> (setq sq2 3.14)
+...
+
+==> 3.14
+
+>>> (setq sq3 "hello")
+...
+
+==> "hello"
+
+>>> (setq sq4 '(a b c))
+...
+
+==> (A B C)
+
+>>> (setq sq5 nil)
+...
+
+==> NIL
+
+>>> (setq sq6 t)
+...
+
+==> T
+
+; --- 2. setq: multiple pairs in one call ---
+
+>>> ;;; returns the value of the last assignment
+... (setq ma 1 mb 2 mc 3)
+...
+
+==> 3
+
+>>> ma
+...
+
+==> 1
+
+>>> mb
+...
+
+==> 2
+
+>>> mc
+...
+
+==> 3
+
+; --- 3. setq: scope behaviour ---
+
+>>> ;;; setq inside let finds and updates the let-local binding
+... (let ((lvar 5))
+...    (setq lvar 99)
+...    lvar)
+...
+
+==> 99
+
+>>> ;;; the let-local did not leak into the global scope
+... (boundp 'lvar)
+...
+
+==> NIL
+
+>>> ;;; setq creates a new global when the name is not bound anywhere
+... (setq sq-new 777)
+...
+
+==> 777
+
+>>> sq-new
+...
+
+==> 777
+
+; --- 4. setq: auto-names a lambda ---
+
+>>> (setq sq-fn (lambda (x) (* x x)))
+...
+
+==> (FUNCTION SQ-FN (X) ...)
+
+>>> (sq-fn 7)
+...
+
+==> 49
+
+; --- 5. setq: error cases ---
+
+>>> ;;; no arguments
+... (setq)
+
+%%% ERROR 'SETQ': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
+==>
+
+>>> ;;; odd number of arguments
+... (setq sq1 1 sq2)
+
+%%% ERROR 'SETQ': An even number of arguments is expected.  Received 3.
+%%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
+==>
+
+>>> ;;; non-symbol lvalue
+... (setq 42 1)
+
+%%% ERROR 'SETQ': First of setf pair must be a symbol.
+%%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
+==>
+
+; ============================================================
+; FUNCALL
+; ============================================================
+
+; call a primitive directly
+>>> (funcall car '(1 2 3))
+==> 1
+
+; call a lambda
+>>> (funcall (lambda (x) (* x x)) 5)
+==> 25
+
+; call a two-argument lambda
+>>> (funcall (lambda (x y) (+ x y)) 3 4)
+==> 7
+
+; call a primitive by value
+>>> (funcall reverse '(a b c))
+==> (C B A)
+
+; ============================================================
+; APPLY
+; ============================================================
+
+; basic apply with final list
+>>> (apply + '(1 2 3))
+==> 6
+
+; leading args before the final list
+>>> (apply + 1 2 '(3 4))
+==> 10
+
+; apply with a lambda
+>>> (apply (lambda (x y) (+ x y)) '(3 4))
+==> 7
+
+; leading scalars merged into final list
+>>> (apply list 1 2 '(3 4))
+==> (1 2 3 4)
+
+; empty final list
+>>> (apply + '())
+==> 0
+
+; ============================================================
+; QUASIQUOTE
+; ============================================================
+
+>>> (setf name 'john)
+...
+
+==> JOHN
+
+>>> `(go ,name go)
+...
+
+==> (GO JOHN GO)
+
+>>> `( name ,name age ,(+ 3 7))
+...
+
+==> (NAME JOHN AGE 10)
+
+>>> `,name
+...
+
+==> JOHN
+
+>>> (setf full '(r h l))
+...
+
+==> (R H L)
+
+>>> `( ,@full )
+...
+
+==> (R H L)
+
+; --- nested quasiquotes ---
+
+>>> ;;; inner quasiquote preserved as data no unquotes
+... `(a `b)
+...
+
+==> (A (QUASIQUOTE B))
+
+>>> ;;; inner unquote preserved as form (belongs to inner quasiquote)
+... `(a `(b ,name))
+...
+
+==> (A (QUASIQUOTE (B (UNQUOTE NAME))))
+
+>>> ;;; double-unquote: outer unquote evaluated now, inner unquote preserved
+... `(a `(b ,,name))
+...
+
+==> (A (QUASIQUOTE (B (UNQUOTE JOHN))))
+
+>>> ;;; unquote outside quasiquote
+... ,x
+
+%%% ERROR 'UNQUOTE': UNQUOTE can only occur inside a QUASIQUOTE.
+%%% PRIMITIVE USAGE: (UNQUOTE sexpr)
+==>
+
+>>> ;;; unquote-splicing outside quasiquote
+... ,@x
+
+%%% ERROR 'UNQUOTE-SPLICING': UNQUOTE-SPLICING can only occur inside a QUASIQUOTE.
+%%% PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)
+==>
+
+; ============================================================
+; BLOCK / RETURN-FROM
+; ============================================================
+
+; --- block and return-from ---
+
+; block returns value of last body form
+>>> (block myblock 1 2 3)
+==> 3
+
+; block with no body returns NIL
+>>> (block myblock)
+==> NIL
+
+; return-from exits the block immediately, skipping remaining forms
+>>> (block myblock
+...    (return-from myblock 42)
+...    99)
+==> 42
+
+; return-from with no value returns NIL
+>>> (block myblock
+...    (return-from myblock)
+...    99)
+==> NIL
+
+; return-from from inside a nested expression
+>>> (+ 1 (block escape
+...         (+ 10 (return-from escape 5))))
+==> 6
+
+; nested blocks with same name innermost is exited
+>>> (block foo
+...    (block foo
+...       (return-from foo 1))
+...    2)
+==> 2
+
+; return-from to outer block bypasses the inner block entirely
+>>> (block outer
+...    (block inner
+...       (return-from outer 99))
+...    42)
+==> 99
+
+; block used as early-exit in a search loop
+>>> (defun find-even (lst)
+...    (block found
+...       (dolist (x lst)
+...          (if (evenp x) (return-from found x)))
+...       nil))
+==> (FUNCTION FIND-EVEN (LST) ...)
+
+>>> (find-even '(1 3 5 4 7))
+==> 4
+
+>>> (find-even '(1 3 5 7))
+==> NIL
+
+; --- block nil and return ---
+
+; (block nil ...) acts like a named block
+>>> (block nil 1 2 3)
+==> 3
+
+; (return value) exits (block nil ...)
+>>> (block nil
+...    (return 42)
+...    99)
+==> 42
+
+; (return) with no value returns NIL
+>>> (block nil
+...    (return)
+...    99)
+==> NIL
+
+; dotimes with early (return ...)
+>>> (let ((sum 0))
+...    (dotimes (i 10)
+...       (if (= i 5) (return sum))
+...       (setf sum (+ sum i)))
+...    sum)
+...
+
+==> 10
+
+; dotimes with result form
+>>> (let ((total 0)) (dotimes (i 5 total) (setf total (+ total i))))
+...
+
+==> 10
+
+; dotimes result form - var = count when evaluated
+>>> (dotimes (i 5 i) nil)
+...
+
+==> 5
+
+; dolist with early (return ...)
+>>> (dolist (x '(1 2 3 4 5))
+...    (if (= x 3) (return x)))
+...
+
+==> 3
+
+; Error: stale return-from (no matching block active)
+>>> (return-from nowhere 42)
+%%% return-from: no block named NOWHERE is currently active.
+
+; Error: stale return (no block nil active)
+>>> (return 42)
+%%% return-from: no block named NIL is currently active.
+
+; Error: block name must be a symbol (not an integer)
+>>> (block 42 1 2 3)
+%%% block: name must be a symbol.
+
+; Error: return-from name must be a symbol
+>>> (return-from 42 99)
+%%% return-from: name must be a symbol.
+
+; ============================================================
+; CATCH / THROW
+; ============================================================
+
+; --- catch and throw ---
+
+; throw immediately returns value to catch; remaining body skipped
+>>> (catch 'done (throw 'done 42) 99)
+==> 42
+
+; normal completion no throw; returns last body form
+>>> (catch 'done 1 2 3)
+==> 3
+
+; empty body returns NIL
+>>> (catch 'tag)
+==> NIL
+
+; throw crosses function-call boundary (dynamic extent)
+>>> (defun thrower () (throw 'escape 99))
+==> (FUNCTION THROWER () ...)
+
+>>> (catch 'escape (thrower) 0)
+==> 99
+
+; nested catches: inner tag matches caught by inner; outer returns body after
+>>> (catch 'outer
+...    (catch 'inner
+...       (throw 'inner 1))
+...    2)
+==> 2
+
+; nested catches: outer tag propagates past inner, caught by outer
+>>> (catch 'outer
+...    (catch 'inner
+...       (throw 'outer 99))
+...    42)
+==> 99
+
+; tag is evaluated at runtime
+>>> (let ((tag 'my-tag)) (catch tag (throw tag 77)))
+==> 77
+
+; numeric tag uses eql (same type, same value)
+>>> (catch 1 (throw 1 "hit") "miss")
+==> "hit"
+
+; eql distinguishes numeric types mismatched tag is an unmatched throw
+>>> (catch 1 (throw 1.0 "hit") "miss")
+%%% throw: no catch for tag 1.0.
+
+; throw with no matching catch error
+>>> (throw 'nowhere 42)
+%%% throw: no catch for tag NOWHERE.
+
+; throw requires exactly 2 args
+>>> (throw 'foo)
+%%% ERROR 'THROW': 2 arguments expected.
+%%% PRIMITIVE USAGE: (THROW tag result)
+
+; ============================================================
+; HANDLER-CASE
+; ============================================================
+
+; test33-conditions.log — Condition system: make-condition, signal, handler-case,
+;                          ignore-errors, condition-type, condition-message
+
+; make-condition — basic construction
+>>> (make-condition 'my-error "something went wrong")
+==> (DICT
+   ("CONDITION-TYPE" MY-ERROR)
+   ("MESSAGE" "something went wrong")
+)
+
+; conditionp — recognizes condition objects
+>>> (conditionp (make-condition 'foo "bar"))
+==> T
+
+; conditionp — rejects non-conditions
+>>> (conditionp "hello")
+==> NIL
+
+>>> (conditionp 42)
+==> NIL
+
+>>> (conditionp '(a b c))
+==> NIL
+
+; condition-type
+>>> (condition-type (make-condition 'type-a "msg"))
+==> TYPE-A
+
+; condition-message
+>>> (condition-message (make-condition 'type-a "the message"))
+==> "the message"
+
+; condition-message — empty message default
+>>> (condition-message (make-condition 'type-a))
+==> ""
+
+; handler-case — catch by exact type
+>>> (handler-case (signal 'my-error "oops")
+...   (my-error (e) (condition-message e)))
+==> "oops"
+
+; handler-case — catch by T (catch-all)
+>>> (handler-case (signal 'anything "caught")
+...   (t (e) 'caught-it))
+==> CAUGHT-IT
+
+; handler-case — catch by ERROR (catch-all)
+>>> (handler-case (signal 'whatever "msg")
+...   (error (e) 'also-caught))
+==> ALSO-CAUGHT
+
+; handler-case — first matching clause wins
+>>> (handler-case (signal 'file-error "not found")
+...   (file-error (e) 'file-clause)
+...   (t          (e) 'catchall-clause))
+==> FILE-CLAUSE
+
+; handler-case — non-matching type re-raises
+>>> (handler-case (signal 'type-x "unhandled")
+...   (type-y (e) 'wrong))
+%%% Unhandled condition: (DICT
+%%%    ("CONDITION-TYPE" TYPE-X)
+%%%    ("MESSAGE" "unhandled")
+%%% )
+
+; handler-case — catches (error ...) primitive as ERROR condition
+>>> (handler-case (error "something bad")
+...   (error (e) (condition-message e)))
+==> "something bad"
+
+; handler-case — catches error primitive via T
+>>> (handler-case (error "caught by t")
+...   (t (e) 'got-it))
+==> GOT-IT
+
+; handler-case — normal execution (no signal) returns form value
+>>> (handler-case (* 6 7)
+...   (t (e) 'should-not-run))
+==> 42
+
+; handler-case — condition-type of a wrapped LRuntimeError is ERROR
+>>> (handler-case (error "test")
+...   (error (e) (condition-type e)))
+==> ERROR
+
+; handler-case — signal with condition object directly
+>>> (let ((c (make-condition 'my-type "direct")))
+...   (handler-case (signal c)
+...     (my-type (e) (condition-message e))))
+==> "direct"
+
+; ignore-errors — suppresses errors, returns NIL
+>>> (ignore-errors (error "swallowed"))
+==> NIL
+
+; ignore-errors — suppresses signaled conditions, returns NIL
+>>> (ignore-errors (signal 'bad-thing "swallowed"))
+==> NIL
+
+; ignore-errors — returns normal value when no error
+>>> (ignore-errors (* 3 4))
+==> 12
+
+; ignore-errors — returns last body form value
+>>> (ignore-errors
+...   (setf _ign_test_ 1)
+...   (* 5 5))
+==> 25
+
+; handler-case — no var binding when var list is empty
+>>> (handler-case (signal 'oops "ignored")
+...   (oops () 'no-var-needed))
+==> NO-VAR-NEEDED
+
+; nested handler-case — inner catches first
+>>> (handler-case
+...   (handler-case (signal 'inner-err "inner")
+...     (inner-err (e) 'inner-caught))
+...   (t (e) 'outer-caught))
+==> INNER-CAUGHT
+
+; nested handler-case — unmatched inner propagates to outer
+>>> (handler-case
+...   (handler-case (signal 'unmatched "bubbles")
+...     (other-type (e) 'wrong))
+...   (t (e) 'outer-caught))
+==> OUTER-CAUGHT
+
+; condition-type and condition-message error on non-condition
+>>> (condition-type 42)
+%%% condition-type: argument must be a condition object.
+
+>>> (condition-message "oops")
+%%% condition-message: argument must be a condition object.
+
+; signal error on non-symbol, non-condition first arg
+>>> (signal 42)
+%%% signal: first argument must be a condition object or a symbol.
+
+; ============================================================
+; MULTIPLE-VALUE-BIND
+; ============================================================
+
+; multiple-value-bind — exact match
+>>> (multiple-value-bind (q r) (values 7 3)
+...   (list q r))
+==> (7 3)
+
+; multiple-value-bind — fewer values than vars: extras get NIL
+>>> (multiple-value-bind (a b c) (values 10 20)
+...   (list a b c))
+==> (10 20 NIL)
+
+; multiple-value-bind — more values than vars: extras discarded
+>>> (multiple-value-bind (x) (values 1 2 3)
+...   x)
+==> 1
+
+; multiple-value-bind — single non-multiple value
+>>> (multiple-value-bind (p q) 99
+...   (list p q))
+==> (99 NIL)
+
+; multiple-value-bind — zero values: all vars get NIL
+>>> (multiple-value-bind (a b) (values)
+...   (list a b))
+==> (NIL NIL)
+
+; multiple-value-bind — body with multiple forms
+>>> (multiple-value-bind (x y) (values 3 4)
+...   (setf _mv_sum_ (+ x y))
+...   (* x y))
+==> 12
+
+; ============================================================
+; NTH-VALUE
+; ============================================================
+
+; nth-value — 0th value
+>>> (nth-value 0 (values 'a 'b 'c))
+==> A
+
+; nth-value — 1st value
+>>> (nth-value 1 (values 'a 'b 'c))
+==> B
+
+; nth-value — 2nd value
+>>> (nth-value 2 (values 'a 'b 'c))
+==> C
+
+; nth-value — out of range returns NIL
+>>> (nth-value 5 (values 1 2))
+==> NIL
+
+; nth-value — single non-multiple value: 0 returns it
+>>> (nth-value 0 42)
+==> 42
+
+; nth-value — single non-multiple value: >0 returns NIL
+>>> (nth-value 1 42)
+==> NIL
+
+; ============================================================
+; MULTIPLE-VALUE-LIST
+; ============================================================
+
+; multiple-value-list — multiple values to list
+>>> (multiple-value-list (values 1 2 3))
+==> (1 2 3)
+
+; multiple-value-list — single value to one-element list
+>>> (multiple-value-list 42)
+==> (42)
+
+; multiple-value-list — zero values to empty list
+>>> (multiple-value-list (values))
+==> NIL
+; --- scalar and tail contexts ---
+
+; scalar context: multiple values stripped to primary in IF condition
+>>> (if (values t nil) 'yes 'no)
+==> YES
+
+; scalar context: multiple values stripped in LET binding
+>>> (let ((x (values 100 200)))
+...   x)
+==> 100
+
+; scalar context: multiple values stripped in LET* binding
+>>> (let* ((x (values 5 6))
+...        (y (* x 2)))
+...   y)
+==> 10
+
+; scalar context: multiple values stripped in SETQ
+>>> (setq _mv_test_ (values 'first 'second))
+==> FIRST
+
+; scalar context: multiple values stripped as function arg
+>>> (+ (values 3 99) (values 4 99))
+==> 7
+
+; tail position: multiple values propagate through progn
+>>> (progn (values 1 2))
+==> 1
+2
+
+; tail position: multiple values propagate through cond
+>>> (cond (t (values 'x 'y)))
+==> X
+Y
+
+; tail position: multiple values propagate through let body
+>>> (let ((z 0))
+...   (values z (+ z 1)))
+==> 0
+1
+
+; values works in functions
+>>> (defun quot-rem (n d)
+...   (values (floor n d) (mod n d)))
+==> (FUNCTION QUOT-REM (N D) ...)
+
+>>> (multiple-value-bind (q r) (quot-rem 17 5)
+...   (list q r))
+==> (3 2)
+
+>>> (nth-value 0 (quot-rem 17 5))
+==> 3
+
+>>> (nth-value 1 (quot-rem 17 5))
+==> 2
+
+; ============================================================
+; MAKE-DICT
+; ============================================================
+
+; empty dict
+>>> (make-dict)
+==> (DICT
+)
+
+; two entries (values evaluated)
+>>> (make-dict (a 1) (b 2))
+==> (DICT
+   (A 1)
+   (B 2)
+)
+
+; computed value
+>>> (make-dict (x (+ 1 2)))
+==> (DICT
+   (X 3)
+)
+
+; ============================================================
+; : (MODULE ACCESS)
+; ============================================================
+
+; create a module
+>>> (make-module 'somod)
+==> #<MODULE SOMOD>
+
+; set a field
+>>> (module-set! somod 'a 42)
+==> 42
+
+; : operator
+>>> (: somod a)
+==> 42
+
+; colon-reader shorthand
+>>> somod:a
+==> 42
+
+; ============================================================
+; CALL/CC
+; ============================================================
+
+; Basic escape: continuation invoked immediately
+>>> (call/cc (lambda (k) (k 42)))
+==> 42
+
+; Lambda returns normally without invoking the continuation
+>>> (call/cc (lambda (k) 99))
+==> 99
+
+; Continuation invoked inside nested arithmetic outer + still uses escaped value
+>>> (+ 1 (call/cc (lambda (k) (+ 10 (k 42)))))
+==> 43
+
+; type-of a continuation is CONTINUATION
+>>> (call/cc (lambda (k) (type-of k)))
+==> CONTINUATION
+
+; functionp is NIL for continuations
+>>> (call/cc (lambda (k) (functionp k)))
+==> NIL
+
+; macrop is NIL for continuations
+>>> (call/cc (lambda (k) (macrop k)))
+==> NIL
+
+>>> (call/cc (lambda (k) (k 99)))
+==> 99
+
+; Inner call/cc escape stays within the inner scope; outer computation proceeds normally
+>>> (call/cc (lambda (k1) (+ 100 (call/cc (lambda (k2) (k2 5))))))
+==> 105
+
+; Inner call/cc escapes to the outer call/cc, bypassing the (+ 100 ...) entirely
+>>> (+ 1000 (call/cc (lambda (k1) (+ 100 (call/cc (lambda (k2) (k1 5)))))))
+==> 1005
+
+; Early exit from dolist loop using call/cc
+>>> (defun find-first (pred lst)
+...    (call/cc (lambda (exit)
+...                (dolist (x lst)
+...                   (if (pred x) (exit x) nil))
+...                nil)))
+==> (FUNCTION FIND-FIRST (PRED LST) ...)
+
+>>> (find-first evenp '(1 3 5 4 7))
+==> 4
+
+>>> (find-first evenp '(1 3 5 7))
+==> NIL
+
+; Continuation object pretty-prints as #<CONTINUATION>
+>>> (string (call/cc (lambda (k) k)))
+==> "#<CONTINUATION>"
+
+; Re-invocable continuation: counter via call/cc
+; k captures the state at the call/cc point (n=0); each (k nil) restores that
+; state and re-runs the body.  When n reaches 4 the if falls through to n.
+>>> (let ((n 0) (k nil))
+...    (call/cc (lambda (c) (setq k c)))
+...    (setq n (+ n 1))
+...    (if (< n 4) (k nil) n))
+==> 4
+
+; call/cc requires exactly 1 argument
+>>> (call/cc)
+%%% ERROR 'CALL/CC': 1 argument expected.
+%%% PRIMITIVE USAGE: (CALL/CC procedure)
+
+; call/cc argument must be a callable
+>>> (call/cc 42)
+%%% ERROR 'CALL/CC': Argument must be a callable.
+%%% PRIMITIVE USAGE: (CALL/CC procedure)
+
+; call/cc argument may not be a special form pass quote (unquoted) to get the primitive
+>>> (call/cc quote)
+%%% ERROR 'CALL/CC': Argument may not be a special form.
+%%% PRIMITIVE USAGE: (CALL/CC procedure)
+
+; Continuation requires exactly 1 argument
+>>> (call/cc (lambda (k) (k 1 2)))
+%%% Continuation expects exactly 1 argument, got 2.
+
+; ============================================================
+; DYNAMIC-WIND
+; ============================================================
+
+; --------------------------------------------------------
+; dynamic-wind
+; --------------------------------------------------------
+
+; Basic execution order and return value
+; --------------------------------------------------------
+
+; before -> thunk -> after, in that order
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda () (setf log (append log (list "thunk"))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "thunk" "after")
+
+; return value is the thunk's value, not before's or after's
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () 42)
+...   (lambda () nil))
+==> 42
+
+; before's return value is discarded
+>>> (dynamic-wind
+...   (lambda () 999)
+...   (lambda () 42)
+...   (lambda () nil))
+==> 42
+
+; after's return value is discarded
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () 42)
+...   (lambda () 888))
+==> 42
+
+; thunk returning NIL
+>>> (dynamic-wind (lambda () nil) (lambda () nil) (lambda () nil))
+==> NIL
+
+; before sees state before thunk runs; after sees state after thunk runs
+>>> (let ((x 0) (log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list x))))
+...     (lambda () (setf x 42))
+...     (lambda () (setf log (append log (list x)))))
+...   log)
+==> (0 42)
+
+; thunk with multiple body forms: all run, last is returned
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 1))))
+...     (lambda ()
+...       (setf log (append log (list 2)))
+...       (setf log (append log (list 3)))
+...       99)
+...     (lambda () (setf log (append log (list 4)))))
+...   log)
+==> (1 2 3 4)
+
+; before/after can mutate shared state in order
+>>> (let ((x 0))
+...   (dynamic-wind
+...     (lambda () (setf x (+ x 1)))
+...     (lambda () (setf x (+ x 10)))
+...     (lambda () (setf x (+ x 100))))
+...   x)
+==> 111
+
+; return value unaffected by after's side effects
+>>> (let ((x 0))
+...   (list
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda () 77)
+...       (lambda () (setf x 99)))
+...     x))
+==> (77 99)
+
+; three sequential dynamic-winds run independently
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 1))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list 2)))))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 3))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list 4)))))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list 5))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list 6)))))
+...   log)
+==> (1 2 3 4 5 6)
+
+; --------------------------------------------------------
+; Non-local exits via throw/catch
+; --------------------------------------------------------
+
+; throw from thunk: after runs
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (throw :done nil))
+...       (lambda () (setf log (append log (list "after"))))))
+...   log)
+==> ("before" "after")
+
+; catch INSIDE thunk handles throw; after still runs (no non-local exit)
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (let ((v (catch :x (throw :x 42))))
+...         (setf log (append log (list v)))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" 42 "after")
+
+; throw from thunk of OUTER; both afters run, inner first
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () nil)
+...           (lambda () (throw :done nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after"))))))
+...   log)
+==> ("inner-after" "outer-after")
+
+; throw from before: thunk and after do NOT run
+>>> (let ((log (list)))
+...   (catch :escape
+...     (dynamic-wind
+...       (lambda () (throw :escape nil))
+...       (lambda () (setf log (append log (list "thunk"))))
+...       (lambda () (setf log (append log (list "after"))))))
+...   log)
+==> NIL
+
+; throw from innermost of 3 nested: all three afters run, innermost first
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () nil)
+...           (lambda ()
+...             (dynamic-wind
+...               (lambda () nil)
+...               (lambda () (throw :done nil))
+...               (lambda () (setf log (append log (list "C-out"))))))
+...           (lambda () (setf log (append log (list "B-out"))))))
+...       (lambda () (setf log (append log (list "A-out"))))))
+...   log)
+==> ("C-out" "B-out" "A-out")
+
+; --------------------------------------------------------
+; Non-local exits via return-from/block
+; --------------------------------------------------------
+
+; return-from exits thunk: after runs
+>>> (let ((log (list)))
+...   (block outer
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (return-from outer nil))
+...       (lambda () (setf log (append log (list "after"))))))
+...   log)
+==> ("before" "after")
+
+; block INSIDE thunk catches return-from; after still runs
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (let ((v (block inner (return-from inner 55))))
+...         (setf log (append log (list v)))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" 55 "after")
+
+; return-from exits two nested dynamic-winds: both afters run, inner first
+>>> (let ((log (list)))
+...   (block escape
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "B-before"))))
+...           (lambda () (return-from escape nil))
+...           (lambda () (setf log (append log (list "B-after"))))))
+...       (lambda () (setf log (append log (list "A-after"))))))
+...   log)
+==> ("A-before" "B-before" "B-after" "A-after")
+
+; return-from exits nested A and B; A runs before B does
+>>> (let ((log (list)))
+...   (block done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "outer-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "inner-before"))))
+...           (lambda () (return-from done nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after"))))))
+...   log)
+==> ("outer-before" "inner-before" "inner-after" "outer-after")
+
+; --------------------------------------------------------
+; Non-local exits via error/signal
+; --------------------------------------------------------
+
+; error exits thunk: after runs
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (error "boom"))
+...       (lambda () (setf log (append log (list "after")))))
+...     (t (e) nil))
+...   log)
+==> ("before" "after")
+
+; handler-case INSIDE thunk catches error; after still runs
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (handler-case (error "caught-inside")
+...         (t (e) (setf log (append log (list "caught"))))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "caught" "after")
+
+; signal caught OUTSIDE dynamic-wind: after runs
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (signal (make-condition 'test-err "msg")))
+...       (lambda () (setf log (append log (list "after")))))
+...     (t (e) nil))
+...   log)
+==> ("before" "after")
+
+; signal caught INSIDE thunk: after still runs (no unwind)
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (handler-case
+...         (signal (make-condition 'test-err "msg"))
+...         (t (e) (setf log (append log (list "caught"))))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "caught" "after")
+
+; error in before: thunk and after do NOT run
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (error "before-error"))
+...       (lambda () (setf log (append log (list "thunk"))))
+...       (lambda () (setf log (append log (list "after")))))
+...     (t (e) nil))
+...   log)
+==> NIL
+
+; error exits both nested dws: both afters run, inner first
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () nil)
+...           (lambda () (error "boom"))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after")))))
+...     (t (e) nil))
+...   log)
+==> ("inner-after" "outer-after")
+
+; --------------------------------------------------------
+; Non-local exits via continuation
+; --------------------------------------------------------
+
+; continuation escape from thunk: after runs
+>>> (let ((log (list)))
+...   (call/cc (lambda (escape)
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "before"))))
+...       (lambda () (escape nil))
+...       (lambda () (setf log (append log (list "after")))))))
+...   log)
+==> ("before" "after")
+
+; continuation captured BEFORE dynamic-wind, called from INSIDE: after runs
+>>> (let ((log (list)) (outer nil) (entered nil))
+...   (call/cc (lambda (k) (setq outer k)))
+...   (when (not entered)
+...     (setf entered t)
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "in"))))
+...       (lambda () (outer nil))
+...       (lambda () (setf log (append log (list "out"))))))
+...   log)
+==> ("in" "out")
+
+; continuation escape exits nested: both afters run
+>>> (let ((log (list)))
+...   (call/cc (lambda (escape)
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "outer-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "inner-before"))))
+...           (lambda () (escape nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (lambda () (setf log (append log (list "outer-after")))))))
+...   log)
+==> ("outer-before" "inner-before" "inner-after" "outer-after")
+
+; --------------------------------------------------------
+; Re-invocable continuations: before and after run on each crossing
+; --------------------------------------------------------
+
+; stored continuation re-invoked twice: 3 before/after pairs total
+>>> (let ((log (list)) (resume nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "in"))))
+...     (lambda ()
+...       (call/cc (lambda (k) (setq resume k)))
+...       (setf n (+ n 1)))
+...     (lambda () (setf log (append log (list "out")))))
+...   (when (< n 3) (resume nil))
+...   log)
+==> ("in" "out" "in" "out" "in" "out")
+
+; 4 re-entries: before and after called exactly 4 times each
+>>> (let ((bc 0) (ac 0) (k nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf bc (+ bc 1)))
+...     (lambda () (call/cc (lambda (c) (setq k c))) (setf n (+ n 1)))
+...     (lambda () (setf ac (+ ac 1))))
+...   (when (< n 4) (k nil))
+...   (list bc ac n))
+==> (4 4 4)
+
+; value delivered to call/cc expression when continuation is called
+>>> (let ((k nil) (log (list)))
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda ()
+...       (let ((v (call/cc (lambda (c) (setq k c) 1))))
+...         (setf log (append log (list v)))))
+...     (lambda () nil))
+...   (when (= (length log) 1) (k 2))
+...   log)
+==> (1 2)
+
+; continuation called with a sequence of different values
+>>> (let ((k nil) (results (list)))
+...   (let ((v (call/cc (lambda (c) (setq k c) 10))))
+...     (setf results (append results (list v))))
+...   (when (= (length results) 1) (k 20))
+...   (when (= (length results) 2) (k 30))
+...   results)
+==> (10 20 30)
+
+; re-entry into NESTED dynamic-wind: inner before/after run each crossing
+>>> (let ((log (list)) (k nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "outer-in"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "inner-in"))))
+...         (lambda ()
+...           (call/cc (lambda (c) (setq k c)))
+...           (setf n (+ n 1)))
+...         (lambda () (setf log (append log (list "inner-out"))))))
+...     (lambda () (setf log (append log (list "outer-out")))))
+...   (when (< n 2) (k nil))
+...   log)
+==> ("outer-in" "inner-in" "inner-out" "outer-out" "outer-in" "inner-in" "inner-out" "outer-out")
+
+; --------------------------------------------------------
+; Wind-stack transitions across dynamic-wind scopes
+; --------------------------------------------------------
+
+; continuation stored inside dw A, called from inside dw B:
+; B's after runs (exit B), A's before runs (enter A), A's after runs (exit A),
+; then B's before runs again (re-enter B), B's after runs (normal exit)
+>>> (let ((log (list)) (kA nil) (done nil))
+...   (defun run-A ()
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-in"))))
+...       (lambda () (call/cc (lambda (k) (setq kA k))))
+...       (lambda () (setf log (append log (list "A-out"))))))
+...   (defun run-B ()
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "B-in"))))
+...       (lambda ()
+...         (when (not done)
+...           (setf done t)
+...           (kA nil)))
+...       (lambda () (setf log (append log (list "B-out"))))))
+...   (run-A)
+...   (run-B)
+...   log)
+==> ("A-in" "A-out" "B-in" "B-out" "A-in" "A-out" "B-in" "B-out")
+
+; --------------------------------------------------------
+; Nested dynamic-wind: execution order
+; --------------------------------------------------------
+
+; normal exit: outer-before, inner-before, thunk, inner-after, outer-after
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "A-before"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "B-before"))))
+...         (lambda () (setf log (append log (list "thunk"))))
+...         (lambda () (setf log (append log (list "B-after"))))))
+...     (lambda () (setf log (append log (list "A-after")))))
+...   log)
+==> ("A-before" "B-before" "thunk" "B-after" "A-after")
+
+; throw from inner - both afters run innermost first
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-before"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "B-before"))))
+...           (lambda () (throw :done nil))
+...           (lambda () (setf log (append log (list "B-after"))))))
+...       (lambda () (setf log (append log (list "A-after"))))))
+...   log)
+==> ("A-before" "B-before" "B-after" "A-after")
+
+; three-level nesting, throw from deepest: C-out, B-out, A-out
+>>> (let ((log (list)))
+...   (catch :done
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-in"))))
+...       (lambda ()
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "B-in"))))
+...           (lambda ()
+...             (dynamic-wind
+...               (lambda () (setf log (append log (list "C-in"))))
+...               (lambda () (throw :done nil))
+...               (lambda () (setf log (append log (list "C-out"))))))
+...           (lambda () (setf log (append log (list "B-out"))))))
+...       (lambda () (setf log (append log (list "A-out"))))))
+...   log)
+==> ("A-in" "B-in" "C-in" "C-out" "B-out" "A-out")
+
+; catch inside thunk of outer dw handles throw from inner dw's thunk
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "outer-before"))))
+...     (lambda ()
+...       (catch :x
+...         (dynamic-wind
+...           (lambda () (setf log (append log (list "inner-before"))))
+...           (lambda () (throw :x nil))
+...           (lambda () (setf log (append log (list "inner-after"))))))
+...       (setf log (append log (list "outer-thunk-continued"))))
+...     (lambda () (setf log (append log (list "outer-after")))))
+...   log)
+==> ("outer-before" "inner-before" "inner-after" "outer-thunk-continued" "outer-after")
+
+; --------------------------------------------------------
+; Closure semantics: before/after capture their defining environment
+; --------------------------------------------------------
+
+; closures in before/after correctly capture the loop variable
+>>> (let ((i 0))
+...   (dotimes (n 3)
+...     (let ((captured n))
+...       (dynamic-wind
+...         (lambda () (setf i (+ i captured)))
+...         (lambda () nil)
+...         (lambda () (setf i (+ i captured))))))
+...   i)
+==> 6
+
+; --------------------------------------------------------
+; Interaction with other control operators
+; --------------------------------------------------------
+
+; dynamic-wind inside a dolist body
+>>> (let ((log (list)))
+...   (dolist (x '(a b c))
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list x))))
+...       (lambda () nil)
+...       (lambda () (setf log (append log (list x))))))
+...   log)
+==> (A A B B C C)
+
+; dynamic-wind inside a dotimes body
+>>> (let ((sum 0))
+...   (dotimes (i 3)
+...     (dynamic-wind
+...       (lambda () (setf sum (+ sum i)))
+...       (lambda () nil)
+...       (lambda () (setf sum (+ sum i)))))
+...   sum)
+==> 6
+
+; block/return-from inside thunk exits only the thunk's block, not dw
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "before"))))
+...     (lambda ()
+...       (block nil
+...         (return nil))
+...       (setf log (append log (list "thunk-continued"))))
+...     (lambda () (setf log (append log (list "after")))))
+...   log)
+==> ("before" "thunk-continued" "after")
+
+; call/cc inside before (unusual but should work)
+>>> (let ((k nil))
+...   (dynamic-wind
+...     (lambda () (when (null k) (call/cc (lambda (c) (setq k c)))))
+...     (lambda () 42)
+...     (lambda () nil)))
+==> 42
+
+; --------------------------------------------------------
+; Error cases
+; --------------------------------------------------------
+
+>>> (dynamic-wind (lambda () nil) (lambda () nil))
+%%% dynamic-wind: requires exactly 3 arguments (before thunk after).
+
+>>> (dynamic-wind (lambda () nil) (lambda () nil) (lambda () nil) (lambda () nil))
+%%% dynamic-wind: requires exactly 3 arguments (before thunk after).
+
+>>> (dynamic-wind 42 (lambda () nil) (lambda () nil))
+%%% dynamic-wind: before argument must be a callable.
+
+>>> (dynamic-wind (lambda () nil) 42 (lambda () nil))
+%%% dynamic-wind: thunk argument must be a callable.
+
+>>> (dynamic-wind (lambda () nil) (lambda () nil) 42)
+%%% dynamic-wind: after argument must be a callable.
+
+>>> (dynamic-wind "hello" (lambda () nil) (lambda () nil))
+%%% dynamic-wind: before argument must be a callable.
+
+>>> (let ((m (defmacro _dw_test_mac () nil)))
+...   (dynamic-wind m (lambda () nil) (lambda () nil)))
+%%% dynamic-wind: before argument must be a callable.
+
+; --------------------------------------------------------
+; Resource management patterns
+; --------------------------------------------------------
+
+; "finally" pattern: after always runs (resource closed)
+>>> (let ((open nil) (result nil))
+...   (dynamic-wind
+...     (lambda () (setf open t))
+...     (lambda () (setf result 42))
+...     (lambda () (setf open nil)))
+...   (list result open))
+==> (42 NIL)
+
+; "finally" pattern: resource closed even when thunk errors
+>>> (let ((open nil))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf open t))
+...       (lambda () (error "oops"))
+...       (lambda () (setf open nil)))
+...     (t (e) nil))
+...   open)
+==> NIL
+
+; thunk sees state set by before
+>>> (let ((ready nil) (result nil))
+...   (dynamic-wind
+...     (lambda () (setf ready t))
+...     (lambda () (setf result ready))
+...     (lambda () nil))
+...   result)
+==> T
+
+; after cleans up state set by thunk
+>>> (let ((x 0))
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda () (setf x 99))
+...     (lambda () (setf x 0)))
+...   x)
+==> 0
+
+; dynamic-wind result usable in enclosing expression
+>>> (+ 10 (dynamic-wind
+...         (lambda () nil)
+...         (lambda () 5)
+...         (lambda () nil)))
+==> 15
+
+; dynamic-wind in tail position of a defun
+>>> (defun compute ()
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda () (+ 2 3))
+...     (lambda () nil)))
+==> (FUNCTION COMPUTE () ...)
+>>> (compute)
+==> 5
+
+; before/after can call helper functions
+>>> (let ((log (list)))
+...   (defun log-it (x) (setf log (append log (list x))))
+...   (dynamic-wind
+...     (lambda () (log-it "setup"))
+...     (lambda () (log-it "work"))
+...     (lambda () (log-it "cleanup")))
+...   log)
+==> ("setup" "work" "cleanup")
+
+; --------------------------------------------------------
+; Interaction with loops and recursion
+; --------------------------------------------------------
+
+; dynamic-wind in dolist body: before/after run for each element
+>>> (let ((log (list)))
+...   (dolist (x '(a b c))
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list x))))
+...       (lambda () nil)
+...       (lambda () (setf log (append log (list x))))))
+...   log)
+==> (A A B B C C)
+
+; dynamic-wind in dotimes
+>>> (let ((sum 0))
+...   (dotimes (i 3)
+...     (dynamic-wind
+...       (lambda () (setf sum (+ sum i)))
+...       (lambda () nil)
+...       (lambda () (setf sum (+ sum i)))))
+...   sum)
+==> 6
+
+; dynamic-wind in loop counts entries correctly with dotimes
+>>> (let ((bc 0) (ac 0))
+...   (dotimes (i 4)
+...     (dynamic-wind
+...       (lambda () (setf bc (+ bc 1)))
+...       (lambda () nil)
+...       (lambda () (setf ac (+ ac 1)))))
+...   (list bc ac))
+==> (4 4)
+
+; recursive function called inside thunk
+>>> (let ((log (list)))
+...   (defun count-down (n)
+...     (when (> n 0)
+...       (setf log (append log (list n)))
+...       (count-down (- n 1))))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "start"))))
+...     (lambda () (count-down 3))
+...     (lambda () (setf log (append log (list "end")))))
+...   log)
+==> ("start" 3 2 1 "end")
+
+; depth tracking with dynamic-wind (entry/exit invariant)
+>>> (let ((depth 0) (max-depth 0))
+...   (defun guarded ()
+...     (dynamic-wind
+...       (lambda () (setf depth (+ depth 1))
+...                  (when (> depth max-depth) (setf max-depth depth)))
+...       (lambda () (when (< depth 3) (guarded)))
+...       (lambda () (setf depth (- depth 1)))))
+...   (guarded)
+...   (list depth max-depth))
+==> (0 3)
+
+; --------------------------------------------------------
+; Additional continuation tests
+; --------------------------------------------------------
+
+; continuation called 3 times from inside dw: 3 before/after pairs
+>>> (let ((k nil) (log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "dw-before"))))
+...     (lambda ()
+...       (call/cc (lambda (c) (setq k c)))
+...       (setf log (append log (list "in-thunk"))))
+...     (lambda () (setf log (append log (list "dw-after")))))
+...   (when (< (length log) 6) (k nil))
+...   log)
+==> ("dw-before" "in-thunk" "dw-after" "dw-before" "in-thunk" "dw-after")
+
+; re-entry from outside: each re-entry triggers before then after
+>>> (let ((log (list)) (k nil))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "in"))))
+...     (lambda () (call/cc (lambda (c) (setq k c))))
+...     (lambda () (setf log (append log (list "out")))))
+...   (when (= (length log) 2) (k nil))
+...   log)
+==> ("in" "out" "in" "out")
+
+; count tracks each before/after via let-loop with continuation
+>>> (let ((total 0) (k nil) (i 0))
+...   (dynamic-wind
+...     (lambda () (setf total (+ total 1)))
+...     (lambda ()
+...       (when (null k) (call/cc (lambda (c) (setq k c))))
+...       (setf i (+ i 1)))
+...     (lambda () (setf total (+ total 10))))
+...   (when (< i 3) (k nil))
+...   total)
+==> 33
+
+; continuation captures value from call/cc on each re-entry
+>>> (let ((k nil) (log (list)))
+...   (let ((v (call/cc (lambda (c) (setq k c) 10))))
+...     (setf log (append log (list v))))
+...   (when (= (length log) 1) (k 20))
+...   (when (= (length log) 2) (k 30))
+...   log)
+==> (10 20 30)
+
+; --------------------------------------------------------
+; More behavioral coverage
+; --------------------------------------------------------
+
+; before count always equals after count even with re-entry
+>>> (let ((bc 0) (ac 0) (k nil) (n 0))
+...   (dynamic-wind
+...     (lambda () (setf bc (+ bc 1)))
+...     (lambda ()
+...       (call/cc (lambda (c) (setq k c)))
+...       (setf n (+ n 1)))
+...     (lambda () (setf ac (+ ac 1))))
+...   (when (< n 3) (k nil))
+...   (= bc ac))
+==> T
+
+; thunk returning a list
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () (list 1 2 3))
+...   (lambda () nil))
+==> (1 2 3)
+
+; thunk returning a symbol
+>>> (dynamic-wind
+...   (lambda () nil)
+...   (lambda () 'hello)
+...   (lambda () nil))
+==> HELLO
+
+; thunk returning T
+>>> (dynamic-wind (lambda () nil) (lambda () t) (lambda () nil))
+==> T
+
+; three-level normal exit: 1-in, 2-in, 3-in, 3-out, 2-out, 1-out
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "1-in"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "2-in"))))
+...         (lambda ()
+...           (dynamic-wind
+...             (lambda () (setf log (append log (list "3-in"))))
+...             (lambda () nil)
+...             (lambda () (setf log (append log (list "3-out"))))))
+...         (lambda () (setf log (append log (list "2-out"))))))
+...     (lambda () (setf log (append log (list "1-out")))))
+...   log)
+==> ("1-in" "2-in" "3-in" "3-out" "2-out" "1-out")
+
+; three sequential dws each increment n twice (before + after)
+>>> (let ((n 0))
+...   (dynamic-wind (lambda () (setf n (+ n 1))) (lambda () nil) (lambda () (setf n (+ n 1))))
+...   (dynamic-wind (lambda () (setf n (+ n 1))) (lambda () nil) (lambda () (setf n (+ n 1))))
+...   (dynamic-wind (lambda () (setf n (+ n 1))) (lambda () nil) (lambda () (setf n (+ n 1))))
+...   n)
+==> 6
+
+; second dw runs normally even when first dw's thunk errored (with handler)
+>>> (let ((log (list)))
+...   (handler-case
+...     (dynamic-wind
+...       (lambda () (setf log (append log (list "A-before"))))
+...       (lambda () (error "e"))
+...       (lambda () (setf log (append log (list "A-after")))))
+...     (t (ex) nil))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "B-before"))))
+...     (lambda () nil)
+...     (lambda () (setf log (append log (list "B-after")))))
+...   log)
+==> ("A-before" "A-after" "B-before" "B-after")
+
+; error in second of two sequential dws: first runs fully, second's after runs
+>>> (let ((log (list)))
+...   (handler-case
+...     (progn
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "A"))))
+...         (lambda () nil)
+...         (lambda () (setf log (append log (list "B")))))
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "C"))))
+...         (lambda () (error "e"))
+...         (lambda () (setf log (append log (list "D"))))))
+...     (t (ex) nil))
+...   log)
+==> ("A" "B" "C" "D")
+
+; throw from AFTER: value delivered to catch
+>>> (let ((log (list)))
+...   (let ((v (catch :x
+...     (dynamic-wind
+...       (lambda () nil)
+...       (lambda () (setf log (append log (list "thunk"))))
+...       (lambda () (throw :x 99))))))
+...     (list v log)))
+==> (99 ("thunk"))
+
+; funcall on a function returned by dynamic-wind's thunk
+>>> (let ((f (dynamic-wind
+...            (lambda () nil)
+...            (lambda () (lambda (x) (* x 2)))
+...            (lambda () nil))))
+...   (funcall f 5))
+==> 10
+
+; continuation that escapes from inside nested dw: after runs once
+>>> (let ((log (list)) (calls 0))
+...   (call/cc (lambda (k)
+...     (setf calls (+ calls 1))
+...     (when (< calls 3)
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "wrap"))))
+...         (lambda () (k nil))
+...         (lambda () (setf log (append log (list "unwrap"))))))))
+...   log)
+==> ("wrap" "unwrap")
+
+; nested dw with normal exit: verify before order is outer then inner
+>>> (let ((log (list)))
+...   (dynamic-wind
+...     (lambda () (setf log (append log (list "outer-first"))))
+...     (lambda ()
+...       (dynamic-wind
+...         (lambda () (setf log (append log (list "inner-second"))))
+...         (lambda () nil)
+...         (lambda () (setf log (append log (list "inner-third"))))))
+...     (lambda () (setf log (append log (list "outer-fourth")))))
+...   log)
+==> ("outer-first" "inner-second" "inner-third" "outer-fourth")
+
+; dynamic-wind where before and after both modify the same counter
+>>> (let ((n 0))
+...   (dynamic-wind
+...     (lambda () (setf n (+ n 1)))
+...     (lambda () n)
+...     (lambda () (setf n (- n 1))))
+...   n)
+==> 0
+
+; error inside after during throw unwind - after's error propagates
+; (handler-case cannot intercept it because error exits the except handler)
+>>> (catch :done
+...   (dynamic-wind
+...     (lambda () nil)
+...     (lambda () (throw :done nil))
+...     (lambda () (error "after-error"))))
+%%% after-error
+
+; --------------------------------------------------------
+; unwind-protect
+; --------------------------------------------------------
+
+; basic: returns value of protected form
+>>> (unwind-protect 42 nil)
+==> 42
+
+; no cleanup forms
+>>> (unwind-protect 7)
+==> 7
+
+; cleanup runs after protected; return value is protected value
+>>> (let ((log (list)))
+...   (list (unwind-protect (progn (setf log (append log (list 1))) 99)
+...                         (setf log (append log (list 2))))
+...         log))
+==> (99 (1 2))
+
+; multiple cleanup forms run in order
+>>> (let ((log (list)))
+...   (unwind-protect nil
+...     (setf log (append log (list "a")))
+...     (setf log (append log (list "b"))))
+...   log)
+==> ("a" "b")
+
+; cleanup runs on throw
+>>> (let ((log (list)))
+...   (catch :done
+...     (unwind-protect (throw :done 99)
+...       (setf log (append log (list "cleanup")))))
+...   log)
+==> ("cleanup")
+
+; cleanup runs on return-from
+>>> (let ((log (list)))
+...   (block done
+...     (unwind-protect (return-from done nil)
+...       (setf log (append log (list "cleanup")))))
+...   log)
+==> ("cleanup")
+
+; cleanup runs on error
+>>> (let ((log (list)))
+...   (handler-case
+...     (unwind-protect (error "boom")
+...       (setf log (append log (list "cleanup"))))
+...     (t (e) nil))
+...   log)
+==> ("cleanup")
+
+; nested: inner cleanup runs before outer on normal exit
+>>> (let ((log (list)))
+...   (unwind-protect
+...     (unwind-protect nil
+...       (setf log (append log (list "inner"))))
+...     (setf log (append log (list "outer"))))
+...   log)
+==> ("inner" "outer")
+
+; nested: both cleanups run on throw, inner before outer
+>>> (let ((log (list)))
+...   (catch :done
+...     (unwind-protect
+...       (unwind-protect (throw :done nil)
+...         (setf log (append log (list "inner"))))
+...       (setf log (append log (list "outer")))))
+...   log)
+==> ("inner" "outer")
+
+; cleanup runs on continuation escape
+>>> (let ((log (list))
+...       (k nil))
+...   (call/cc (lambda (exit)
+...     (unwind-protect (exit nil)
+...       (setf log (append log (list "cleanup"))))))
+...   log)
+==> ("cleanup")
+
+>>> ;;; cond with no matching clause returns NIL
+... (cond (nil 1) (nil 2))
+...
+
+==> NIL
+
+>>> ;;; case with no matching clause returns NIL
+... (case 5 (1 "one") (2 "two"))
+...
+
+==> NIL
+
+>>> ;;; case with matching clause
+... (case 2 (1 10) (2 20) (3 30))
+...
+
+==> 20
+
+>>> ;;; case with T catch-all
+... (case 99 (1 "one") (t "other"))
+...
+
+==> "other"
+
+>>> ;;; case with OTHERWISE catch-all
+... (case 99 (1 "one") (otherwise "other"))
+...
+
+==> "other"
+
+>>> ;;; case with list of keys
+... (case 2 ((1 2 3) "found") (t "not found"))
+...
+
+==> "found"
+
+>>> ;;; case with list of keys, no match falls to otherwise
+... (case 9 ((1 2 3) "found") (otherwise "not found"))
+...
+
+==> "not found"
+
+>>> ;;; cond with first match
+... (cond (t 1) (t 2))
+...
+
+==> 1
+
+>>> ;;; cond skips false, matches second
+... (cond (nil 1) (t 2))
+...
+
+==> 2
+
+; ============================================================
+; test18-apply-funcall.lisp
+; Tests for apply, funcall, eval, and python primitives.
+; ============================================================
+
+; --- funcall: basic usage ---
+
+>>> ;;; funcall with a primitive
+... (funcall + 1 2 3)
+...
+
+==> 6
+
+>>> ;;; funcall with car
+... (funcall car '(a b c))
+...
+
+==> A
+
+>>> ;;; funcall with a lambda
+... (funcall (lambda (x) (* x x)) 5)
+...
+
+==> 25
+
+>>> ;;; funcall with a named function
+... (funcall list 1 2 3)
+...
+
+==> (1 2 3)
+
+; --- apply: basic usage ---
+
+>>> ;;; apply with a list of args
+... (apply + '(1 2 3))
+...
+
+==> 6
+
+>>> ;;; apply with extra args prepended to list
+... (apply + 1 2 '(3 4))
+...
+
+==> 10
+
+>>> ;;; apply with empty list
+... (apply + '())
+...
+
+==> 0
+
+>>> ;;; apply with a named function
+... (apply list '(a b c))
+...
+
+==> (A B C)
+
+>>> ;;; apply with extra args and named function
+... (apply cons 'a '((b c)))
+...
+
+==> (A B C)
+
+>>> ;;; progn with no arguments returns NIL
+... (progn)
+...
+
+==> NIL
+
+; --- let edge cases ---
+
+>>> ;;; let with bare symbol binds to NIL
+... (let (x) x)
+...
+
+==> NIL
+
+>>> ;;; let with single-element list binds to NIL
+... (let ((x)) x)
+...
+
+==> NIL
+
+>>> ;;; let with no body returns NIL
+... (let ())
+...
+
+==> NIL
+
+>>> ;;; let* with no body returns NIL
+... (let* ())
+...
+
+==> NIL
+
+; --- setf with multiple pairs ---
+
+>>> (setf aa 10 bb 20)
+...
+
+==> 20
+
+>>> aa
+...
+
+==> 10
+
+>>> bb
+...
+
+==> 20
+; ============================================================
+; test26-setq-atset.lisp
+; Tests for setq (variable assignment) and at-set (indexed/keyed
+; mutation of lists and maps).
+; ============================================================
+
+; --- 11. setf macro expansion tests ---
+
+>>> ;;; setf with a symbol expands to setq (auto-names a lambda)
+... (setf sf-fn (lambda (x) (* x 3)))
+...
+
+==> (FUNCTION SF-FN (X) ...)
+
+>>> (sf-fn 5)
+...
+
+==> 15
+
+>>> ;;; setf with multiple pairs (progn of setqs)
+... (setf sf-a 1 sf-b 2 sf-c 3)
+...
+
+==> 3
+
+>>> sf-a
+...
+
+==> 1
+
+>>> sf-b
+...
+
+==> 2
+
+>>> sf-c
+...
+
+==> 3
+
+>>> ;;; setf (at ...) form mutates a list in place
+... (setf sf-lst (list 10 20 30))
+...
+
+==> (10 20 30)
+
+>>> (setf (at 1 sf-lst) 99)
+...
+
+==> 99
+
+>>> sf-lst
+...
+
+==> (10 99 30)
+
+>>> ;;; setf (at ...) form mutates a map in place
+... (setf sf-map (make-dict (x 1) (y 2)))
+...
+
+==> (DICT
+   (X 1)
+   (Y 2)
+)
+
+>>> (setf (at 'y sf-map) 77)
+...
+
+==> 77
+
+>>> sf-map
+...
+
+==> (DICT
+   (X 1)
+   (Y 77)
+)
+
+>>> ;;; setf with mixed pairs: symbol then at-form
+... (setf sf-x 0 (at 0 sf-lst) 55)
+...
+
+==> 55
+
+>>> sf-x
+...
+
+==> 0
+
+>>> sf-lst
+...
+
+==> (55 99 30)
+
+; --- 12. setf macro error cases ---
+
+>>> ;;; NIL lvalue
+... (setf () 5)
+
+%%% setf: lvalue cannot be NIL or ()
+==>
+
+>>> ;;; (at ...) form with wrong element count
+... (setf (at 0) 5)
+
+%%% setf: (at ...) place form expected 3 elements
+==>
+
+>>> ;;; struct accessor with extra instance argument
+... (setf (sf-fn sf-a sf-b) 5)
+
+%%% setf: struct accessor place must have exactly 1 instance argument
+==>
+
+>>> ;;; non-symbol non-list lvalue
+... (setf 99 5)
+
+%%% setf: unrecognized place form
+==>
+
+>>> ;;; zero args
+... (setf)
+
+%%% Too few positional arguments.
+==>
+
+>>> ;;; one arg (missing value)
+... (setf sf-a)
+
+%%% Too few positional arguments.
+==>
+
+; --- multi-body control structures ---
+
+>>> ;;; progn returns the last value
+... (progn 1 2 3)
+...
+
+==> 3
+
+>>> ;;; cond with multiple body forms returns last
+... (cond (t 1 2 3))
+...
+
+==> 3
+
+>>> ;;; case with multiple body forms returns last
+... (case 1 (1 10 20 30))
+...
+
+==> 30
+
+; --- nested quote ---
+
+>>> ;;; double-quoted symbol
+... ''x
+...
+
+==> (QUOTE X)
+
+>>> ;;; quote inside a quoted list
+... '(a 'b c)
+...
+
+==> (A (QUOTE B) C)
+; --- quasiquote edge cases ---
+
+>>> ;;; quasiquote atom passthrough
+... `42
+
+==> 42
+
+>>> ;;; quasiquote string passthrough
+... `"hello"
+
+==> "hello"
+
+>>> ;;; quasiquote empty list
+... `()
+
+==> NIL
+
+>>> ;;; splice empty list into quasiquote
+... `(a ,@'() b)
+
+==> (A B)
+
+>>> ;;; splice non-empty list into quasiquote
+... `(a ,@'(1 2) b)
+
+==> (A 1 2 B)
+; --- apply / funcall edge cases ---
+
+>>> ;;; apply with multiple prepended args
+... (apply + 1 2 '(3 4))
+
+==> 10
+
+>>> ;;; apply with lambda
+... (apply (lambda (a b) (+ a b)) '(3 7))
+
+==> 10
+
+>>> ;;; funcall with &rest lambda
+... (funcall (lambda (&rest args) args) 1 2 3)
+
+==> (1 2 3)
+
+>>> ;;; funcall with library function reverse
+... (funcall reverse '(3 2 1))
+
+==> (1 2 3)
+
+>>> ;;; funcall with library function list
+... (funcall list 1 2 3)
+
+==> (1 2 3)
+
+; --- funcall errors ---
+
+>>> ;;; Error: funcall with no arguments
+... (funcall)
+
+%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
+==>
+
+; --- apply errors ---
+
+>>> ;;; Error: apply with no arguments
+... (apply)
+
+%%% ERROR 'APPLY': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (APPLY function &rest args)
+==>
+
+>>> ;;; Error: apply last arg not a list
+... (apply + 1)
+
+%%% APPLY: last argument must be a list.
+==>
+
+>>> ;;; Error: apply with a special form
+... (apply 'if '(t 1 2))
+
+%%% APPLY: first argument may not be a special form.
+==>
+
+; --- funcall errors ---
+
+>>> ;;; Error: funcall with no arguments
+... (funcall)
+
+%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
+==>
+
+; --- apply errors ---
+
+>>> ;;; Error: apply with no arguments
+... (apply)
+
+%%% ERROR 'APPLY': At least 2 arguments expected.
+%%% PRIMITIVE USAGE: (APPLY function &rest args)
+==>
+
+>>> ;;; Error: apply last arg not a list
+... (apply + 1)
+
+%%% APPLY: last argument must be a list.
+==>
+
+>>> ;;; Error: apply with a special form
+... (apply 'if '(t 1 2))
+
+%%% APPLY: first argument may not be a special form.
+==>
+
+; --- IF error paths ---
+
+>>> ;;; if with no arguments
+... (if)
+
+%%% ERROR 'IF': 2 or 3 arguments expected.
+%%% PRIMITIVE USAGE: (IF cond conseq &optional alt)
+==>
+
+>>> ;;; if with too many arguments
+... (if t 1 2 3)
+
+%%% ERROR 'IF': 2 or 3 arguments expected.
+%%% PRIMITIVE USAGE: (IF cond conseq &optional alt)
+==>
+
+; --- COND additional error paths ---
+
+>>> ;;; cond entry that is not a list
+... (cond 1)
+
+%%% ERROR 'COND': Entry 1 must be a non-empty list.
+%%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
+==>
+
+>>> ;;; cond entry with condition but no body
+... (cond (t))
+
+==> NIL
+
+; --- CASE additional error paths ---
+
+>>> ;;; case with no clauses
+... (case 1)
+
+%%% ERROR 'CASE': 2 or more arguments expected.
+%%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
+==>
+
+>>> ;;; case entry that is not a list
+... (case 1 2)
+
+%%% ERROR 'CASE': Entry 1 must be a non-empty list.
+%%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
+==>
+
+>>> ;;; case entry with value but no body
+... (case 1 (1))
+
+==> NIL
+
+; --- LET additional error path ---
+
+>>> ;;; let with non-symbol non-list initializer
+... (let (1) x)
+
+%%% ERROR 'LET': Variable initializer spec expected to be a symbol or a list.
+%%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+; --- LET* additional error paths ---
+
+>>> ;;; let* first element of initializer pair must be symbol
+... (let* ((1 2)) 1)
+
+%%% ERROR 'LET*': First element of a variable initializer pair expected to be a symbol.
+%%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+>>> ;;; let* initializer spec too long
+... (let* ((x 1 2)) 1)
+
+%%% ERROR 'LET*': Variable initializer spec expected to be 1 or 2 elements long.
+%%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+>>> ;;; let* with non-symbol non-list initializer
+... (let* (1) x)
+
+%%% ERROR 'LET*': Variable initializer spec expected to be a symbol or a list.
+%%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
+==>
+
+; --- APPLY additional error paths ---
+
+>>> ;;; apply with unbound symbol
+... (apply 'nonexistent-fn-xyz '(1 2))
+
+%%% APPLY: "NONEXISTENT-FN-XYZ" is not bound to a callable.
+==>
+
+>>> ;;; apply with non-symbol non-callable first arg
+... (apply 42 '(1 2))
+
+%%% APPLY: first argument must evaluate to a callable or symbol.
+==>
+
+; --- COND: bad entry in non-first position ---
+
+>>> ;;; cond with non-list entry in second position
+... (cond (nil 1) 2)
+
+%%% ERROR 'COND': Entry 2 must be a non-empty list.
+%%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
+==>
+
+; --- CASE: bad entry in non-first position ---
+
+>>> ;;; case with non-list entry in second position (non-matching first)
+... (case 99 (1 "one") 2)
+
+%%% ERROR 'CASE': Entry 2 must be a non-empty list.
+%%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
+
+; --- quasiquote argument count errors ---
+
+>>> ;;; quasiquote with no arguments
+... (quasiquote)
+
+%%% ERROR 'QUASIQUOTE': 1 argument expected.
+%%% PRIMITIVE USAGE: (QUASIQUOTE sexpr)
+==>
+
+>>> ;;; quasiquote with too many arguments
+... (quasiquote 1 2)
+
+%%% ERROR 'QUASIQUOTE': 1 argument expected.
+%%% PRIMITIVE USAGE: (QUASIQUOTE sexpr)
+==>
+
+; --- funcall errors ---
+
+>>> ;;; funcall with no arguments
+... (funcall)
+
+%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
+==>

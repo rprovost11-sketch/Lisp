@@ -1,9 +1,21 @@
 from __future__ import annotations
+import ast as _ast_module
 from fractions import Fraction
 from typing import Any
 
 from pythonslisp.ltk.ParserBase import LexerBase, LexerState, ParserBase, ParseError
 from pythonslisp.AST import LSymbol
+
+
+def _parse_string_literal( lex: str ) -> str:
+   """Convert a Lisp string lexeme (including surrounding quotes) to its Python string value.
+   Handles all Python escape sequences.  Literal newlines/carriage-returns inside the
+   string are pre-escaped so that ast.literal_eval can parse them correctly."""
+   inner = lex[1:-1]
+   inner = inner.replace( '\r\n', '\\r\\n' )
+   inner = inner.replace( '\r',   '\\r'   )
+   inner = inner.replace( '\n',   '\\n'   )
+   return _ast_module.literal_eval( f'"{inner}"' )
 
 """
 The Language
@@ -406,7 +418,7 @@ class Parser( ParserBase ):
          self._scanner.consume( )
       elif nextToken == Lexer.STRING_TOK:
          lex = self._scanner.getLexeme( )
-         ast = lex[1:-1]
+         ast = _parse_string_literal( lex )
          self._scanner.consume( )
       elif nextToken == Lexer.SINGLE_QUOTE_TOK:
          self._scanner.consume( )

@@ -1,0 +1,185 @@
+; ============================================================
+; test00-parser.log
+; Lexer/parser subsystem: happy-path parsing and syntax errors.
+; The (parse string) primitive returns (PROGN expr...) — the AST
+; exactly as produced by the parser, before evaluation.
+; ============================================================
+
+; --- Atomic value parsing ---
+
+>>> ;;; integer
+... (parse "42")
+
+==> (PROGN 42)
+
+>>> ;;; negative integer
+... (parse "-15")
+
+==> (PROGN -15)
+
+>>> ;;; float
+... (parse "3.14")
+
+==> (PROGN 3.14)
+
+>>> ;;; scientific notation
+... (parse "6.02e23")
+
+==> (PROGN 6.02e+23)
+
+>>> ;;; rational
+... (parse "1/3")
+
+==> (PROGN 1/3)
+
+>>> ;;; symbol — case-folded to upper
+... (parse "foo")
+
+==> (PROGN FOO)
+
+>>> ;;; nil symbol
+... (parse "nil")
+
+==> (PROGN NIL)
+
+>>> ;;; t symbol
+... (parse "t")
+
+==> (PROGN T)
+
+; --- List and structure parsing ---
+
+>>> ;;; empty list parses as NIL
+... (parse "()")
+
+==> (PROGN NIL)
+
+>>> ;;; simple list
+... (parse "(+ 1 2)")
+
+==> (PROGN (+ 1 2))
+
+>>> ;;; nested list
+... (parse "((1 2) (3 4))")
+
+==> (PROGN ((1 2) (3 4)))
+
+; --- Reader macro expansion ---
+
+>>> ;;; quote shorthand 'x expands to (QUOTE X)
+... (parse "'foo")
+
+==> (PROGN (QUOTE FOO))
+
+>>> ;;; quasiquote with unquote
+... (parse "`(1 ,x)")
+
+==> (PROGN (QUASIQUOTE (1 (UNQUOTE X))))
+
+>>> ;;; quote containing unquote-splicing (literal, not expanded)
+... (parse "'(1 ,@xs)")
+
+==> (PROGN (QUOTE (1 (UNQUOTE-SPLICING XS))))
+
+; --- Multi-expression and empty input ---
+
+>>> ;;; multiple top-level expressions in one string
+... (parse "(+ 1 2) (- 3 1)")
+
+==> (PROGN (+ 1 2) (- 3 1))
+
+>>> ;;; empty string yields empty PROGN
+... (parse "")
+
+==> (PROGN)
+
+>>> ;;; string with embedded quotes — requires actual-character storage
+... (parse "\"hello\"")
+
+==> (PROGN "hello")
+
+>>> ;;; string with escape sequence passes through correctly
+... (parse "\"line1\\nline2\"")
+
+==> (PROGN "line1\nline2")
+
+; --- Raw syntax errors ---
+
+>>> ;;; Unmatched open paren
+... (
+
+%%% Syntax Error: "" (3,3)
+%%% (
+%%%   ^
+%%% ) expected.
+==>
+
+>>> ;;; Unmatched close paren
+... )
+
+%%% Syntax Error: "" (2,2)
+%%% )
+%%%  ^
+%%% Object expected.
+==>
+
+>>> ;;; Incomplete expression
+... (+ 1
+
+%%% Syntax Error: "" (3,6)
+%%% (+ 1
+%%%      ^
+%%% ) expected.
+==>
+
+>>> ;;; Extra close paren
+... (+ 1 2))
+
+%%% Syntax Error: "" (2,9)
+%%% (+ 1 2))
+%%%         ^
+%%% Object expected.
+==>
+
+>>> ;;; Unterminated string
+... "unterminated
+
+%%% Syntax Error: "" (3,15)
+%%% "unterminated
+%%%               ^
+%%% '"' expected.  A string literal may be unterminated.
+==>
+
+>>> ;;; Quote with nothing after it
+... '
+
+%%% Syntax Error: "" (3,3)
+%%% '
+%%%   ^
+%%% Unexpected end of input after quote.
+==>
+
+>>> ;;; Quote before close paren
+... ')
+
+%%% Syntax Error: "" (2,3)
+%%% ')
+%%%   ^
+%%% Object expected.
+==>
+
+; --- Parse primitive errors ---
+
+>>> (parse)
+
+%%% ERROR 'PARSE': 1 argument expected.
+%%% PRIMITIVE USAGE: (PARSE string)
+==>
+
+>>> ;;; parse with non-string
+... (parse 1)
+
+%%% ERROR 'PARSE': Argument expected to be a string.
+%%% PRIMITIVE USAGE: (PARSE string)
+==>
+
