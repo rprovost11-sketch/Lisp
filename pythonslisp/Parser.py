@@ -4,7 +4,7 @@ from fractions import Fraction
 from typing import Any
 
 from pythonslisp.ltk.ParserBase import LexerBase, LexerState, ParserBase, ParseError
-from pythonslisp.AST import LSymbol
+from pythonslisp.AST import LSymbol, LList
 
 
 def _parse_string_literal( lex: str ) -> str:
@@ -421,29 +421,37 @@ class Parser( ParserBase ):
          ast = _parse_string_literal( lex )
          self._scanner.consume( )
       elif nextToken == Lexer.SINGLE_QUOTE_TOK:
+         buf = self._scanner.buffer
+         fn, ln, cn, sl = buf.filename(), buf.scanLineNum(), buf.scanColNum(), buf.scanLineTxt()
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
             raise ParseError( self._scanner, 'Unexpected end of input after quote.' )
-         ast = [ LSymbol('QUOTE'), subordinate ]
+         ast = LList( [ LSymbol('QUOTE'), subordinate ], filename=fn, line_num=ln, col_num=cn, source_line=sl )
       elif nextToken == Lexer.QUASIQUOTE_TOK:
+         buf = self._scanner.buffer
+         fn, ln, cn, sl = buf.filename(), buf.scanLineNum(), buf.scanColNum(), buf.scanLineTxt()
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
             raise ParseError( self._scanner, 'Unexpected end of input after quasiquote.' )
-         ast = [ LSymbol('QUASIQUOTE'), subordinate ]
+         ast = LList( [ LSymbol('QUASIQUOTE'), subordinate ], filename=fn, line_num=ln, col_num=cn, source_line=sl )
       elif nextToken == Lexer.UNQUOTE_TOK:
+         buf = self._scanner.buffer
+         fn, ln, cn, sl = buf.filename(), buf.scanLineNum(), buf.scanColNum(), buf.scanLineTxt()
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
             raise ParseError( self._scanner, 'Unexpected end of input after unquote.' )
-         ast = [ LSymbol('UNQUOTE'), subordinate ]
+         ast = LList( [ LSymbol('UNQUOTE'), subordinate ], filename=fn, line_num=ln, col_num=cn, source_line=sl )
       elif nextToken == Lexer.UNQUOTE_SPLICING_TOK:
+         buf = self._scanner.buffer
+         fn, ln, cn, sl = buf.filename(), buf.scanLineNum(), buf.scanColNum(), buf.scanLineTxt()
          self._scanner.consume( )
          subordinate = self._parseObject( )
          if subordinate is None:
             raise ParseError( self._scanner, 'Unexpected end of input after unquote-splicing.' )
-         ast = [ LSymbol('UNQUOTE-SPLICING'), subordinate ]
+         ast = LList( [ LSymbol('UNQUOTE-SPLICING'), subordinate ], filename=fn, line_num=ln, col_num=cn, source_line=sl )
       elif nextToken == Lexer.EOF_TOK:
          ast = None
       else:
@@ -451,9 +459,16 @@ class Parser( ParserBase ):
 
       return ast
 
-   def _parseList( self ) -> list:
+   def _parseList( self ) -> LList:
       scn = self._scanner
-      
+      buf = scn.buffer
+
+      # Capture source position at the open paren before consuming it
+      filename    = buf.filename()
+      line_num    = buf.scanLineNum()
+      col_num     = buf.scanColNum()
+      source_line = buf.scanLineTxt()
+
       theList = list( )
 
       # Open List
@@ -475,4 +490,5 @@ class Parser( ParserBase ):
       else:
          scn.consume( )
 
-      return theList
+      return LList( theList, filename=filename, line_num=line_num,
+                    col_num=col_num, source_line=source_line )

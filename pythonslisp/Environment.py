@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Sequence
 
-from pythonslisp.AST import LSymbol
+from pythonslisp.AST import LSymbol, derive_arity, arity_mismatch_msg
 from pythonslisp.Exceptions import LArgBindingError
 
 
@@ -107,6 +107,12 @@ class Environment:
    # Argument binding
    # -----------------------------------------------------------------------
 
+   @staticmethod
+   def _arityMsg( lambdaListAST: list, nProvided: int ) -> str:
+      """Build the 'N provided; M expected' portion of an arity error."""
+      min_a, max_a = derive_arity( lambdaListAST )
+      return arity_mismatch_msg( min_a, max_a, nProvided )
+
    def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any],
                       destructuring: bool = False ) -> None:
       paramListLength = len(lambdaListAST)
@@ -119,7 +125,7 @@ class Environment:
          nextParam = lambdaListAST[paramNum]
       except IndexError:
          if argNum < argListLength:
-            raise LArgBindingError( f'Too many arguments.  Received {argListLength}.' )
+            raise LArgBindingError( f'Too many arguments.  {self._arityMsg(lambdaListAST, argListLength)}' )
          return          # All params used up.  Return gracefully
       if not isinstance(nextParam, LSymbol):
          raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
@@ -131,7 +137,7 @@ class Environment:
             nextParam = lambdaListAST[paramNum]
          except IndexError:
             if argNum < argListLength:
-               raise LArgBindingError( f'Too many arguments.  Received {argListLength}.' )
+               raise LArgBindingError( f'Too many arguments.  {self._arityMsg(lambdaListAST, argListLength)}' )
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
             raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
@@ -261,7 +267,7 @@ class Environment:
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LArgBindingError( "Too few positional arguments." )
+            raise LArgBindingError( f'Too few arguments.  {self._arityMsg(lambdaListAST, argNum)}' )
 
          if isinstance( paramName, LSymbol ):
             self._bindings[paramName.name] = argVal

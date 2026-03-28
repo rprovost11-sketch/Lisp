@@ -18,7 +18,7 @@ Goals:  Implement a substantial subset of the features of common lisp.
 Features
 - Full macro system: defmacro, macroexpand, and a runtime library written in Lisp
 - Complete lambda lists: &optional, &rest, &key, and &aux for functions and macros
-- Closures, tail call optimization, and call/cc
+- Closures, tail call optimization, and fully implemented continuations
 - Condition system: handler-case, signal, make-condition
 - Multiple return values: values, multiple-value-bind
 - Embed Lisp in Python or call Python from Lisp
@@ -92,7 +92,8 @@ the sexpression '(help)'.
 
 These two help systems document access to different things.  The listener
 command help system provides documentation for commands recognized by the
-listener from inside the repl.  The LOHS provides access to documentation for
+listener from inside the repl to control the listener in various ways such as
+working with session logs.  The LOHS provides access to documentation for
 all lisp callables (primitives, functions and macros) as well as to various help
 topics of interest to the lisp programmer.
 
@@ -139,8 +140,8 @@ return the AST of an sexpression.  A subsequent call to prettyPrintSExpr(ast)
 will convert the complex structure to a python string representation.
 
 The interpreter's eval functions can handle any number of lisp expressions
-in the string argument.  The return value is always the value of the result
-of evaluating the last expression in the string.
+in the string argument.  The return value is always the result of evaluating the
+last expression in the string.
 
 Calling python from lisp is just as easy.  Just call the python lisp primitive
 and pass it some python code in a lisp string.

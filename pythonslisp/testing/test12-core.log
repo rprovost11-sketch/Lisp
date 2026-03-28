@@ -25,13 +25,19 @@
 >>> ;;; Error: python with no arguments
 ... (python)
 
-%%% ERROR 'PYTHON': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (python)
+%%%  ^
+%%% ERROR 'PYTHON': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
 >>> ;;; Error: python with non-string
 ... (python 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (python 1)
+%%%  ^
 %%% ERROR 'PYTHON': Argument expected to be a string.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
@@ -41,14 +47,20 @@
 >>> ;;; Error: eval with no arguments
 ... (eval)
 
-%%% ERROR 'EVAL': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (eval)
+%%%  ^
+%%% ERROR 'EVAL': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 
 >>> ;;; Error: eval with too many arguments
 ... (eval 1 2)
 
-%%% ERROR 'EVAL': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (eval 1 2)
+%%%  ^
+%%% ERROR 'EVAL': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 
@@ -173,18 +185,27 @@
 
 >>> (error "something went wrong")
 
+%%% Runtime Error: "" (1,2)
+%%% (error "something went wrong")
+%%%  ^
 %%% something went wrong
 ==>
 
 >>> ;;; error with positional format args
 ... (error "bad value: {0}" (list 42))
 
+%%% Runtime Error: "" (2,26)
+%%% (error "bad value: {0}" (list 42))
+%%%                          ^
 %%% bad value: 42
 ==>
 
 >>> ;;; error with map format args
 ... (error "expected {TYPE} but got {GOT}" (make-dict (type "integer") (got "string")))
 
+%%% Runtime Error: "" (2,2)
+%%% (error "expected {TYPE} but got {GOT}" (make-dict (type "integer") (got "string")))
+%%%  ^
 %%% expected integer but got string
 ==>
 
@@ -338,6 +359,9 @@ Type '(help "substring" :substring t)' to search all names by substring.
 
 ; type error caught before eval
 >>> (raweval-for-display 42)
+%%% Runtime Error: "" (1,2)
+%%% (raweval-for-display 42)
+%%%  ^
 %%% ERROR 'RAWEVAL-FOR-DISPLAY': Argument must be a string.
 %%% PRIMITIVE USAGE: (RAWEVAL-FOR-DISPLAY string &optional stream)
 
@@ -383,6 +407,9 @@ Type '(help "substring" :substring t)' to search all names by substring.
 
 ; error: invalid arg type
 >>> (gensym 3.14)
+%%% Runtime Error: "" (1,2)
+%%% (gensym 3.14)
+%%%  ^
 %%% ERROR 'GENSYM': Argument must be a string prefix, a symbol, or a non-negative integer.
 %%% PRIMITIVE USAGE: (GENSYM &optional x)
 ==>
@@ -591,12 +618,18 @@ T
 >>> ;;; Error: makunbound requires exactly one symbol argument
 ... (makunbound 1 2)
 
-%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (makunbound 1 2)
+%%%  ^
+%%% ERROR 'MAKUNBOUND': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> (makunbound 1)
 
+%%% Runtime Error: "" (1,2)
+%%% (makunbound 1)
+%%%  ^
 %%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
@@ -614,7 +647,9 @@ T
 >>> ;;; Error: setf requires an even number of arguments
 ... (setf myvar1 10 myvar2)
 
-%%% Too few positional arguments.
+%%% Error binding arguments in call to macro SETF.
+%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
 ; --- defparameter ---
@@ -658,30 +693,48 @@ T
 
 >>> (setf)
 
-%%% Too few positional arguments.
+%%% Runtime Error: "" (1,2)
+%%% (setf)
+%%%  ^
+%%% Error binding arguments in call to macro SETF.
+%%% Too few arguments.  0 arguments provided; at least 2 expected.
+%%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
 >>> ;;; setf with odd number of args
 ... (setf x)
 
-%%% Too few positional arguments.
+%%% Runtime Error: "" (2,2)
+%%% (setf x)
+%%%  ^
+%%% Error binding arguments in call to macro SETF.
+%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
 >>> ;;; setf with 3 args (odd)
 ... (setf x 1 y)
 
-%%% Too few positional arguments.
+%%% Error binding arguments in call to macro SETF.
+%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
 >>> (makunbound)
 
-%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (makunbound)
+%%%  ^
+%%% ERROR 'MAKUNBOUND': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> ;;; makunbound with non-symbol
 ... (makunbound 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (makunbound 1)
+%%%  ^
 %%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
@@ -689,38 +742,56 @@ T
 >>> ;;; makunbound with too many args
 ... (makunbound 'a 'b)
 
-%%% ERROR 'MAKUNBOUND': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (makunbound 'a 'b)
+%%%  ^
+%%% ERROR 'MAKUNBOUND': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
 >>> ;;; symtab! with args
 ... (symtab! 1)
 
-%%% ERROR 'SYMTAB!': 0 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (symtab! 1)
+%%%  ^
+%%% ERROR 'SYMTAB!': 1 argument provided; 0 expected.
 %%% PRIMITIVE USAGE: (SYMTAB!)
 ==>
 
 >>> (make-symbol)
 
-%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (make-symbol)
+%%%  ^
+%%% ERROR 'MAKE-SYMBOL': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> (make-symbol "a" "b")
 
-%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (make-symbol "a" "b")
+%%%  ^
+%%% ERROR 'MAKE-SYMBOL': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> ;;; make-symbol with non-string argument
 ... (make-symbol 42)
 
+%%% Runtime Error: "" (2,2)
+%%% (make-symbol 42)
+%%%  ^
 %%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
 >>> (make-symbol '())
 
+%%% Runtime Error: "" (1,2)
+%%% (make-symbol '())
+%%%  ^
 %%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
@@ -728,6 +799,9 @@ T
 >>> ;;; make-symbol from numeric string is not a valid symbol name
 ... (make-symbol "42")
 
+%%% Runtime Error: "" (2,2)
+%%% (make-symbol "42")
+%%%  ^
 %%% ERROR 'MAKE-SYMBOL': "42" is not a valid symbol name.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
@@ -737,12 +811,18 @@ T
 >>> ;;; setf with NIL lvalue
 ... (setf () 5)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (28,16)
+%%%               (error "setf: lvalue cannot be NIL or ()"))
+%%%                ^
 %%% setf: lvalue cannot be NIL or ()
 ==>
 
 >>> ;;; setf (at ...) form with wrong element count
 ... (setf (at 1) 5)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (33,24)
+%%%                       (error "setf: (at ...) place form expected 3 elements")
+%%%                        ^
 %%% setf: (at ...) place form expected 3 elements
 ==>
 
@@ -786,7 +866,10 @@ T
 >>> ;;; eval with too many arguments
 ... (eval 1 2)
 
-%%% ERROR 'EVAL': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (eval 1 2)
+%%%  ^
+%%% ERROR 'EVAL': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 
@@ -802,6 +885,9 @@ T
 >>> ;;; setf at with out-of-range index
 ... (setf (at 99 (list 1 2)) 5)
 
+%%% Runtime Error: "" (2,15)
+%%% (setf (at 99 (list 1 2)) 5)
+%%%               ^
 %%% ERROR 'AT-SET': Invalid argument key/index.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
@@ -811,13 +897,19 @@ T
 >>> ;;; defsetf-internal with no arguments
 ... (defsetf-internal)
 
-%%% ERROR 'DEFSETF-INTERNAL': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (defsetf-internal)
+%%%  ^
+%%% ERROR 'DEFSETF-INTERNAL': 0 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
 ==>
 
 >>> ;;; defsetf-internal with non-symbol arguments
 ... (defsetf-internal 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (defsetf-internal 1 2)
+%%%  ^
 %%% ERROR 'DEFSETF-INTERNAL': Both arguments must be symbols.
 %%% PRIMITIVE USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
 ==>
@@ -827,6 +919,9 @@ T
 >>> ;;; help with two positional args errors at argument binding
 ... (help 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (help 1 2)
+%%%  ^
 %%% Error binding arguments in call to function "HELP".
 %%% Keyword expected, found 2.
 ==>
@@ -834,6 +929,9 @@ T
 >>> ;;; help with non-callable argument
 ... (help 42)
 
+%%% Runtime Error: "" (2,2)
+%%% (help 42)
+%%%  ^
 %%% ERROR 'HELP': First argument expected to be a callable or struct type.
 %%% PRIMITIVE USAGE: (HELP &optional target &key (substring nil))
 ==>
@@ -841,6 +939,9 @@ T
 >>> ;;; help :substring t requires a string target
 ... (help :substring t)
 
+%%% Runtime Error: "" (2,2)
+%%% (help :substring t)
+%%%  ^
 %%% ERROR 'HELP': :substring t requires a string target.
 %%% PRIMITIVE USAGE: (HELP &optional target &key (substring nil))
 ==>
@@ -848,6 +949,9 @@ T
 >>> ;;; make-symbol with empty string
 ... (make-symbol "")
 
+%%% Runtime Error: "" (2,2)
+%%% (make-symbol "")
+%%%  ^
 %%% ERROR 'MAKE-SYMBOL': "" is not a valid symbol name.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
@@ -862,6 +966,9 @@ T
 >>> ;;; python with non-string argument
 ... (python 42)
 
+%%% Runtime Error: "" (2,2)
+%%% (python 42)
+%%%  ^
 %%% ERROR 'PYTHON': Argument expected to be a string.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
@@ -870,12 +977,18 @@ T
 
 >>> (readall)
 
-%%% ERROR 'READALL': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (readall)
+%%%  ^
+%%% ERROR 'READALL': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (READALL stream)
 ==>
 
 >>> (readall 42)
 
+%%% Runtime Error: "" (1,2)
+%%% (readall 42)
+%%%  ^
 %%% ERROR 'READALL': Argument expected to be a stream.
 %%% PRIMITIVE USAGE: (READALL stream)
 ==>
@@ -884,24 +997,36 @@ T
 
 >>> (tmpdir 1)
 
-%%% ERROR 'TMPDIR': 0 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (tmpdir 1)
+%%%  ^
+%%% ERROR 'TMPDIR': 1 argument provided; 0 expected.
 %%% PRIMITIVE USAGE: (TMPDIR)
 ==>
 
 >>> (path-join)
 
-%%% ERROR 'PATH-JOIN': At least 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (path-join)
+%%%  ^
+%%% ERROR 'PATH-JOIN': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 
 >>> (path-join 42)
 
+%%% Runtime Error: "" (1,2)
+%%% (path-join 42)
+%%%  ^
 %%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 
 >>> (path-join "a" 42)
 
+%%% Runtime Error: "" (1,2)
+%%% (path-join "a" 42)
+%%%  ^
 %%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>

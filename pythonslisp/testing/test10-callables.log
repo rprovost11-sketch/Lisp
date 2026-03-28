@@ -183,13 +183,19 @@
 >>> ;;; Error: first element of a list must be callable
 ... (1 2 3)
 
+%%% Runtime Error: "" (2,2)
+%%% (1 2 3)
+%%%  ^
 %%% Badly formed list expression '1'.  The first element should evaluate to a callable.
 ==>
 
 >>> ;;; Error: eval requires exactly one argument
 ... (eval)
 
-%%% ERROR 'EVAL': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (eval)
+%%%  ^
+%%% ERROR 'EVAL': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (EVAL sexpr)
 ==>
 
@@ -325,14 +331,20 @@
 >>> ;;; Error: macroexpand requires exactly one argument
 ... (macroexpand)
 
-%%% ERROR 'MACROEXPAND': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (macroexpand)
+%%%  ^
+%%% ERROR 'MACROEXPAND': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MACROEXPAND 'form)
 ==>
 
 >>> ;;; Error: macroexpand-1 requires exactly one argument
 ... (macroexpand-1)
 
-%%% ERROR 'MACROEXPAND-1': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (macroexpand-1)
+%%%  ^
+%%% ERROR 'MACROEXPAND-1': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MACROEXPAND-1 'form)
 ==>
 
@@ -410,6 +422,9 @@
 
 >>> (defmacro)
 
+%%% Runtime Error: "" (1,2)
+%%% (defmacro)
+%%%  ^
 %%% ERROR 'DEFMACRO': 3 or more arguments expected.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
@@ -417,6 +432,9 @@
 >>> ;;; defmacro first arg must be symbol
 ... (defmacro 1 () 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (defmacro 1 () 1)
+%%%  ^
 %%% ERROR 'DEFMACRO': Argument 1 expected to be a symbol.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
@@ -424,6 +442,9 @@
 >>> ;;; defmacro second arg must be list
 ... (defmacro foo 1 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (defmacro foo 1 1)
+%%%  ^
 %%% ERROR 'DEFMACRO': Argument 2 expected to be a list of params.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
@@ -432,7 +453,10 @@
 
 >>> (macroexpand)
 
-%%% ERROR 'MACROEXPAND': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (macroexpand)
+%%%  ^
+%%% ERROR 'MACROEXPAND': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MACROEXPAND 'form)
 ==>
 
@@ -458,6 +482,9 @@
 >>> ;;; defmacro with docstring but no body
 ... (defmacro foo () "docstring")
 
+%%% Runtime Error: "" (2,2)
+%%% (defmacro foo () "docstring")
+%%%  ^
 %%% ERROR 'DEFMACRO': At least one body expression expected after docstring.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
@@ -467,6 +494,9 @@
 >>> ;;; defmacro with empty body (no docstring)
 ... (defmacro emptyb22 ())
 
+%%% Runtime Error: "" (2,2)
+%%% (defmacro emptyb22 ())
+%%%  ^
 %%% ERROR 'DEFMACRO': At least one body expression expected.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
@@ -600,27 +630,39 @@
 >>> ;;; Error: too few positional arguments (lambda)
 ... ((lambda (a b) (+ a b)) 1)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (a b) (+ a b)) 1)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too few positional arguments.
+%%% Too few arguments.  1 argument provided; 2 expected.
 ==>
 
 >>> ;;; Error: too many arguments, no &rest (lambda)
 ... ((lambda (a) a) 1 2 3)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (a) a) 1 2 3)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too many arguments.  Received 3.
+%%% Too many arguments.  3 arguments provided; 1 expected.
 ==>
 
 >>> ;;; Error: too many arguments after &optional exhausted (lambda)
 ... ((lambda (&optional a b) (list a b)) 1 2 3)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&optional a b) (list a b)) 1 2 3)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too many arguments.  Received 3.
+%%% Too many arguments.  3 arguments provided; 0 to 2 expected.
 ==>
 
 >>> ;;; Error: unexpected keyword (lambda)
 ... ((lambda (&key a) a) :b 2)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&key a) a) :b 2)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Unexpected keyword found B.
 ==>
@@ -628,6 +670,9 @@
 >>> ;;; Error: keyword not followed by value (lambda)
 ... ((lambda (&key a b) (list a b)) :a 1 :b)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&key a b) (list a b)) :a 1 :b)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Keyword B expected to be followed by a value.
 ==>
@@ -643,14 +688,20 @@
 
 >>> (param-test-posit 1)
 
+%%% Runtime Error: "" (1,2)
+%%% (param-test-posit 1)
+%%%  ^
 %%% Error binding arguments in call to function "PARAM-TEST-POSIT".
-%%% Too few positional arguments.
+%%% Too few arguments.  1 argument provided; 2 expected.
 ==>
 
 >>> (param-test-posit 1 2 3)
 
+%%% Runtime Error: "" (1,2)
+%%% (param-test-posit 1 2 3)
+%%%  ^
 %%% Error binding arguments in call to function "PARAM-TEST-POSIT".
-%%% Too many arguments.  Received 3.
+%%% Too many arguments.  3 arguments provided; 2 expected.
 ==>
 
 >>> ;;; Fix 1: bare (var) spec with no default in &key
@@ -725,6 +776,9 @@
 >>> ;;; :allow-other-keys nil does NOT permit unknown keys
 ... ((lambda (&key a) a) :a 1 :b 99 :allow-other-keys nil)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&key a) a) :a 1 :b 99 :allow-other-keys nil)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Unexpected keyword found B.
 ==>
@@ -752,8 +806,11 @@
 >>> ;;; Fix 1: &optional with no &key heuristic fires, :foo not consumed, extra-arg error
 ... ((lambda (&optional x) x) :foo)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&optional x) x) :foo)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too many arguments.  Received 1.
+%%% Too many arguments.  1 argument provided; 0 or 1 expected.
 ==>
 
 >>> ;;; Fix 1: non-NIL explicit default used when keyword heuristic fires
@@ -799,6 +856,9 @@
 >>> ;;; NC6: (&key) with empty section any keyword passed is an error
 ... ((lambda (&key) nil) :x 1)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&key) nil) :x 1)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Unexpected keyword found X.
 ==>
@@ -806,30 +866,45 @@
 >>> ;;; NC5: duplicate positional parameter names
 ... ((lambda (a a) a) 1 2)
 
+%%% Binding Error: "" (2,2)
+%%% ((lambda (a a) a) 1 2)
+%%%  ^
 %%% Duplicate parameter name A in positional parameters.
 ==>
 
 >>> ;;; NC5: duplicate across positional and optional (both are plain symbols)
 ... ((lambda (a &optional a) a) 1)
 
+%%% Binding Error: "" (2,2)
+%%% ((lambda (a &optional a) a) 1)
+%%%  ^
 %%% Duplicate parameter name A in positional parameters.
 ==>
 
 >>> ;;; NC5: duplicate positional and &rest name
 ... ((lambda (a &rest a) a) 1)
 
+%%% Binding Error: "" (2,2)
+%%% ((lambda (a &rest a) a) 1)
+%%%  ^
 %%% Duplicate parameter name A in &REST.
 ==>
 
 >>> ;;; NC5: duplicate key variable and its own pvar
 ... ((lambda (&key (a 0 a)) a) :a 5)
 
+%%% Binding Error: "" (2,2)
+%%% ((lambda (&key (a 0 a)) a) :a 5)
+%%%  ^
 %%% Duplicate parameter name A in supplied-p variable.
 ==>
 
 >>> ;;; NC1: known keyword appearing out of order gives specific message
 ... ((lambda (&rest x &optional y) (list x y)) 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&rest x &optional y) (list x y)) 1 2)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% &OPTIONAL is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.
 ==>
@@ -837,6 +912,9 @@
 >>> ;;; NC1: &body is macro-only; invalid in function lambda lists
 ... ((lambda (&body x) x) 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&body x) x) 1 2)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% &BODY is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.
 ==>
@@ -873,6 +951,9 @@
 >>> ;;; Bug 4: &-symbol rejected as &rest variable name
 ... ((lambda (&rest &foo) &foo) 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&rest &foo) &foo) 1 2)
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Symbol expected after &rest.
 ==>
@@ -880,6 +961,9 @@
 >>> ;;; Bug 6: &-symbol rejected as variable name in &key list spec
 ... ((lambda (&key (&aux)) &aux))
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&key (&aux)) &aux))
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Lambda list keyword &AUX cannot be used as a variable name in &KEY spec.
 ==>
@@ -887,6 +971,9 @@
 >>> ;;; Bug 7: &-symbol rejected as variable name in &aux list spec
 ... ((lambda (&aux (&key 5)) &key))
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&aux (&key 5)) &key))
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).
 ==>
@@ -894,6 +981,9 @@
 >>> ;;; &-symbol rejected as pvar in &optional spec
 ... ((lambda (&optional (a 0 &rest)) a))
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&optional (a 0 &rest)) a))
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Lambda list keyword &REST cannot be used as a supplied-p variable in &OPTIONAL spec.
 ==>
@@ -901,12 +991,18 @@
 >>> ;;; &-symbol rejected as pvar in &key spec
 ... ((lambda (&key (a 0 &aux)) a))
 
+%%% Runtime Error: "" (2,2)
+%%% ((lambda (&key (a 0 &aux)) a))
+%%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
 %%% Lambda list keyword &AUX cannot be used as a supplied-p variable in &KEY spec.
 ==>
 
 >>> (lambda)
 
+%%% Runtime Error: "" (1,2)
+%%% (lambda)
+%%%  ^
 %%% ERROR 'LAMBDA': 1 or more arguments expected.
 %%% PRIMITIVE USAGE: (LAMBDA lambda-list &rest body)
 ==>

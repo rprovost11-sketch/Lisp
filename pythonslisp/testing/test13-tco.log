@@ -222,6 +222,9 @@
 >>> ;;; division by zero at the bottom of 50000 tail calls
 ... (tco-err 50000)
 
+%%% Runtime Error: "" (2,17)
+%%%    (if (= n 0) (// 1 0) (tco-err (- n 1))))
+%%%                 ^
 %%% ERROR '//': division by zero
 %%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
@@ -237,8 +240,11 @@
 >>> ;;; zero-arg call in tail position -> arg-binding error with correct name
 ... (tco-arity 3)
 
+%%% Runtime Error: "" (2,17)
+%%%    (if (= n 0) (tco-arity) (tco-arity (- n 1))))
+%%%                 ^
 %%% Error binding arguments in call to function "TCO-ARITY".
-%%% Too few positional arguments.
+%%% Too few arguments.  0 arguments provided; 1 expected.
 ==>
 
 ; --- 14. Unbound variable in tail position propagates correctly ---
@@ -252,6 +258,9 @@
 >>> ;;; unbound symbol error at the end of the chain
 ... (tco-unbound 5)
 
+%%% Runtime Error: "" (2,9)
+%%%    (if (= n 0) no-such-var (tco-unbound (- n 1))))
+%%%         ^
 %%% Unbound Variable: NO-SUCH-VAR.
 ==>
 

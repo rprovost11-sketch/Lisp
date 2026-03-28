@@ -172,13 +172,19 @@
 
 >>> (parse)
 
-%%% ERROR 'PARSE': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (parse)
+%%%  ^
+%%% ERROR 'PARSE': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (PARSE string)
 ==>
 
 >>> ;;; parse with non-string
 ... (parse 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (parse 1)
+%%%  ^
 %%% ERROR 'PARSE': Argument expected to be a string.
 %%% PRIMITIVE USAGE: (PARSE string)
 ==>

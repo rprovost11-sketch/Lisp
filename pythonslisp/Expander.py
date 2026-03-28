@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LMacro, L_NIL, prettyPrintSExpr
-from pythonslisp.Environment import Environment
+from pythonslisp.AST import LSymbol, LMacro, LList, L_NIL, prettyPrintSExpr
 from pythonslisp.Context import Context
+from pythonslisp.Exceptions import LArgBindingError, LRuntimeError
 
 
 class Expander:
@@ -52,7 +52,13 @@ class Expander:
          return Expander._expand(ctx, env, expandedOnce, maxIterations - 1)
 
       # --- Step 2: recurse into sub-elements (bottom-up) ---
-      expanded = [Expander._expand(ctx, env, elt, maxIterations) for elt in sexpr]
+      # Preserve LList type so source position info survives expansion
+      if isinstance(sexpr, LList):
+         expanded = LList( [Expander._expand(ctx, env, elt, maxIterations) for elt in sexpr],
+                           filename=sexpr.filename, line_num=sexpr.line_num,
+                           col_num=sexpr.col_num, source_line=sexpr.source_line )
+      else:
+         expanded = [Expander._expand(ctx, env, elt, maxIterations) for elt in sexpr]
 
       # --- Step 3: apply structural normalization rules ---
       if not isinstance(expanded[0], LSymbol):
@@ -97,7 +103,17 @@ class Expander:
             callableObj = env.lookup(head.name)
             if isinstance(callableObj, LMacro):
                args = sexpr[1:]
-               return Expander.expandMacroCall(ctx, env, callableObj, args)
+               try:
+                  return Expander.expandMacroCall(ctx, env, callableObj, args)
+               except LArgBindingError as ex:
+                  msg = (f'Error binding arguments in call to macro {head.name}.\n'
+                         f'{ex.args[-1]}\n'
+                         f'{callableObj.usageString()}')
+                  err = LRuntimeError( msg )
+                  if isinstance(sexpr, LList) and sexpr.has_source_info():
+                     err.source_info = ( sexpr.filename, sexpr.line_num,
+                                         sexpr.col_num, sexpr.source_line )
+                  raise err
          except KeyError:
             pass
 

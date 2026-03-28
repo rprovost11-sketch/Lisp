@@ -163,13 +163,13 @@ def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 
 @primitive( 'gensym', '(&optional x)' )
 def LP_gensym( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Generate and return a new, unique symbol.
+   """Generate and return a new, unique valid symbol.
 With no argument, uses prefix \"G\" and appends the current *gensym-counter*,
 then increments it.  If x is a string, it is used as the prefix and validated
-as a legal symbol prefix via the parser; an error is raised if it is not valid.
-If x is a symbol, its name is used as the prefix directly (no validation
-needed).  If x is a non-negative integer it is used as the numeric suffix
-directly and *gensym-counter* is left unchanged."""
+as a legal symbol prefix; an error is raised if it is not valid.
+If x is a symbol, its name is used as the prefix directly.  If x is a
+non-negative integer it is used as the numeric suffix directly and
+*gensym-counter* is left unchanged."""
    counter = env.lookupGlobalWithDefault( '*GENSYM-COUNTER*', 0 )
    if not args:
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )

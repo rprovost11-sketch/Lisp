@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LPrimitive
+from pythonslisp.AST import LSymbol, LPrimitive, LList, arity_mismatch_msg
 from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
                                          LRuntimeError,
                                          LRuntimePrimError )
@@ -24,6 +24,18 @@ class Analyzer:
 
    @staticmethod
    def analyze( env: Environment, sexpr: Any ) -> None:
+      """Wrapper: runs _do_analyze and annotates any raised error with
+      the source position of sexpr if it is an LList and the error has
+      not already been annotated by a deeper recursive call."""
+      try:
+         Analyzer._do_analyze( env, sexpr )
+      except LRuntimeError as e:
+         if isinstance( sexpr, LList ) and sexpr.has_source_info() and e.source_info is None:
+            e.source_info = ( sexpr.filename, sexpr.line_num, sexpr.col_num, sexpr.source_line )
+         raise
+
+   @staticmethod
+   def _do_analyze( env: Environment, sexpr: Any ) -> None:
       """
       Recursively walk sexpr, raising on structural / semantic problems.
 
@@ -160,7 +172,8 @@ class Analyzer:
                   tooFew  = numArgs < callableObj.min_args
                   tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
                   if tooFew or tooMany:
-                     raise LRuntimePrimError(callableObj, callableObj.arity_msg)
+                     raise LRuntimePrimError(callableObj,
+                        arity_mismatch_msg(callableObj.min_args, callableObj.max_args, numArgs))
          except KeyError:
             pass
       for elt in sexpr:

@@ -133,7 +133,7 @@ class LexerBuffer( object ):
       return count
 
    def markStartOfLexeme( self ) -> None:
-      '''Set mark to the current vlaue of point to record the start of a lex.'''
+      '''Set mark to the current value of point to record the start of a lex.'''
       self._mark = self._point
 
    def getLexeme( self ) -> str:

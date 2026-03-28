@@ -300,6 +300,71 @@ class LNil(list):
    __iadd__    = _immutable
    __imul__    = _immutable
 
+class LList(list):
+   """A list AST node that carries source position information for error reporting."""
+   __slots__ = ('filename', 'line_num', 'col_num', 'source_line')
+
+   def __init__( self, iterable = (), *, filename: str = '', line_num: int = 0,
+                 col_num: int = 0, source_line: str = '' ) -> None:
+      super().__init__( iterable )
+      self.filename    = filename
+      self.line_num    = line_num
+      self.col_num     = col_num
+      self.source_line = source_line
+
+   def has_source_info( self ) -> bool:
+      return self.line_num != 0
+
+
+_KW_MARKERS = frozenset({'&OPTIONAL', '&REST', '&BODY', '&KEY',
+                         '&AUX', '&ALLOW-OTHER-KEYS'})
+
+def derive_arity( ll_ast: list ) -> tuple[int, int | None]:
+   """Return (min_args, max_args) for a lambda list AST.
+   max_args is None when &rest, &body, or &key makes the upper bound unlimited.
+   Top-level destructuring patterns (nested lists) each count as one argument."""
+   min_args   = 0
+   max_args   = 0
+   in_section = 'required'
+   unbounded  = False
+   for item in ll_ast:
+      if isinstance( item, LSymbol ) and item.name in _KW_MARKERS:
+         marker = item.name
+         if marker in ('&REST', '&BODY'):
+            in_section = 'rest'
+            unbounded  = True
+         elif marker == '&OPTIONAL':
+            in_section = 'optional'
+         elif marker in ('&KEY', '&ALLOW-OTHER-KEYS'):
+            in_section = 'key'
+            unbounded  = True
+         elif marker == '&AUX':
+            in_section = 'aux'
+      else:
+         if in_section == 'required':
+            min_args += 1
+            max_args += 1
+         elif in_section == 'optional':
+            max_args += 1
+   if unbounded:
+      return min_args, None
+   return min_args, max_args
+
+
+def arity_mismatch_msg( min_a: int, max_a: int | None, n_provided: int ) -> str:
+   """Build 'N provided; M expected' arity mismatch string."""
+   provided = f'{n_provided} argument{"s" if n_provided != 1 else ""} provided'
+   if max_a is None:
+      expected = f'at least {min_a} expected'
+   elif max_a == min_a:
+      expected = f'{min_a} expected'
+   elif max_a == min_a + 1:
+      expected = f'{min_a} or {max_a} expected'
+   else:
+      expected = f'{min_a} to {max_a} expected'
+   return f'{provided}; {expected}.'
+
+
 # Canonical Lisp constants - defined here so AST has no upstream deps
 L_T: LSymbol = LSymbol('T')
 L_NIL: LNil = LNil()

@@ -8,7 +8,7 @@ from typing import Any
 from pythonslisp.Parser import Parser
 from pythonslisp.ltk.Listener import InterpreterBase
 from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LMacro,
-                              LMultipleValues, prettyPrintSExpr )
+                              LMultipleValues, prettyPrintSExpr, derive_arity )
 from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
                                      ReturnFrom, Thrown, Signaled )
 from pythonslisp.Environment import Environment
@@ -170,38 +170,8 @@ class Interpreter( InterpreterBase ):
 When targetEnv is a ModuleEnvironment, primitives are bound into that module
 instead of the global environment."""
       _UNSET      = object()
-      _KW_MARKERS = frozenset({'&OPTIONAL', '&REST', '&BODY', '&KEY',
-                               '&AUX', '&ALLOW-OTHER-KEYS'})
       interpreter  = self
       _target_env  = targetEnv    # capture for closure
-
-      def _derive_arity( ll_ast: list ) -> tuple[int, int|None]:
-         min_args   = 0
-         max_args   = 0
-         in_section = 'required'
-         unbounded  = False
-         for item in ll_ast:
-            if isinstance( item, LSymbol ) and item.name in _KW_MARKERS:
-               marker = item.name
-               if marker in ('&REST', '&BODY'):
-                  in_section = 'rest'
-                  unbounded  = True
-               elif marker == '&OPTIONAL':
-                  in_section = 'optional'
-               elif marker in ('&KEY', '&ALLOW-OTHER-KEYS'):
-                  in_section = 'key'
-                  unbounded  = True
-               elif marker == '&AUX':
-                  in_section = 'aux'
-            else:
-               if in_section == 'required':
-                  min_args += 1
-                  max_args += 1
-               elif in_section == 'optional':
-                  max_args += 1
-         if unbounded:
-            return min_args, None
-         return min_args, max_args
 
       def _make_arity_msg( min_args: int, max_args: int|None ) -> str:
          if max_args is None:
@@ -232,7 +202,7 @@ instead of the global environment."""
                if stripped.startswith('(') and stripped.endswith(')'):
                   stripped = stripped[1:-1].strip()
                self._paramsString = stripped
-               derived_min, derived_max = _derive_arity( ll_ast )
+               derived_min, derived_max = derive_arity( ll_ast )
                self._min_args = derived_min if min_args is _UNSET else min_args
                self._max_args = derived_max if max_args is _UNSET else max_args
             elif mode is LambdaListMode.ARITY_ONLY:
@@ -242,7 +212,7 @@ instead of the global environment."""
                if stripped.startswith('(') and stripped.endswith(')'):
                   stripped = stripped[1:-1].strip()
                self._paramsString = stripped
-               derived_min, derived_max = _derive_arity( ll_ast )
+               derived_min, derived_max = derive_arity( ll_ast )
                self._min_args = derived_min if min_args is _UNSET else min_args
                self._max_args = derived_max if max_args is _UNSET else max_args
             else:  # DOC_ONLY

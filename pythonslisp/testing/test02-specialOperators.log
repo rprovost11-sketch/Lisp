@@ -34,12 +34,18 @@
 
 >>> (quote)
 
+%%% Runtime Error: "" (1,2)
+%%% (quote)
+%%%  ^
 %%% ERROR 'QUOTE': 1 argument expected.
 %%% PRIMITIVE USAGE: (QUOTE sexpr)
 ==>
 
 >>> (quote 1 2)
 
+%%% Runtime Error: "" (1,2)
+%%% (quote 1 2)
+%%%  ^
 %%% ERROR 'QUOTE': 1 argument expected.
 %%% PRIMITIVE USAGE: (QUOTE sexpr)
 ==>
@@ -120,6 +126,9 @@
 >>> ;;; Error: cond requires at least one clause
 ... (cond)
 
+%%% Runtime Error: "" (2,2)
+%%% (cond)
+%%%  ^
 %%% ERROR 'COND': 1 or more arguments expected.
 %%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
@@ -187,6 +196,9 @@
 
 >>> (case)
 
+%%% Runtime Error: "" (1,2)
+%%% (case)
+%%%  ^
 %%% ERROR 'CASE': 2 or more arguments expected.
 %%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 ==>
@@ -219,6 +231,9 @@
 
 >>> (let)
 
+%%% Runtime Error: "" (1,2)
+%%% (let)
+%%%  ^
 %%% ERROR 'LET': 2 or more arguments expected.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -226,6 +241,9 @@
 >>> ;;; let first arg must be list
 ... (let 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (let 1 2)
+%%%  ^
 %%% ERROR 'LET': The first argument to let expected to be a list of variable initializations.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -233,6 +251,9 @@
 >>> ;;; let var spec first element must be symbol
 ... (let ((1 2)) 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (let ((1 2)) 1)
+%%%  ^
 %%% ERROR 'LET': First element of a variable initializer pair expected to be a symbol.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -240,6 +261,9 @@
 >>> ;;; let var spec must be 1 or 2 elements
 ... (let ((x 1 2)) 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (let ((x 1 2)) 1)
+%%%  ^
 %%% ERROR 'LET': Variable initializer spec expected to be 1 or 2 elements long.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -264,6 +288,9 @@
 
 >>> (let*)
 
+%%% Runtime Error: "" (1,2)
+%%% (let*)
+%%%  ^
 %%% ERROR 'LET*': 2 or more arguments expected.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -271,6 +298,9 @@
 >>> ;;; let* first arg must be list
 ... (let* 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (let* 1 2)
+%%%  ^
 %%% ERROR 'LET*': The first argument to let expected to be a list of variable initializations.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 
@@ -392,6 +422,9 @@
 >>> ;;; no arguments
 ... (setq)
 
+%%% Runtime Error: "" (2,2)
+%%% (setq)
+%%%  ^
 %%% ERROR 'SETQ': At least 2 arguments expected.
 %%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
@@ -399,6 +432,9 @@
 >>> ;;; odd number of arguments
 ... (setq sq1 1 sq2)
 
+%%% Runtime Error: "" (2,2)
+%%% (setq sq1 1 sq2)
+%%%  ^
 %%% ERROR 'SETQ': An even number of arguments is expected.  Received 3.
 %%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
@@ -406,6 +442,9 @@
 >>> ;;; non-symbol lvalue
 ... (setq 42 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (setq 42 1)
+%%%  ^
 %%% ERROR 'SETQ': First of setf pair must be a symbol.
 %%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
@@ -638,10 +677,16 @@
 
 ; Error: block name must be a symbol (not an integer)
 >>> (block 42 1 2 3)
+%%% Runtime Error: "" (1,2)
+%%% (block 42 1 2 3)
+%%%  ^
 %%% block: name must be a symbol.
 
 ; Error: return-from name must be a symbol
 >>> (return-from 42 99)
+%%% Runtime Error: "" (1,2)
+%%% (return-from 42 99)
+%%%  ^
 %%% return-from: name must be a symbol.
 
 ; ============================================================
@@ -701,7 +746,10 @@
 
 ; throw requires exactly 2 args
 >>> (throw 'foo)
-%%% ERROR 'THROW': 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (throw 'foo)
+%%%  ^
+%%% ERROR 'THROW': 1 argument provided; 2 expected.
 %%% PRIMITIVE USAGE: (THROW tag result)
 
 ; ============================================================
@@ -838,13 +886,22 @@
 
 ; condition-type and condition-message error on non-condition
 >>> (condition-type 42)
+%%% Runtime Error: "" (1,2)
+%%% (condition-type 42)
+%%%  ^
 %%% condition-type: argument must be a condition object.
 
 >>> (condition-message "oops")
+%%% Runtime Error: "" (1,2)
+%%% (condition-message "oops")
+%%%  ^
 %%% condition-message: argument must be a condition object.
 
 ; signal error on non-symbol, non-condition first arg
 >>> (signal 42)
+%%% Runtime Error: "" (1,2)
+%%% (signal 42)
+%%%  ^
 %%% signal: first argument must be a condition object or a symbol.
 
 ; ============================================================
@@ -1091,7 +1148,10 @@ Y
 
 ; call/cc requires exactly 1 argument
 >>> (call/cc)
-%%% ERROR 'CALL/CC': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (call/cc)
+%%%  ^
+%%% ERROR 'CALL/CC': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (CALL/CC procedure)
 
 ; call/cc argument must be a callable
@@ -1106,6 +1166,9 @@ Y
 
 ; Continuation requires exactly 1 argument
 >>> (call/cc (lambda (k) (k 1 2)))
+%%% Runtime Error: "" (1,23)
+%%% (call/cc (lambda (k) (k 1 2)))
+%%%                       ^
 %%% Continuation expects exactly 1 argument, got 2.
 
 ; ============================================================
@@ -2353,37 +2416,59 @@ Y
 >>> ;;; NIL lvalue
 ... (setf () 5)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (28,16)
+%%%               (error "setf: lvalue cannot be NIL or ()"))
+%%%                ^
 %%% setf: lvalue cannot be NIL or ()
 ==>
 
 >>> ;;; (at ...) form with wrong element count
 ... (setf (at 0) 5)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (33,24)
+%%%                       (error "setf: (at ...) place form expected 3 elements")
+%%%                        ^
 %%% setf: (at ...) place form expected 3 elements
 ==>
 
 >>> ;;; struct accessor with extra instance argument
 ... (setf (sf-fn sf-a sf-b) 5)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (43,20)
+%%%                   (error "setf: struct accessor place must have exactly 1 instance argument"))
+%%%                    ^
 %%% setf: struct accessor place must have exactly 1 instance argument
 ==>
 
 >>> ;;; non-symbol non-list lvalue
 ... (setf 99 5)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (47,16)
+%%%               (error "setf: unrecognized place form")))))
+%%%                ^
 %%% setf: unrecognized place form
 ==>
 
 >>> ;;; zero args
 ... (setf)
 
-%%% Too few positional arguments.
+%%% Runtime Error: "" (2,2)
+%%% (setf)
+%%%  ^
+%%% Error binding arguments in call to macro SETF.
+%%% Too few arguments.  0 arguments provided; at least 2 expected.
+%%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
 >>> ;;; one arg (missing value)
 ... (setf sf-a)
 
-%%% Too few positional arguments.
+%%% Runtime Error: "" (2,2)
+%%% (setf sf-a)
+%%%  ^
+%%% Error binding arguments in call to macro SETF.
+%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
 ; --- multi-body control structures ---
@@ -2477,7 +2562,10 @@ Y
 >>> ;;; Error: funcall with no arguments
 ... (funcall)
 
-%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (funcall)
+%%%  ^
+%%% ERROR 'FUNCALL': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
 ==>
 
@@ -2486,7 +2574,10 @@ Y
 >>> ;;; Error: apply with no arguments
 ... (apply)
 
-%%% ERROR 'APPLY': At least 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (apply)
+%%%  ^
+%%% ERROR 'APPLY': 0 arguments provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (APPLY function &rest args)
 ==>
 
@@ -2507,7 +2598,10 @@ Y
 >>> ;;; Error: funcall with no arguments
 ... (funcall)
 
-%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (funcall)
+%%%  ^
+%%% ERROR 'FUNCALL': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
 ==>
 
@@ -2516,7 +2610,10 @@ Y
 >>> ;;; Error: apply with no arguments
 ... (apply)
 
-%%% ERROR 'APPLY': At least 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (apply)
+%%%  ^
+%%% ERROR 'APPLY': 0 arguments provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (APPLY function &rest args)
 ==>
 
@@ -2537,6 +2634,9 @@ Y
 >>> ;;; if with no arguments
 ... (if)
 
+%%% Runtime Error: "" (2,2)
+%%% (if)
+%%%  ^
 %%% ERROR 'IF': 2 or 3 arguments expected.
 %%% PRIMITIVE USAGE: (IF cond conseq &optional alt)
 ==>
@@ -2544,6 +2644,9 @@ Y
 >>> ;;; if with too many arguments
 ... (if t 1 2 3)
 
+%%% Runtime Error: "" (2,2)
+%%% (if t 1 2 3)
+%%%  ^
 %%% ERROR 'IF': 2 or 3 arguments expected.
 %%% PRIMITIVE USAGE: (IF cond conseq &optional alt)
 ==>
@@ -2553,6 +2656,9 @@ Y
 >>> ;;; cond entry that is not a list
 ... (cond 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (cond 1)
+%%%  ^
 %%% ERROR 'COND': Entry 1 must be a non-empty list.
 %%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
@@ -2567,6 +2673,9 @@ Y
 >>> ;;; case with no clauses
 ... (case 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (case 1)
+%%%  ^
 %%% ERROR 'CASE': 2 or more arguments expected.
 %%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 ==>
@@ -2574,6 +2683,9 @@ Y
 >>> ;;; case entry that is not a list
 ... (case 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (case 1 2)
+%%%  ^
 %%% ERROR 'CASE': Entry 1 must be a non-empty list.
 %%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 ==>
@@ -2588,6 +2700,9 @@ Y
 >>> ;;; let with non-symbol non-list initializer
 ... (let (1) x)
 
+%%% Runtime Error: "" (2,2)
+%%% (let (1) x)
+%%%  ^
 %%% ERROR 'LET': Variable initializer spec expected to be a symbol or a list.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -2597,6 +2712,9 @@ Y
 >>> ;;; let* first element of initializer pair must be symbol
 ... (let* ((1 2)) 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (let* ((1 2)) 1)
+%%%  ^
 %%% ERROR 'LET*': First element of a variable initializer pair expected to be a symbol.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -2604,6 +2722,9 @@ Y
 >>> ;;; let* initializer spec too long
 ... (let* ((x 1 2)) 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (let* ((x 1 2)) 1)
+%%%  ^
 %%% ERROR 'LET*': Variable initializer spec expected to be 1 or 2 elements long.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -2611,6 +2732,9 @@ Y
 >>> ;;; let* with non-symbol non-list initializer
 ... (let* (1) x)
 
+%%% Runtime Error: "" (2,2)
+%%% (let* (1) x)
+%%%  ^
 %%% ERROR 'LET*': Variable initializer spec expected to be a symbol or a list.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
@@ -2634,6 +2758,9 @@ Y
 >>> ;;; cond with non-list entry in second position
 ... (cond (nil 1) 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (cond (nil 1) 2)
+%%%  ^
 %%% ERROR 'COND': Entry 2 must be a non-empty list.
 %%% PRIMITIVE USAGE: (COND (cond1 body1) (cond2 body2) ...)
 ==>
@@ -2643,6 +2770,9 @@ Y
 >>> ;;; case with non-list entry in second position (non-matching first)
 ... (case 99 (1 "one") 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (case 99 (1 "one") 2)
+%%%  ^
 %%% ERROR 'CASE': Entry 2 must be a non-empty list.
 %%% PRIMITIVE USAGE: (CASE sexpr (val1 body1) (val2 body2) ...)
 
@@ -2651,6 +2781,9 @@ Y
 >>> ;;; quasiquote with no arguments
 ... (quasiquote)
 
+%%% Runtime Error: "" (2,2)
+%%% (quasiquote)
+%%%  ^
 %%% ERROR 'QUASIQUOTE': 1 argument expected.
 %%% PRIMITIVE USAGE: (QUASIQUOTE sexpr)
 ==>
@@ -2658,6 +2791,9 @@ Y
 >>> ;;; quasiquote with too many arguments
 ... (quasiquote 1 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (quasiquote 1 2)
+%%%  ^
 %%% ERROR 'QUASIQUOTE': 1 argument expected.
 %%% PRIMITIVE USAGE: (QUASIQUOTE sexpr)
 ==>
@@ -2667,6 +2803,9 @@ Y
 >>> ;;; funcall with no arguments
 ... (funcall)
 
-%%% ERROR 'FUNCALL': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (funcall)
+%%%  ^
+%%% ERROR 'FUNCALL': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (FUNCALL callable &rest args)
 ==>

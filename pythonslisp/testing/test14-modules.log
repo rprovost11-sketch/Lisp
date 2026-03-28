@@ -250,15 +250,24 @@
 
 ; module-set! on non-module
 >>> (module-set! 42 'x 1)
+%%% Runtime Error: "" (1,2)
+%%% (module-set! 42 'x 1)
+%%%  ^
 %%% ERROR 'MODULE-SET!': 1st argument must be a module.
 %%% PRIMITIVE USAGE: (MODULE-SET! module symbol value)
 
 ; load-module with bad :name type
 >>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
+%%% Runtime Error: "" (1,2)
+%%% (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
+%%%  ^
 %%% ERROR 'LOAD-MODULE': :name must be a symbol, string, or quoted (: ...) path.
 %%% PRIMITIVE USAGE: (LOAD-MODULE filespec &key name)
 
 ; load-extension with bad :name type
 >>> (load-extension "pythonslisp/examples/my_extension.py" :name 99)
+%%% Runtime Error: "" (1,2)
+%%% (load-extension "pythonslisp/examples/my_extension.py" :name 99)
+%%%  ^
 %%% ERROR 'LOAD-EXTENSION': :name must be a symbol, string, or quoted (: ...) path.
 %%% PRIMITIVE USAGE: (LOAD-EXTENSION &rest files &key name)

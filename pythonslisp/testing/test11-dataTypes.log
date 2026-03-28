@@ -151,7 +151,10 @@
 >>> (type-of)
 ...
 
-%%% ERROR 'TYPE-OF': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (type-of)
+%%%  ^
+%%% ERROR 'TYPE-OF': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (TYPE-OF sexpr)
 ==>
 
@@ -159,7 +162,10 @@
 >>> (type-of 1 2)
 ...
 
-%%% ERROR 'TYPE-OF': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (type-of 1 2)
+%%%  ^
+%%% ERROR 'TYPE-OF': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (TYPE-OF sexpr)
 ==>
 
@@ -434,12 +440,18 @@
 >>> (setf (point-x p1 p1) 5)
 ...
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (43,20)
+%%%                   (error "setf: struct accessor place must have exactly 1 instance argument"))
+%%%                    ^
 %%% setf: struct accessor place must have exactly 1 instance argument
 ==>
 
 >>> (make-point :z 99)
 ...
 
+%%% Runtime Error: "" (1,2)
+%%% (make-point :z 99)
+%%%  ^
 %%% Error binding arguments in call to function "MAKE-POINT".
 %%% Unexpected keyword found Z.
 ==>
@@ -682,6 +694,9 @@
 ; --- typep: error ---
 
 >>> (typep 42 "not-a-symbol")
+%%% Runtime Error: "" (1,2)
+%%% (typep 42 "not-a-symbol")
+%%%  ^
 %%% ERROR 'TYPEP': Argument 2 must be a type symbol or compound type specifier.
 %%% PRIMITIVE USAGE: (TYPEP object type-specifier)
 
@@ -798,6 +813,9 @@
 >>> ;;; Error: float rejects non-numeric strings
 ... (float "hello")
 
+%%% Runtime Error: "" (2,2)
+%%% (float "hello")
+%%%  ^
 %%% ERROR 'FLOAT': Invalid argument.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
@@ -805,20 +823,29 @@
 >>> ;;; Error: rational requires exactly one argument
 ... (rational)
 
-%%% ERROR 'RATIONAL': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (rational)
+%%%  ^
+%%% ERROR 'RATIONAL': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>
 
 >>> (rational 1 2)
 
-%%% ERROR 'RATIONAL': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (rational 1 2)
+%%%  ^
+%%% ERROR 'RATIONAL': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>
 
 >>> ;;; Error: make-symbol requires exactly one argument
 ... (make-symbol)
 
-%%% ERROR 'MAKE-SYMBOL': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (make-symbol)
+%%%  ^
+%%% ERROR 'MAKE-SYMBOL': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -1063,6 +1090,9 @@
 >>> ;;; float with symbol argument
 ... (float 'abc)
 
+%%% Runtime Error: "" (2,2)
+%%% (float 'abc)
+%%%  ^
 %%% ERROR 'FLOAT': Invalid argument.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
@@ -1070,6 +1100,9 @@
 >>> ;;; integer with symbol argument
 ... (integer 'abc)
 
+%%% Runtime Error: "" (2,2)
+%%% (integer 'abc)
+%%%  ^
 %%% ERROR 'INTEGER': Invalid argument.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>

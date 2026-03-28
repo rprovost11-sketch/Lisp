@@ -231,11 +231,17 @@
 
 ; error: separator must be a string
 >>> (string-join 42 (list 1 2))
+%%% Runtime Error: "" (1,18)
+%%% (string-join 42 (list 1 2))
+%%%                  ^
 %%% ERROR 'STRING-JOIN': Argument 1 (separator) must be a String.
 %%% PRIMITIVE USAGE: (STRING-JOIN separator list)
 
 ; error: second arg must be a list
 >>> (string-join ", " 99)
+%%% Runtime Error: "" (1,2)
+%%% (string-join ", " 99)
+%%%  ^
 %%% ERROR 'STRING-JOIN': Argument 2 must be a List.
 %%% PRIMITIVE USAGE: (STRING-JOIN separator list)
 
@@ -268,6 +274,9 @@
 
 ; error: first arg must be a string
 >>> (string-split 42)
+%%% Runtime Error: "" (1,2)
+%%% (string-split 42)
+%%%  ^
 %%% ERROR 'STRING-SPLIT': Argument 1 must be a String.
 %%% PRIMITIVE USAGE: (STRING-SPLIT string &optional separator)
 
@@ -288,6 +297,9 @@
 
 ; error: arg must be a string
 >>> (string-lines 42)
+%%% Runtime Error: "" (1,2)
+%%% (string-lines 42)
+%%%  ^
 %%% ERROR 'STRING-LINES': Argument 1 must be a String.
 %%% PRIMITIVE USAGE: (STRING-LINES string)
 
@@ -308,6 +320,9 @@
 
 ; error: arg must be a string
 >>> (now-string 42)
+%%% Runtime Error: "" (1,2)
+%%% (now-string 42)
+%%%  ^
 %%% ERROR 'NOW-STRING': Argument must be a format string.
 %%% PRIMITIVE USAGE: (NOW-STRING &optional format)
 
@@ -318,7 +333,10 @@
 >>> ;;; Error: string requires at least one argument
 ... (string)
 
-%%% ERROR 'STRING': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (string)
+%%%  ^
+%%% ERROR 'STRING': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (STRING &rest objects &key (sep ""))
 ==>
 
@@ -386,13 +404,19 @@
 
 >>> (string)
 
-%%% ERROR 'STRING': At least 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (string)
+%%%  ^
+%%% ERROR 'STRING': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (STRING &rest objects &key (sep ""))
 ==>
 
 >>> (ustring)
 
-%%% ERROR 'USTRING': At least 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (ustring)
+%%%  ^
+%%% ERROR 'USTRING': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (USTRING &rest objects &key (sep ""))
 ==>
 
@@ -401,6 +425,9 @@
 >>> ;;; at out of range on string
 ... (at 5 "hi")
 
+%%% Runtime Error: "" (2,2)
+%%% (at 5 "hi")
+%%%  ^
 %%% ERROR 'AT': Invalid argument key/index.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
@@ -408,6 +435,9 @@
 >>> ;;; at on empty string
 ... (at 0 "")
 
+%%% Runtime Error: "" (2,2)
+%%% (at 0 "")
+%%%  ^
 %%% ERROR 'AT': Invalid argument key/index.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>

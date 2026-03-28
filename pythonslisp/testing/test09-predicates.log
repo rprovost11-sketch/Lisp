@@ -416,61 +416,91 @@
 >>> ;;; Error: predicates require exactly one argument
 ... (numberp)
 
-%%% ERROR 'NUMBERP': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (numberp)
+%%%  ^
+%%% ERROR 'NUMBERP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (NUMBERP sexpr)
 ==>
 
 >>> (numberp 1 2)
 
-%%% ERROR 'NUMBERP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (numberp 1 2)
+%%%  ^
+%%% ERROR 'NUMBERP': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (NUMBERP sexpr)
 ==>
 
 >>> (integerp)
 
-%%% ERROR 'INTEGERP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (integerp)
+%%%  ^
+%%% ERROR 'INTEGERP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (INTEGERP sexpr)
 ==>
 
 >>> (floatp)
 
-%%% ERROR 'FLOATP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (floatp)
+%%%  ^
+%%% ERROR 'FLOATP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (FLOATP sexpr)
 ==>
 
 >>> (rationalp)
 
-%%% ERROR 'RATIONALP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (rationalp)
+%%%  ^
+%%% ERROR 'RATIONALP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (RATIONALP sexpr)
 ==>
 
 >>> (symbolp)
 
-%%% ERROR 'SYMBOLP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (symbolp)
+%%%  ^
+%%% ERROR 'SYMBOLP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (SYMBOLP sexpr)
 ==>
 
 >>> (listp)
 
-%%% ERROR 'LISTP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (listp)
+%%%  ^
+%%% ERROR 'LISTP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (LISTP sexpr)
 ==>
 
 >>> (stringp)
 
-%%% ERROR 'STRINGP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (stringp)
+%%%  ^
+%%% ERROR 'STRINGP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (STRINGP sexpr)
 ==>
 
 >>> (functionp)
 
-%%% ERROR 'FUNCTIONP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (functionp)
+%%%  ^
+%%% ERROR 'FUNCTIONP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (FUNCTIONP sexpr)
 ==>
 
 >>> (macrop)
 
-%%% ERROR 'MACROP': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (macrop)
+%%%  ^
+%%% ERROR 'MACROP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (MACROP sexpr)
 ==>
 
@@ -503,14 +533,20 @@
 >>> ;;; consp error: no args
 ... (consp)
 
-%%% ERROR 'CONSP': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (consp)
+%%%  ^
+%%% ERROR 'CONSP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (CONSP sexpr)
 ==>
 
 >>> ;;; consp error: too many args
 ... (consp 1 2)
 
-%%% ERROR 'CONSP': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (consp 1 2)
+%%%  ^
+%%% ERROR 'CONSP': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (CONSP sexpr)
 ==>
 
@@ -793,37 +829,55 @@
 >>> ;;; Error: relational operators need at least 2 arguments
 ... (= 1)
 
-%%% ERROR '=': At least 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (= 1)
+%%%  ^
+%%% ERROR '=': 1 argument provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (= expr1 expr2 &rest exprs)
 ==>
 
 >>> (/= 1)
 
-%%% ERROR '/=': At least 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (/= 1)
+%%%  ^
+%%% ERROR '/=': 1 argument provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (/= expr1 expr2 &rest exprs)
 ==>
 
 >>> (< 1)
 
-%%% ERROR '<': At least 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (< 1)
+%%%  ^
+%%% ERROR '<': 1 argument provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (< expr1 expr2 &rest exprs)
 ==>
 
 >>> (<= 1)
 
-%%% ERROR '<=': At least 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (<= 1)
+%%%  ^
+%%% ERROR '<=': 1 argument provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (<= expr1 expr2 &rest exprs)
 ==>
 
 >>> (> 1)
 
-%%% ERROR '>': At least 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (> 1)
+%%%  ^
+%%% ERROR '>': 1 argument provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (> expr1 expr2 &rest exprs)
 ==>
 
 >>> (>= 1)
 
-%%% ERROR '>=': At least 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (>= 1)
+%%%  ^
+%%% ERROR '>=': 1 argument provided; at least 2 expected.
 %%% PRIMITIVE USAGE: (>= expr1 expr2 &rest exprs)
 ==>
 
@@ -1102,6 +1156,9 @@
 >>> ;;; less-than with incomparable types
 ... (< "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (< "a" 1)
+%%%  ^
 %%% ERROR '<': Invalid argument.  Arguments are not comparable.
 %%% PRIMITIVE USAGE: (< expr1 expr2 &rest exprs)
 ==>
@@ -1109,6 +1166,9 @@
 >>> ;;; greater-than with incomparable types
 ... (> "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (> "a" 1)
+%%%  ^
 %%% ERROR '>': Invalid argument.  Arguments are not comparable.
 %%% PRIMITIVE USAGE: (> expr1 expr2 &rest exprs)
 ==>
@@ -1116,6 +1176,9 @@
 >>> ;;; less-equal with incomparable types
 ... (<= "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (<= "a" 1)
+%%%  ^
 %%% ERROR '<=': Invalid argument.  Arguments are not comparable.
 %%% PRIMITIVE USAGE: (<= expr1 expr2 &rest exprs)
 ==>
@@ -1123,6 +1186,9 @@
 >>> ;;; greater-equal with incomparable types
 ... (>= "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (>= "a" 1)
+%%%  ^
 %%% ERROR '>=': Invalid argument.  Arguments are not comparable.
 %%% PRIMITIVE USAGE: (>= expr1 expr2 &rest exprs)
 ==>
@@ -1132,14 +1198,20 @@
 >>> ;;; atom with no arguments
 ... (atom)
 
-%%% ERROR 'ATOM': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (atom)
+%%%  ^
+%%% ERROR 'ATOM': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (ATOM sexpr)
 ==>
 
 >>> ;;; atom with too many arguments
 ... (atom 1 2)
 
-%%% ERROR 'ATOM': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (atom 1 2)
+%%%  ^
+%%% ERROR 'ATOM': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (ATOM sexpr)
 ==>
 
@@ -1148,21 +1220,30 @@
 >>> ;;; is? with no arguments
 ... (is?)
 
-%%% ERROR 'EQ': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (is?)
+%%%  ^
+%%% ERROR 'EQ': 0 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (EQ a b)
 ==>
 
 >>> ;;; is? with one argument
 ... (is? 1)
 
-%%% ERROR 'EQ': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (is? 1)
+%%%  ^
+%%% ERROR 'EQ': 1 argument provided; 2 expected.
 %%% PRIMITIVE USAGE: (EQ a b)
 ==>
 
 >>> ;;; is? with too many arguments
 ... (is? 1 2 3)
 
-%%% ERROR 'EQ': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (is? 1 2 3)
+%%%  ^
+%%% ERROR 'EQ': 3 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (EQ a b)
 ==>
 
@@ -1171,36 +1252,51 @@
 >>> ;;; evenp with no arguments
 ... (evenp)
 
+%%% Runtime Error: "" (2,2)
+%%% (evenp)
+%%%  ^
 %%% Error binding arguments in call to function "EVENP".
-%%% Too few positional arguments.
+%%% Too few arguments.  0 arguments provided; 1 expected.
 ==>
 
 >>> ;;; oddp with no arguments
 ... (oddp)
 
+%%% Runtime Error: "" (2,2)
+%%% (oddp)
+%%%  ^
 %%% Error binding arguments in call to function "ODDP".
-%%% Too few positional arguments.
+%%% Too few arguments.  0 arguments provided; 1 expected.
 ==>
 
 >>> ;;; zerop with no arguments
 ... (zerop)
 
+%%% Runtime Error: "" (2,2)
+%%% (zerop)
+%%%  ^
 %%% Error binding arguments in call to function "ZEROP".
-%%% Too few positional arguments.
+%%% Too few arguments.  0 arguments provided; 1 expected.
 ==>
 
 >>> ;;; minusp with no arguments
 ... (minusp)
 
+%%% Runtime Error: "" (2,2)
+%%% (minusp)
+%%%  ^
 %%% Error binding arguments in call to function "MINUSP".
-%%% Too few positional arguments.
+%%% Too few arguments.  0 arguments provided; 1 expected.
 ==>
 
 >>> ;;; plusp with no arguments
 ... (plusp)
 
+%%% Runtime Error: "" (2,2)
+%%% (plusp)
+%%%  ^
 %%% Error binding arguments in call to function "PLUSP".
-%%% Too few positional arguments.
+%%% Too few arguments.  0 arguments provided; 1 expected.
 ==>
 
 ; ============================================================
@@ -1320,13 +1416,19 @@
 >>> ;;; Error: not requires exactly one argument
 ... (not)
 
-%%% ERROR 'NOT': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (not)
+%%%  ^
+%%% ERROR 'NOT': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (NOT object)
 ==>
 
 >>> (not 1 2)
 
-%%% ERROR 'NOT': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (not 1 2)
+%%%  ^
+%%% ERROR 'NOT': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (NOT object)
 ==>
 

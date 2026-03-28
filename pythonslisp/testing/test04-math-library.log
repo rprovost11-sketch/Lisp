@@ -249,6 +249,9 @@
 >>> ;;; Error: non-numeric argument to +
 ... (+ "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (+ "a" 1)
+%%%  ^
 %%% ERROR '+': Invalid argument.
 %%% PRIMITIVE USAGE: (+ &rest numbers)
 ==>
@@ -274,6 +277,9 @@
 >>> ;;; Error: division by zero
 ... (/ 1 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (/ 1 0)
+%%%  ^
 %%% ERROR '/': division by zero
 %%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
@@ -281,7 +287,10 @@
 >>> ;;; Error: atan with no arguments
 ... (atan)
 
-%%% ERROR 'ATAN': 1 or 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (atan)
+%%%  ^
+%%% ERROR 'ATAN': 0 arguments provided; 1 or 2 expected.
 %%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
 ==>
 
@@ -703,11 +712,17 @@
 >>> ;;; evenp type error on float
 ... (evenp 2.0)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\math.lisp" (39,8)
+%%%       (error "evenp: argument must be an integer")
+%%%        ^
 %%% evenp: argument must be an integer
 
 >>> ;;; oddp type error on float
 ... (oddp 3.0)
 
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\math.lisp" (45,8)
+%%%       (error "oddp: argument must be an integer")
+%%%        ^
 %%% oddp: argument must be an integer
 
 >>> ;;; zerop float zero
@@ -740,6 +755,9 @@
 >>> ;;; asin out of domain
 ... (asin 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (asin 2)
+%%%  ^
 %%% ERROR 'ASIN': Invalid argument.
 %%% PRIMITIVE USAGE: (ASIN number)
 ==>
@@ -747,6 +765,9 @@
 >>> ;;; acos out of domain
 ... (acos 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (acos 2)
+%%%  ^
 %%% ERROR 'ACOS': Invalid argument.
 %%% PRIMITIVE USAGE: (ACOS number)
 ==>
@@ -756,42 +777,60 @@
 >>> ;;; sin with no arguments
 ... (sin)
 
-%%% ERROR 'SIN': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (sin)
+%%%  ^
+%%% ERROR 'SIN': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (SIN radians)
 ==>
 
 >>> ;;; sin with too many arguments
 ... (sin 1 2)
 
-%%% ERROR 'SIN': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (sin 1 2)
+%%%  ^
+%%% ERROR 'SIN': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (SIN radians)
 ==>
 
 >>> ;;; cos with no arguments
 ... (cos)
 
-%%% ERROR 'COS': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (cos)
+%%%  ^
+%%% ERROR 'COS': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (COS radians)
 ==>
 
 >>> ;;; cos with too many arguments
 ... (cos 1 2)
 
-%%% ERROR 'COS': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (cos 1 2)
+%%%  ^
+%%% ERROR 'COS': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (COS radians)
 ==>
 
 >>> ;;; asin with no arguments
 ... (asin)
 
-%%% ERROR 'ASIN': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (asin)
+%%%  ^
+%%% ERROR 'ASIN': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (ASIN number)
 ==>
 
 >>> ;;; acos with no arguments
 ... (acos)
 
-%%% ERROR 'ACOS': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (acos)
+%%%  ^
+%%% ERROR 'ACOS': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (ACOS number)
 ==>
 
@@ -800,6 +839,9 @@
 >>> ;;; cos with non-number
 ... (cos "a")
 
+%%% Runtime Error: "" (2,2)
+%%% (cos "a")
+%%%  ^
 %%% ERROR 'COS': Invalid argument.
 %%% PRIMITIVE USAGE: (COS radians)
 ==>
@@ -807,6 +849,9 @@
 >>> ;;; sin with non-number
 ... (sin "a")
 
+%%% Runtime Error: "" (2,2)
+%%% (sin "a")
+%%%  ^
 %%% ERROR 'SIN': Invalid argument.
 %%% PRIMITIVE USAGE: (SIN radians)
 ==>
@@ -816,20 +861,29 @@
 >>> ;;; integer division with too many arguments
 ... (// 1 2 3)
 
-%%% ERROR '//': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (// 1 2 3)
+%%%  ^
+%%% ERROR '//': 3 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
 
 >>> ;;; modulo with too many arguments
 ... (mod 1 2 3)
 
-%%% ERROR 'MOD': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (mod 1 2 3)
+%%%  ^
+%%% ERROR 'MOD': 3 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (MOD number divisor)
 ==>
 
 >>> ;;; rem by zero
 ... (rem 7 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (rem 7 0)
+%%%  ^
 %%% ERROR 'REM': division by zero
 %%% PRIMITIVE USAGE: (REM number divisor)
 ==>
@@ -837,6 +891,9 @@
 >>> ;;; rem with non-number
 ... (rem "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (rem "a" 2)
+%%%  ^
 %%% ERROR 'REM': Invalid argument.
 %%% PRIMITIVE USAGE: (REM number divisor)
 ==>
@@ -844,13 +901,19 @@
 >>> ;;; rem with too many arguments
 ... (rem 1 2 3)
 
-%%% ERROR 'REM': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (rem 1 2 3)
+%%%  ^
+%%% ERROR 'REM': 3 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (REM number divisor)
 ==>
 
 >>> ;;; gcd with non-number
 ... (gcd "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (gcd "a" 2)
+%%%  ^
 %%% ERROR 'GCD': Invalid argument.
 %%% PRIMITIVE USAGE: (GCD &rest integers)
 ==>
@@ -858,6 +921,9 @@
 >>> ;;; lcm with non-number
 ... (lcm "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (lcm "a" 2)
+%%%  ^
 %%% ERROR 'LCM': Invalid argument.
 %%% PRIMITIVE USAGE: (LCM &rest integers)
 ==>
@@ -865,6 +931,9 @@
 >>> ;;; min with non-number
 ... (min "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (min "a" 1)
+%%%  ^
 %%% ERROR 'MIN': Invalid argument.
 %%% PRIMITIVE USAGE: (MIN &rest numbers)
 ==>
@@ -872,6 +941,9 @@
 >>> ;;; max with non-number
 ... (max "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (max "a" 1)
+%%%  ^
 %%% ERROR 'MAX': Invalid argument.
 %%% PRIMITIVE USAGE: (MAX &rest numbers)
 ==>
@@ -879,6 +951,9 @@
 >>> ;;; expt with non-number base
 ... (expt "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (expt "a" 2)
+%%%  ^
 %%% ERROR 'EXPT': Invalid argument type.  Arguments expected to be numbers.
 %%% PRIMITIVE USAGE: (EXPT base power)
 ==>
@@ -886,34 +961,49 @@
 >>> ;;; expt with no arguments
 ... (expt)
 
-%%% ERROR 'EXPT': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (expt)
+%%%  ^
+%%% ERROR 'EXPT': 0 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (EXPT base power)
 ==>
 
 >>> ;;; expt with three arguments
 ... (expt 1 2 3)
 
-%%% ERROR 'EXPT': 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (expt 1 2 3)
+%%%  ^
+%%% ERROR 'EXPT': 3 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (EXPT base power)
 ==>
 
 >>> ;;; log with no arguments
 ... (log)
 
-%%% ERROR 'LOG': 1 or 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (log)
+%%%  ^
+%%% ERROR 'LOG': 0 arguments provided; 1 or 2 expected.
 %%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; log with too many arguments
 ... (log 1 2 3)
 
-%%% ERROR 'LOG': 1 or 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (log 1 2 3)
+%%%  ^
+%%% ERROR 'LOG': 3 arguments provided; 1 or 2 expected.
 %%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; log with non-number
 ... (log "a")
 
+%%% Runtime Error: "" (2,2)
+%%% (log "a")
+%%%  ^
 %%% ERROR 'LOG': Invalid argument.
 %%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
@@ -969,6 +1059,9 @@
 >>> ;;; random of 0 is an error (must be positive)
 ... (random 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (random 0)
+%%%  ^
 %%% ERROR 'RANDOM': Argument expected to be positive.
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
@@ -976,6 +1069,9 @@
 >>> ;;; random of 0.0 is an error (must be positive)
 ... (random 0.0)
 
+%%% Runtime Error: "" (2,2)
+%%% (random 0.0)
+%%%  ^
 %%% ERROR 'RANDOM': Argument expected to be positive.
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
@@ -985,27 +1081,39 @@
 >>> ;;; (*) with no args
 ... (*)
 
-%%% ERROR '*': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (*)
+%%%  ^
+%%% ERROR '*': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (* number &rest numbers)
 ==>
 
 >>> ;;; (-) with no args
 ... (-)
 
-%%% ERROR '-': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (-)
+%%%  ^
+%%% ERROR '-': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (- number &rest numbers)
 ==>
 
 >>> ;;; (/) with no args
 ... (/)
 
-%%% ERROR '/': At least 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (/)
+%%%  ^
+%%% ERROR '/': 0 arguments provided; at least 1 expected.
 %%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
 
 >>> ;;; integer division by zero
 ... (// 7 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (// 7 0)
+%%%  ^
 %%% ERROR '//': division by zero
 %%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
@@ -1013,6 +1121,9 @@
 >>> ;;; modulo by zero
 ... (mod 7 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (mod 7 0)
+%%%  ^
 %%% ERROR 'MOD': division by zero
 %%% PRIMITIVE USAGE: (MOD number divisor)
 ==>
@@ -1020,6 +1131,9 @@
 >>> ;;; integer division with non-number
 ... (// "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (// "a" 2)
+%%%  ^
 %%% ERROR '//': Invalid argument.
 %%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
@@ -1027,6 +1141,9 @@
 >>> ;;; modulo with non-number
 ... (mod "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (mod "a" 2)
+%%%  ^
 %%% ERROR 'MOD': Invalid argument.
 %%% PRIMITIVE USAGE: (MOD number divisor)
 ==>
@@ -1034,6 +1151,9 @@
 >>> ;;; negation of non-number
 ... (- "a")
 
+%%% Runtime Error: "" (2,2)
+%%% (- "a")
+%%%  ^
 %%% ERROR '-': Invalid argument.
 %%% PRIMITIVE USAGE: (- number &rest numbers)
 ==>
@@ -1041,6 +1161,9 @@
 >>> ;;; division with non-number
 ... (/ "a" 2)
 
+%%% Runtime Error: "" (2,2)
+%%% (/ "a" 2)
+%%%  ^
 %%% ERROR '/': Invalid argument.
 %%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
@@ -1048,6 +1171,9 @@
 >>> ;;; min with no args
 ... (min)
 
+%%% Runtime Error: "" (2,2)
+%%% (min)
+%%%  ^
 %%% ERROR 'MIN': Invalid argument.
 %%% PRIMITIVE USAGE: (MIN &rest numbers)
 ==>
@@ -1055,6 +1181,9 @@
 >>> ;;; max with no args
 ... (max)
 
+%%% Runtime Error: "" (2,2)
+%%% (max)
+%%%  ^
 %%% ERROR 'MAX': Invalid argument.
 %%% PRIMITIVE USAGE: (MAX &rest numbers)
 ==>
@@ -1064,6 +1193,9 @@
 >>> ;;; random with negative
 ... (random -1)
 
+%%% Runtime Error: "" (2,2)
+%%% (random -1)
+%%%  ^
 %%% ERROR 'RANDOM': Argument expected to be positive.
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
@@ -1071,6 +1203,9 @@
 >>> ;;; random with string
 ... (random "a")
 
+%%% Runtime Error: "" (2,2)
+%%% (random "a")
+%%%  ^
 %%% ERROR 'RANDOM': Invalid argument type.
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
@@ -1078,20 +1213,29 @@
 >>> ;;; random with no args
 ... (random)
 
-%%% ERROR 'RANDOM': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (random)
+%%%  ^
+%%% ERROR 'RANDOM': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random with too many args
 ... (random 1 2)
 
-%%% ERROR 'RANDOM': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (random 1 2)
+%%%  ^
+%%% ERROR 'RANDOM': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; integer from invalid string
 ... (integer "hello")
 
+%%% Runtime Error: "" (2,2)
+%%% (integer "hello")
+%%%  ^
 %%% ERROR 'INTEGER': Invalid argument.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>
@@ -1101,34 +1245,49 @@
 >>> ;;; float with no arguments
 ... (float)
 
-%%% ERROR 'FLOAT': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (float)
+%%%  ^
+%%% ERROR 'FLOAT': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
 >>> ;;; float with too many arguments
 ... (float 1 2)
 
-%%% ERROR 'FLOAT': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (float 1 2)
+%%%  ^
+%%% ERROR 'FLOAT': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
 >>> ;;; integer with no arguments
 ... (integer)
 
-%%% ERROR 'INTEGER': 1 or 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (integer)
+%%%  ^
+%%% ERROR 'INTEGER': 0 arguments provided; 1 or 2 expected.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>
 
 >>> ;;; integer with too many arguments
 ... (integer 1 2 3)
 
-%%% ERROR 'INTEGER': 1 or 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (integer 1 2 3)
+%%%  ^
+%%% ERROR 'INTEGER': 3 arguments provided; 1 or 2 expected.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>
 
 >>> ;;; rational with non-number
 ... (rational "hello")
 
+%%% Runtime Error: "" (2,2)
+%%% (rational "hello")
+%%%  ^
 %%% ERROR 'RATIONAL': Invalid argument.
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>
@@ -1138,13 +1297,19 @@
 >>> ;;; atan with too many arguments
 ... (atan 1 2 3)
 
-%%% ERROR 'ATAN': 1 or 2 arguments expected.
+%%% Runtime Error: "" (2,2)
+%%% (atan 1 2 3)
+%%%  ^
+%%% ERROR 'ATAN': 3 arguments provided; 1 or 2 expected.
 %%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
 ==>
 
 >>> ;;; atan with non-number
 ... (atan "a")
 
+%%% Runtime Error: "" (2,2)
+%%% (atan "a")
+%%%  ^
 %%% ERROR 'ATAN': Invalid argument.
 %%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
 ==>
@@ -1154,14 +1319,20 @@
 >>> ;;; asin with too many arguments
 ... (asin 0 1)
 
-%%% ERROR 'ASIN': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (asin 0 1)
+%%%  ^
+%%% ERROR 'ASIN': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (ASIN number)
 ==>
 
 >>> ;;; acos with too many arguments
 ... (acos 0 1)
 
-%%% ERROR 'ACOS': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (acos 0 1)
+%%%  ^
+%%% ERROR 'ACOS': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (ACOS number)
 ==>
 
@@ -1170,6 +1341,9 @@
 >>> ;;; division zero by zero
 ... (/ 0 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (/ 0 0)
+%%%  ^
 %%% ERROR '/': division by zero
 %%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
@@ -1179,6 +1353,9 @@
 >>> ;;; log of zero is domain error
 ... (log 0)
 
+%%% Runtime Error: "" (2,2)
+%%% (log 0)
+%%%  ^
 %%% ERROR 'LOG': Invalid argument.
 %%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
@@ -1186,6 +1363,9 @@
 >>> ;;; log of negative is domain error
 ... (log -1)
 
+%%% Runtime Error: "" (2,2)
+%%% (log -1)
+%%%  ^
 %%% ERROR 'LOG': Invalid argument.
 %%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
@@ -1195,6 +1375,9 @@
 >>> ;;; float on list (non-numeric)
 ... (float (list 1))
 
+%%% Runtime Error: "" (2,9)
+%%% (float (list 1))
+%%%         ^
 %%% ERROR 'FLOAT': Invalid argument.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
@@ -1202,6 +1385,9 @@
 >>> ;;; rational on list (non-numeric)
 ... (rational (list 1))
 
+%%% Runtime Error: "" (2,12)
+%%% (rational (list 1))
+%%%            ^
 %%% ERROR 'RATIONAL': Invalid argument.
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>

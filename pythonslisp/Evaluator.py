@@ -24,7 +24,7 @@ from typing import Any
 
 from pythonslisp.AST import ( LSymbol, L_NIL, L_T,
                                LCallable, LFunction, LPrimitive, LMacro, LContinuation,
-                               LMultipleValues, eql, prettyPrintSExpr )
+                               LMultipleValues, LList, eql, prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LArgBindingError,
                                       ContinuationInvoked, ReturnFrom,
                                       Thrown, Signaled )
@@ -915,6 +915,7 @@ def cek_eval( ctx, env, expr ) -> Any:
    C = expr
    E = env
    K = []
+   _last_call_form = None   # most recent non-special function call form; used for error annotation
 
    while True:
       try:
@@ -957,6 +958,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          headStr = head.name if type(head) is LSymbol else None
 
          if headStr not in _SPECIAL_OPERATOR_SET:
+            _last_call_form = C   # capture before C is overwritten; used by error handler
             K.append( ArgFrame(None, list(C[1:]), [], E, 'call') )
             C = C[0]
             continue
@@ -1277,6 +1279,9 @@ def cek_eval( ctx, env, expr ) -> Any:
          continue
 
       except LRuntimeError as e:
+         if e.source_info is None and isinstance( _last_call_form, LList ) and _last_call_form.has_source_info():
+            e.source_info = ( _last_call_form.filename, _last_call_form.line_num,
+                               _last_call_form.col_num, _last_call_form.source_line )
          handler_idx   = None
          handler_frame = None
          for i in reversed(range(len(K))):
@@ -1292,7 +1297,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
          del K[handler_idx:]
          new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
-         cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': str(e)}
+         cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': e.args[0] if e.args else ''}
          if var is not None:
             new_env.bindLocal(var.name, cond)
          C, E = _eval_body(body, new_env, K)

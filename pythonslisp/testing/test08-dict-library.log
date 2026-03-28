@@ -181,6 +181,9 @@
 ; error: argument is a list
 >>> (dict-keys '(1 2 3))
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-keys '(1 2 3))
+%%%  ^
 %%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
@@ -188,6 +191,9 @@
 ; error: argument is an integer
 >>> (dict-keys 42)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-keys 42)
+%%%  ^
 %%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
@@ -195,6 +201,9 @@
 ; error: argument is a string
 >>> (dict-keys "hello")
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-keys "hello")
+%%%  ^
 %%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
@@ -202,6 +211,9 @@
 ; error: argument is NIL
 >>> (dict-keys nil)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-keys nil)
+%%%  ^
 %%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
@@ -209,14 +221,20 @@
 ; error: too few arguments
 >>> (dict-keys)
 
-%%% ERROR 'DICT-KEYS': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-keys)
+%%%  ^
+%%% ERROR 'DICT-KEYS': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
 
 ; error: too many arguments
 >>> (dict-keys d1 d1)
 
-%%% ERROR 'DICT-KEYS': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-keys d1 d1)
+%%%  ^
+%%% ERROR 'DICT-KEYS': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
 
@@ -227,6 +245,9 @@
 ; error: argument is a list
 >>> (dict-values '(1 2 3))
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-values '(1 2 3))
+%%%  ^
 %%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
@@ -234,6 +255,9 @@
 ; error: argument is an integer
 >>> (dict-values 42)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-values 42)
+%%%  ^
 %%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
@@ -241,6 +265,9 @@
 ; error: argument is NIL
 >>> (dict-values nil)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-values nil)
+%%%  ^
 %%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
@@ -248,14 +275,20 @@
 ; error: too few arguments
 >>> (dict-values)
 
-%%% ERROR 'DICT-VALUES': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-values)
+%%%  ^
+%%% ERROR 'DICT-VALUES': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
 
 ; error: too many arguments
 >>> (dict-values d1 d1)
 
-%%% ERROR 'DICT-VALUES': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-values d1 d1)
+%%%  ^
+%%% ERROR 'DICT-VALUES': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
 
@@ -266,6 +299,9 @@
 ; error: argument is a list
 >>> (dict-pairs '(1 2 3))
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-pairs '(1 2 3))
+%%%  ^
 %%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
@@ -273,6 +309,9 @@
 ; error: argument is an integer
 >>> (dict-pairs 42)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-pairs 42)
+%%%  ^
 %%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
@@ -280,6 +319,9 @@
 ; error: argument is a string
 >>> (dict-pairs "hello")
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-pairs "hello")
+%%%  ^
 %%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
@@ -287,6 +329,9 @@
 ; error: argument is NIL
 >>> (dict-pairs nil)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-pairs nil)
+%%%  ^
 %%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
@@ -294,14 +339,20 @@
 ; error: too few arguments
 >>> (dict-pairs)
 
-%%% ERROR 'DICT-PAIRS': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-pairs)
+%%%  ^
+%%% ERROR 'DICT-PAIRS': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
 
 ; error: too many arguments
 >>> (dict-pairs d1 d1)
 
-%%% ERROR 'DICT-PAIRS': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-pairs d1 d1)
+%%%  ^
+%%% ERROR 'DICT-PAIRS': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
 
@@ -329,6 +380,9 @@
 ; error: argument is a list
 >>> (dict-length '(1 2 3))
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-length '(1 2 3))
+%%%  ^
 %%% ERROR 'DICT-LENGTH': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>
@@ -336,6 +390,9 @@
 ; error: argument is NIL
 >>> (dict-length nil)
 
+%%% Runtime Error: "" (1,2)
+%%% (dict-length nil)
+%%%  ^
 %%% ERROR 'DICT-LENGTH': Argument 1 must be a Dict.
 %%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>
@@ -343,14 +400,20 @@
 ; error: too few arguments
 >>> (dict-length)
 
-%%% ERROR 'DICT-LENGTH': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-length)
+%%%  ^
+%%% ERROR 'DICT-LENGTH': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>
 
 ; error: too many arguments
 >>> (dict-length d1 d1)
 
-%%% ERROR 'DICT-LENGTH': 1 argument expected.
+%%% Runtime Error: "" (1,2)
+%%% (dict-length d1 d1)
+%%%  ^
+%%% ERROR 'DICT-LENGTH': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>
 
@@ -649,39 +712,57 @@
 
 >>> (has-value-p)
 
-%%% ERROR 'HAS-VALUE-P': 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (has-value-p)
+%%%  ^
+%%% ERROR 'HAS-VALUE-P': 0 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
 >>> ;;; has-value-p on non-collection
 ... (has-value-p 2 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (has-value-p 2 1)
+%%%  ^
 %%% ERROR 'HAS-VALUE-P': Invalid argument.  Argument 2 expected to be a list or dict.
 %%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
 >>> (has-key-p)
 
-%%% ERROR 'HAS-KEY-P': 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (has-key-p)
+%%%  ^
+%%% ERROR 'HAS-KEY-P': 0 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
 ==>
 
 >>> ;;; has-key-p with non-map second arg
 ... (has-key-p "a" 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (has-key-p "a" 1)
+%%%  ^
 %%% ERROR 'HAS-KEY-P': Invalid argument 2.  Dict expected.
 %%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
 ==>
 
 >>> (update!)
 
-%%% ERROR 'UPDATE!': 2 arguments expected.
+%%% Runtime Error: "" (1,2)
+%%% (update!)
+%%%  ^
+%%% ERROR 'UPDATE!': 0 arguments provided; 2 expected.
 %%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
 
 >>> ;;; update! with non-map first arg
 ... (update! 1 (make-dict))
 
+%%% Runtime Error: "" (2,2)
+%%% (update! 1 (make-dict))
+%%%  ^
 %%% ERROR 'UPDATE!': Argument 1 expected to be a dict.
 %%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
@@ -689,6 +770,9 @@
 >>> ;;; update! with non-map second arg
 ... (update! (make-dict) 1)
 
+%%% Runtime Error: "" (2,2)
+%%% (update! (make-dict) 1)
+%%%  ^
 %%% ERROR 'UPDATE!': Argument 2 expected to be a dict.
 %%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
@@ -698,6 +782,9 @@
 >>> ;;; make-dict with mixed key types
 ... (make-dict (a 1) (2 2))
 
+%%% Runtime Error: "" (2,2)
+%%% (make-dict (a 1) (2 2))
+%%%  ^
 %%% ERROR 'MAKE-DICT': All keys in a map must be the same type. Entry 2 is int, expected str.
 %%% PRIMITIVE USAGE: (MAKE-DICT (key1 val1) (key2 val2) ...)
 ==>
@@ -705,6 +792,9 @@
 >>> ;;; make-dict entry with single element (not a pair)
 ... (make-dict (1))
 
+%%% Runtime Error: "" (2,2)
+%%% (make-dict (1))
+%%%  ^
 %%% ERROR 'MAKE-DICT': Entry 1 does not contain a (key value) pair.
 %%% PRIMITIVE USAGE: (MAKE-DICT (key1 val1) (key2 val2) ...)
 ==>
@@ -712,6 +802,9 @@
 >>> ;;; make-dict with list as key
 ... (make-dict ('(1) 2))
 
+%%% Runtime Error: "" (2,2)
+%%% (make-dict ('(1) 2))
+%%%  ^
 %%% ERROR 'MAKE-DICT': Entry 1 has an invalid key type.
 %%% PRIMITIVE USAGE: (MAKE-DICT (key1 val1) (key2 val2) ...)
 ==>
@@ -721,14 +814,20 @@
 >>> ;;; dictp with no arguments
 ... (dictp)
 
-%%% ERROR 'DICTP': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (dictp)
+%%%  ^
+%%% ERROR 'DICTP': 0 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICTP sexpr)
 ==>
 
 >>> ;;; dictp with too many arguments
 ... (dictp 1 2)
 
-%%% ERROR 'DICTP': 1 argument expected.
+%%% Runtime Error: "" (2,2)
+%%% (dictp 1 2)
+%%%  ^
+%%% ERROR 'DICTP': 2 arguments provided; 1 expected.
 %%% PRIMITIVE USAGE: (DICTP sexpr)
 ==>
 
@@ -737,6 +836,9 @@
 >>> ;;; at with missing key on map
 ... (at 'missing (make-dict (a 1)))
 
+%%% Runtime Error: "" (2,2)
+%%% (at 'missing (make-dict (a 1)))
+%%%  ^
 %%% ERROR 'AT': Invalid argument key/index.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
@@ -744,6 +846,9 @@
 >>> ;;; at-delete missing key on map
 ... (at-delete 'missing (make-dict (a 1)))
 
+%%% Runtime Error: "" (2,2)
+%%% (at-delete 'missing (make-dict (a 1)))
+%%%  ^
 %%% ERROR 'AT-DELETE': Bad index or key into collection.
 %%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>

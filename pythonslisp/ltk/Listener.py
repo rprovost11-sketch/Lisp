@@ -135,7 +135,7 @@ class Listener( object ):
                self._writeErrorMsg( ex.args[-1] if ex.args else str(ex) )
 
             except Exception as ex:   # Unknowns raised by the interpreter
-               self._writeErrorMsg( ex.args[-1] if ex.args else str(ex) )
+               self._writeErrorMsg( str(ex) if ex.args else '' )
                #exceptInfo = sys.exc_info( )
                #sys.excepthook( *exceptInfo )
 
@@ -207,7 +207,7 @@ class Listener( object ):
          except ParserBase.ParseError as ex:
             actualErrorStr = ex.args[-1] if ex.args else str(ex)
          except Exception as ex:   # Unknowns raised by the interpreter
-            actualErrorStr = ex.args[-1] if ex.args else str(ex)
+            actualErrorStr = str(ex) if ex.args else ''
          
          actualOutputStr = outputStream.getvalue().strip()
 
@@ -522,12 +522,13 @@ class Listener( object ):
       try:
          for filename in filenameList:
             self._interp.reboot( outStrm=outStrm )
+            # Do not merge these two print statements.
+            print( f'{os.path.basename(filename):40} ', end='', flush=True, file=savedStdout )
             testResultMsg, numTestsRunThisFile = self.sessionLog_test( filename, verbosity=3 )
+            resultColor = GREEN if 'TESTS PASSED!' in testResultMsg else RED
+            print( f'{resultColor}{testResultMsg}{RESET}', file=savedStdout, flush=True )
             testSummaryList.append( (filename, testResultMsg) )
             totalTestsRun += numTestsRunThisFile
-            resultColor = GREEN if 'TESTS PASSED!' in testResultMsg else RED
-            print( f'{os.path.basename(filename):40} {resultColor}{testResultMsg}{RESET}',
-                   file=savedStdout, flush=True )
       finally:
          sys.stdout = savedStdout
       self._interp.reboot( outStrm=outStrm )
