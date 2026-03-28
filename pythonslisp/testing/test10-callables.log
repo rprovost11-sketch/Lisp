@@ -692,7 +692,8 @@
 %%% (param-test-posit 1)
 %%%  ^
 %%% Error binding arguments in call to function "PARAM-TEST-POSIT".
-%%% Too few arguments.  1 argument provided; 2 expected.
+%%% 1 argument provided; 2 expected.
+%%% FUNCTION USAGE: (PARAM-TEST-POSIT A B)
 ==>
 
 >>> (param-test-posit 1 2 3)
@@ -701,7 +702,8 @@
 %%% (param-test-posit 1 2 3)
 %%%  ^
 %%% Error binding arguments in call to function "PARAM-TEST-POSIT".
-%%% Too many arguments.  3 arguments provided; 2 expected.
+%%% 3 arguments provided; 2 expected.
+%%% FUNCTION USAGE: (PARAM-TEST-POSIT A B)
 ==>
 
 >>> ;;; Fix 1: bare (var) spec with no default in &key

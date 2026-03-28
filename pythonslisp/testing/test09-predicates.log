@@ -1256,7 +1256,8 @@
 %%% (evenp)
 %%%  ^
 %%% Error binding arguments in call to function "EVENP".
-%%% Too few arguments.  0 arguments provided; 1 expected.
+%%% 0 arguments provided; 1 expected.
+%%% FUNCTION USAGE: (EVENP INTVAL)
 ==>
 
 >>> ;;; oddp with no arguments
@@ -1266,7 +1267,8 @@
 %%% (oddp)
 %%%  ^
 %%% Error binding arguments in call to function "ODDP".
-%%% Too few arguments.  0 arguments provided; 1 expected.
+%%% 0 arguments provided; 1 expected.
+%%% FUNCTION USAGE: (ODDP INTVAL)
 ==>
 
 >>> ;;; zerop with no arguments
@@ -1276,7 +1278,8 @@
 %%% (zerop)
 %%%  ^
 %%% Error binding arguments in call to function "ZEROP".
-%%% Too few arguments.  0 arguments provided; 1 expected.
+%%% 0 arguments provided; 1 expected.
+%%% FUNCTION USAGE: (ZEROP NUMVAL)
 ==>
 
 >>> ;;; minusp with no arguments
@@ -1286,7 +1289,8 @@
 %%% (minusp)
 %%%  ^
 %%% Error binding arguments in call to function "MINUSP".
-%%% Too few arguments.  0 arguments provided; 1 expected.
+%%% 0 arguments provided; 1 expected.
+%%% FUNCTION USAGE: (MINUSP NUMVAL)
 ==>
 
 >>> ;;; plusp with no arguments
@@ -1296,7 +1300,8 @@
 %%% (plusp)
 %%%  ^
 %%% Error binding arguments in call to function "PLUSP".
-%%% Too few arguments.  0 arguments provided; 1 expected.
+%%% 0 arguments provided; 1 expected.
+%%% FUNCTION USAGE: (PLUSP NUMVAL)
 ==>
 
 ; ============================================================

@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LPrimitive, LList, arity_mismatch_msg
+from pythonslisp.AST import LSymbol, LPrimitive, LFunction, LList, arity_mismatch_msg, derive_arity
 from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
                                          LRuntimeError,
                                          LRuntimePrimError )
@@ -162,7 +162,7 @@ class Analyzer:
          return
 
       # ---------- Everything else (regular calls, unknown special forms) ---
-      # Generic arity check for primitives that carry arity metadata.
+      # Generic arity check for primitives and functions.
       if isinstance(head, LSymbol):
          try:
             callableObj = env.lookup(head.name)
@@ -174,6 +174,17 @@ class Analyzer:
                   if tooFew or tooMany:
                      raise LRuntimePrimError(callableObj,
                         arity_mismatch_msg(callableObj.min_args, callableObj.max_args, numArgs))
+            elif isinstance(callableObj, LFunction):
+               min_a, max_a = derive_arity(callableObj.lambdaListAST)
+               numArgs = len(args)
+               tooFew  = numArgs < min_a
+               tooMany = max_a is not None and numArgs > max_a
+               if tooFew or tooMany:
+                  fnName = callableObj.name if callableObj.name else '(lambda ...)'
+                  msg    = arity_mismatch_msg(min_a, max_a, numArgs)
+                  usage  = callableObj.usageString()
+                  raise LRuntimeError(
+                     f'Error binding arguments in call to function "{fnName}".\n{msg}\n{usage}')
          except KeyError:
             pass
       for elt in sexpr:
