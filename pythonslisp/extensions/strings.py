@@ -13,14 +13,14 @@ from pythonslisp.AST import prettyPrint, prettyPrintSExpr
 def LP_string_upcase( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a copy of string with all characters converted to uppercase."""
    if not isinstance( args[0], str ):
-      raise LRuntimePrimError( LP_string_upcase, 'Argument 1 must be a String.' )
+      raise LRuntimePrimError( LP_string_upcase, 'Invalid argument 1. STRING expected.' )
    return args[0].upper()
 
 @primitive( 'string-downcase', '(string)' )
 def LP_string_downcase( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a copy of string with all characters converted to lowercase."""
    if not isinstance( args[0], str ):
-      raise LRuntimePrimError( LP_string_downcase, 'Argument 1 must be a String.' )
+      raise LRuntimePrimError( LP_string_downcase, 'Invalid argument 1. STRING expected.' )
    return args[0].lower()
 
 @primitive( 'string-trim', '(char-bag string)' )
@@ -28,9 +28,9 @@ def LP_string_trim( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Removes leading and trailing characters in char-bag from string."""
    charBag, s = args[0], args[1]
    if not isinstance( charBag, str ):
-      raise LRuntimePrimError( LP_string_trim, 'Argument 1 (char-bag) must be a String.' )
+      raise LRuntimePrimError( LP_string_trim, 'Invalid argument 1. STRING expected.' )
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_string_trim, 'Argument 2 must be a String.' )
+      raise LRuntimePrimError( LP_string_trim, 'Invalid argument 2. STRING expected.' )
    return s.strip( charBag )
 
 @primitive( 'string-left-trim', '(char-bag string)' )
@@ -38,9 +38,9 @@ def LP_string_left_trim( ctx: Context, env: Environment, args: list[Any] ) -> An
    """Removes leading characters in char-bag from string."""
    charBag, s = args[0], args[1]
    if not isinstance( charBag, str ):
-      raise LRuntimePrimError( LP_string_left_trim, 'Argument 1 (char-bag) must be a String.' )
+      raise LRuntimePrimError( LP_string_left_trim, 'Invalid argument 1. STRING expected.' )
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_string_left_trim, 'Argument 2 must be a String.' )
+      raise LRuntimePrimError( LP_string_left_trim, 'Invalid argument 2. STRING expected.' )
    return s.lstrip( charBag )
 
 @primitive( 'string-right-trim', '(char-bag string)' )
@@ -48,23 +48,23 @@ def LP_string_right_trim( ctx: Context, env: Environment, args: list[Any] ) -> A
    """Removes trailing characters in char-bag from string."""
    charBag, s = args[0], args[1]
    if not isinstance( charBag, str ):
-      raise LRuntimePrimError( LP_string_right_trim, 'Argument 1 (char-bag) must be a String.' )
+      raise LRuntimePrimError( LP_string_right_trim, 'Invalid argument 1. STRING expected.' )
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_string_right_trim, 'Argument 2 must be a String.' )
+      raise LRuntimePrimError( LP_string_right_trim, 'Invalid argument 2. STRING expected.' )
    return s.rstrip( charBag )
 
 @primitive( 'char-code', '(char)' )
 def LP_char_code( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the integer character code of a single-character string."""
    if not isinstance( args[0], str ) or len( args[0] ) != 1:
-      raise LRuntimePrimError( LP_char_code, 'Argument 1 must be a single-character String.' )
+      raise LRuntimePrimError( LP_char_code, 'Invalid argument 1. SINGLE-CHARACTER STRING expected.' )
    return ord( args[0] )
 
 @primitive( 'code-char', '(integer)' )
 def LP_code_char( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the single-character string corresponding to an integer character code."""
    if not isinstance( args[0], int ):
-      raise LRuntimePrimError( LP_code_char, 'Argument 1 must be an Integer.' )
+      raise LRuntimePrimError( LP_code_char, 'Invalid argument 1. INTEGER expected.' )
    return chr( args[0] )
 
 def _cl_capitalize( s: str ) -> str:
@@ -90,7 +90,7 @@ Optional :start and :end bound the region affected; text outside is unchanged.""
    start   = env.lookup( 'START' )
    end     = env.lookup( 'END' )
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_string_capitalize, '1st argument must be a string.' )
+      raise LRuntimePrimError( LP_string_capitalize, 'Invalid argument 1. STRING expected.' )
    start_n, end_n = _validate_bounds( start, end, len(s), LP_string_capitalize )
    prefix   = s[:start_n]
    middle   = s[start_n:end_n]
@@ -103,9 +103,9 @@ def LP_string_join( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 Each element is converted via prettyPrintSExpr, except strings which are
 used as-is (without surrounding quotes)."""
    if not isinstance( args[0], str ):
-      raise LRuntimePrimError( LP_string_join, 'Argument 1 (separator) must be a String.' )
+      raise LRuntimePrimError( LP_string_join, 'Invalid argument 1. STRING expected.' )
    if not isinstance( args[1], list ):
-      raise LRuntimePrimError( LP_string_join, 'Argument 2 must be a List.' )
+      raise LRuntimePrimError( LP_string_join, 'Invalid argument 2. LIST expected.' )
    parts = [ (elt if isinstance( elt, str ) else prettyPrint( elt ))
              for elt in args[1] ]
    return args[0].join( parts )
@@ -117,12 +117,12 @@ With no separator, splits on runs of whitespace (empty strings omitted).
 With a separator string, splits at every occurrence of that separator."""
    s = args[0]
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_string_split, 'Argument 1 must be a String.' )
+      raise LRuntimePrimError( LP_string_split, 'Invalid argument 1. STRING expected.' )
    if len(args) == 1:
       return s.split()
    sep = args[1]
    if not isinstance( sep, str ):
-      raise LRuntimePrimError( LP_string_split, 'Argument 2 (separator) must be a String.' )
+      raise LRuntimePrimError( LP_string_split, 'Invalid argument 2. STRING expected.' )
    return s.split( sep )
 
 @primitive( 'string-lines', '(string)' )
@@ -131,5 +131,5 @@ def LP_string_lines( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 stripped from each element.  An empty string returns NIL."""
    s = args[0]
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_string_lines, 'Argument 1 must be a String.' )
+      raise LRuntimePrimError( LP_string_lines, 'Invalid argument 1. STRING expected.' )
    return s.splitlines()

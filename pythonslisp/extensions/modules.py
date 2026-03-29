@@ -76,9 +76,9 @@ MODULE must be a module object.  SYMBOL must be a symbol naming the binding.
 Returns VALUE."""
    module, sym, value = args
    if not isinstance( module, ModuleEnvironment ):
-      raise LRuntimePrimError( LP_module_set, '1st argument must be a module.' )
+      raise LRuntimePrimError( LP_module_set, 'Invalid argument 1. MODULE expected.' )
    if not isinstance( sym, LSymbol ):
-      raise LRuntimePrimError( LP_module_set, '2nd argument must be a symbol.' )
+      raise LRuntimePrimError( LP_module_set, 'Invalid argument 2. SYMBOL expected.' )
    module._bindings[ sym.name ] = value
    return value
 
@@ -92,7 +92,7 @@ Returns the new module object."""
    filespec = env.lookup( 'FILESPEC' )
    name_arg = env.lookup( 'NAME' )
    if not isinstance( filespec, str ):
-      raise LRuntimePrimError( LP_load_module, 'filespec must be a string.' )
+      raise LRuntimePrimError( LP_load_module, 'Invalid argument 1. STRING FILE PATH expected.' )
    global_env = env.getGlobalEnv()
    # Determine module name and binding location from :name argument.
    # :name may be NIL, a symbol, a string, or a quoted (: ...) path form.
@@ -152,7 +152,7 @@ NAME may be a symbol or a string.  The module is bound in the global environment
       if not isinstance( sym, LSymbol ):
          raise LRuntimePrimError( LP_make_module, f'"{name_arg}" is not a valid module name.' )
    else:
-      raise LRuntimePrimError( LP_make_module, 'name must be a symbol or string.' )
+      raise LRuntimePrimError( LP_make_module, 'Invalid argument 1. SYMBOL or STRING expected.' )
    global_env = env.getGlobalEnv()
    module_env = ModuleEnvironment( name=module_name, parent=global_env, evalFn=ctx.lEval )
    env.bindGlobal( module_name, module_env )
@@ -163,7 +163,7 @@ def LP_module_name( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the name of a module as a string."""
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):
-      raise LRuntimePrimError( LP_module_name, 'argument must be a module.' )
+      raise LRuntimePrimError( LP_module_name, 'Invalid argument 1. MODULE expected.' )
    return module.name
 
 @primitive( 'module-symbols', '(module)' )
@@ -171,5 +171,5 @@ def LP_module_symbols( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a sorted list of symbols defined directly in the module."""
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):
-      raise LRuntimePrimError( LP_module_symbols, 'argument must be a module.' )
+      raise LRuntimePrimError( LP_module_symbols, 'Invalid argument 1. MODULE expected.' )
    return [ LSymbol(name) for name in sorted( module._bindings.keys() ) ]

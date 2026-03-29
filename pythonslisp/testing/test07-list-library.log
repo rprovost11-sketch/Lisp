@@ -109,7 +109,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (car 1)
 %%%  ^
-%%% ERROR 'CAR': 1st argument expected to be a list.
+%%% ERROR 'CAR': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (CAR list)
 ==>
 
@@ -118,7 +118,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (cdr "str")
 %%%  ^
-%%% ERROR 'CDR': 1st argument expected to be a list.
+%%% ERROR 'CDR': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (CDR list)
 ==>
 
@@ -150,7 +150,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (append 1 '(2 3))
 %%%  ^
-%%% ERROR 'APPEND': Invalid argument 1. List expected.
+%%% ERROR 'APPEND': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (APPEND &rest lists)
 ==>
 
@@ -170,7 +170,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (sort 1 <)
 %%%  ^
-%%% ERROR 'SORT': Argument 1 expected to be a list.
+%%% ERROR 'SORT': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (SORT sequence predicate &key (key nil))
 ==>
 
@@ -217,7 +217,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (subseq 42 0)
 %%%  ^
-%%% ERROR 'SUBSEQ': 1st argument must be a list or string.
+%%% ERROR 'SUBSEQ': Invalid argument 1. LIST or STRING expected.
 %%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
@@ -227,7 +227,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (subseq '(1 2 3) 1.0)
 %%%  ^
-%%% ERROR 'SUBSEQ': 2nd argument must be an integer.
+%%% ERROR 'SUBSEQ': Invalid argument 2. INTEGER expected.
 %%% PRIMITIVE USAGE: (SUBSEQ sequence start &optional end)
 ==>
 
@@ -1600,7 +1600,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-set 0 42 9)
 %%%  ^
-%%% ERROR 'AT-SET': Invalid argument 2. List or Dict expected.
+%%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1610,7 +1610,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-set 0 "abc" 9)
 %%%  ^
-%%% ERROR 'AT-SET': Invalid argument 2. List or Dict expected.
+%%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1684,7 +1684,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (push! 1 2)
 %%%  ^
-%%% ERROR 'PUSH!': 1st argument expected to be a list.
+%%% ERROR 'PUSH!': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (PUSH! list value)
 ==>
 
@@ -1694,7 +1694,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (pop! 1)
 %%%  ^
-%%% ERROR 'POP!': 1st argument expected to be a list.
+%%% ERROR 'POP!': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (POP! list)
 ==>
 
@@ -1704,7 +1704,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (pop! '())
 %%%  ^
-%%% ERROR 'POP!': Invalid argument 1. List is empty.
+%%% ERROR 'POP!': Invalid argument 1. NON-EMPTY LIST expected.
 %%% PRIMITIVE USAGE: (POP! list)
 ==>
 
@@ -1714,7 +1714,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (cons 1 2)
 %%%  ^
-%%% ERROR 'CONS': 2nd argument expected to be a list.
+%%% ERROR 'CONS': Invalid argument 2. LIST expected.
 %%% PRIMITIVE USAGE: (CONS obj list)
 ==>
 
@@ -1724,7 +1724,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-insert "a" '(1 2) 3)
 %%%  ^
-%%% ERROR 'AT-INSERT': Argument 1 expected to be an integer index.
+%%% ERROR 'AT-INSERT': Invalid argument 1. INTEGER INDEX expected.
 %%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
 ==>
 
@@ -1734,7 +1734,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-insert 0 1 3)
 %%%  ^
-%%% ERROR 'AT-INSERT': Argument 2 expected to be a list.
+%%% ERROR 'AT-INSERT': Invalid argument 2. LIST expected.
 %%% PRIMITIVE USAGE: (AT-INSERT index list newItem)
 ==>
 
@@ -1754,7 +1754,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-delete 5 '(1 2 3))
 %%%  ^
-%%% ERROR 'AT-DELETE': Bad index or key into collection.
+%%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.
 %%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
@@ -1764,7 +1764,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-delete 1 1)
 %%%  ^
-%%% ERROR 'AT-DELETE': Argument 2 expected to be a list or dict.
+%%% ERROR 'AT-DELETE': Invalid argument 2. LIST or DICT expected.
 %%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>
 
@@ -1950,7 +1950,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (append '(1) 2 '(3))
 %%%  ^
-%%% ERROR 'APPEND': Invalid argument 2. List expected.
+%%% ERROR 'APPEND': Invalid argument 2. LIST expected.
 %%% PRIMITIVE USAGE: (APPEND &rest lists)
 ==>
 
@@ -1962,7 +1962,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (sort 'abc <)
 %%%  ^
-%%% ERROR 'SORT': Argument 1 expected to be a list.
+%%% ERROR 'SORT': Invalid argument 1. LIST expected.
 %%% PRIMITIVE USAGE: (SORT sequence predicate &key (key nil))
 ==>
 
@@ -1974,6 +1974,6 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-delete 10 '(1 2))
 %%%  ^
-%%% ERROR 'AT-DELETE': Bad index or key into collection.
+%%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.
 %%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>

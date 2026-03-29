@@ -134,7 +134,7 @@ class Analyzer:
          if len(args) < 1:
             raise LRuntimePrimError(env.lookup('LAMBDA'), '1 or more arguments expected.')
          if not isinstance(args[0], list):
-            raise LRuntimePrimError(env.lookup('LAMBDA'), 'First argument expected to be a list of params.')
+            raise LRuntimePrimError(env.lookup('LAMBDA'), 'Invalid argument 1. PARAMETER LIST expected.')
          for bodyForm in args[1:]:
             Analyzer.analyze(env, bodyForm)
          return
@@ -144,9 +144,9 @@ class Analyzer:
          if len(args) < 2:
             raise LRuntimePrimError(env.lookup('DEFMACRO'), '3 or more arguments expected.')
          if not isinstance(args[0], LSymbol):
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Argument 1 expected to be a symbol.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Invalid argument 1. SYMBOL expected.')
          if not isinstance(args[1], list):
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Argument 2 expected to be a list of params.')
+            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Invalid argument 2. PARAMETER LIST expected.')
          funcBody = list(args[2:])
          if len(funcBody) < 1:
             raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
@@ -203,7 +203,7 @@ class Analyzer:
 
       if not isinstance(vardefs, list):
          raise LRuntimePrimError(env.lookup(name),
-               'The first argument to let expected to be a list of variable initializations.')
+               'Invalid argument 1. LIST OF VARIABLE BINDINGS expected.')
 
       for varSpec in vardefs:
          if isinstance(varSpec, LSymbol):
@@ -213,12 +213,12 @@ class Analyzer:
             if varSpecLen == 1:
                if not isinstance(varSpec[0], LSymbol):
                   raise LRuntimePrimError(env.lookup(name),
-                        'First element of a variable initializer pair expected to be a symbol.')
+                        'Variable binding name expected to be a SYMBOL.')
             elif varSpecLen == 2:
                varName, initForm = varSpec
                if not isinstance(varName, LSymbol):
                   raise LRuntimePrimError(env.lookup(name),
-                        'First element of a variable initializer pair expected to be a symbol.')
+                        'Variable binding name expected to be a SYMBOL.')
                Analyzer.analyze(env, initForm)
             else:
                raise LRuntimePrimError(env.lookup(name),

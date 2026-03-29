@@ -185,7 +185,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (parse 1)
 %%%  ^
-%%% ERROR 'PARSE': Argument expected to be a string.
+%%% ERROR 'PARSE': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (PARSE string)
 ==>
 

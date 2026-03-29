@@ -144,7 +144,7 @@ goes to that stream.
 Use as (raweval-for-display input-string) or (raweval-for-display input-string stream)."""
    source = args[0]
    if not isinstance( source, str ):
-      raise LRuntimePrimError( LP_raweval_for_display, 'Argument must be a string.' )
+      raise LRuntimePrimError( LP_raweval_for_display, 'Invalid argument 1. STRING expected.' )
    from io import IOBase
    _UNSET = object()   # sentinel distinct from None so we can detect "did we change ctx.outStrm?"
    stream_val = args[1] if len(args) > 1 else None

@@ -435,7 +435,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (defmacro 1 () 1)
 %%%  ^
-%%% ERROR 'DEFMACRO': Argument 1 expected to be a symbol.
+%%% ERROR 'DEFMACRO': Invalid argument 1. SYMBOL expected.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 
@@ -445,7 +445,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (defmacro foo 1 1)
 %%%  ^
-%%% ERROR 'DEFMACRO': Argument 2 expected to be a list of params.
+%%% ERROR 'DEFMACRO': Invalid argument 2. PARAMETER LIST expected.
 %%% PRIMITIVE USAGE: (DEFMACRO symbol lambda-list &rest body)
 ==>
 

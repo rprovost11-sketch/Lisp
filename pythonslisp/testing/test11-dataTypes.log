@@ -433,7 +433,7 @@
 >>> (setf (point-x 42) 5)
 ...
 
-%%% ERROR 'SET-ACCESSOR!': Argument 2 must be a struct instance.
+%%% ERROR 'SET-ACCESSOR!': Invalid argument 2. STRUCT INSTANCE expected.
 %%% PRIMITIVE USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
 ==>
 
@@ -697,7 +697,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (typep 42 "not-a-symbol")
 %%%  ^
-%%% ERROR 'TYPEP': Argument 2 must be a type symbol or compound type specifier.
+%%% ERROR 'TYPEP': Invalid argument 2. TYPE SPECIFIER expected.
 %%% PRIMITIVE USAGE: (TYPEP object type-specifier)
 
 ; --- typecase ---

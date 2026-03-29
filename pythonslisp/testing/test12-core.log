@@ -38,7 +38,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (python 1)
 %%%  ^
-%%% ERROR 'PYTHON': Argument expected to be a string.
+%%% ERROR 'PYTHON': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
@@ -362,7 +362,7 @@ Type '(help "substring" :substring t)' to search all names by substring.
 %%% Runtime Error: "" (1,2)
 %%% (raweval-for-display 42)
 %%%  ^
-%%% ERROR 'RAWEVAL-FOR-DISPLAY': Argument must be a string.
+%%% ERROR 'RAWEVAL-FOR-DISPLAY': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (RAWEVAL-FOR-DISPLAY string &optional stream)
 
 ; --- gensym ---
@@ -410,7 +410,7 @@ Type '(help "substring" :substring t)' to search all names by substring.
 %%% Runtime Error: "" (1,2)
 %%% (gensym 3.14)
 %%%  ^
-%%% ERROR 'GENSYM': Argument must be a string prefix, a symbol, or a non-negative integer.
+%%% ERROR 'GENSYM': Invalid argument 1. STRING, SYMBOL, or NON-NEGATIVE INTEGER expected.
 %%% PRIMITIVE USAGE: (GENSYM &optional x)
 ==>
 
@@ -630,7 +630,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (makunbound 1)
 %%%  ^
-%%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
+%%% ERROR 'MAKUNBOUND': Invalid argument 1. SYMBOL expected.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
@@ -735,7 +735,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (makunbound 1)
 %%%  ^
-%%% ERROR 'MAKUNBOUND': Argument expected to be a symbol.
+%%% ERROR 'MAKUNBOUND': Invalid argument 1. SYMBOL expected.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
@@ -783,7 +783,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (make-symbol 42)
 %%%  ^
-%%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
+%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -792,7 +792,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (make-symbol '())
 %%%  ^
-%%% ERROR 'MAKE-SYMBOL': 1st argument expected to be a string.
+%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -802,7 +802,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (make-symbol "42")
 %%%  ^
-%%% ERROR 'MAKE-SYMBOL': "42" is not a valid symbol name.
+%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. Valid symbol name expected; "42" is not valid.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -878,7 +878,7 @@ T
 >>> ;;; setf at with non-list non-map container
 ... (setf (at 0 42) 5)
 
-%%% ERROR 'AT-SET': Invalid argument 2. List or Dict expected.
+%%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -910,7 +910,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (defsetf-internal 1 2)
 %%%  ^
-%%% ERROR 'DEFSETF-INTERNAL': Both arguments must be symbols.
+%%% ERROR 'DEFSETF-INTERNAL': Invalid argument 1. SYMBOL expected.
 %%% PRIMITIVE USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
 ==>
 
@@ -952,7 +952,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (make-symbol "")
 %%%  ^
-%%% ERROR 'MAKE-SYMBOL': "" is not a valid symbol name.
+%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. Valid symbol name expected; "" is not valid.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -969,7 +969,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (python 42)
 %%%  ^
-%%% ERROR 'PYTHON': Argument expected to be a string.
+%%% ERROR 'PYTHON': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
@@ -989,7 +989,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (readall 42)
 %%%  ^
-%%% ERROR 'READALL': Argument expected to be a stream.
+%%% ERROR 'READALL': Invalid argument 1. STREAM expected.
 %%% PRIMITIVE USAGE: (READALL stream)
 ==>
 
@@ -1018,7 +1018,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (path-join 42)
 %%%  ^
-%%% ERROR 'PATH-JOIN': Argument 1 expected to be a string.
+%%% ERROR 'PATH-JOIN': Invalid argument 1. STRING expected.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 
@@ -1027,7 +1027,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (path-join "a" 42)
 %%%  ^
-%%% ERROR 'PATH-JOIN': Argument 2 expected to be a string.
+%%% ERROR 'PATH-JOIN': Invalid argument 2. STRING expected.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 

@@ -271,7 +271,7 @@ Compound specifiers: (OR ...) (AND ...) (NOT t) (MEMBER v...) (SATISFIES fn)
   (NUMBER low high).  Bounds are * (unbounded), n (inclusive), or (n) (exclusive)."""
    obj, spec = args
    if not isinstance(spec, (LSymbol, list)):
-      raise LRuntimePrimError( LP_typep, 'Argument 2 must be a type symbol or compound type specifier.' )
+      raise LRuntimePrimError( LP_typep, 'Invalid argument 2. TYPE SPECIFIER expected.' )
    return L_T if _typep(obj, spec, ctx, env) else L_NIL
 
 @primitive( 'not', '(object)' )
@@ -344,7 +344,7 @@ def LP_less( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior < mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. Arguments are not comparable.' )
+            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
       prior = mbr
    return L_T
 
@@ -358,7 +358,7 @@ def LP_lessOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior <= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. Arguments are not comparable.' )
+            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
       prior = mbr
    return L_T
 
@@ -372,7 +372,7 @@ def LP_greater( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior > mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. Arguments are not comparable.' )
+            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
       prior = mbr
    return L_T
 
@@ -386,7 +386,7 @@ def LP_greaterOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior >= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. Arguments are not comparable.' )
+            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
       prior = mbr
    return L_T
 
@@ -440,11 +440,11 @@ def LP_make_symbol( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Takes a string and returns a new symbol whose print string is that string."""
    arg = args[0]
    if not isinstance(arg, str):
-      raise LRuntimePrimError( LP_make_symbol, '1st argument expected to be a string.' )
+      raise LRuntimePrimError( LP_make_symbol, 'Invalid argument 1. STRING expected.' )
    try:
       sym, _ = ctx.parseOne(arg)
    except ParseError:
-      raise LRuntimePrimError( LP_make_symbol, f'"{arg}" is not a valid symbol name.' )
+      raise LRuntimePrimError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
    if not isinstance(sym, LSymbol):
-      raise LRuntimePrimError( LP_make_symbol, f'"{arg}" is not a valid symbol name.' )
+      raise LRuntimePrimError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
    return sym

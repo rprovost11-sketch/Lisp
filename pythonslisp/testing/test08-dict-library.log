@@ -184,7 +184,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-keys '(1 2 3))
 %%%  ^
-%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
 
@@ -194,7 +194,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-keys 42)
 %%%  ^
-%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
 
@@ -204,7 +204,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-keys "hello")
 %%%  ^
-%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
 
@@ -214,7 +214,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-keys nil)
 %%%  ^
-%%% ERROR 'DICT-KEYS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-KEYS dict)
 ==>
 
@@ -248,7 +248,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-values '(1 2 3))
 %%%  ^
-%%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
+%%% ERROR 'DICT-VALUES': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
 
@@ -258,7 +258,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-values 42)
 %%%  ^
-%%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
+%%% ERROR 'DICT-VALUES': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
 
@@ -268,7 +268,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-values nil)
 %%%  ^
-%%% ERROR 'DICT-VALUES': Argument 1 must be a Dict.
+%%% ERROR 'DICT-VALUES': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-VALUES dict)
 ==>
 
@@ -302,7 +302,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-pairs '(1 2 3))
 %%%  ^
-%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
 
@@ -312,7 +312,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-pairs 42)
 %%%  ^
-%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
 
@@ -322,7 +322,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-pairs "hello")
 %%%  ^
-%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
 
@@ -332,7 +332,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-pairs nil)
 %%%  ^
-%%% ERROR 'DICT-PAIRS': Argument 1 must be a Dict.
+%%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-PAIRS dict)
 ==>
 
@@ -383,7 +383,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-length '(1 2 3))
 %%%  ^
-%%% ERROR 'DICT-LENGTH': Argument 1 must be a Dict.
+%%% ERROR 'DICT-LENGTH': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>
 
@@ -393,7 +393,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (dict-length nil)
 %%%  ^
-%%% ERROR 'DICT-LENGTH': Argument 1 must be a Dict.
+%%% ERROR 'DICT-LENGTH': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (DICT-LENGTH dict)
 ==>
 
@@ -725,7 +725,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (has-value-p 2 1)
 %%%  ^
-%%% ERROR 'HAS-VALUE-P': Invalid argument 2. List or Dict expected.
+%%% ERROR 'HAS-VALUE-P': Invalid argument 2. LIST or DICT expected.
 %%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
@@ -744,7 +744,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (has-key-p "a" 1)
 %%%  ^
-%%% ERROR 'HAS-KEY-P': Invalid argument 2.  Dict expected.
+%%% ERROR 'HAS-KEY-P': Invalid argument 2. DICT expected.
 %%% PRIMITIVE USAGE: (HAS-KEY-P key dict)
 ==>
 
@@ -763,7 +763,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (update! 1 (make-dict))
 %%%  ^
-%%% ERROR 'UPDATE!': Argument 1 expected to be a dict.
+%%% ERROR 'UPDATE!': Invalid argument 1. DICT expected.
 %%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
 
@@ -773,7 +773,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (update! (make-dict) 1)
 %%%  ^
-%%% ERROR 'UPDATE!': Argument 2 expected to be a dict.
+%%% ERROR 'UPDATE!': Invalid argument 2. DICT expected.
 %%% PRIMITIVE USAGE: (UPDATE! dict1 dict2)
 ==>
 
@@ -849,6 +849,6 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-delete 'missing (make-dict (a 1)))
 %%%  ^
-%%% ERROR 'AT-DELETE': Bad index or key into collection.
+%%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.
 %%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>

@@ -65,8 +65,10 @@ not a macro call."""
 def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Register a struct field accessor as a valid setf target."""
    accessor_sym, field_sym = args
-   if not isinstance(accessor_sym, LSymbol) or not isinstance(field_sym, LSymbol):
-      raise LRuntimePrimError( LP_defsetf_internal, 'Both arguments must be symbols.' )
+   if not isinstance(accessor_sym, LSymbol):
+      raise LRuntimePrimError( LP_defsetf_internal, 'Invalid argument 1. SYMBOL expected.' )
+   if not isinstance(field_sym, LSymbol):
+      raise LRuntimePrimError( LP_defsetf_internal, 'Invalid argument 2. SYMBOL expected.' )
    ctx.setfRegistry[accessor_sym.name] = field_sym
    return accessor_sym
 
@@ -75,13 +77,13 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Internal: write a struct field value via the defsetf registry."""
    accessor, instance, newval = args
    if not isinstance( accessor, LSymbol ):
-      raise LRuntimePrimError( LP_set_accessor, 'Argument 1 must be a symbol.' )
+      raise LRuntimePrimError( LP_set_accessor, 'Invalid argument 1. SYMBOL expected.' )
    field_key = ctx.setfRegistry.get( accessor.name )
    if field_key is None:
       raise LRuntimePrimError( LP_set_accessor,
                                   f'No setf expander registered for {accessor.name}.' )
    if not isinstance( instance, dict ):
-      raise LRuntimePrimError( LP_set_accessor, 'Argument 2 must be a struct instance.' )
+      raise LRuntimePrimError( LP_set_accessor, 'Invalid argument 2. STRUCT INSTANCE expected.' )
    instance[ field_key ] = newval
    return newval
 
@@ -103,7 +105,7 @@ def LP_makunbound( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 The argument is evaluated: (makunbound 'x) unbinds X."""
    key = args[0]
    if not isinstance(key, LSymbol):
-      raise LRuntimePrimError( LP_makunbound, 'Argument expected to be a symbol.' )
+      raise LRuntimePrimError( LP_makunbound, 'Invalid argument 1. SYMBOL expected.' )
    env.getGlobalEnv().unbind( key.name )
    return L_NIL
 
@@ -154,7 +156,7 @@ def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
    sym = args[0]
    if not isinstance( sym, LSymbol ):
-      raise LRuntimePrimError( LP_boundp, 'Argument 1 must be a Symbol.' )
+      raise LRuntimePrimError( LP_boundp, 'Invalid argument 1. SYMBOL expected.' )
    try:
       env.lookup( sym.name )
       return L_T
@@ -180,9 +182,9 @@ non-negative integer it is used as the numeric suffix directly and
       try:
          sym, _ = ctx.parseOne( combined )
       except ParseError:
-         raise LRuntimePrimError( LP_gensym, f'"{x}" is not a valid symbol prefix.' )
+         raise LRuntimePrimError( LP_gensym, f'Invalid argument 1. Valid symbol prefix expected; "{x}" is not valid.' )
       if not isinstance( sym, LSymbol ):
-         raise LRuntimePrimError( LP_gensym, f'"{x}" is not a valid symbol prefix.' )
+         raise LRuntimePrimError( LP_gensym, f'Invalid argument 1. Valid symbol prefix expected; "{x}" is not valid.' )
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
       return sym
    elif isinstance( x, LSymbol ):
@@ -190,7 +192,7 @@ non-negative integer it is used as the numeric suffix directly and
       return LSymbol( f'{x.name}{counter}' )
    elif isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
       return LSymbol( f'G{x}' )
-   raise LRuntimePrimError( LP_gensym, 'Argument must be a string prefix, a symbol, or a non-negative integer.' )
+   raise LRuntimePrimError( LP_gensym, 'Invalid argument 1. STRING, SYMBOL, or NON-NEGATIVE INTEGER expected.' )
 
 _ITUPS = 1_000_000
 
@@ -215,7 +217,7 @@ With a format string, uses strftime formatting (e.g. \"%Y-%m-%d-%H%M%S\")."""
       return now.isoformat()
    fmt = args[0]
    if not isinstance( fmt, str ):
-      raise LRuntimePrimError( LP_now_string, 'Argument must be a format string.' )
+      raise LRuntimePrimError( LP_now_string, 'Invalid argument 1. FORMAT STRING expected.' )
    return now.strftime( fmt )
 
 @primitive( 'load-extension', '(&rest files &key name)',
@@ -242,9 +244,9 @@ Returns T if all files loaded successfully."""
       else:
          files.append( arg )
          i += 1
-   for path in files:
+   for i, path in enumerate(files, 1):
       if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_extensions, 'Each file argument must be a string path.' )
+         raise LRuntimePrimError( LP_load_extensions, f'Invalid argument {i}. STRING PATH expected.' )
    target_env = resolve_module_path( name_arg, env.getGlobalEnv(), ctx, LP_load_extensions )
    for path in files:
       ctx.loadExt( path, target_env )
@@ -257,9 +259,9 @@ def LP_load_extension_dirs( ctx: Context, env: Environment, args: list[Any] ) ->
 .py files are loaded alphabetically, then all .lisp files alphabetically.
 All arguments must be string paths.  Returns T if all directories loaded
 successfully."""
-   for path in args:
+   for i, path in enumerate(args, 1):
       if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_extension_dirs, 'Each argument must be a string path.' )
+         raise LRuntimePrimError( LP_load_extension_dirs, f'Invalid argument {i}. STRING PATH expected.' )
    for path in args:
       ctx.loadExtDir( path )
    return L_T
