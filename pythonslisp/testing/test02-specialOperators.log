@@ -264,7 +264,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (let ((x 1 2)) 1)
 %%%  ^
-%%% ERROR 'LET': Variable initializer spec expected to be 1 or 2 elements long.
+%%% ERROR 'LET': Variable initializer expected to be 1 or 2 elements.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
@@ -435,7 +435,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (setq sq1 1 sq2)
 %%%  ^
-%%% ERROR 'SETQ': An even number of arguments is expected.  Received 3.
+%%% ERROR 'SETQ': An even number of arguments expected; 3 provided.
 %%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
 
@@ -445,7 +445,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (setq 42 1)
 %%%  ^
-%%% ERROR 'SETQ': First of setf pair must be a symbol.
+%%% ERROR 'SETQ': Assignment target must be a SYMBOL.
 %%% PRIMITIVE USAGE: (SETQ symbol1 sexpr1 symbol2 sexpr2 ...)
 ==>
 
@@ -680,14 +680,14 @@
 %%% Runtime Error: "" (1,2)
 %%% (block 42 1 2 3)
 %%%  ^
-%%% block: name must be a symbol.
+%%% block: name must be a SYMBOL or NIL.
 
 ; Error: return-from name must be a symbol
 >>> (return-from 42 99)
 %%% Runtime Error: "" (1,2)
 %%% (return-from 42 99)
 %%%  ^
-%%% return-from: name must be a symbol.
+%%% return-from: name must be a SYMBOL or NIL.
 
 ; ============================================================
 ; CATCH / THROW
@@ -2703,7 +2703,7 @@ Y
 %%% Runtime Error: "" (2,2)
 %%% (let (1) x)
 %%%  ^
-%%% ERROR 'LET': Variable initializer spec expected to be a symbol or a list.
+%%% ERROR 'LET': Variable initializer expected to be a SYMBOL or LIST.
 %%% PRIMITIVE USAGE: (LET ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
@@ -2725,7 +2725,7 @@ Y
 %%% Runtime Error: "" (2,2)
 %%% (let* ((x 1 2)) 1)
 %%%  ^
-%%% ERROR 'LET*': Variable initializer spec expected to be 1 or 2 elements long.
+%%% ERROR 'LET*': Variable initializer expected to be 1 or 2 elements.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 
@@ -2735,7 +2735,7 @@ Y
 %%% Runtime Error: "" (2,2)
 %%% (let* (1) x)
 %%%  ^
-%%% ERROR 'LET*': Variable initializer spec expected to be a symbol or a list.
+%%% ERROR 'LET*': Variable initializer expected to be a SYMBOL or LIST.
 %%% PRIMITIVE USAGE: (LET* ( (var1 sexpr1) (var2 sexpr2) ...) &rest body)
 ==>
 

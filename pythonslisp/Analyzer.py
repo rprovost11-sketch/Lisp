@@ -222,10 +222,10 @@ class Analyzer:
                Analyzer.analyze(env, initForm)
             else:
                raise LRuntimePrimError(env.lookup(name),
-                     'Variable initializer spec expected to be 1 or 2 elements long.')
+                     'Variable initializer expected to be 1 or 2 elements.')
          else:
             raise LRuntimePrimError(env.lookup(name),
-                  'Variable initializer spec expected to be a symbol or a list.')
+                  'Variable initializer expected to be a SYMBOL or LIST.')
 
       for bodyForm in body:
          Analyzer.analyze(env, bodyForm)
@@ -238,12 +238,12 @@ class Analyzer:
          raise LRuntimePrimError(env.lookup('SETQ'), 'At least 2 arguments expected.')
       if (numArgs % 2) != 0:
          raise LRuntimePrimError(env.lookup('SETQ'),
-               f'An even number of arguments is expected.  Received {numArgs}.')
+               f'An even number of arguments expected; {numArgs} provided.')
       for i in range(0, numArgs, 2):
          lval = args[i]
          rval = args[i + 1]
          if not isinstance(lval, LSymbol):
-            raise LRuntimePrimError(env.lookup('SETQ'), 'First of setf pair must be a symbol.')
+            raise LRuntimePrimError(env.lookup('SETQ'), 'Assignment target must be a SYMBOL.')
          Analyzer.analyze(env, rval)
 
    @staticmethod
@@ -255,9 +255,9 @@ class Analyzer:
    def _analyzeBlock( env: Environment, args: list ) -> None:
       """Structural checks for (block ...) forms."""
       if len(args) < 1:
-         raise LRuntimeError('block: at least 1 argument (name) expected.')
+         raise LRuntimeError('block: at least 1 argument expected.')
       if not (isinstance(args[0], LSymbol) or Analyzer._is_nil_val(args[0])):
-         raise LRuntimeError('block: name must be a symbol.')
+         raise LRuntimeError('block: name must be a SYMBOL or NIL.')
       for bodyForm in args[1:]:
          Analyzer.analyze(env, bodyForm)
 
@@ -267,7 +267,7 @@ class Analyzer:
       if len(args) < 1 or len(args) > 2:
          raise LRuntimeError('return-from: 1 or 2 arguments expected.')
       if not (isinstance(args[0], LSymbol) or Analyzer._is_nil_val(args[0])):
-         raise LRuntimeError('return-from: name must be a symbol.')
+         raise LRuntimeError('return-from: name must be a SYMBOL or NIL.')
       if len(args) == 2:
          Analyzer.analyze(env, args[1])
 
