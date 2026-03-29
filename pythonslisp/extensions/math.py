@@ -17,13 +17,21 @@ def _frac_or_int( frac: Fraction ):
    return int(frac) if frac.denominator == 1 else frac
 
 
+def _bad_number_arg( args, prim ):
+   """After TypeError from a bulk numeric operation, find and report the first non-number argument."""
+   for i, arg in enumerate(args, 1):
+      if not isinstance(arg, LNUMBER):
+         raise LRuntimePrimError(prim, f'Invalid argument {i}. Number expected.')
+   raise LRuntimePrimError(prim, 'Invalid argument.')
+
+
 @primitive( '+', '(&rest numbers)' )
 def LP_add( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the sum of numbers."""
    try:
       return sum(args)
    except TypeError:
-      raise LRuntimePrimError( LP_add, 'Invalid argument.' )
+      _bad_number_arg(args, LP_add)
 
 @primitive( '-', '(number &rest numbers)' )
 def LP_sub( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -36,7 +44,7 @@ def LP_sub( ctx: Context, env: Environment, args: list[Any] ) -> Any:
          return -1 * arg
       return args[0] - sum(args[1:])
    except TypeError:
-      raise LRuntimePrimError( LP_sub, 'Invalid argument.' )
+      _bad_number_arg(args, LP_sub)
 
 @primitive( '*', '(number &rest numbers)' )
 def LP_mul( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -44,7 +52,7 @@ def LP_mul( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return functools.reduce( lambda x,y: x * y, iter(args) )
    except TypeError:
-      raise LRuntimePrimError( LP_mul, 'Invalid argument.' )
+      _bad_number_arg(args, LP_mul)
 
 @primitive( '/', '(number &rest more-numbers)', min_args=1 )
 def LP_div( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -63,7 +71,7 @@ when the denominator is 1).  Any float input yields a float result."""
       result = functools.reduce( lambda x, y: x / y, fracs )
       return _frac_or_int( result )
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_div, 'Invalid argument.' )
+      _bad_number_arg(args, LP_div)
    except ZeroDivisionError:
       raise LRuntimePrimError( LP_div, 'division by zero' )
 
@@ -73,7 +81,7 @@ def LP_intdiv( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return args[0] // args[1]
    except TypeError:
-      raise LRuntimePrimError( LP_intdiv, 'Invalid argument.' )
+      _bad_number_arg(args[:2], LP_intdiv)
    except ZeroDivisionError:
       raise LRuntimePrimError( LP_intdiv, 'division by zero' )
 
@@ -84,7 +92,7 @@ the sign of the divisor (second argument)."""
    try:
       return args[0] % args[1]
    except TypeError:
-      raise LRuntimePrimError( LP_mod, 'Invalid argument.' )
+      _bad_number_arg(args[:2], LP_mod)
    except ZeroDivisionError:
       raise LRuntimePrimError( LP_mod, 'division by zero' )
 
@@ -99,7 +107,7 @@ result matches the sign of the dividend (first argument)."""
          return m
       return m - b
    except TypeError:
-      raise LRuntimePrimError( LP_rem, 'Invalid argument.' )
+      _bad_number_arg(args[:2], LP_rem)
    except ZeroDivisionError:
       raise LRuntimePrimError( LP_rem, 'division by zero' )
 
@@ -109,7 +117,7 @@ def LP_gcd( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.gcd( *args )
    except TypeError:
-      raise LRuntimePrimError( LP_gcd, 'Invalid argument.' )
+      _bad_number_arg(args, LP_gcd)
 
 @primitive( 'lcm', '(&rest integers)' )
 def LP_lcm( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -117,7 +125,7 @@ def LP_lcm( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.lcm( *args )
    except TypeError:
-      raise LRuntimePrimError( LP_lcm, 'Invalid argument.' )
+      _bad_number_arg(args, LP_lcm)
 
 @primitive( 'log', '(number &optional (base e))' )
 def LP_log( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -127,8 +135,10 @@ logarithm (base e).  An optional second argument specifies the base."""
       num,*rest = args
       base = math.e if len(rest) == 0 else rest[0]
       return math.log(num,base)
-   except (ValueError, TypeError):
-      raise LRuntimePrimError( LP_log, 'Invalid argument.' )
+   except TypeError:
+      _bad_number_arg(args, LP_log)
+   except ValueError:
+      raise LRuntimePrimError( LP_log, 'Invalid argument 1. Invalid value for logarithm.' )
 
 @primitive( 'expt', '(base power)' )
 def LP_expt( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -137,7 +147,7 @@ def LP_expt( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       result = base ** power
    except TypeError:
-      raise LRuntimePrimError( LP_expt, 'Invalid argument type.  Arguments expected to be numbers.' )
+      _bad_number_arg([base, power], LP_expt)
 
    return result.real if isinstance(result, complex) else result
 
@@ -147,7 +157,7 @@ def LP_sin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.sin(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_sin, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_sin, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'cos', '(radians)' )
 def LP_cos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -155,7 +165,7 @@ def LP_cos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.cos(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_cos, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_cos, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'asin', '(number)' )
 def LP_asin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -163,7 +173,7 @@ def LP_asin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.asin(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_asin, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_asin, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'acos', '(number)' )
 def LP_acos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -171,7 +181,7 @@ def LP_acos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.acos(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_acos, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_acos, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'atan', '(number1 &optional number2)' )
 def LP_atan( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -182,7 +192,7 @@ def LP_atan( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       else:
          return math.atan2( args[0], args[1] )
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_atan, 'Invalid argument.' )
+      _bad_number_arg(args, LP_atan)
 
 @primitive( 'floor', '(number &optional divisor)' )
 def LP_floor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -197,8 +207,10 @@ quotient is used."""
          q = math.floor( args[0] / args[1] )
          r = args[0] - q * args[1]
       return LMultipleValues( [q, r] )
-   except (TypeError, ValueError, ZeroDivisionError) as e:
-      raise LRuntimePrimError( LP_floor, f'Invalid argument: {e}' )
+   except (TypeError, ValueError):
+      _bad_number_arg(args[:2], LP_floor)
+   except ZeroDivisionError:
+      raise LRuntimePrimError( LP_floor, 'Invalid argument 2. Division by zero.' )
 
 @primitive( 'ceiling', '(number &optional divisor)' )
 def LP_ceiling( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -213,8 +225,10 @@ quotient is used."""
          q = math.ceil( args[0] / args[1] )
          r = args[0] - q * args[1]
       return LMultipleValues( [q, r] )
-   except (TypeError, ValueError, ZeroDivisionError) as e:
-      raise LRuntimePrimError( LP_ceiling, f'Invalid argument: {e}' )
+   except (TypeError, ValueError):
+      _bad_number_arg(args[:2], LP_ceiling)
+   except ZeroDivisionError:
+      raise LRuntimePrimError( LP_ceiling, 'Invalid argument 2. Division by zero.' )
 
 @primitive( 'round', '(number &optional divisor)' )
 def LP_round( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -229,8 +243,10 @@ even, per CL) (or rounded quotient of number/divisor), and the remainder
          q = round( args[0] / args[1] )
          r = args[0] - q * args[1]
       return LMultipleValues( [q, r] )
-   except (TypeError, ValueError, ZeroDivisionError) as e:
-      raise LRuntimePrimError( LP_round, f'Invalid argument: {e}' )
+   except (TypeError, ValueError):
+      _bad_number_arg(args[:2], LP_round)
+   except ZeroDivisionError:
+      raise LRuntimePrimError( LP_round, 'Invalid argument 2. Division by zero.' )
 
 @primitive( 'truncate', '(number &optional divisor)' )
 def LP_truncate( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -245,8 +261,10 @@ In scalar context only the quotient is used."""
          q = math.trunc( args[0] / args[1] )
          r = args[0] - q * args[1]
       return LMultipleValues( [q, r] )
-   except (TypeError, ValueError, ZeroDivisionError) as e:
-      raise LRuntimePrimError( LP_truncate, f'Invalid argument: {e}' )
+   except (TypeError, ValueError):
+      _bad_number_arg(args[:2], LP_truncate)
+   except ZeroDivisionError:
+      raise LRuntimePrimError( LP_truncate, 'Invalid argument 2. Division by zero.' )
 
 @primitive( 'min', '(&rest numbers)' )
 def LP_min( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -254,7 +272,7 @@ def LP_min( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return min( *args )
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_min, 'Invalid argument.' )
+      _bad_number_arg(args, LP_min)
 
 @primitive( 'max', '(&rest numbers)' )
 def LP_max( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -262,7 +280,7 @@ def LP_max( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return max( *args )
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_max, 'Invalid argument.' )
+      _bad_number_arg(args, LP_max)
 
 @primitive( 'random', '(integerOrFloat)' )
 def LP_random( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -273,11 +291,11 @@ For float n returns a random float in [0.0, n)."""
 
    if isinstance( num, int ):
       if num <= 0:
-         raise LRuntimePrimError( LP_random, 'Argument expected to be positive.' )
+         raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.' )
       return _random.randrange( num )
    elif isinstance( num, float ):
       if num <= 0.0:
-         raise LRuntimePrimError( LP_random, 'Argument expected to be positive.' )
+         raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.' )
       return _random.uniform( 0.0, num )
    else:
-      raise LRuntimePrimError( LP_random, 'Invalid argument type.' )
+      raise LRuntimePrimError( LP_random, 'Invalid argument 1. Integer or float expected.' )

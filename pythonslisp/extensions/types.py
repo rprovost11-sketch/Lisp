@@ -338,60 +338,56 @@ CL semantics: all pairwise combinations are checked, not just adjacent pairs.
 def LP_less( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns t if the arguments are in ascending order."""
    prior = None
-   try:
-      for mbr in args:
-         if prior is not None:
+   for i, mbr in enumerate(args, 1):
+      if prior is not None:
+         try:
             if not( prior < mbr ):
                return L_NIL
-         prior = mbr
-   except TypeError:
-      raise LRuntimePrimError( LP_less, 'Invalid argument.  Arguments are not comparable.' )
-
+         except TypeError:
+            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. Arguments are not comparable.' )
+      prior = mbr
    return L_T
 
 @primitive( '<=', '(expr1 expr2 &rest exprs)' )
 def LP_lessOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns t if the adjacent arguments are less-than-or-equal otherwise nil."""
    prior = None
-   try:
-      for mbr in args:
-         if prior is not None:
+   for i, mbr in enumerate(args, 1):
+      if prior is not None:
+         try:
             if not( prior <= mbr ):
                return L_NIL
-         prior = mbr
-   except TypeError:
-      raise LRuntimePrimError( LP_lessOrEqual, 'Invalid argument.  Arguments are not comparable.' )
-
+         except TypeError:
+            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. Arguments are not comparable.' )
+      prior = mbr
    return L_T
 
 @primitive( '>', '(expr1 expr2 &rest exprs)' )
 def LP_greater( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns t if the arguments are in descending order otherwise nil."""
    prior = None
-   try:
-      for mbr in args:
-         if prior is not None:
+   for i, mbr in enumerate(args, 1):
+      if prior is not None:
+         try:
             if not( prior > mbr ):
                return L_NIL
-         prior = mbr
-   except TypeError:
-      raise LRuntimePrimError( LP_greater, 'Invalid argument.  Arguments are not comparable.' )
-
+         except TypeError:
+            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. Arguments are not comparable.' )
+      prior = mbr
    return L_T
 
 @primitive( '>=', '(expr1 expr2 &rest exprs)' )
 def LP_greaterOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns t if the adjacent arguments are greater-than-or-equal otherwise nil."""
    prior = None
-   try:
-      for mbr in args:
-         if prior is not None:
+   for i, mbr in enumerate(args, 1):
+      if prior is not None:
+         try:
             if not( prior >= mbr ):
                return L_NIL
-         prior = mbr
-   except TypeError:
-      raise LRuntimePrimError( LP_greaterOrEqual, 'Invalid argument.  Arguments are not comparable.' )
-
+         except TypeError:
+            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. Arguments are not comparable.' )
+      prior = mbr
    return L_T
 
 @primitive( 'float', '(number)' )
@@ -400,7 +396,7 @@ def LP_float( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return float(args[0])
    except (ValueError, TypeError):
-      raise LRuntimePrimError( LP_float, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_float, 'Invalid argument 1. Number or numeric string expected.' )
 
 @primitive( 'integer', '(number &optional (base 10))' )
 def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -408,7 +404,7 @@ def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return int(*args)
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_integer, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_integer, 'Invalid argument 1. Number or numeric string expected.' )
 
 @primitive( 'rational', '(number)' )
 def LP_rational( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -417,7 +413,7 @@ containing a valid lisp number that can be expressed as a fraction."""
    try:
       return Fraction(args[0])
    except (IndexError, TypeError, ValueError):
-      raise LRuntimePrimError( LP_rational, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_rational, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'string', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
 def LP_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:

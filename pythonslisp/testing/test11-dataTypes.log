@@ -426,7 +426,7 @@
 >>> (point-x 42)
 ...
 
-%%% ERROR 'AT': Invalid argument.  List, Dict, or String expected.
+%%% ERROR 'AT': Invalid argument 2. List, Dict, or String expected.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
@@ -816,7 +816,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (float "hello")
 %%%  ^
-%%% ERROR 'FLOAT': Invalid argument.
+%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1093,7 +1093,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (float 'abc)
 %%%  ^
-%%% ERROR 'FLOAT': Invalid argument.
+%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1103,6 +1103,6 @@
 %%% Runtime Error: "" (2,2)
 %%% (integer 'abc)
 %%%  ^
-%%% ERROR 'INTEGER': Invalid argument.
+%%% ERROR 'INTEGER': Invalid argument 1. Number or numeric string expected.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>

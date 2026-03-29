@@ -878,7 +878,7 @@ T
 >>> ;;; setf at with non-list non-map container
 ... (setf (at 0 42) 5)
 
-%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
+%%% ERROR 'AT-SET': Invalid argument 2. List or Dict expected.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -888,7 +888,7 @@ T
 %%% Runtime Error: "" (2,15)
 %%% (setf (at 99 (list 1 2)) 5)
 %%%               ^
-%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% ERROR 'AT-SET': Invalid argument 1. Key/index out of range or wrong type.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 

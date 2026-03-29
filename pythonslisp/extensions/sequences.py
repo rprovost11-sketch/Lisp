@@ -119,7 +119,7 @@ def LP_pop( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       value = alist.pop()
    except IndexError:
-      raise LRuntimePrimError( LP_pop, 'Invalid argument.' )
+      raise LRuntimePrimError( LP_pop, 'Invalid argument 1. List is empty.' )
    return value
 
 @primitive( 'at', '(keyOrIndex dictListOrStr)' )
@@ -129,12 +129,12 @@ def LP_at( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    key, keyed = args
 
    if not isinstance(keyed, (list, dict, str) ):
-      raise LRuntimePrimError( LP_at, 'Invalid argument.  List, Dict, or String expected.' )
+      raise LRuntimePrimError( LP_at, 'Invalid argument 2. List, Dict, or String expected.' )
 
    try:
       return keyed[ key ]
    except ( KeyError, IndexError, TypeError ):
-      raise LRuntimePrimError( LP_at, 'Invalid argument key/index.' )
+      raise LRuntimePrimError( LP_at, 'Invalid argument 1. Key/index out of range or wrong type.' )
 
 @primitive( 'at-set', '(keyOrIndex dictListOrStr newValue)' )
 def LP_atSet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -143,12 +143,12 @@ def LP_atSet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    key, keyed, newValue = args
 
    if not isinstance(keyed, (list, dict)):
-      raise LRuntimePrimError( LP_atSet, 'Invalid argument.  List or Dict expected.' )
+      raise LRuntimePrimError( LP_atSet, 'Invalid argument 2. List or Dict expected.' )
 
    try:
       keyed[ key ] = newValue
    except ( KeyError, IndexError, TypeError ):
-      raise LRuntimePrimError( LP_atSet, 'Invalid argument key/index.' )
+      raise LRuntimePrimError( LP_atSet, 'Invalid argument 1. Key/index out of range or wrong type.' )
 
    return newValue
 
@@ -190,9 +190,9 @@ def LP_append( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if len(args) == 1:
       return args[0]
    resultList = list( )
-   for lst in args:
+   for i, lst in enumerate(args, 1):
       if not isinstance( lst, list ):
-         raise LRuntimePrimError( LP_append, 'Invalid argument.' )
+         raise LRuntimePrimError( LP_append, f'Invalid argument {i}. List expected.' )
       resultList.extend( lst )
    return resultList
 
@@ -206,7 +206,7 @@ def LP_has_value_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    elif isinstance(keyed, dict):
       keyed = keyed.values()
    else:
-      raise LRuntimePrimError( LP_has_value_p, 'Invalid argument.  Argument 2 expected to be a list or dict.')
+      raise LRuntimePrimError( LP_has_value_p, 'Invalid argument 2. List or Dict expected.')
 
    return L_T if aVal in keyed else L_NIL
 

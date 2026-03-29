@@ -725,7 +725,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (has-value-p 2 1)
 %%%  ^
-%%% ERROR 'HAS-VALUE-P': Invalid argument.  Argument 2 expected to be a list or dict.
+%%% ERROR 'HAS-VALUE-P': Invalid argument 2. List or Dict expected.
 %%% PRIMITIVE USAGE: (HAS-VALUE-P value listOrDict)
 ==>
 
@@ -839,7 +839,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at 'missing (make-dict (a 1)))
 %%%  ^
-%%% ERROR 'AT': Invalid argument key/index.
+%%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 

@@ -150,7 +150,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (append 1 '(2 3))
 %%%  ^
-%%% ERROR 'APPEND': Invalid argument.
+%%% ERROR 'APPEND': Invalid argument 1. List expected.
 %%% PRIMITIVE USAGE: (APPEND &rest lists)
 ==>
 
@@ -160,7 +160,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at 5 '(1 2 3))
 %%%  ^
-%%% ERROR 'AT': Invalid argument key/index.
+%%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
@@ -1600,7 +1600,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-set 0 42 9)
 %%%  ^
-%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
+%%% ERROR 'AT-SET': Invalid argument 2. List or Dict expected.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1610,7 +1610,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at-set 0 "abc" 9)
 %%%  ^
-%%% ERROR 'AT-SET': Invalid argument.  List or Dict expected.
+%%% ERROR 'AT-SET': Invalid argument 2. List or Dict expected.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1620,7 +1620,7 @@
 %%% Runtime Error: "" (2,13)
 %%% (at-set 99 (list 1 2 3) 0)
 %%%             ^
-%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% ERROR 'AT-SET': Invalid argument 1. Key/index out of range or wrong type.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1630,7 +1630,7 @@
 %%% Runtime Error: "" (2,14)
 %%% (at-set 1.5 (list 1 2 3) 0)
 %%%              ^
-%%% ERROR 'AT-SET': Invalid argument key/index.
+%%% ERROR 'AT-SET': Invalid argument 1. Key/index out of range or wrong type.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -1704,7 +1704,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (pop! '())
 %%%  ^
-%%% ERROR 'POP!': Invalid argument.
+%%% ERROR 'POP!': Invalid argument 1. List is empty.
 %%% PRIMITIVE USAGE: (POP! list)
 ==>
 
@@ -1744,7 +1744,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (at 0 42)
 %%%  ^
-%%% ERROR 'AT': Invalid argument.  List, Dict, or String expected.
+%%% ERROR 'AT': Invalid argument 2. List, Dict, or String expected.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
@@ -1938,7 +1938,7 @@
 %%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (60,5)
 %%%    (at index lst))
 %%%     ^
-%%% ERROR 'AT': Invalid argument key/index.
+%%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
@@ -1950,7 +1950,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (append '(1) 2 '(3))
 %%%  ^
-%%% ERROR 'APPEND': Invalid argument.
+%%% ERROR 'APPEND': Invalid argument 2. List expected.
 %%% PRIMITIVE USAGE: (APPEND &rest lists)
 ==>
 
