@@ -186,7 +186,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (1 2 3)
 %%%  ^
-%%% Badly formed list expression '1'.  The first element should evaluate to a callable.
+%%% Expression head is not callable: '1'.
 ==>
 
 >>> ;;; Error: eval requires exactly one argument

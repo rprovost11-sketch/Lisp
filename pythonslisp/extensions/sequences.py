@@ -463,7 +463,7 @@ search."""
    if not isinstance( seq2, (list, str) ):
       raise LRuntimePrimError( LP_search, 'Invalid argument 2. LIST or STRING expected.' )
    if type(seq1) is not type(seq2):
-      raise LRuntimePrimError( LP_search, 'Both sequences must be the same type.' )
+      raise LRuntimePrimError( LP_search, 'Invalid argument 2. Same type as argument 1 expected.' )
    s1_n, e1_n = _validate_bounds( start1, end1, len(seq1), LP_search )
    s2_n, e2_n = _validate_bounds( start2, end2, len(seq2), LP_search )
    pattern = seq1[s1_n:e1_n]

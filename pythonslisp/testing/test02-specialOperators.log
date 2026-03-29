@@ -1156,13 +1156,13 @@ Y
 
 ; call/cc argument must be a callable
 >>> (call/cc 42)
-%%% ERROR 'CALL/CC': Argument must be a callable.
-%%% PRIMITIVE USAGE: (CALL/CC procedure)
+%%% ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected.
+%%% SPECIAL OPERATOR USAGE: (CALL/CC procedure)
 
 ; call/cc argument may not be a special form pass quote (unquoted) to get the primitive
 >>> (call/cc quote)
-%%% ERROR 'CALL/CC': Argument may not be a special form.
-%%% PRIMITIVE USAGE: (CALL/CC procedure)
+%%% ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; special forms are not callable.
+%%% SPECIAL OPERATOR USAGE: (CALL/CC procedure)
 
 ; Continuation requires exactly 1 argument
 >>> (call/cc (lambda (k) (k 1 2)))
@@ -1731,20 +1731,20 @@ Y
 %%% dynamic-wind: requires exactly 3 arguments (before thunk after).
 
 >>> (dynamic-wind 42 (lambda () nil) (lambda () nil))
-%%% dynamic-wind: before argument must be a callable.
+%%% Invalid before argument. CALLABLE expected.
 
 >>> (dynamic-wind (lambda () nil) 42 (lambda () nil))
-%%% dynamic-wind: thunk argument must be a callable.
+%%% Invalid thunk argument. CALLABLE expected.
 
 >>> (dynamic-wind (lambda () nil) (lambda () nil) 42)
-%%% dynamic-wind: after argument must be a callable.
+%%% Invalid after argument. CALLABLE expected.
 
 >>> (dynamic-wind "hello" (lambda () nil) (lambda () nil))
-%%% dynamic-wind: before argument must be a callable.
+%%% Invalid before argument. CALLABLE expected.
 
 >>> (let ((m (defmacro _dw_test_mac () nil)))
 ...   (dynamic-wind m (lambda () nil) (lambda () nil)))
-%%% dynamic-wind: before argument must be a callable.
+%%% Invalid before argument. CALLABLE expected.
 
 ; --------------------------------------------------------
 ; Resource management patterns
@@ -2584,13 +2584,13 @@ Y
 >>> ;;; Error: apply last arg not a list
 ... (apply + 1)
 
-%%% APPLY: last argument must be a list.
+%%% Invalid last argument. LIST expected.
 ==>
 
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
-%%% APPLY: first argument may not be a special form.
+%%% Invalid argument 1. CALLABLE expected; special forms cannot be applied.
 ==>
 
 ; --- funcall errors ---
@@ -2620,13 +2620,13 @@ Y
 >>> ;;; Error: apply last arg not a list
 ... (apply + 1)
 
-%%% APPLY: last argument must be a list.
+%%% Invalid last argument. LIST expected.
 ==>
 
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
-%%% APPLY: first argument may not be a special form.
+%%% Invalid argument 1. CALLABLE expected; special forms cannot be applied.
 ==>
 
 ; --- IF error paths ---
@@ -2750,7 +2750,7 @@ Y
 >>> ;;; apply with non-symbol non-callable first arg
 ... (apply 42 '(1 2))
 
-%%% APPLY: first argument must evaluate to a callable or symbol.
+%%% Invalid argument 1. CALLABLE or SYMBOL expected.
 ==>
 
 ; --- COND: bad entry in non-first position ---

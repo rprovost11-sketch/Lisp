@@ -1433,7 +1433,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (search "hello" '(1 2 3))
 %%%  ^
-%%% ERROR 'SEARCH': Both sequences must be the same type.
+%%% ERROR 'SEARCH': Invalid argument 2. Same type as argument 1 expected.
 %%% PRIMITIVE USAGE: (SEARCH sequence1 sequence2 &key (test eql) (key nil) (from-end nil) (start1 0) (end1 nil) (start2 0) (end2 nil))
 
 ; --- List operation edge cases ---

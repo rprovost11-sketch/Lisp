@@ -345,16 +345,16 @@ class ArgFrame:
 
          if self.mode == 'funcall':
             if not isinstance(fn, LCallable):
-               raise LRuntimeError( 'FUNCALL: first argument must evaluate to a callable.' )
+               raise LRuntimeError( 'Invalid argument 1. CALLABLE expected.' )
             if type(fn) is LContinuation:
                if len(self.pending) != 1:
                   raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(self.pending)}.' )
                K.append( _ContinuationInvokeFrame(fn) )
                return self.pending[0], self.env   # expression
             if type(fn) is LMacro:
-               raise LRuntimeError( f'FUNCALL: cannot call macro "{fn.name}".' )
+               raise LRuntimeError( f'Invalid argument 1. CALLABLE expected; macros are not callable via FUNCALL.' )
             if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
-               raise LRuntimeError( f'FUNCALL: first argument may not be a special form.' )
+               raise LRuntimeError( 'Invalid argument 1. CALLABLE expected; special forms are not callable.' )
 
 
          elif self.mode == 'apply':
@@ -368,15 +368,15 @@ class ArgFrame:
                if not isinstance(fn, LCallable):
                   raise LRuntimeError( f'APPLY: "{fn}" is not bound to a callable.' )
             else:
-               raise LRuntimeError( 'APPLY: first argument must evaluate to a callable or symbol.' )
+               raise LRuntimeError( 'Invalid argument 1. CALLABLE or SYMBOL expected.' )
             if type(fn) is LMacro:
-               raise LRuntimeError( f'APPLY: cannot apply macro "{fn.name}".' )
+               raise LRuntimeError( f'Invalid argument 1. CALLABLE expected; macros cannot be applied.' )
             if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
-               raise LRuntimeError( 'APPLY: first argument may not be a special form.' )
+               raise LRuntimeError( 'Invalid argument 1. CALLABLE expected; special forms cannot be applied.' )
 
          else:  # 'call'
             if not isinstance(fn, LCallable):
-               raise LRuntimeError( f"Badly formed list expression '{fn}'.  The first element should evaluate to a callable." )
+               raise LRuntimeError( f"Expression head is not callable: '{fn}'." )
             if type(fn) is LContinuation:
                if len(self.pending) != 1:
                   raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(self.pending)}.' )
@@ -408,7 +408,7 @@ class ArgFrame:
       if self.mode == 'apply':
          list_arg = self.done.pop()
          if not isinstance(list_arg, list):
-            raise LRuntimeError( 'APPLY: last argument must be a list.' )
+            raise LRuntimeError( 'Invalid last argument. LIST expected.' )
          if type(self.fn) is LContinuation:
             spread = self.done + list_arg
             if len(spread) != 1:
@@ -636,11 +636,11 @@ class CallCCProcFrame:
    def step( self, value, E, K, ctx ):
       proc = _primary(value)
       if not isinstance( proc, LCallable ):
-         raise LRuntimeError( "ERROR 'CALL/CC': Argument must be a callable.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
+         raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       if type(proc) is LMacro:
-         raise LRuntimeError( "ERROR 'CALL/CC': Argument may not be a macro.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
+         raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; macros are not callable.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       if type(proc) is LPrimitive and proc.name in _SPECIAL_OPERATOR_SET:
-         raise LRuntimeError( "ERROR 'CALL/CC': Argument may not be a special form.\nPRIMITIVE USAGE: (CALL/CC procedure)" )
+         raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; special forms are not callable.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       K.append( ArgFrame(None, [_Val(self.cont)], [], E, 'funcall') )
       return _Val(proc), E
 
@@ -720,7 +720,7 @@ class DynWindCollectFrame:
       before_fn, thunk_fn, after_fn = self.done
       for fn, label in ( (before_fn, 'before'), (thunk_fn, 'thunk'), (after_fn, 'after') ):
          if not isinstance(fn, LCallable) or type(fn) is LMacro:
-            raise LRuntimeError( f"dynamic-wind: {label} argument must be a callable." )
+            raise LRuntimeError( f'Invalid {label} argument. CALLABLE expected.' )
       wind_entry = [before_fn, after_fn]
       K.append( DynWindExecuteFrame(thunk_fn, after_fn, wind_entry, self.env) )
       return _do_apply( before_fn, [], self.env, K, ctx )
