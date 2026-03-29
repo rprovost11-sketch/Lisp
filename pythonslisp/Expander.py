@@ -122,7 +122,7 @@ class Expander:
    @staticmethod
    def expandMacroCall(ctx: Context, env: Environment, macro: LMacro, argsList: list) -> Any:
       """Expand a single macro call and return the unevaluated expansion."""
-      expansionEnv = Environment.child(env, macro.compiledLambdaList.template)
+      expansionEnv = Environment(env, evalFn=ctx.lEval)
       expansionEnv.bindArguments(macro.compiledLambdaList, argsList)
 
       result = L_NIL

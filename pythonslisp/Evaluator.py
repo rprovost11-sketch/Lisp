@@ -798,7 +798,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
    try:
       if type(fn) is LPrimitive:
          if fn.compiledLambdaList:
-            kw_env = Environment.child( env, fn.compiledLambdaList.template )
+            kw_env = Environment( env, evalFn=ctx.lEval )
             kw_env.bindArguments( fn.compiledLambdaList, args )
             result = fn.pythonFn( ctx, kw_env, args )
          else:
@@ -809,7 +809,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
          return _Val(result), env   # VALUE - wrap; LMultipleValues preserved for frames to strip
 
       else:  # LFunction
-         new_env = Environment.child( fn.capturedEnvironment, fn.compiledLambdaList.template )
+         new_env = Environment( fn.capturedEnvironment, evalFn=ctx.lEval )
          new_env.bindArguments( fn.compiledLambdaList, args )
          body = fn.bodyAST
          if not body:

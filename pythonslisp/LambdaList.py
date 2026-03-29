@@ -30,11 +30,9 @@ class CompiledLambdaList:
    aux           : list[(varName: str, initForm: Any)]
    min_args      : int
    max_args      : int | None       — None when the list is unbounded
-   template      : dict             — pre-sized {name: None} for all bound names;
-                   copied at call time to avoid per-call dict growth and resize
    """
    __slots__ = ('positional', 'optional', 'rest', 'keys', 'key_order',
-                'allow_other_keys', 'aux', 'min_args', 'max_args', 'template')
+                'allow_other_keys', 'aux', 'min_args', 'max_args')
 
    def __init__( self, positional: list, optional: list, rest: (str|None),
                  keys: (dict|None), key_order: (list|None),
@@ -49,31 +47,6 @@ class CompiledLambdaList:
       self.aux:              list         = aux
       self.min_args:         int          = min_args
       self.max_args:         (int|None)   = max_args
-      self.template:         dict         = dict.fromkeys( _collect_names(self) )
-
-
-def _collect_names( cll: CompiledLambdaList ) -> list:
-   """Return all variable names bound by cll, recursing into destructuring sub-patterns."""
-   names = []
-   for p in cll.positional:
-      if isinstance( p, str ):
-         names.append( p )
-      else:   # nested CompiledLambdaList
-         names.extend( _collect_names(p) )
-   for varName, _, pvarName in cll.optional:
-      names.append( varName )
-      if pvarName:
-         names.append( pvarName )
-   if cll.rest is not None:
-      names.append( cll.rest )
-   if cll.keys is not None:
-      for varName, pvarName, _ in cll.keys.values():
-         names.append( varName )
-         if pvarName:
-            names.append( pvarName )
-   for varName, _ in cll.aux:
-      names.append( varName )
-   return names
 
 
 def compileLambdaList( ll: list, destructuring: bool = False ) -> CompiledLambdaList:

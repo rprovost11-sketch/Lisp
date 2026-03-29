@@ -34,19 +34,6 @@ class Environment:
       else:
          self._evalFn = None
 
-   @classmethod
-   def child( cls, parent: Environment, template: (dict|None) = None ) -> Environment:
-      """Create a child scope for a function call, inheriting evalFn from parent.
-      If template is provided (a pre-sized dict from CompiledLambdaList.template),
-      _bindings is initialized from template.copy() — avoiding per-call dict growth
-      and resize.  Otherwise starts with an empty dict."""
-      obj              = cls.__new__( cls )
-      obj._bindings    = template.copy() if template is not None else {}
-      obj._parent      = parent
-      obj._GLOBAL_ENV  = parent._GLOBAL_ENV
-      obj._evalFn      = parent._evalFn
-      return obj
-
    # -----------------------------------------------------------------------
    # Basic binding and lookup
    # -----------------------------------------------------------------------
