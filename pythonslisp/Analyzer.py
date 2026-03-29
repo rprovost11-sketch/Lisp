@@ -16,7 +16,8 @@ from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LPrimitive, LFunction, LList, arity_mismatch_msg, derive_arity
 from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
                                          LRuntimeError,
-                                         LRuntimePrimError )
+                                         LRuntimePrimError,
+                                         LArgBindingError )
 
 
 class Analyzer:
@@ -135,6 +136,7 @@ class Analyzer:
             raise LRuntimePrimError(env.lookup('LAMBDA'), '1 or more arguments expected.')
          if not isinstance(args[0], list):
             raise LRuntimePrimError(env.lookup('LAMBDA'), 'Invalid argument 1. PARAMETER LIST expected.')
+         Analyzer.analyzeLambdaList(args[0])
          for bodyForm in args[1:]:
             Analyzer.analyze(env, bodyForm)
          return
@@ -147,6 +149,7 @@ class Analyzer:
             raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Invalid argument 1. SYMBOL expected.')
          if not isinstance(args[1], list):
             raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Invalid argument 2. PARAMETER LIST expected.')
+         Analyzer.analyzeLambdaList(args[1], destructuring=True)
          funcBody = list(args[2:])
          if len(funcBody) < 1:
             raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
@@ -297,6 +300,211 @@ class Analyzer:
          Analyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
             Analyzer.analyze(env, bodyForm)
+
+   @staticmethod
+   def analyzeLambdaList( lambdaListAST: list, destructuring: bool = False ) -> None:
+      """Validate lambda list structure at definition time.
+
+      Performs full structural validation and duplicate-name detection.
+      Raises LArgBindingError for any structural problem.  After this
+      passes, bindArguments can assume the lambda list is well-formed.
+      """
+      _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&BODY', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
+      seen: set = set()
+
+      def _no_dup( sym: LSymbol, context: str ) -> None:
+         if sym.name in seen:
+            raise LArgBindingError( f'Duplicate parameter name {sym.name} in {context}.' )
+         seen.add( sym.name )
+
+      def _validate( ll: list, destr: bool ) -> None:
+         length = len( ll )
+         i      = 0
+
+         # ---- Positional params ----
+         while i < length:
+            param = ll[i]
+            if isinstance( param, LSymbol ):
+               if param.startswith( '&' ):
+                  break
+               _no_dup( param, 'positional parameters' )
+            elif isinstance( param, list ) and destr:
+               _validate( param, destr=True )
+            else:
+               raise LArgBindingError( f'Lambda list item {i + 1} must be a symbol.' )
+            i += 1
+
+         if i >= length:
+            return
+
+         keyword = ll[i]
+         if not isinstance( keyword, LSymbol ):
+            raise LArgBindingError( f'Lambda list item {i + 1} must be a symbol.' )
+
+         # ---- &OPTIONAL ----
+         if keyword.name == '&OPTIONAL':
+            i += 1
+            while i < length:
+               spec = ll[i]
+               if isinstance( spec, LSymbol ):
+                  if spec.startswith( '&' ):
+                     break
+                  _no_dup( spec, 'positional parameters' )
+               elif isinstance( spec, list ):
+                  slen = len( spec )
+                  if slen < 1 or slen > 3:
+                     raise LArgBindingError(
+                        'Parameter spec following &OPTIONAL must be a list of '
+                        '(<variable> [<defaultvalue> [<pvar>]] ).' )
+                  var = spec[0]
+                  if not isinstance( var, LSymbol ):
+                     raise LArgBindingError(
+                        'Parameter variable in &OPTIONAL spec must be a symbol.' )
+                  if var.startswith( '&' ):
+                     raise LArgBindingError(
+                        f'Lambda list keyword {var} cannot be used as a variable name in &OPTIONAL spec.' )
+                  _no_dup( var, 'lambda list' )
+                  if slen == 3:
+                     pvar = spec[2]
+                     if isinstance( pvar, LSymbol ):
+                        if pvar.startswith( '&' ):
+                           raise LArgBindingError(
+                              f'Lambda list keyword {pvar} cannot be used as a supplied-p variable in &OPTIONAL spec.' )
+                        _no_dup( pvar, 'supplied-p variable' )
+                     elif not isinstance( pvar, list ):
+                        raise LArgBindingError(
+                           f'Parameter pvar following {var} must be a symbol.' )
+               else:
+                  raise LArgBindingError(
+                     'Parameter spec following &OPTIONAL must be a <variable> or a list of '
+                     '(<variable> <defaultvalue>).' )
+               i += 1
+
+            if i >= length:
+               return
+            keyword = ll[i]
+            if not isinstance( keyword, LSymbol ):
+               raise LArgBindingError( f'Lambda list item {i + 1} must be a symbol.' )
+
+         # ---- &REST / &BODY ----
+         if keyword.name == '&REST' or ( keyword.name == '&BODY' and destr ):
+            i += 1
+            if i >= length:
+               raise LArgBindingError( f'Lambda list item {i + 1}: symbol expected after &rest.' )
+            rest_var = ll[i]
+            if not isinstance( rest_var, LSymbol ) or rest_var.startswith( '&' ):
+               raise LArgBindingError( f'Lambda list item {i + 1}: symbol expected after &rest.' )
+            _no_dup( rest_var, '&REST' )
+            i += 1
+
+            if i >= length:
+               return
+            keyword = ll[i]
+            if not isinstance( keyword, LSymbol ):
+               raise LArgBindingError( f'Lambda list item {i + 1} must be a symbol.' )
+
+         # ---- &KEY ----
+         if keyword.name == '&KEY':
+            i += 1
+            while i < length:
+               spec = ll[i]
+               if isinstance( spec, LSymbol ):
+                  if spec.startswith( '&' ):
+                     break
+                  _no_dup( spec, 'positional parameters' )
+               elif isinstance( spec, list ):
+                  slen = len( spec )
+                  if slen == 0:
+                     raise LArgBindingError( 'Empty parameter spec () in &KEY lambda list.' )
+                  key_var_spec = spec[0]
+                  if isinstance( key_var_spec, LSymbol ):
+                     if key_var_spec.startswith( '&' ):
+                        raise LArgBindingError(
+                           f'Lambda list keyword {key_var_spec} cannot be used as a variable name in &KEY spec.' )
+                     _no_dup( key_var_spec, 'lambda list' )
+                  elif isinstance( key_var_spec, list ):
+                     if len( key_var_spec ) != 2:
+                        raise LArgBindingError(
+                           'Key Var pair following &KEY must contain exactly two elements.' )
+                     key_sym, var_sym = key_var_spec
+                     if not isinstance( key_sym, LSymbol ) or not key_sym.startswith( ':' ):
+                        raise LArgBindingError(
+                           'The key in a &KEY (keyword var) pair must be a keyword symbol (e.g. :mykey).' )
+                     if not isinstance( var_sym, LSymbol ):
+                        raise LArgBindingError(
+                           'Variable in &KEY (keyword var) pair must be a symbol.' )
+                     _no_dup( var_sym, '&KEY (keyword var) pair' )
+                  else:
+                     raise LArgBindingError(
+                        '&KEY key/var spec must be either a symbol or a list (:keySymbol varSymbol).' )
+                  if slen > 3:
+                     raise LArgBindingError(
+                        'Too many arguments specified in a parameter keyword initialization list.' )
+                  if slen == 3:
+                     pvar = spec[2]
+                     if isinstance( pvar, LSymbol ):
+                        if pvar.startswith( '&' ):
+                           raise LArgBindingError(
+                              f'Lambda list keyword {pvar} cannot be used as a supplied-p variable in &KEY spec.' )
+                        _no_dup( pvar, 'supplied-p variable' )
+                     elif not isinstance( pvar, list ):
+                        raise LArgBindingError(
+                           f'pvar for &KEY parameter {key_var_spec} must be a symbol.' )
+               else:
+                  raise LArgBindingError(
+                     'Parameter spec following &KEY must be a symbol or a list.' )
+               i += 1
+
+            if i >= length:
+               return
+            keyword = ll[i]
+            if not isinstance( keyword, LSymbol ):
+               raise LArgBindingError( f'Lambda list item {i + 1} must be a symbol.' )
+
+            if keyword.name == '&ALLOW-OTHER-KEYS':
+               i += 1
+               if i >= length:
+                  return
+               keyword = ll[i]
+               if not isinstance( keyword, LSymbol ):
+                  raise LArgBindingError( f'Lambda list item {i + 1} must be a symbol.' )
+
+         # ---- &AUX ----
+         if keyword.name == '&AUX':
+            i += 1
+            while i < length:
+               spec = ll[i]
+               if isinstance( spec, LSymbol ):
+                  if spec.startswith( '&' ):
+                     raise LArgBindingError( f'{spec} occurs after &AUX.' )
+                  _no_dup( spec, 'positional parameters' )
+               elif isinstance( spec, list ):
+                  slen = len( spec )
+                  if slen < 1 or slen > 2:
+                     raise LArgBindingError(
+                        'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
+                  var = spec[0]
+                  if not isinstance( var, LSymbol ) or var.startswith( '&' ):
+                     raise LArgBindingError(
+                        'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
+                  _no_dup( var, 'positional parameters' )
+               else:
+                  raise LArgBindingError(
+                     'Parameter spec following &AUX must be a <variable> or a list of (<variable> [<defaultvalue>]).' )
+               i += 1
+            return
+
+         # ---- Unknown or misplaced &-keyword ----
+         if keyword.startswith( '&' ):
+            if keyword.name in _KNOWN_KEYWORDS:
+               raise LArgBindingError(
+                  f'{keyword} is misplaced in the lambda list.  '
+                  f'Valid order: &optional, &rest, &key, &aux.' )
+            raise LArgBindingError( f'Unknown lambda list keyword: {keyword}.' )
+
+         raise LArgBindingError( f'Unexpected content at position {i + 1} in lambda list.' )
+
+      _validate( lambdaListAST, destructuring )
 
    @staticmethod
    def _analyzeMakeDict( env: Environment, args: list ) -> None:

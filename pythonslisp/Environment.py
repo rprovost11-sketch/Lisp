@@ -115,20 +115,16 @@ class Environment:
 
    def bindArguments( self, lambdaListAST: list[Any], argList: Sequence[Any],
                       destructuring: bool = False ) -> None:
-      paramListLength = len(lambdaListAST)
-      argListLength   = len(argList)
+      argListLength = len(argList)
 
       paramNum, argNum = self._bindPositionalArgs( lambdaListAST, 0, argList, 0, destructuring )
 
-      # Retrieve the next param which should be a symbol
       try:
          nextParam = lambdaListAST[paramNum]
       except IndexError:
          if argNum < argListLength:
             raise LArgBindingError( f'Too many arguments. {self._arityMsg(lambdaListAST, argListLength)}' )
-         return          # All params used up.  Return gracefully
-      if not isinstance(nextParam, LSymbol):
-         raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
+         return
 
       if nextParam.name == '&OPTIONAL':
          paramNum, argNum = self._bindOptionalArgs( lambdaListAST, paramNum+1, argList, argNum )
@@ -138,9 +134,7 @@ class Environment:
          except IndexError:
             if argNum < argListLength:
                raise LArgBindingError( f'Too many arguments. {self._arityMsg(lambdaListAST, argListLength)}' )
-            return          # All params used up.  Return gracefully
-         if not isinstance(nextParam, LSymbol):
-            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
+            return
 
       rest_was_bound = False
       if nextParam.name == '&REST' or (nextParam.name == '&BODY' and destructuring):
@@ -150,9 +144,7 @@ class Environment:
          try:
             nextParam = lambdaListAST[paramNum]
          except IndexError:
-            return          # All params used up.  Return gracefully
-         if not isinstance(nextParam, LSymbol):
-            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
+            return
 
       if nextParam.name == '&KEY':
          paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum,
@@ -161,93 +153,10 @@ class Environment:
          try:
             nextParam = lambdaListAST[paramNum]
          except IndexError:
-            return          # All params used up.  Return gracefully
-         if not isinstance(nextParam, LSymbol):
-            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
+            return
 
       if nextParam.name == '&AUX':
-         paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
-      elif nextParam.startswith('&'):
-         _KNOWN_KEYWORDS = {'&OPTIONAL', '&REST', '&BODY', '&KEY', '&AUX', '&ALLOW-OTHER-KEYS'}
-         if nextParam.name in _KNOWN_KEYWORDS:
-            raise LArgBindingError( f'{nextParam} is misplaced in the lambda list.  Valid order: &optional, &rest, &key, &aux.' )
-         else:
-            raise LArgBindingError( f'Unknown lambda list keyword: {nextParam}.' )
-
-      if paramNum < paramListLength:
-         raise LArgBindingError( f'Unexpected content at position {paramNum} in lambda list.' )
-
-   # -----------------------------------------------------------------------
-
-   @staticmethod
-   def _validateNoDuplicateParams( lambdaListAST: list[Any],
-                                    destructuring: bool = False ) -> None:
-      '''Pre-pass: verify no variable name appears more than once in a lambda list.'''
-      seen: set[str] = set()
-
-      def _check( name: Any, context: str ) -> None:
-         if not isinstance(name, LSymbol):
-            return     # other validation will catch non-symbols
-         if name.startswith('&'):
-            return     # &-keywords are not parameter names
-         if name.name in seen:
-            raise LArgBindingError( f'Duplicate parameter name {name.name} in {context}.' )
-         seen.add( name.name )
-
-      def _check_pattern( pattern: Any, context: str ) -> None:
-         '''Recursively check all variable names within a destructuring pattern.'''
-         if isinstance( pattern, LSymbol ):
-            _check( pattern, context )
-         elif isinstance( pattern, list ):
-            in_req = True
-            i = 0
-            while i < len(pattern):
-               item = pattern[i]
-               if isinstance( item, LSymbol ) and item.startswith('&'):
-                  in_req = False
-                  if item.name in ('&REST', '&BODY'):
-                     i += 1
-                     if i < len(pattern):
-                        _check( pattern[i], '&REST in ' + context )
-               elif in_req:
-                  _check_pattern( item, context )
-               else:
-                  if isinstance( item, list ) and item:
-                     _check( item[0], context )
-                     if len(item) >= 3:
-                        _check( item[2], context )   # supplied-p var
-               i += 1
-
-      in_required = True
-      index       = 0
-      lambdaListLen = len( lambdaListAST )
-      while index < lambdaListLen:
-         spec = lambdaListAST[index]
-
-         if isinstance( spec, LSymbol ):
-            if spec.name in ('&REST', '&BODY'):
-               in_required = False
-               index += 1
-               if index < lambdaListLen:
-                  _check( lambdaListAST[index], '&REST' )
-            elif spec.startswith('&'):
-               in_required = False
-            else:
-               _check( spec, 'positional parameters' )
-
-         elif isinstance( spec, list ) and len(spec) > 0:
-            if in_required and destructuring:
-               _check_pattern( spec, 'destructuring pattern' )
-            else:
-               keyVarSpec = spec[0]
-               if isinstance( keyVarSpec, LSymbol ):
-                  _check( keyVarSpec, 'lambda list' )
-               elif isinstance( keyVarSpec, list ) and len(keyVarSpec) >= 2:
-                  _check( keyVarSpec[1], '&KEY (keyword var) pair' )
-               if len(spec) >= 3:
-                  _check( spec[2], 'supplied-p variable' )
-
-         index += 1
+         self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
 
    def _bindPositionalArgs( self, lambdaListAST: list[Any], paramNum: int,
                             argList: Sequence[Any], argNum: int,
@@ -259,10 +168,7 @@ class Environment:
          if isinstance( paramName, LSymbol ):
             if paramName.startswith('&'):
                break
-         elif isinstance( paramName, list ) and destructuring:
-            pass   # destructuring pattern - handled below
-         else:
-            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
+         # else: list destructuring pattern (validated at definition time)
 
          try:
             argVal = argList[argNum]
@@ -299,9 +205,9 @@ class Environment:
             if paramSpec.startswith('&'):
                break
             varName  = paramSpec
-            initForm = list( )
+            initForm = list()
             pvarName = None
-         elif isinstance(paramSpec, list):
+         else:   # list spec (validated at definition time)
             paramSpecLen = len(paramSpec)
             if paramSpecLen == 1:
                varName  = paramSpec[0]
@@ -310,21 +216,8 @@ class Environment:
             elif paramSpecLen == 2:
                varName, initForm = paramSpec
                pvarName = None
-            elif paramSpecLen == 3:
+            else:   # == 3
                varName, initForm, pvarName = paramSpec
-            else:
-               raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a list of (<variable> [<defaultvalue> [<pvar>]] ).' )
-
-            if not isinstance(varName, LSymbol):
-               raise LArgBindingError( 'Parameter variable in &OPTIONAL spec must be a symbol.' )
-            if varName.startswith('&'):
-               raise LArgBindingError( f'Lambda list keyword {varName} cannot be used as a variable name in &OPTIONAL spec.' )
-            if pvarName and (not isinstance(pvarName, LSymbol)):
-               raise LArgBindingError( f'Parameter pvar following {varName} must be a symbol.' )
-            if isinstance(pvarName, LSymbol) and pvarName.startswith('&'):
-               raise LArgBindingError( f'Lambda list keyword {pvarName} cannot be used as a supplied-p variable in &OPTIONAL spec.' )
-         else:
-            raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>).' )
          paramNum += 1
 
          originalInitForm = initForm                  # save before potential overwrite
@@ -348,17 +241,9 @@ class Environment:
    def _bindRestArgs( self, lambdaListAST: list[Any], paramNum: int,
                       argList: Sequence[Any], argNum: int ) -> tuple[int, int]:
       '''Syntax:  &rest var'''
-      try:
-         paramName = lambdaListAST[paramNum]
-      except IndexError:
-         raise LArgBindingError( f'Lambda list item {paramNum+1}: symbol expected after &rest.' )
-
-      if not isinstance(paramName, LSymbol ) or paramName.startswith('&'):
-         raise LArgBindingError( f'Lambda list item {paramNum+1}: symbol expected after &rest.' )
-
+      paramName   = lambdaListAST[paramNum]   # guaranteed valid by analyzeLambdaList
       theRestArgs = argList[argNum:]
       self._bindings[paramName.name] = list(theRestArgs)
-
       return paramNum + 1, argNum
 
    def _bindKeyArgs( self, lambdaListAST: list[Any], paramNum: int,
@@ -373,7 +258,7 @@ class Environment:
       keysDict      = {}    # keyStr -> (varName, pvarName, initForm)
       keyParamOrder = []    # ordered list of keyStr for incremental evaluation
 
-      # ---- Phase 1: Parse key parameter specs (store initForms, don't evaluate yet) ----
+      # ---- Phase 1: Build keysDict from lambda list key specs ----
       while paramNum < paramListLength:
          paramSpec = lambdaListAST[paramNum]
          if isinstance(paramSpec, LSymbol):
@@ -383,27 +268,14 @@ class Environment:
             varName  = paramSpec
             initForm = list()
             pvarName = None
-         elif isinstance(paramSpec, list):
-            if len(paramSpec) == 0:
-               raise LArgBindingError( f'Empty parameter spec () in &KEY lambda list.' )
+         else:   # list spec (validated at definition time)
             keyVarSpec, *initFormSpec = paramSpec
 
             if isinstance(keyVarSpec, LSymbol):
-               if keyVarSpec.startswith('&'):
-                  raise LArgBindingError( f'Lambda list keyword {keyVarSpec} cannot be used as a variable name in &KEY spec.' )
                keyName = keyVarSpec
                varName = keyVarSpec
-            elif isinstance(keyVarSpec, list):
-               try:
-                  keyName, varName = keyVarSpec
-               except ValueError:
-                  raise LArgBindingError( f'Key Var pair following &KEY must contain exactly two elements.' )
-               if not isinstance(keyName, LSymbol) or not keyName.startswith(':'):
-                  raise LArgBindingError( f'The key in a &KEY (keyword var) pair must be a keyword symbol (e.g. :mykey).' )
-               if not isinstance(varName, LSymbol):
-                  raise LArgBindingError( f'Variable in &KEY (keyword var) pair must be a symbol.' )
-            else:
-               raise LArgBindingError( f'&KEY key/var spec must be either a symbol or a list (:keySymbol varSymbol).' )
+            else:   # (:key var) pair
+               keyName, varName = keyVarSpec
 
             initFormSpecLen = len(initFormSpec)
             if initFormSpecLen == 0:
@@ -412,16 +284,8 @@ class Environment:
             elif initFormSpecLen == 1:
                initForm = initFormSpec[0]
                pvarName = None
-            elif initFormSpecLen == 2:
+            else:   # == 2
                initForm, pvarName = initFormSpec
-               if pvarName and not isinstance(pvarName, LSymbol):
-                  raise LArgBindingError( f'pvar for &KEY parameter {varName} must be a symbol.' )
-               if isinstance(pvarName, LSymbol) and pvarName.startswith('&'):
-                  raise LArgBindingError( f'Lambda list keyword {pvarName} cannot be used as a supplied-p variable in &KEY spec.' )
-            else:
-               raise LArgBindingError( f'Too many arguments specified in a parameter keyword initialization list.' )
-         else:
-            raise LArgBindingError( f'Parameter spec following &KEY must be a symbol or a list.' )
 
          keyStr = keyName.name[1:] if keyName.startswith(':') else keyName.name
          keysDict[keyStr]   = (varName, pvarName, initForm)
@@ -510,29 +374,18 @@ class Environment:
          paramSpec = lambdaListAST[paramNum]
 
          if isinstance( paramSpec, LSymbol ):
-            if paramSpec.startswith('&'):
-               raise LArgBindingError( f'{paramSpec} occurs after &AUX.' )
             varName  = paramSpec
-            initForm = list( )
-         elif isinstance(paramSpec, list):
+            initForm = list()
+         else:   # list spec (validated at definition time)
             paramSpecLen = len(paramSpec)
             if paramSpecLen == 1:
                varName  = paramSpec[0]
                initForm = list()
-            elif paramSpecLen == 2:
+            else:   # == 2
                varName, initForm = paramSpec
-            else:
-               raise LArgBindingError( 'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
-
-            if not isinstance(varName, LSymbol) or varName.startswith('&'):
-               raise LArgBindingError( 'Parameter spec following &AUX must be a list of (<variable> [<defaultvalue>]).' )
-
             initForm = self._evalFn( self, initForm )
-         else:
-            raise LArgBindingError( 'Parameter spec following &AUX must be a <variable> or a list of (<variable> [<defaultvalue>]).' )
 
          self._bindings[varName.name] = initForm
-
          paramNum += 1
 
       return paramNum, argNum

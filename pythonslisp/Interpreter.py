@@ -197,6 +197,7 @@ instead of the global environment."""
             self._name        = primitiveSymbolString.upper()
             if mode is LambdaListMode.FULL_BINDING:
                ll_ast = interpreter._parser.parse( params )[1]
+               Analyzer.analyzeLambdaList( ll_ast )
                self._lambdaListAST = ll_ast
                stripped = params.strip()
                if stripped.startswith('(') and stripped.endswith(')'):

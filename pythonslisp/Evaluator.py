@@ -1068,7 +1068,6 @@ def cek_eval( ctx, env, expr ) -> Any:
                funcBody  = funcBody[1:]
             else:
                docString = ''
-            Environment._validateNoDuplicateParams( funcParams )
             C = _Val( LFunction(LSymbol(''), funcParams, docString, funcBody,
                                 capturedEnvironment=E) )
             continue
@@ -1082,7 +1081,6 @@ def cek_eval( ctx, env, expr ) -> Any:
                funcBody  = funcBody[1:]
             else:
                docString = ''
-            Environment._validateNoDuplicateParams( funcParams )
             macro = LMacro(fnName, funcParams, docString, funcBody)
             E.bindGlobal(fnName.name, macro)
             C = _Val(macro)
