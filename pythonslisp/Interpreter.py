@@ -17,6 +17,7 @@ from pythonslisp.Analyzer import Analyzer
 from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
 from pythonslisp.extensions import LambdaListMode, primitive as _ext_primitive
+from pythonslisp.LambdaList import compileLambdaList
 from pythonslisp.Evaluator import cek_eval as _cek_eval
 
 
@@ -198,17 +199,17 @@ instead of the global environment."""
             if mode is LambdaListMode.FULL_BINDING:
                ll_ast = interpreter._parser.parse( params )[1]
                Analyzer.analyzeLambdaList( ll_ast )
-               self._lambdaListAST = ll_ast
+               compiledLL = compileLambdaList( ll_ast )
+               self._compiledLambdaList = compiledLL
                stripped = params.strip()
                if stripped.startswith('(') and stripped.endswith(')'):
                   stripped = stripped[1:-1].strip()
                self._paramsString = stripped
-               derived_min, derived_max = derive_arity( ll_ast )
-               self._min_args = derived_min if min_args is _UNSET else min_args
-               self._max_args = derived_max if max_args is _UNSET else max_args
+               self._min_args = compiledLL.min_args if min_args is _UNSET else min_args
+               self._max_args = compiledLL.max_args if max_args is _UNSET else max_args
             elif mode is LambdaListMode.ARITY_ONLY:
                ll_ast = interpreter._parser.parse( params )[1]
-               self._lambdaListAST = None
+               self._compiledLambdaList = None
                stripped = params.strip()
                if stripped.startswith('(') and stripped.endswith(')'):
                   stripped = stripped[1:-1].strip()
@@ -217,7 +218,7 @@ instead of the global environment."""
                self._min_args = derived_min if min_args is _UNSET else min_args
                self._max_args = derived_max if max_args is _UNSET else max_args
             else:  # DOC_ONLY
-               self._lambdaListAST = None
+               self._compiledLambdaList = None
                stripped = params.strip()
                if stripped.startswith('(') and stripped.endswith(')'):
                   stripped = stripped[1:-1].strip()
@@ -231,7 +232,7 @@ instead of the global environment."""
             lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
                                        min_args=self._min_args, max_args=self._max_args,
                                        arity_msg=self._arity_msg,
-                                       lambdaListAST=self._lambdaListAST )
+                                       compiledLambdaList=self._compiledLambdaList )
             if _target_env is not None:
                _target_env.bindLocal( self._name, lPrimitivObj )
             else:
@@ -251,7 +252,10 @@ Used by extension .py files that need to register macros via @macro."""
          name_sym     = LSymbol( name )
          params_ast   = interpreter._parser.parse( params_str )[1]
          body_ast     = interpreter._parser.parse( body_str )[1:]   # strip PROGN, get forms
-         macro_obj    = LMacro( name_sym, params_ast, docstring, body_ast )
+         from pythonslisp.Analyzer import Analyzer
+         Analyzer.analyzeLambdaList( params_ast, destructuring=True )
+         compiledLL   = compileLambdaList( params_ast, destructuring=True )
+         macro_obj    = LMacro( name_sym, params_ast, docstring, body_ast, compiledLambdaList=compiledLL )
          if _target_env is not None:
             _target_env.bindLocal( name_sym.name, macro_obj )
          else:

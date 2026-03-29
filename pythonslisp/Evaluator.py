@@ -30,6 +30,7 @@ from pythonslisp.Exceptions import ( LRuntimeError, LArgBindingError,
                                       Thrown, Signaled )
 from pythonslisp.Environment  import Environment, ModuleEnvironment
 from pythonslisp.Expander     import Expander
+from pythonslisp.LambdaList   import compileLambdaList
 
 
 # ---------------------------------------------------------------------------
@@ -796,9 +797,9 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
 
    try:
       if type(fn) is LPrimitive:
-         if fn.lambdaListAST:
+         if fn.compiledLambdaList:
             kw_env = Environment( env, evalFn=ctx.lEval )
-            kw_env.bindArguments( fn.lambdaListAST, args )
+            kw_env.bindArguments( fn.compiledLambdaList, args )
             result = fn.pythonFn( ctx, kw_env, args )
          else:
             result = fn.pythonFn( ctx, env, args )
@@ -809,7 +810,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
 
       else:  # LFunction
          new_env = Environment( fn.capturedEnvironment, evalFn=ctx.lEval )
-         new_env.bindArguments( fn.lambdaListAST, args )
+         new_env.bindArguments( fn.compiledLambdaList, args )
          body = fn.bodyAST
          if not body:
             if printed:
@@ -1068,8 +1069,9 @@ def cek_eval( ctx, env, expr ) -> Any:
                funcBody  = funcBody[1:]
             else:
                docString = ''
+            compiledLL = compileLambdaList( funcParams )
             C = _Val( LFunction(LSymbol(''), funcParams, docString, funcBody,
-                                capturedEnvironment=E) )
+                                capturedEnvironment=E, compiledLambdaList=compiledLL) )
             continue
 
          if headStr == 'DEFMACRO':
@@ -1081,7 +1083,8 @@ def cek_eval( ctx, env, expr ) -> Any:
                funcBody  = funcBody[1:]
             else:
                docString = ''
-            macro = LMacro(fnName, funcParams, docString, funcBody)
+            compiledLL = compileLambdaList( funcParams, destructuring=True )
+            macro = LMacro(fnName, funcParams, docString, funcBody, compiledLambdaList=compiledLL)
             E.bindGlobal(fnName.name, macro)
             C = _Val(macro)
             continue

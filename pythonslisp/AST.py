@@ -5,6 +5,7 @@ from typing import Any, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
    from pythonslisp.Environment import Environment
+   from pythonslisp.LambdaList import CompiledLambdaList
 
 # #################
 # Lisp Function API
@@ -55,17 +56,17 @@ class LCallable:
       self.docString:str = docString
 
 class LPrimitive( LCallable ):
-   __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'lambdaListAST')
+   __slots__ = ('pythonFn', 'paramsString', 'min_args', 'max_args', 'arity_msg', 'compiledLambdaList')
 
    def __init__( self, fn: Callable[[Environment], Any], name: str, paramsString: str, docString: str = '',
                  min_args: int = 0, max_args: (int|None) = None, arity_msg: str = '',
-                 lambdaListAST: (list|None) = None ) -> None:
+                 compiledLambdaList: (CompiledLambdaList|None) = None ) -> None:
       self.pythonFn:Callable[[Environment], Any] = fn
       self.paramsString:str = paramsString
       self.min_args:int       = min_args
       self.max_args:(int|None) = max_args
       self.arity_msg:str      = arity_msg
-      self.lambdaListAST:(list|None) = lambdaListAST
+      self.compiledLambdaList:(CompiledLambdaList|None) = compiledLambdaList
       super().__init__( name, docString )
 
    def typeLabel( self ):
@@ -86,12 +87,14 @@ class LPrimitive( LCallable ):
       return f'(PRIMITIVE {self.name} {params} ...)'
 
 class LFunction( LCallable ):
-   __slots__ = ('lambdaListAST', 'bodyAST', 'capturedEnvironment')
+   __slots__ = ('lambdaListAST', 'compiledLambdaList', 'bodyAST', 'capturedEnvironment')
 
-   def __init__( self, name: (LSymbol|str), lambdaListAST: list, docString: str, bodyAST: list, capturedEnvironment: Environment ) -> None:
-      self.lambdaListAST: list = lambdaListAST
-      self.bodyAST: list   = bodyAST
-      self.capturedEnvironment: Environment = capturedEnvironment
+   def __init__( self, name: (LSymbol|str), lambdaListAST: list, docString: str, bodyAST: list,
+                 capturedEnvironment: Environment, compiledLambdaList: CompiledLambdaList ) -> None:
+      self.lambdaListAST: list                         = lambdaListAST
+      self.compiledLambdaList: CompiledLambdaList      = compiledLambdaList
+      self.bodyAST: list                               = bodyAST
+      self.capturedEnvironment: Environment            = capturedEnvironment
       super().__init__( name.name if isinstance(name, LSymbol) else name, docString )
 
    def typeLabel( self ):
@@ -116,11 +119,13 @@ class LFunction( LCallable ):
 
 
 class LMacro( LCallable ):
-   __slots__ = ('lambdaListAST', 'bodyAST')
+   __slots__ = ('lambdaListAST', 'compiledLambdaList', 'bodyAST')
 
-   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list ) -> None:
-      self.lambdaListAST: list  = lambdaListAST
-      self.bodyAST: list    = bodyAST
+   def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list,
+                 compiledLambdaList: CompiledLambdaList ) -> None:
+      self.lambdaListAST: list                    = lambdaListAST
+      self.compiledLambdaList: CompiledLambdaList = compiledLambdaList
+      self.bodyAST: list                          = bodyAST
       super().__init__( name.name, docString )
 
    def typeLabel( self ):

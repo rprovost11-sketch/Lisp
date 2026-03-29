@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LPrimitive, LFunction, LList, arity_mismatch_msg, derive_arity
+from pythonslisp.AST import LSymbol, LPrimitive, LFunction, LList, arity_mismatch_msg
 from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
                                          LRuntimeError,
                                          LRuntimePrimError,
@@ -178,7 +178,9 @@ class Analyzer:
                      raise LRuntimePrimError(callableObj,
                         arity_mismatch_msg(callableObj.min_args, callableObj.max_args, numArgs))
             elif isinstance(callableObj, LFunction):
-               min_a, max_a = derive_arity(callableObj.lambdaListAST)
+               cll     = callableObj.compiledLambdaList
+               min_a   = cll.min_args
+               max_a   = cll.max_args
                numArgs = len(args)
                tooFew  = numArgs < min_a
                tooMany = max_a is not None and numArgs > max_a
