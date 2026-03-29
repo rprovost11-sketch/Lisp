@@ -756,7 +756,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
       try:
          pos_arg = env.lookupGlobal(pos_arg.name)
       except KeyError:
-         raise LRuntimePrimError( LP_help, f'Unknown symbol: {pos_arg.name}.' )
+         raise LRuntimePrimError( LP_help, f'Unbound variable: {pos_arg.name}.' )
 
    if is_struct_descriptor(pos_arg):
       print_struct_help( pos_arg, ctx.outStrm )
@@ -882,7 +882,7 @@ Has no effect if readline is not available.  Returns n."""
    if not isinstance( n, int ) or isinstance( n, bool ):
       raise LRuntimePrimError( LP_readline_set_history_length, 'Invalid argument 1. INTEGER expected.' )
    if n < 1:
-      raise LRuntimePrimError( LP_readline_set_history_length, 'History length must be a positive integer.' )
+      raise LRuntimePrimError( LP_readline_set_history_length, 'Invalid argument 1. Positive INTEGER expected.' )
    if _rl is not None:
       _rl.set_history_length( n )
    return n

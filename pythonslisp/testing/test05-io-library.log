@@ -1477,7 +1477,7 @@ ab
 %%% Runtime Error: "" (1,2)
 %%% (readline-set-history-length 0)
 %%%  ^
-%%% ERROR 'READLINE-SET-HISTORY-LENGTH': History length must be a positive integer.
+%%% ERROR 'READLINE-SET-HISTORY-LENGTH': Invalid argument 1. Positive INTEGER expected.
 %%% PRIMITIVE USAGE: (READLINE-SET-HISTORY-LENGTH n)
 
 ; error: arg must be an integer
