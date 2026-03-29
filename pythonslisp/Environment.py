@@ -108,11 +108,6 @@ class Environment:
    # Argument binding
    # -----------------------------------------------------------------------
 
-   @staticmethod
-   def _arityMsg( compiledLL: CompiledLambdaList, nProvided: int ) -> str:
-      """Build the 'N provided; M expected' portion of an arity error."""
-      return arity_mismatch_msg( compiledLL.min_args, compiledLL.max_args, nProvided )
-
    def bindArguments( self, compiledLL: CompiledLambdaList, argList: Sequence[Any] ) -> None:
       argNum = self._bindPositionalArgs( compiledLL, argList, 0 )
       argNum = self._bindOptionalArgs( compiledLL, argList, argNum )
@@ -120,7 +115,8 @@ class Environment:
       if compiledLL.keys is not None:
          self._bindKeyArgs( compiledLL, argList, argNum, skip_non_keywords=rest_was_bound )
       elif not rest_was_bound and argNum < len(argList):
-         raise LArgBindingError( f'Too many arguments. {self._arityMsg(compiledLL, len(argList))}' )
+         raise LArgBindingError(
+            f'Too many arguments. {arity_mismatch_msg(compiledLL.min_args, compiledLL.max_args, len(argList))}' )
       self._bindAuxArgs( compiledLL )
 
    def _bindPositionalArgs( self, compiledLL: CompiledLambdaList,
@@ -129,7 +125,8 @@ class Environment:
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LArgBindingError( f'Too few arguments. {self._arityMsg(compiledLL, argNum)}' )
+            raise LArgBindingError(
+               f'Too few arguments. {arity_mismatch_msg(compiledLL.min_args, compiledLL.max_args, argNum)}' )
          if isinstance( paramSpec, str ):
             self._bindings[paramSpec] = argVal
          else:   # nested CompiledLambdaList — destructuring sub-pattern
