@@ -119,14 +119,17 @@ class Listener( object ):
                if (inputExprStr != '') and (inputExprStr[0] == ']'):
                   self._runListenerCommand( inputExprStr )
                else:
-                  start = time.perf_counter( )
-                  rawVal,parseTime,evalTime = self._interp.rawEval_instrumented( inputExprStr )
-                  totalTime  = time.perf_counter( ) - start
-                  self._writeResult( rawVal )
                   if self._instrumenting:
+                     start = time.perf_counter( )
+                     rawVal,parseTime,evalTime = self._interp.rawEval_instrumented( inputExprStr )
+                     totalTime = time.perf_counter( ) - start
+                     self._writeResult( rawVal )
                      print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
                      print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
                      print( f'-------------     Total execution time: {totalTime:15.8f} sec' )
+                  else:
+                     rawVal = self._interp.rawEval( inputExprStr )
+                     self._writeResult( rawVal )
 
             except StopIteration:
                break
