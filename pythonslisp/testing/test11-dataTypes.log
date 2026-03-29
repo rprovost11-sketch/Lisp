@@ -453,7 +453,7 @@
 %%% (make-point :z 99)
 %%%  ^
 %%% Error binding arguments in call to function "MAKE-POINT".
-%%% Unexpected keyword found Z.
+%%% Argument 1: unexpected keyword :Z.
 ==>
 
 ; --- struct descriptors ---

@@ -244,7 +244,7 @@
 %%%    (if (= n 0) (tco-arity) (tco-arity (- n 1))))
 %%%                 ^
 %%% Error binding arguments in call to function "TCO-ARITY".
-%%% Too few arguments.  0 arguments provided; 1 expected.
+%%% Too few arguments. 0 arguments provided; 1 expected.
 ==>
 
 ; --- 14. Unbound variable in tail position propagates correctly ---

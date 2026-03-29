@@ -634,7 +634,7 @@
 %%% ((lambda (a b) (+ a b)) 1)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too few arguments.  1 argument provided; 2 expected.
+%%% Too few arguments. 1 argument provided; 2 expected.
 ==>
 
 >>> ;;; Error: too many arguments, no &rest (lambda)
@@ -644,7 +644,7 @@
 %%% ((lambda (a) a) 1 2 3)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too many arguments.  3 arguments provided; 1 expected.
+%%% Too many arguments. 3 arguments provided; 1 expected.
 ==>
 
 >>> ;;; Error: too many arguments after &optional exhausted (lambda)
@@ -654,7 +654,7 @@
 %%% ((lambda (&optional a b) (list a b)) 1 2 3)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too many arguments.  3 arguments provided; 0 to 2 expected.
+%%% Too many arguments. 3 arguments provided; 0 to 2 expected.
 ==>
 
 >>> ;;; Error: unexpected keyword (lambda)
@@ -664,7 +664,7 @@
 %%% ((lambda (&key a) a) :b 2)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Unexpected keyword found B.
+%%% Argument 1: unexpected keyword :B.
 ==>
 
 >>> ;;; Error: keyword not followed by value (lambda)
@@ -674,7 +674,7 @@
 %%% ((lambda (&key a b) (list a b)) :a 1 :b)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Keyword B expected to be followed by a value.
+%%% Argument 3: keyword :B must be followed by a value.
 ==>
 
 >>> ;;; Named function: error message shows function name
@@ -782,7 +782,7 @@
 %%% ((lambda (&key a) a) :a 1 :b 99 :allow-other-keys nil)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Unexpected keyword found B.
+%%% Argument 3: unexpected keyword :B.
 ==>
 
 >>> ;;; :allow-other-keys t with no declared keys unknown keys silently ignored
@@ -812,7 +812,7 @@
 %%% ((lambda (&optional x) x) :foo)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Too many arguments.  1 argument provided; 0 or 1 expected.
+%%% Too many arguments. 1 argument provided; 0 or 1 expected.
 ==>
 
 >>> ;;; Fix 1: non-NIL explicit default used when keyword heuristic fires
@@ -862,7 +862,7 @@
 %%% ((lambda (&key) nil) :x 1)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Unexpected keyword found X.
+%%% Argument 1: unexpected keyword :X.
 ==>
 
 >>> ;;; NC5: duplicate positional parameter names
@@ -957,7 +957,7 @@
 %%% ((lambda (&rest &foo) &foo) 1 2)
 %%%  ^
 %%% Error binding arguments in call to "(lambda ...)".
-%%% Symbol expected after &rest.
+%%% Lambda list item 2: symbol expected after &rest.
 ==>
 
 >>> ;;; Bug 6: &-symbol rejected as variable name in &key list spec

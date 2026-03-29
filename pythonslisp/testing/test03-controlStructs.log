@@ -165,7 +165,7 @@ ABC
 %%% (for (x) (< x 5) (+ x 1) nil)
 %%%  ^
 %%% Error binding arguments in call to macro FOR.
-%%% Too few arguments.  1 argument provided; 2 expected.
+%%% Too few arguments. 1 argument provided; 2 expected.
 %%% MACRO USAGE: (FOR (VAR INIT) COND NEXTFORM &BODY BODY)
 
 ; Error: loop variable not a symbol
@@ -255,7 +255,7 @@ ABC
 %%% (while)
 %%%  ^
 %%% Error binding arguments in call to macro WHILE.
-%%% Too few arguments.  0 arguments provided; at least 1 expected.
+%%% Too few arguments. 0 arguments provided; at least 1 expected.
 %%% MACRO USAGE: (WHILE COND &REST BODY)
 ==>
 
@@ -274,7 +274,7 @@ ABC
 %%% (dotimes)
 %%%  ^
 %%% Error binding arguments in call to macro DOTIMES.
-%%% Too few arguments.  0 arguments provided; at least 1 expected.
+%%% Too few arguments. 0 arguments provided; at least 1 expected.
 %%% MACRO USAGE: (DOTIMES (VAR COUNT &OPTIONAL (RESULT NIL)) &BODY BODY)
 ==>
 
@@ -296,7 +296,7 @@ ABC
 %%% (dotimes (i 3 4 5) 1)
 %%%  ^
 %%% Error binding arguments in call to macro DOTIMES.
-%%% Too many arguments.  4 arguments provided; 2 or 3 expected.
+%%% Too many arguments. 4 arguments provided; 2 or 3 expected.
 %%% MACRO USAGE: (DOTIMES (VAR COUNT &OPTIONAL (RESULT NIL)) &BODY BODY)
 ==>
 
@@ -321,7 +321,7 @@ ABC
 %%% (dolist)
 %%%  ^
 %%% Error binding arguments in call to macro DOLIST.
-%%% Too few arguments.  0 arguments provided; at least 1 expected.
+%%% Too few arguments. 0 arguments provided; at least 1 expected.
 %%% MACRO USAGE: (DOLIST (VAR LIST-EXPR &OPTIONAL (RESULT NIL)) &BODY BODY)
 ==>
 

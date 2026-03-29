@@ -648,7 +648,7 @@ T
 ... (setf myvar1 10 myvar2)
 
 %%% Error binding arguments in call to macro SETF.
-%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% Too few arguments. 1 argument provided; at least 2 expected.
 %%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
@@ -697,7 +697,7 @@ T
 %%% (setf)
 %%%  ^
 %%% Error binding arguments in call to macro SETF.
-%%% Too few arguments.  0 arguments provided; at least 2 expected.
+%%% Too few arguments. 0 arguments provided; at least 2 expected.
 %%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
@@ -708,7 +708,7 @@ T
 %%% (setf x)
 %%%  ^
 %%% Error binding arguments in call to macro SETF.
-%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% Too few arguments. 1 argument provided; at least 2 expected.
 %%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
@@ -716,7 +716,7 @@ T
 ... (setf x 1 y)
 
 %%% Error binding arguments in call to macro SETF.
-%%% Too few arguments.  1 argument provided; at least 2 expected.
+%%% Too few arguments. 1 argument provided; at least 2 expected.
 %%% MACRO USAGE: (SETF PLACE VALUE &REST MORE)
 ==>
 
@@ -923,7 +923,7 @@ T
 %%% (help 1 2)
 %%%  ^
 %%% Error binding arguments in call to function "HELP".
-%%% Keyword expected, found 2.
+%%% Argument 2: keyword symbol expected, found 2.
 ==>
 
 >>> ;;; help with non-callable argument

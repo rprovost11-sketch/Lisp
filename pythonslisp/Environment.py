@@ -125,10 +125,10 @@ class Environment:
          nextParam = lambdaListAST[paramNum]
       except IndexError:
          if argNum < argListLength:
-            raise LArgBindingError( f'Too many arguments.  {self._arityMsg(lambdaListAST, argListLength)}' )
+            raise LArgBindingError( f'Too many arguments. {self._arityMsg(lambdaListAST, argListLength)}' )
          return          # All params used up.  Return gracefully
       if not isinstance(nextParam, LSymbol):
-         raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
+         raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
 
       if nextParam.name == '&OPTIONAL':
          paramNum, argNum = self._bindOptionalArgs( lambdaListAST, paramNum+1, argList, argNum )
@@ -137,10 +137,10 @@ class Environment:
             nextParam = lambdaListAST[paramNum]
          except IndexError:
             if argNum < argListLength:
-               raise LArgBindingError( f'Too many arguments.  {self._arityMsg(lambdaListAST, argListLength)}' )
+               raise LArgBindingError( f'Too many arguments. {self._arityMsg(lambdaListAST, argListLength)}' )
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
-            raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
+            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
 
       rest_was_bound = False
       if nextParam.name == '&REST' or (nextParam.name == '&BODY' and destructuring):
@@ -152,7 +152,7 @@ class Environment:
          except IndexError:
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
-            raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
+            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
 
       if nextParam.name == '&KEY':
          paramNum, argNum = self._bindKeyArgs( lambdaListAST, paramNum+1, argList, argNum,
@@ -163,7 +163,7 @@ class Environment:
          except IndexError:
             return          # All params used up.  Return gracefully
          if not isinstance(nextParam, LSymbol):
-            raise LArgBindingError( f"Param {paramNum} expected to be a symbol." )
+            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
 
       if nextParam.name == '&AUX':
          paramNum, argNum = self._bindAuxArgs( lambdaListAST, paramNum+1, argList, argNum )
@@ -262,12 +262,12 @@ class Environment:
          elif isinstance( paramName, list ) and destructuring:
             pass   # destructuring pattern - handled below
          else:
-            raise LArgBindingError( f"Positional param {paramNum} expected to be a symbol." )
+            raise LArgBindingError( f"Lambda list item {paramNum+1} must be a symbol." )
 
          try:
             argVal = argList[argNum]
          except IndexError:
-            raise LArgBindingError( f'Too few arguments.  {self._arityMsg(lambdaListAST, argNum)}' )
+            raise LArgBindingError( f'Too few arguments. {self._arityMsg(lambdaListAST, argNum)}' )
 
          if isinstance( paramName, LSymbol ):
             self._bindings[paramName.name] = argVal
@@ -324,7 +324,7 @@ class Environment:
             if isinstance(pvarName, LSymbol) and pvarName.startswith('&'):
                raise LArgBindingError( f'Lambda list keyword {pvarName} cannot be used as a supplied-p variable in &OPTIONAL spec.' )
          else:
-            raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>). ' )
+            raise LArgBindingError( 'Parameter spec following &OPTIONAL must be a <variable> or a list of (<variable> <defaultvalue>).' )
          paramNum += 1
 
          originalInitForm = initForm                  # save before potential overwrite
@@ -351,10 +351,10 @@ class Environment:
       try:
          paramName = lambdaListAST[paramNum]
       except IndexError:
-         raise LArgBindingError( f'Param name expected after &rest.' )
+         raise LArgBindingError( f'Lambda list item {paramNum+1}: symbol expected after &rest.' )
 
       if not isinstance(paramName, LSymbol ) or paramName.startswith('&'):
-         raise LArgBindingError( 'Symbol expected after &rest.' )
+         raise LArgBindingError( f'Lambda list item {paramNum+1}: symbol expected after &rest.' )
 
       theRestArgs = argList[argNum:]
       self._bindings[paramName.name] = list(theRestArgs)
@@ -450,12 +450,13 @@ class Environment:
       # Collect supplied keyword arguments (first occurrence wins per CL 3.4.1.4.1)
       suppliedArgs = {}    # keyStr -> argVal
       while argNum < argListLength:
-         keyArg = argList[argNum]
+         keyArg  = argList[argNum]
+         key_pos = argNum + 1  # 1-indexed position of this keyword in the arg list
          if (not isinstance(keyArg, LSymbol)) or (not keyArg.startswith(':')):
             if skip_non_keywords:
                argNum += 1
                continue
-            raise LArgBindingError( f'Keyword expected, found {keyArg}.' )
+            raise LArgBindingError( f'Argument {key_pos}: keyword symbol expected, found {keyArg}.' )
          keyArgStr = keyArg.name[1:]  # Strip the leading colon
          argNum += 1
 
@@ -468,7 +469,7 @@ class Environment:
             # by &rest - treat it as data and skip rather than raising an error.
             if skip_non_keywords and keyArgStr not in keysDict:
                continue
-            raise LArgBindingError( f'Keyword {keyArgStr} expected to be followed by a value.' )
+            raise LArgBindingError( f'Argument {key_pos}: keyword :{keyArgStr} must be followed by a value.' )
          argNum += 1
 
          # :allow-other-keys is always accepted; skip binding if not a declared key param
@@ -476,7 +477,7 @@ class Environment:
             continue
 
          if (not allowOtherKeys) and (keyArgStr not in keysDict):
-            raise LArgBindingError( f'Unexpected keyword found {keyArgStr}.' )
+            raise LArgBindingError( f'Argument {key_pos}: unexpected keyword :{keyArgStr}.' )
 
          # First occurrence wins; skip unknown keys when allowOtherKeys
          if keyArgStr in keysDict and keyArgStr not in suppliedArgs:
