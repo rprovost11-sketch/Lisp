@@ -110,14 +110,23 @@ class Environment:
 
    def bindArguments( self, compiledLL: CompiledLambdaList, argList: Sequence[Any] ) -> None:
       argNum = self._bindPositionalArgs( compiledLL, argList, 0 )
-      argNum = self._bindOptionalArgs( compiledLL, argList, argNum )
-      argNum, rest_was_bound = self._bindRestArgs( compiledLL, argList, argNum )
+
+      if compiledLL.optional:
+         argNum = self._bindOptionalArgs( compiledLL, argList, argNum )
+
+      if compiledLL.rest is not None:
+         argNum, rest_was_bound = self._bindRestArgs( compiledLL, argList, argNum )
+      else:
+         rest_was_bound = False
+
       if compiledLL.keys is not None:
          self._bindKeyArgs( compiledLL, argList, argNum, skip_non_keywords=rest_was_bound )
       elif not rest_was_bound and argNum < len(argList):
          raise LArgBindingError(
             f'Too many arguments. {arity_mismatch_msg(compiledLL.min_args, compiledLL.max_args, len(argList))}' )
-      self._bindAuxArgs( compiledLL )
+
+      if compiledLL.aux:
+         self._bindAuxArgs( compiledLL )
 
    def _bindPositionalArgs( self, compiledLL: CompiledLambdaList,
                             argList: Sequence[Any], argNum: int ) -> int:
