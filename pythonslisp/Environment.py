@@ -127,7 +127,7 @@ class Environment:
          except IndexError:
             raise LArgBindingError(
                f'Too few arguments. {arity_mismatch_msg(compiledLL.min_args, compiledLL.max_args, argNum)}' )
-         if isinstance( paramSpec, str ):
+         if type( paramSpec ) is str:
             self._bindings[paramSpec] = argVal
          else:   # nested CompiledLambdaList — destructuring sub-pattern
             self._destructuringBind( paramSpec, argVal )
@@ -151,7 +151,7 @@ class Environment:
          else:
             nextArg = None
 
-         if argNum >= argListLength or ( isinstance(nextArg, LSymbol) and nextArg.startswith(':') ):
+         if argNum >= argListLength or ( type(nextArg) is LSymbol and nextArg.startswith(':') ):
             boundVal = self._evalFn( self, initFormSpec )   # evaluate the spec default
             pvarVal  = list()                                # Nil / False
          else:
@@ -189,7 +189,7 @@ class Environment:
       scanIdx = argNum
       while scanIdx + 1 < argListLength:
          scanArg = argList[scanIdx]
-         if isinstance(scanArg, LSymbol) and scanArg.name == ':ALLOW-OTHER-KEYS':
+         if type(scanArg) is LSymbol and scanArg.name == ':ALLOW-OTHER-KEYS':
             if argList[scanIdx + 1] != list():   # non-NIL value enables it
                allowOtherKeys = True
             break
@@ -200,7 +200,7 @@ class Environment:
       while argNum < argListLength:
          keyArg  = argList[argNum]
          key_pos = argNum + 1
-         if (not isinstance(keyArg, LSymbol)) or (not keyArg.startswith(':')):
+         if (type(keyArg) is not LSymbol) or (not keyArg.startswith(':')):
             if skip_non_keywords:
                argNum += 1
                continue

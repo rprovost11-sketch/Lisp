@@ -9,11 +9,11 @@ Key invariant
 -------------
 In _lEval a recursive call always returns a value directly (return result).
 In the CEK loop, a looked-up or computed value would be set as C and looped -
-but then _is_value would misidentify a data list as code to evaluate.
+but that would misidentify a data list as code to evaluate.
 
-Solution: wrap every computed value in _Val().  The loop's first check is
-isinstance(C, _Val); only _Val-tagged objects (and self-evaluating atoms) are
-delivered to continuation frames.  Non-empty lists without _Val are always
+Solution: wrap every computed value in _Val().  The loop's first check tests
+whether C is a value: not a LSymbol AND not a non-empty list.  _Val-tagged
+objects and self-evaluating atoms satisfy this; non-empty lists are always
 treated as expressions (source code) to reduce.
 
 Frames that return expressions  → return (ast_node, env)
@@ -60,21 +60,6 @@ def _lTrue( x: Any ) -> bool:
    return True
 
 
-def _is_value( x: Any ) -> bool:
-   """True when x is self-evidently a value that needs no further reduction.
-   Non-empty lists without _Val are always treated as expressions."""
-   if isinstance(x, _Val):
-      return True
-   if type(x) is LSymbol:
-      return False
-   if isinstance(x, list) and len(x) > 0:
-      return False
-   return True
-
-
-def _unwrap( x: Any ) -> Any:
-   """Strip a _Val wrapper if present."""
-   return x.v if isinstance(x, _Val) else x
 
 
 def _extract_vardefs( vardefs ) -> list:
@@ -103,7 +88,7 @@ def _eval_body( body, env, K ) -> tuple:
 
 
 def _block_name( obj ):
-   if isinstance(obj, LSymbol):
+   if type(obj) is LSymbol:
       return obj.name
    if isinstance(obj, list) and not obj:   # L_NIL
       return 'NIL'
@@ -165,7 +150,8 @@ class IfFrame:
       self.else_expr = else_expr
       self.env       = env
 
-   def copy( self ): return self
+   def copy( self ):
+      return self
 
    def step( self, value, E, K, ctx ):
       # Returns an expression (AST node) - not _Val-wrapped.
@@ -181,7 +167,8 @@ class PrognFrame:
       self.remaining = remaining   # list of forms; the last IS the tail form
       self.env       = env
 
-   def copy( self ): return PrognFrame( list(self.remaining), self.env )
+   def copy( self ):
+      return PrognFrame( list(self.remaining), self.env )
 
    def step( self, value, E, K, ctx ):
       # The incoming value (previous form's result) is discarded.
@@ -205,7 +192,8 @@ class LetFrame:
       self.body         = body
       self.outer_env    = outer_env
 
-   def copy( self ): return LetFrame( self.current_name, list(self.pending), dict(self.bound), self.body, self.outer_env )
+   def copy( self ):
+      return LetFrame( self.current_name, list(self.pending), dict(self.bound), self.body, self.outer_env )
 
    def step( self, value, E, K, ctx ):
       self.bound[self.current_name] = _primary(value)
@@ -231,7 +219,8 @@ class LetStarFrame:
       self.inner_env    = inner_env
       self.body         = body
 
-   def copy( self ): return LetStarFrame( self.current_name, list(self.pending), self.inner_env, self.body )
+   def copy( self ):
+      return LetStarFrame( self.current_name, list(self.pending), self.inner_env, self.body )
 
    def step( self, value, E, K, ctx ):
       self.inner_env.bindLocal( self.current_name, _primary(value) )
@@ -253,7 +242,8 @@ class SetqFrame:
       self.pending   = pending
       self.env       = env
 
-   def copy( self ): return SetqFrame( self.lval_name, list(self.pending), self.env )
+   def copy( self ):
+      return SetqFrame( self.lval_name, list(self.pending), self.env )
 
    def step( self, value, E, K, ctx ):
       rval = _primary(value)
@@ -278,7 +268,8 @@ class CondFrame:
       self.remaining_clauses = remaining_clauses
       self.env               = env
 
-   def copy( self ): return CondFrame( list(self.clause_body), list(self.remaining_clauses), self.env )
+   def copy( self ):
+      return CondFrame( list(self.clause_body), list(self.remaining_clauses), self.env )
 
    def step( self, value, E, K, ctx ):
       if _lTrue( _primary(value) ):
@@ -300,7 +291,8 @@ class CaseFrame:
       self.clauses = clauses
       self.env     = env
 
-   def copy( self ): return self
+   def copy( self ):
+      return self
 
    def step( self, value, E, K, ctx ):
       value = _primary(value)
@@ -335,7 +327,8 @@ class ArgFrame:
       self.env     = env
       self.mode    = mode
 
-   def copy( self ): return ArgFrame( self.fn, list(self.pending), list(self.done), self.env, self.mode )
+   def copy( self ):
+      return ArgFrame( self.fn, list(self.pending), list(self.done), self.env, self.mode )
 
    def step( self, value, E, K, ctx ):
       # ------------------------------------------------------------------
@@ -429,7 +422,8 @@ class _ContinuationInvokeFrame:
    def __init__( self, continuation ):
       self.continuation = continuation
 
-   def copy( self ): return self
+   def copy( self ):
+      return self
 
    def step( self, value, E, K, ctx ):
       _do_wind_transition( ctx, self.continuation.wind_stack, E )
@@ -448,7 +442,8 @@ class BodyFrame:
       self.env       = env
       self.tracer    = tracer
 
-   def copy( self ): return BodyFrame( list(self.remaining), self.fn, self.depth, self.env, self.tracer )
+   def copy( self ):
+      return BodyFrame( list(self.remaining), self.fn, self.depth, self.env, self.tracer )
 
    def step( self, value, E, K, ctx ):
       if self.remaining:
@@ -470,7 +465,9 @@ class BlockFrame:
    __slots__ = ('name',)
    def __init__( self, name ):
       self.name = name
-   def copy( self ): return self
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       return _Val(value), E
 
@@ -480,7 +477,9 @@ class ReturnFromFrame:
    __slots__ = ('name',)
    def __init__( self, name ):
       self.name = name
-   def copy( self ): return self
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       for i in reversed(range(len(K))):
          if isinstance(K[i], BlockFrame) and K[i].name == self.name:
@@ -496,7 +495,10 @@ class CatchTagFrame:
    def __init__( self, body, env ):
       self.body = body
       self.env  = env
-   def copy( self ): return self
+      
+   def copy( self ):
+      return self
+   
    def step( self, tag, E, K, ctx ):
       K.append( CatchBodyFrame(_primary(tag)) )
       return _eval_body(self.body, self.env, K)
@@ -507,7 +509,10 @@ class CatchBodyFrame:
    __slots__ = ('tag',)
    def __init__( self, tag ):
       self.tag = tag
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       return _Val(_primary(value)), E
 
@@ -519,15 +524,19 @@ class HandlerCaseBodyFrame:
       # clauses: list of (type_sym, var_sym_or_None, body_forms)
       self.clauses = clauses
       self.env     = env
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def find_handler( self, type_name ):
       for ctype, var, body in self.clauses:
-         if isinstance(ctype, LSymbol):
+         if type(ctype) is LSymbol:
             if ctype.name in ('T', 'ERROR'):
                return var, body
             if ctype.name == type_name:
                return var, body
       return None, None
+   
    def step( self, value, E, K, ctx ):
       return _Val(_primary(value)), E
 
@@ -539,7 +548,10 @@ class MVBindFrame:
       self.var_list  = var_list
       self.body      = body
       self.outer_env = outer_env
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       vals = value.values if type(value) is LMultipleValues else [value]
       new_env = Environment(self.outer_env, evalFn=ctx.lEval)
@@ -551,7 +563,9 @@ class MVBindFrame:
 class MVListFrame:
    """Receives form result; returns all values as a list."""
    __slots__ = ()
-   def copy( self ): return self
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       if type(value) is LMultipleValues:
          return _Val(list(value.values)), E
@@ -564,7 +578,10 @@ class NthValueBodyFrame:
    def __init__( self, form, env ):
       self.form = form
       self.env  = env
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def step( self, n_raw, E, K, ctx ):
       n = _primary(n_raw)
       if not isinstance(n, int) or isinstance(n, bool) or n < 0:
@@ -578,7 +595,10 @@ class NthValueDeliverFrame:
    __slots__ = ('n',)
    def __init__( self, n ):
       self.n = n
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       if type(value) is LMultipleValues:
          return _Val(value.values[self.n] if self.n < len(value.values) else L_NIL), E
@@ -593,7 +613,10 @@ class DictBuildFrame:
       self.remaining   = remaining
       self.built       = built
       self.env         = env
-   def copy( self ): return DictBuildFrame( self.current_key, list(self.remaining), dict(self.built), self.env )
+   
+   def copy( self ):
+      return DictBuildFrame( self.current_key, list(self.remaining), dict(self.built), self.env )
+   
    def step( self, value, E, K, ctx ):
       self.built[self.current_key] = _primary(value)
       if self.remaining:
@@ -611,13 +634,16 @@ class ColonFrame:
    def __init__( self, path, env ):
       self.path = path
       self.env  = env
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def step( self, root, E, K, ctx ):
       from pythonslisp.AST import prettyPrint
       _USAGE = "PRIMITIVE USAGE: (: module-or-pkg &rest path)"
       current = _primary(root)
       for sym in self.path:
-         if not isinstance(sym, LSymbol):
+         if type(sym) is not LSymbol:
             raise LRuntimeError(f"ERROR ':': Path elements must be symbols.\n{_USAGE}")
          if not isinstance(current, ModuleEnvironment):
             raise LRuntimeError(f"ERROR ':': {prettyPrint(current)} is not a module or package.\n{_USAGE}")
@@ -633,7 +659,10 @@ class CallCCProcFrame:
    __slots__ = ('cont',)
    def __init__( self, cont ):
       self.cont = cont
-   def copy( self ): return self
+   
+   def copy( self ):
+      return self
+   
    def step( self, value, E, K, ctx ):
       proc = _primary(value)
       if not isinstance( proc, LCallable ):
@@ -708,7 +737,8 @@ class DynWindCollectFrame:
       self.done  = done    # evaluated callables so far
       self.env   = env
 
-   def copy( self ): return DynWindCollectFrame( list(self.forms), list(self.done), self.env )
+   def copy( self ):
+      return DynWindCollectFrame( list(self.forms), list(self.done), self.env )
 
    def step( self, value, E, K, ctx ):
       self.done.append( _primary(value) )
@@ -737,7 +767,8 @@ class DynWindExecuteFrame:
       self.wind_entry = wind_entry
       self.env        = env
 
-   def copy( self ): return DynWindExecuteFrame( self.thunk_fn, self.after_fn, list(self.wind_entry), self.env )
+   def copy( self ):
+      return DynWindExecuteFrame( self.thunk_fn, self.after_fn, list(self.wind_entry), self.env )
 
    def step( self, before_result, E, K, ctx ):
       ctx.wind_stack.append( self.wind_entry )
@@ -755,7 +786,8 @@ class DynWindFrame:
       self.wind_entry = wind_entry
       self.env        = env
 
-   def copy( self ): return DynWindFrame( self.after_fn, list(self.wind_entry), self.env )
+   def copy( self ):
+      return DynWindFrame( self.after_fn, list(self.wind_entry), self.env )
 
    def step( self, thunk_result, E, K, ctx ):
       thunk_val = _primary(thunk_result)
@@ -773,7 +805,8 @@ class DynWindReturnFrame:
       self.thunk_val = thunk_val
       self.env       = env
 
-   def copy( self ): return self
+   def copy( self ):
+      return self
 
    def step( self, after_result, E, K, ctx ):
       return _Val(self.thunk_val), self.env
@@ -838,7 +871,7 @@ def cek_apply( ctx, env, function, args ) -> Any:
    Used by sequences, types, and other primitives that need to call
    Lisp functions with already-evaluated argument lists.
    Returns the primary (first) value in scalar context."""
-   if isinstance( function, LContinuation ):
+   if type( function ) is LContinuation:
       if len(args) != 1:
          raise LRuntimeError( f'Continuation expects exactly 1 argument, got {len(args)}.' )
       raise ContinuationInvoked( function.saved_k, function.wind_stack, args[0] )
@@ -853,8 +886,8 @@ def _run_loop( C, E, K, ctx ) -> Any:
    """Run the CEK loop starting from (C, E, K).
    Returns the final value (not primary-stripped)."""
    while True:
-      if _is_value(C):
-         v = C.v if isinstance(C, _Val) else C
+      if type(C) is not LSymbol and not (isinstance(C, list) and C):
+         v = C.v if type(C) is _Val else C
          if not K:
             return v
          frame = K.pop()
@@ -924,8 +957,8 @@ def cek_eval( ctx, env, expr ) -> Any:
          # ----------------------------------------------------------------
          # Deliver a value to the top continuation frame.
          # ----------------------------------------------------------------
-         if _is_value(C):
-            v = C.v if isinstance(C, _Val) else C
+         if type(C) is not LSymbol and not (isinstance(C, list) and C):
+            v = C.v if type(C) is _Val else C
             if not K:
                return v
             frame = K.pop()
@@ -1116,7 +1149,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
                continue
             for sym in syms:
-               if not isinstance(sym, LSymbol):
+               if type(sym) is not LSymbol:
                   raise LRuntimeError("trace: arguments must be symbols.")
                tracer.addFnTrace(sym.name)
             C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
@@ -1129,7 +1162,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                tracer.removeAll()
             else:
                for sym in syms:
-                  if not isinstance(sym, LSymbol):
+                  if type(sym) is not LSymbol:
                      raise LRuntimeError("untrace: arguments must be symbols.")
                   tracer.removeFnTrace(sym.name)
             C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
@@ -1258,7 +1291,7 @@ def cek_eval( ctx, env, expr ) -> Any:
 
       except Signaled as e:
          ctype_sym   = e.condition.get('CONDITION-TYPE', LSymbol('ERROR'))
-         type_name   = ctype_sym.name if isinstance(ctype_sym, LSymbol) else 'ERROR'
+         type_name   = ctype_sym.name if type(ctype_sym) is LSymbol else 'ERROR'
          handler_idx = None
          handler_frame = None
          for i in reversed(range(len(K))):
