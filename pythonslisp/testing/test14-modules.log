@@ -261,7 +261,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
 %%%  ^
-%%% ERROR 'LOAD-MODULE': :name must be a symbol, string, or quoted (: ...) path.
+%%% ERROR 'LOAD-MODULE': Invalid keyword :name. SYMBOL, STRING, or PATH expected.
 %%% PRIMITIVE USAGE: (LOAD-MODULE filespec &key name)
 
 ; load-extension with bad :name type
@@ -269,5 +269,5 @@
 %%% Runtime Error: "" (1,2)
 %%% (load-extension "pythonslisp/examples/my_extension.py" :name 99)
 %%%  ^
-%%% ERROR 'LOAD-EXTENSION': :name must be a symbol, string, or quoted (: ...) path.
+%%% ERROR 'LOAD-EXTENSION': Invalid keyword :name. SYMBOL, STRING, or PATH expected.
 %%% PRIMITIVE USAGE: (LOAD-EXTENSION &rest files &key name)

@@ -49,11 +49,11 @@ def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
          path = name_arg[1:]
          if not all( isinstance(s, LSymbol) for s in path ):
             raise LRuntimePrimError( prim_for_error,
-               ':name path elements must all be symbols.' )
+               'Invalid keyword :name. SYMBOL PATH expected.' )
          return _navigate_or_create_path( path, global_env, ctx.lEval )
       else:
          raise LRuntimePrimError( prim_for_error,
-            ':name must be a symbol, string, or quoted (: ...) path.' )
+            'Invalid keyword :name. SYMBOL, STRING, or PATH expected.' )
    except ValueError as exc:
       raise LRuntimePrimError( prim_for_error,
          f'{exc.args[0]} already exists but is not a module.' )
@@ -109,7 +109,7 @@ Returns the new module object."""
          path = name_arg[1:]
          if not all( isinstance(s, LSymbol) for s in path ):
             raise LRuntimePrimError( LP_load_module,
-               ':name path elements must all be symbols.' )
+               'Invalid keyword :name. SYMBOL PATH expected.' )
          module_name = path[-1].name
          container   = _navigate_or_create_path( path[:-1], global_env, ctx.lEval )
       elif isinstance( name_arg, LSymbol ):
@@ -120,13 +120,13 @@ Returns the new module object."""
          try:
             sym, _ = ctx.parseOne( module_name )
          except ParseError:
-            raise LRuntimePrimError( LP_load_module, f'"{name_arg}" is not a valid module name.' )
+            raise LRuntimePrimError( LP_load_module, f'Invalid keyword :name. "{name_arg}" is not a valid module name.' )
          if not isinstance( sym, LSymbol ):
-            raise LRuntimePrimError( LP_load_module, f'"{name_arg}" is not a valid module name.' )
+            raise LRuntimePrimError( LP_load_module, f'Invalid keyword :name. "{name_arg}" is not a valid module name.' )
          container   = global_env
       else:
          raise LRuntimePrimError( LP_load_module,
-            ':name must be a symbol, string, or quoted (: ...) path.' )
+            'Invalid keyword :name. SYMBOL, STRING, or PATH expected.' )
    except ValueError as exc:
       raise LRuntimePrimError( LP_load_module,
          f'{exc.args[0]} already exists but is not a module.' )
@@ -148,9 +148,9 @@ NAME may be a symbol or a string.  The module is bound in the global environment
       try:
          sym, _ = ctx.parseOne( module_name )
       except ParseError:
-         raise LRuntimePrimError( LP_make_module, f'"{name_arg}" is not a valid module name.' )
+         raise LRuntimePrimError( LP_make_module, f'Invalid argument 1. "{name_arg}" is not a valid module name.' )
       if not isinstance( sym, LSymbol ):
-         raise LRuntimePrimError( LP_make_module, f'"{name_arg}" is not a valid module name.' )
+         raise LRuntimePrimError( LP_make_module, f'Invalid argument 1. "{name_arg}" is not a valid module name.' )
    else:
       raise LRuntimePrimError( LP_make_module, 'Invalid argument 1. SYMBOL or STRING expected.' )
    global_env = env.getGlobalEnv()

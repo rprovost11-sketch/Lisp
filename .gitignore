@@ -11,3 +11,6 @@ pythonslisp.egg-info/
 pythonslisp/testing/runs/
 test.py
 test2.py
+_wof_test_.txt
+_wof_test_ifexists_.tmp
+update_tests.py

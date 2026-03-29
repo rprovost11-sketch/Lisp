@@ -182,9 +182,9 @@ non-negative integer it is used as the numeric suffix directly and
       try:
          sym, _ = ctx.parseOne( combined )
       except ParseError:
-         raise LRuntimePrimError( LP_gensym, f'Invalid argument 1. Valid symbol prefix expected; "{x}" is not valid.' )
+         raise LRuntimePrimError( LP_gensym, 'Invalid argument 1. Valid SYMBOL PREFIX expected.' )
       if not isinstance( sym, LSymbol ):
-         raise LRuntimePrimError( LP_gensym, f'Invalid argument 1. Valid symbol prefix expected; "{x}" is not valid.' )
+         raise LRuntimePrimError( LP_gensym, 'Invalid argument 1. Valid SYMBOL PREFIX expected.' )
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
       return sym
    elif isinstance( x, LSymbol ):
@@ -238,7 +238,7 @@ Returns T if all files loaded successfully."""
       arg = args[i]
       if isinstance( arg, LSymbol ) and arg.name == ':NAME':
          if i + 1 >= len(args):
-            raise LRuntimePrimError( LP_load_extensions, ':name keyword requires a value.' )
+            raise LRuntimePrimError( LP_load_extensions, 'Invalid keyword :name. Value required.' )
          name_arg = args[i + 1]
          i += 2
       else:
