@@ -574,6 +574,34 @@ class Listener( object ):
       stateStr   = 'ON' if state else 'OFF'
       print( f'Tracing is now {stateColor}{stateStr}{RESET}.' )
 
+   def _cmd_traces( self, args: list[str] ) -> None:
+      '''Usage:  traces [on|off]
+      Enable or disable call-stack tracing on errors from file-loaded code.
+      When on, errors show a call stack (source line + caret per frame) but
+      the evaluator runs ~20-30% slower.  When off, full speed is restored.
+      With no argument, shows the current state.
+      '''
+      useColor   = sys.stdout.isatty()
+      GREEN      = '\033[92m' if useColor else ''
+      YELLOW     = '\033[93m' if useColor else ''
+      RESET      = '\033[0m'  if useColor else ''
+
+      if len(args) == 0:
+         from pythonslisp.Evaluator import _stack_traces_enabled as state
+         stateColor = GREEN if state else YELLOW
+         stateStr   = 'ON' if state else 'OFF'
+         print( f'Stack-trace mode is {stateColor}{stateStr}{RESET}.' )
+         return
+
+      if len(args) != 1 or args[0].lower() not in ('on', 'off'):
+         raise ListenerCommandError( self._cmd_traces.__doc__ )
+
+      enabled = args[0].lower() == 'on'
+      self._interp.set_tracing( enabled )
+      stateColor = GREEN if enabled else YELLOW
+      stateStr   = 'ON' if enabled else 'OFF'
+      print( f'Stack-trace mode is now {stateColor}{stateStr}{RESET}.' )
+
    def _writeLn( self, value: str='', file=None, flush=False ) -> None:
       if self._logFile:
          writeln_multiFile( value, file, self._logFile, flush=flush )

@@ -318,7 +318,7 @@ class ArgFrame:
      'funcall' - FUNCALL; rejects macros
      'apply'   - APPLY;   like funcall but spreads the final list arg
    """
-   __slots__ = ('fn', 'pending', 'done', 'env', 'mode')
+   __slots__ = ('fn', 'pending', 'done', 'env', 'mode', 'call_form')
 
    def __init__( self, fn, pending, done, env, mode='call' ):
       self.fn      = fn
@@ -326,9 +326,14 @@ class ArgFrame:
       self.done    = done
       self.env     = env
       self.mode    = mode
+      # call_form is NOT set here; _cek_eval_traced sets it after construction
 
    def copy( self ):
-      return ArgFrame( self.fn, list(self.pending), list(self.done), self.env, self.mode )
+      f = ArgFrame( self.fn, list(self.pending), list(self.done), self.env, self.mode )
+      cf = getattr( self, 'call_form', None )
+      if cf is not None:
+         f.call_form = cf
+      return f
 
    def step( self, value, E, K, ctx ):
       # ------------------------------------------------------------------
@@ -918,7 +923,7 @@ def _run_loop( C, E, K, ctx ) -> Any:
 
       # For special operators in this loop, delegate to the full cek_eval.
       # This is a sub-eval; any remaining K frames wait for its result.
-      sub_result = cek_eval( ctx, E, C )
+      sub_result = ctx.lEval( E, C )
       C = _Val( sub_result )
       continue
 
@@ -926,6 +931,14 @@ def _run_loop( C, E, K, ctx ) -> Any:
 # ---------------------------------------------------------------------------
 # The CEK machine loop
 # ---------------------------------------------------------------------------
+
+_stack_traces_enabled: bool = False   # toggled by Interpreter.set_tracing()
+
+def set_stack_traces( enabled: bool ) -> None:
+   """Enable or disable call-stack tracking in cek_eval."""
+   global _stack_traces_enabled
+   _stack_traces_enabled = enabled
+
 
 _SPECIAL_OPERATOR_SET = frozenset({
    # existing
@@ -945,7 +958,9 @@ _SPECIAL_OPERATOR_SET = frozenset({
 
 
 def cek_eval( ctx, env, expr ) -> Any:
-   """CEK machine evaluator."""
+   """CEK machine evaluator.
+   When _stack_traces_enabled is True, ArgFrame.call_form is recorded on every
+   call and a call stack is built on unhandled LRuntimeError."""
    C = expr
    E = env
    K = []
@@ -993,7 +1008,9 @@ def cek_eval( ctx, env, expr ) -> Any:
 
          if headStr not in _SPECIAL_OPERATOR_SET:
             _last_call_form = C   # capture before C is overwritten; used by error handler
-            K.append( ArgFrame(None, list(C[1:]), [], E, 'call') )
+            K.append( ArgFrame(None, list(C[1:]), [], E) )
+            if _stack_traces_enabled:
+               K[-1].call_form = C
             C = C[0]
             continue
 
@@ -1326,6 +1343,19 @@ def cek_eval( ctx, env, expr ) -> Any:
                   handler_frame = K[i]
                   break
          if handler_idx is None:
+            if _stack_traces_enabled and not e.call_stack:
+               frames = []
+               for frame in K:
+                  cf = getattr( frame, 'call_form', None )
+                  if ( isinstance(frame, ArgFrame)
+                       and frame.fn is not None
+                       and isinstance(cf, LList)
+                       and cf.has_source_info()
+                       and cf.filename ):
+                     fn_name = frame.fn.name or '(anonymous)'
+                     indent  = ' ' * (cf.col_num - 1)
+                     frames.append( f'  {fn_name}  "{cf.filename}" ({cf.line_num},{cf.col_num})\n  {cf.source_line}\n  {indent}^' )
+               e.call_stack = frames
             _unwind_dynwind_above(K, 0, ctx, E)
             raise
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)

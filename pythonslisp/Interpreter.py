@@ -18,7 +18,7 @@ from pythonslisp.Tracer import Tracer
 from pythonslisp.Context import Context
 from pythonslisp.extensions import LambdaListMode, primitive as _ext_primitive
 from pythonslisp.LambdaList import compileLambdaList
-from pythonslisp.Evaluator import cek_eval as _cek_eval
+from pythonslisp.Evaluator import cek_eval as _cek_eval, set_stack_traces as _set_stack_traces
 
 
 def _primary( val: Any ) -> Any:
@@ -170,6 +170,10 @@ class Interpreter( InterpreterBase ):
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       return returnVal
+
+   def set_tracing( self, enabled: bool ) -> None:
+      """Enable or disable call-stack tracking in the evaluator."""
+      _set_stack_traces( enabled )
 
    def _makeContext( self, outStrm ) -> Context:
       from pythonslisp.Evaluator import cek_apply as _cek_apply
