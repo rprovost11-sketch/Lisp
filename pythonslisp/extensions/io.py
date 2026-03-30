@@ -538,14 +538,14 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
          return input( )
       except EOFError:
          if eof_error_p:
-            raise LRuntimeError( 'read-line: end of file on standard input.' )
+            raise LRuntimePrimError( LP_read_line, 'End of file on standard input.' )
          return eof_value
    if not stream.readable( ):
       raise LRuntimePrimError( LP_read_line, 'Stream is not readable.' )
    line = stream.readline( )
    if line == '':
       if eof_error_p:
-         raise LRuntimeError( 'read-line: end of file.' )
+         raise LRuntimePrimError( LP_read_line, 'End of file.' )
       return eof_value
    return line[:-1] if line.endswith( '\n' ) else line
 
@@ -570,7 +570,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
       ch = sys.stdin.read( 1 )
       if ch == '':
          if eof_error_p:
-            raise LRuntimeError( 'read-char: end of file on standard input.' )
+            raise LRuntimePrimError( LP_read_char, 'End of file on standard input.' )
          return eof_value
       return ch
    if not stream.readable( ):
@@ -578,7 +578,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
    ch = stream.read( 1 )
    if ch == '':
       if eof_error_p:
-         raise LRuntimeError( 'read-char: end of file.' )
+         raise LRuntimePrimError( LP_read_char, 'End of file.' )
       return eof_value
    return ch
 
@@ -611,12 +611,12 @@ is accumulated."""
       content = stream.read( )
       if not content:
          if eof_error_p:
-            raise LRuntimeError( 'read: end of file.' )
+            raise LRuntimePrimError( LP_read, 'End of file.' )
          return eof_value
       try:
          ast, chars_consumed = ctx.parseOne( content )
       except ParseError as exc:
-         raise LRuntimeError( f'read: {exc}' )
+         raise LRuntimePrimError( LP_read, f'Parse error: {exc}.' )
       stream.seek( pos + chars_consumed )
       return ast
    else:
@@ -626,7 +626,7 @@ is accumulated."""
          if line == '':
             if not accumulated:
                if eof_error_p:
-                  raise LRuntimeError( 'read: end of file.' )
+                  raise LRuntimePrimError( LP_read, 'End of file.' )
                return eof_value
             break
          accumulated += line
@@ -639,7 +639,7 @@ is accumulated."""
          ast, _ = ctx.parseOne( accumulated )
          return ast
       except ParseError as exc:
-         raise LRuntimeError( f'read: {exc}' )
+         raise LRuntimePrimError( LP_read, f'Parse error: {exc}.' )
 
 @primitive( 'save', '(filename &rest objects)' )
 def LP_save( ctx: Context, env: Environment, args: list[Any] ) -> Any:

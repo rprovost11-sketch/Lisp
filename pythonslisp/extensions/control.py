@@ -170,7 +170,9 @@ Use as (raweval-for-display input-string) or (raweval-for-display input-string s
    except LRuntimeError:
       raise
    except Signaled as e:
-      raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' ) from e
+      _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+      _cm = e.condition.get('MESSAGE', '')
+      raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' ) from e
    except Thrown as e:
       raise LRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' ) from e
    except ContinuationInvoked:

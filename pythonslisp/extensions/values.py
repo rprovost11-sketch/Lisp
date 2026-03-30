@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import L_NIL, LMultipleValues
+from pythonslisp.AST import L_NIL, LMultipleValues, got_str
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError
+from pythonslisp.Exceptions import LRuntimePrimError
 from pythonslisp.extensions import primitive
 
 
@@ -24,7 +24,7 @@ def LP_values_list( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 equivalent to (values a b c)."""
    lst = args[0]
    if not isinstance( lst, list ):
-      raise LRuntimeError( 'values-list: argument must be a list.' )
+      raise LRuntimePrimError( LP_values_list, f'Invalid argument 1. LIST expected{got_str(lst)}.' )
    if len(lst) == 1:
       return lst[0]
    return LMultipleValues( list(lst) )

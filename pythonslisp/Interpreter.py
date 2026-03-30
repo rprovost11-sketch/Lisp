@@ -101,7 +101,9 @@ class Interpreter( InterpreterBase ):
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
-         raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
+         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+         _cm = e.condition.get('MESSAGE', '')
+         raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       return returnVal
 
    def rawEval_instrumented( self, source: str, outStrm=None ) -> Any:
@@ -139,7 +141,9 @@ class Interpreter( InterpreterBase ):
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
-         raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
+         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+         _cm = e.condition.get('MESSAGE', '')
+         raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       totTime = time.perf_counter() - startTotTime
       metrics = { 'parse': parseTime, 'expand': expandTime, 'analyze': analyzeTime, 'eval': evalTime, 'total': totTime }
       return returnVal, metrics
@@ -162,7 +166,9 @@ class Interpreter( InterpreterBase ):
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
-         raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
+         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+         _cm = e.condition.get('MESSAGE', '')
+         raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       return returnVal
 
    def _makeContext( self, outStrm ) -> Context:

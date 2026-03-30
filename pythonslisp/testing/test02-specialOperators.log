@@ -816,10 +816,7 @@
 ; handler-case — non-matching type re-raises
 >>> (handler-case (signal 'type-x "unhandled")
 ...   (type-y (e) 'wrong))
-%%% Unhandled condition: (DICT
-%%%    ("CONDITION-TYPE" TYPE-X)
-%%%    ("MESSAGE" "unhandled")
-%%% )
+%%% Unhandled condition TYPE-X: unhandled
 
 ; handler-case — catches (error ...) primitive as ERROR condition
 >>> (handler-case (error "something bad")
@@ -889,20 +886,47 @@
 %%% Runtime Error: "" (1,2)
 %%% (condition-type 42)
 %%%  ^
-%%% condition-type: argument must be a condition object.
+%%% ERROR 'CONDITION-TYPE': Invalid argument 1. CONDITION expected, got INTEGER 42.
+%%% PRIMITIVE USAGE: (CONDITION-TYPE condition)
 
 >>> (condition-message "oops")
 %%% Runtime Error: "" (1,2)
 %%% (condition-message "oops")
 %%%  ^
-%%% condition-message: argument must be a condition object.
+%%% ERROR 'CONDITION-MESSAGE': Invalid argument 1. CONDITION expected, got STRING "oops".
+%%% PRIMITIVE USAGE: (CONDITION-MESSAGE condition)
+
+; make-condition error: type not a symbol
+>>> (make-condition 1)
+%%% Runtime Error: "" (1,2)
+%%% (make-condition 1)
+%%%  ^
+%%% ERROR 'MAKE-CONDITION': Invalid argument 1. SYMBOL expected, got INTEGER 1.
+%%% PRIMITIVE USAGE: (MAKE-CONDITION type &optional message)
+
+; make-condition error: message not a string
+>>> (make-condition 'foo 1)
+%%% Runtime Error: "" (1,2)
+%%% (make-condition 'foo 1)
+%%%  ^
+%%% ERROR 'MAKE-CONDITION': Invalid argument 2. STRING expected, got INTEGER 1.
+%%% PRIMITIVE USAGE: (MAKE-CONDITION type &optional message)
 
 ; signal error on non-symbol, non-condition first arg
 >>> (signal 42)
 %%% Runtime Error: "" (1,2)
 %%% (signal 42)
 %%%  ^
-%%% signal: first argument must be a condition object or a symbol.
+%%% ERROR 'SIGNAL': Invalid argument 1. CONDITION or SYMBOL expected, got INTEGER 42.
+%%% PRIMITIVE USAGE: (SIGNAL type-or-condition &optional message)
+
+; signal error: message not a string
+>>> (signal 'foo 1)
+%%% Runtime Error: "" (1,2)
+%%% (signal 'foo 1)
+%%%  ^
+%%% ERROR 'SIGNAL': Invalid argument 2. STRING expected, got INTEGER 1.
+%%% PRIMITIVE USAGE: (SIGNAL type-or-condition &optional message)
 
 ; ============================================================
 ; MULTIPLE-VALUE-BIND

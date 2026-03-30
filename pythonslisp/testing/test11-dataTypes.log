@@ -816,7 +816,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (float "hello")
 %%%  ^
-%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected, got STRING "hello".
+%%% ERROR 'FLOAT': Invalid argument 1. NUMBER or NUMERIC STRING expected, got STRING "hello".
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1093,7 +1093,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (float 'abc)
 %%%  ^
-%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected, got SYMBOL ABC.
+%%% ERROR 'FLOAT': Invalid argument 1. NUMBER or NUMERIC STRING expected, got SYMBOL ABC.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1103,6 +1103,6 @@
 %%% Runtime Error: "" (2,2)
 %%% (integer 'abc)
 %%%  ^
-%%% ERROR 'INTEGER': Invalid argument 1. Number or numeric string expected, got SYMBOL ABC.
+%%% ERROR 'INTEGER': Invalid argument 1. NUMBER or NUMERIC STRING expected, got SYMBOL ABC.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>

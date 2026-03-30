@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, L_T, L_NIL
+from pythonslisp.AST import LSymbol, L_T, L_NIL, got_str
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeError, Signaled
+from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, Signaled
 from pythonslisp.extensions import primitive
 
 
@@ -14,10 +14,10 @@ def LP_make_condition( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 message string.  Condition objects are used with signal and handler-case."""
    ctype = args[0]
    if not isinstance( ctype, LSymbol ):
-      raise LRuntimeError( 'make-condition: type must be a symbol.' )
+      raise LRuntimePrimError( LP_make_condition, f'Invalid argument 1. SYMBOL expected{got_str(ctype)}.' )
    msg = args[1] if len(args) > 1 else ''
    if not isinstance( msg, str ):
-      raise LRuntimeError( 'make-condition: message must be a string.' )
+      raise LRuntimePrimError( LP_make_condition, f'Invalid argument 2. STRING expected{got_str(msg)}.' )
    return {'CONDITION-TYPE': ctype, 'MESSAGE': msg}
 
 @primitive( 'signal', '(type-or-condition &optional message)' )
@@ -29,10 +29,10 @@ optional message string are used to construct the condition."""
    if isinstance( arg, dict ) and 'CONDITION-TYPE' in arg:
       raise Signaled( arg )
    if not isinstance( arg, LSymbol ):
-      raise LRuntimeError( 'signal: first argument must be a condition object or a symbol.' )
+      raise LRuntimePrimError( LP_signal, f'Invalid argument 1. CONDITION or SYMBOL expected{got_str(arg)}.' )
    msg = args[1] if len(args) > 1 else ''
    if not isinstance( msg, str ):
-      raise LRuntimeError( 'signal: message must be a string.' )
+      raise LRuntimePrimError( LP_signal, f'Invalid argument 2. STRING expected{got_str(msg)}.' )
    raise Signaled( {'CONDITION-TYPE': arg, 'MESSAGE': msg} )
 
 @primitive( 'conditionp', '(obj)' )
@@ -46,7 +46,7 @@ def LP_condition_type( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the type symbol of a condition object."""
    cond = args[0]
    if not (isinstance( cond, dict ) and 'CONDITION-TYPE' in cond):
-      raise LRuntimeError( 'condition-type: argument must be a condition object.' )
+      raise LRuntimePrimError( LP_condition_type, f'Invalid argument 1. CONDITION expected{got_str(cond)}.' )
    return cond['CONDITION-TYPE']
 
 @primitive( 'condition-message', '(condition)' )
@@ -54,5 +54,5 @@ def LP_condition_message( ctx: Context, env: Environment, args: list[Any] ) -> A
    """Returns the message string of a condition object."""
    cond = args[0]
    if not (isinstance( cond, dict ) and 'CONDITION-TYPE' in cond):
-      raise LRuntimeError( 'condition-message: argument must be a condition object.' )
+      raise LRuntimePrimError( LP_condition_message, f'Invalid argument 1. CONDITION expected{got_str(cond)}.' )
    return cond.get( 'MESSAGE', '' )

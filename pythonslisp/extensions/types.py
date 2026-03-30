@@ -244,7 +244,10 @@ Compound specifiers: (OR ...) (AND ...) (NOT t) (MEMBER v...) (SATISFIES fn)
    obj, spec = args
    if not isinstance(spec, (LSymbol, list)):
       raise LRuntimePrimError( LP_typep, f'Invalid argument 2. TYPE SPECIFIER expected{got_str(spec)}.' )
-   return L_T if _typep(obj, spec, ctx, env) else L_NIL
+   try:
+      return L_T if _typep(obj, spec, ctx, env) else L_NIL
+   except LRuntimeError as e:
+      raise LRuntimePrimError( LP_typep, str(e).replace('typep: ', '') ) from e
 
 @primitive( 'not', '(object)' )
 def LP_not( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -316,7 +319,7 @@ def LP_less( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior < mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
+            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -330,7 +333,7 @@ def LP_lessOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior <= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
+            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -344,7 +347,7 @@ def LP_greater( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior > mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
+            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -358,7 +361,7 @@ def LP_greaterOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior >= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
+            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -368,7 +371,7 @@ def LP_float( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return float(args[0])
    except (ValueError, TypeError):
-      raise LRuntimePrimError( LP_float, f'Invalid argument 1. Number or numeric string expected{got_str(args[0])}.' )
+      raise LRuntimePrimError( LP_float, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
 
 @primitive( 'integer', '(number &optional (base 10))' )
 def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -376,7 +379,7 @@ def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return int(*args)
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_integer, f'Invalid argument 1. Number or numeric string expected{got_str(args[0])}.' )
+      raise LRuntimePrimError( LP_integer, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
 
 @primitive( 'rational', '(number)' )
 def LP_rational( ctx: Context, env: Environment, args: list[Any] ) -> Any:
