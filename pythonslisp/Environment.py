@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Sequence
 
-from pythonslisp.AST import LSymbol, arity_mismatch_msg
+from pythonslisp.AST import LSymbol, arity_mismatch_msg, got_str
 from pythonslisp.Exceptions import LArgBindingError
 from pythonslisp.LambdaList import CompiledLambdaList
 
@@ -213,7 +213,7 @@ class Environment:
             if skip_non_keywords:
                argNum += 1
                continue
-            raise LArgBindingError( f'Argument {key_pos}: keyword symbol expected, found {keyArg}.' )
+            raise LArgBindingError( f'Argument {key_pos}: keyword symbol expected{got_str(keyArg)}.' )
          keyArgStr = keyArg.name[1:]   # strip leading colon
          argNum += 1
 

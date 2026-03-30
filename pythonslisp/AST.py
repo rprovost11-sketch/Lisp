@@ -1,6 +1,6 @@
 from __future__ import annotations
 from fractions import Fraction
-from io import IOBase
+from io import IOBase, StringIO
 from typing import Any, Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -217,6 +217,58 @@ def prettyPrintSExpr( sExpr: Any ) -> str:
       return '#<STREAM>'
    else:
       return repr(sExpr)
+
+def lisp_type_name( val: Any ) -> str:
+   """Return the Lisp type name of val as a string.
+Used by type-of and got_str for error messages."""
+   if isinstance(val, list):
+      return 'NULL' if not val else 'CONS'
+   if isinstance(val, bool):   # bool is a subclass of int; check before int
+      return 'SYMBOL'
+   if isinstance(val, int):
+      return 'INTEGER'
+   if isinstance(val, float):
+      return 'FLOAT'
+   if isinstance(val, Fraction):
+      return 'RATIO'
+   if isinstance(val, str):
+      return 'STRING'
+   if isinstance(val, LSymbol):
+      return 'SYMBOL'
+   if isinstance(val, dict):
+      struct_type = val.get( LSymbol('STRUCT-TYPE') )
+      if isinstance(struct_type, LSymbol):
+         return struct_type.name
+      return 'DICT'
+   if isinstance(val, LContinuation):
+      return 'CONTINUATION'
+   if isinstance(val, LFunction):
+      return 'FUNCTION'
+   if isinstance(val, LMacro):
+      return 'MACRO'
+   if isinstance(val, LPrimitive):
+      return 'PRIMITIVE'
+   if isinstance(val, StringIO):
+      return 'STRING-STREAM'
+   if isinstance(val, IOBase):
+      return 'FILE-STREAM'
+   return 'T'
+
+
+_MAX_GOT_LEN = 40
+
+def got_str( val: Any ) -> str:
+   """Return a ', got TYPE VALUE' suffix for error messages.
+The value is truncated to _MAX_GOT_LEN characters."""
+   type_name  = lisp_type_name(val)
+   repr_str   = prettyPrintSExpr(val)
+   first_line = repr_str.split('\n')[0]
+   if len(first_line) > _MAX_GOT_LEN or '\n' in repr_str:
+      display = first_line[:_MAX_GOT_LEN].rstrip() + '...'
+   else:
+      display = first_line
+   return f', got {type_name} {display}'
+
 
 def prettyPrint( sExpr: Any ) -> str:
    '''Return a printable, formatted string representation

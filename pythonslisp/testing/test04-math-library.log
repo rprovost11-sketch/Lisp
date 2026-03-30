@@ -252,7 +252,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (+ "a" 1)
 %%%  ^
-%%% ERROR '+': Invalid argument 1. Number expected.
+%%% ERROR '+': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (+ &rest numbers)
 ==>
 
@@ -894,7 +894,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (rem "a" 2)
 %%%  ^
-%%% ERROR 'REM': Invalid argument 1. Number expected.
+%%% ERROR 'REM': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (REM number divisor)
 ==>
 
@@ -914,7 +914,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (gcd "a" 2)
 %%%  ^
-%%% ERROR 'GCD': Invalid argument 1. Number expected.
+%%% ERROR 'GCD': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (GCD &rest integers)
 ==>
 
@@ -924,7 +924,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (lcm "a" 2)
 %%%  ^
-%%% ERROR 'LCM': Invalid argument 1. Number expected.
+%%% ERROR 'LCM': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (LCM &rest integers)
 ==>
 
@@ -934,7 +934,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (min "a" 1)
 %%%  ^
-%%% ERROR 'MIN': Invalid argument 1. Number expected.
+%%% ERROR 'MIN': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (MIN &rest numbers)
 ==>
 
@@ -944,7 +944,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (max "a" 1)
 %%%  ^
-%%% ERROR 'MAX': Invalid argument 1. Number expected.
+%%% ERROR 'MAX': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (MAX &rest numbers)
 ==>
 
@@ -954,7 +954,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (expt "a" 2)
 %%%  ^
-%%% ERROR 'EXPT': Invalid argument 1. Number expected.
+%%% ERROR 'EXPT': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (EXPT base power)
 ==>
 
@@ -1004,7 +1004,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (log "a")
 %%%  ^
-%%% ERROR 'LOG': Invalid argument 1. Number expected.
+%%% ERROR 'LOG': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
 
@@ -1134,7 +1134,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (// "a" 2)
 %%%  ^
-%%% ERROR '//': Invalid argument 1. Number expected.
+%%% ERROR '//': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
 
@@ -1144,7 +1144,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (mod "a" 2)
 %%%  ^
-%%% ERROR 'MOD': Invalid argument 1. Number expected.
+%%% ERROR 'MOD': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (MOD number divisor)
 ==>
 
@@ -1154,7 +1154,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (- "a")
 %%%  ^
-%%% ERROR '-': Invalid argument 1. Number expected.
+%%% ERROR '-': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (- number &rest numbers)
 ==>
 
@@ -1164,7 +1164,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (/ "a" 2)
 %%%  ^
-%%% ERROR '/': Invalid argument 1. Number expected.
+%%% ERROR '/': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
 
@@ -1206,7 +1206,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (random "a")
 %%%  ^
-%%% ERROR 'RANDOM': Invalid argument 1. Integer or float expected.
+%%% ERROR 'RANDOM': Invalid argument 1. INTEGER or FLOAT expected, got STRING "a".
 %%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
@@ -1236,7 +1236,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (integer "hello")
 %%%  ^
-%%% ERROR 'INTEGER': Invalid argument 1. Number or numeric string expected.
+%%% ERROR 'INTEGER': Invalid argument 1. Number or numeric string expected, got STRING "hello".
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>
 
@@ -1288,7 +1288,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (rational "hello")
 %%%  ^
-%%% ERROR 'RATIONAL': Invalid argument 1. Number expected.
+%%% ERROR 'RATIONAL': Invalid argument 1. NUMBER expected, got STRING "hello".
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>
 
@@ -1310,7 +1310,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (atan "a")
 %%%  ^
-%%% ERROR 'ATAN': Invalid argument 1. Number expected.
+%%% ERROR 'ATAN': Invalid argument 1. NUMBER expected, got STRING "a".
 %%% PRIMITIVE USAGE: (ATAN number1 &optional number2)
 ==>
 
@@ -1378,7 +1378,7 @@
 %%% Runtime Error: "" (2,9)
 %%% (float (list 1))
 %%%         ^
-%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected.
+%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected, got CONS (1).
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1388,6 +1388,6 @@
 %%% Runtime Error: "" (2,12)
 %%% (rational (list 1))
 %%%            ^
-%%% ERROR 'RATIONAL': Invalid argument 1. Number expected.
+%%% ERROR 'RATIONAL': Invalid argument 1. NUMBER expected, got CONS (1).
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>

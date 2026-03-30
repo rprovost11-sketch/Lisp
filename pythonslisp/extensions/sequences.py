@@ -3,7 +3,7 @@ import functools
 from typing import Any, Callable
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol
+from pythonslisp.AST import LSymbol, got_str
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
@@ -32,13 +32,13 @@ def _apply_test( ctx: Any, env: Environment, test_fn: Any, item: Any, cell_key: 
 def _validate_bounds( start: Any, end: Any, seqlen: int, fn: Any ) -> tuple[int, int]:
    """Validate :start and :end; return (start_n, end_n) as concrete ints."""
    if not isinstance( start, int ) or isinstance( start, bool ):
-      raise LRuntimePrimError( fn, ':start must be a non-negative integer.' )
+      raise LRuntimePrimError( fn, f':start must be a non-negative integer{got_str(start)}.' )
    if start < 0:
       raise LRuntimePrimError( fn, ':start must be non-negative.' )
    if _is_nil_val( end ):
       return start, seqlen
    if not isinstance( end, int ) or isinstance( end, bool ):
-      raise LRuntimePrimError( fn, ':end must be a non-negative integer or NIL.' )
+      raise LRuntimePrimError( fn, f':end must be a non-negative integer or NIL{got_str(end)}.' )
    if end < 0 or end > seqlen:
       raise LRuntimePrimError( fn, f':end {end} out of range for sequence of length {seqlen}.' )
    if end < start:
@@ -51,7 +51,7 @@ def _validate_count( count: Any, fn: Any ):
    if _is_nil_val( count ):
       return None
    if not isinstance( count, int ) or isinstance( count, bool ):
-      raise LRuntimePrimError( fn, ':count must be a non-negative integer or NIL.' )
+      raise LRuntimePrimError( fn, f':count must be a non-negative integer or NIL{got_str(count)}.' )
    if count < 0:
       raise LRuntimePrimError( fn, ':count must be non-negative.' )
    return count
@@ -71,7 +71,7 @@ def LP_car( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    theList = args[0]
 
    if not isinstance(theList, list):
-      raise LRuntimePrimError( LP_car, 'Invalid argument 1. LIST expected.' )
+      raise LRuntimePrimError( LP_car, f'Invalid argument 1. LIST expected{got_str(theList)}.' )
 
    try:
       return theList[0]
@@ -84,7 +84,7 @@ def LP_cdr( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    theList = args[0]
 
    if not isinstance(theList, list):
-      raise LRuntimePrimError( LP_cdr, 'Invalid argument 1. LIST expected.' )
+      raise LRuntimePrimError( LP_cdr, f'Invalid argument 1. LIST expected{got_str(theList)}.' )
 
    return theList[1:]
 
@@ -94,7 +94,7 @@ def LP_cons( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    obj, consList = args
 
    if not isinstance(consList, list):
-      raise LRuntimePrimError( LP_cons, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_cons, f'Invalid argument 2. LIST expected{got_str(consList)}.' )
 
    return [ obj, *consList ]
 
@@ -104,7 +104,7 @@ def LP_push( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    alist, value = args
 
    if not isinstance(alist, list):
-      raise LRuntimePrimError( LP_push, 'Invalid argument 1. LIST expected.' )
+      raise LRuntimePrimError( LP_push, f'Invalid argument 1. LIST expected{got_str(alist)}.' )
    alist.append( value )
    return alist
 
@@ -114,7 +114,7 @@ def LP_pop( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    alist = args[0]
 
    if not isinstance(alist, list):
-      raise LRuntimePrimError( LP_pop, 'Invalid argument 1. LIST expected.' )
+      raise LRuntimePrimError( LP_pop, f'Invalid argument 1. LIST expected{got_str(alist)}.' )
 
    try:
       value = alist.pop()
@@ -129,7 +129,7 @@ def LP_at( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    key, keyed = args
 
    if not isinstance(keyed, (list, dict, str) ):
-      raise LRuntimePrimError( LP_at, 'Invalid argument 2. List, Dict, or String expected.' )
+      raise LRuntimePrimError( LP_at, f'Invalid argument 2. LIST, DICT, or STRING expected{got_str(keyed)}.' )
 
    try:
       return keyed[ key ]
@@ -143,7 +143,7 @@ def LP_atSet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    key, keyed, newValue = args
 
    if not isinstance(keyed, (list, dict)):
-      raise LRuntimePrimError( LP_atSet, 'Invalid argument 2. LIST or DICT expected.' )
+      raise LRuntimePrimError( LP_atSet, f'Invalid argument 2. LIST or DICT expected{got_str(keyed)}.' )
 
    try:
       keyed[ key ] = newValue
@@ -158,7 +158,7 @@ def LP_atDelete( ctx: Context, env: Environment, args: list[Any] ) -> bool:
    key, keyed = args
 
    if not isinstance( keyed, (list, dict) ):
-      raise LRuntimePrimError( LP_atDelete, 'Invalid argument 2. LIST or DICT expected.' )
+      raise LRuntimePrimError( LP_atDelete, f'Invalid argument 2. LIST or DICT expected{got_str(keyed)}.' )
 
    try:
       del keyed[key]
@@ -173,10 +173,10 @@ def LP_atInsert( ctx: Context, env: Environment, args: list[Any] ) -> bool:
    index, lst, newItem = args
 
    if not isinstance(index, int):
-      raise LRuntimePrimError( LP_atInsert, 'Invalid argument 1. INTEGER INDEX expected.' )
+      raise LRuntimePrimError( LP_atInsert, f'Invalid argument 1. INTEGER expected{got_str(index)}.' )
 
    if not isinstance( lst, list ):
-      raise LRuntimePrimError( LP_atInsert, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_atInsert, f'Invalid argument 2. LIST expected{got_str(lst)}.' )
 
    lst.insert( index, newItem )
    return newItem
@@ -192,7 +192,7 @@ def LP_append( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    resultList = list( )
    for i, lst in enumerate(args, 1):
       if not isinstance( lst, list ):
-         raise LRuntimePrimError( LP_append, f'Invalid argument {i}. LIST expected.' )
+         raise LRuntimePrimError( LP_append, f'Invalid argument {i}. LIST expected{got_str(lst)}.' )
       resultList.extend( lst )
    return resultList
 
@@ -206,7 +206,7 @@ def LP_has_value_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    elif isinstance(keyed, dict):
       keyed = keyed.values()
    else:
-      raise LRuntimePrimError( LP_has_value_p, 'Invalid argument 2. LIST or DICT expected.' )
+      raise LRuntimePrimError( LP_has_value_p, f'Invalid argument 2. LIST or DICT expected{got_str(keyed)}.' )
 
    return L_T if aVal in keyed else L_NIL
 
@@ -216,10 +216,10 @@ def LP_update( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    dict1, dict2 = args
 
    if not isinstance( dict1, dict ):
-      raise LRuntimePrimError( LP_update, 'Invalid argument 1. DICT expected.' )
+      raise LRuntimePrimError( LP_update, f'Invalid argument 1. DICT expected{got_str(dict1)}.' )
 
    if not isinstance( dict2, dict ):
-      raise LRuntimePrimError( LP_update, 'Invalid argument 2. DICT expected.' )
+      raise LRuntimePrimError( LP_update, f'Invalid argument 2. DICT expected{got_str(dict2)}.' )
 
    dict1.update( dict2 )
    return dict1
@@ -230,7 +230,7 @@ def LP_has_key_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    aKey, aMap = args
 
    if not isinstance(aMap, dict):
-      raise LRuntimePrimError( LP_has_key_p, 'Invalid argument 2. DICT expected.' )
+      raise LRuntimePrimError( LP_has_key_p, f'Invalid argument 2. DICT expected{got_str(aMap)}.' )
 
    return L_T if aKey in aMap else L_NIL
 
@@ -239,7 +239,7 @@ def LP_dict_keys( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a list of all keys in the dict, in insertion order."""
    aDict = args[0]
    if not isinstance( aDict, dict ):
-      raise LRuntimePrimError( LP_dict_keys, 'Invalid argument 1. DICT expected.' )
+      raise LRuntimePrimError( LP_dict_keys, f'Invalid argument 1. DICT expected{got_str(aDict)}.' )
    return list( aDict.keys() )
 
 @primitive( 'dict-values', '(dict)' )
@@ -247,7 +247,7 @@ def LP_dict_values( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a list of all values in the dict, in insertion order."""
    aDict = args[0]
    if not isinstance( aDict, dict ):
-      raise LRuntimePrimError( LP_dict_values, 'Invalid argument 1. DICT expected.' )
+      raise LRuntimePrimError( LP_dict_values, f'Invalid argument 1. DICT expected{got_str(aDict)}.' )
    return list( aDict.values() )
 
 @primitive( 'dict-pairs', '(dict)' )
@@ -255,7 +255,7 @@ def LP_dict_pairs( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a list of (key value) pairs from the dict, in insertion order."""
    aDict = args[0]
    if not isinstance( aDict, dict ):
-      raise LRuntimePrimError( LP_dict_pairs, 'Invalid argument 1. DICT expected.' )
+      raise LRuntimePrimError( LP_dict_pairs, f'Invalid argument 1. DICT expected{got_str(aDict)}.' )
    return [ [k, v] for k, v in aDict.items() ]
 
 @primitive( 'dict-length', '(dict)' )
@@ -263,7 +263,7 @@ def LP_dict_length( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the number of key-value pairs in the dict."""
    aDict = args[0]
    if not isinstance( aDict, dict ):
-      raise LRuntimePrimError( LP_dict_length, 'Invalid argument 1. DICT expected.' )
+      raise LRuntimePrimError( LP_dict_length, f'Invalid argument 1. DICT expected{got_str(aDict)}.' )
    return len( aDict )
 
 @primitive( 'sort', '(sequence predicate &key (key nil))',
@@ -275,7 +275,7 @@ The optional :key function extracts the comparison key from each element."""
    pred     = env.lookup( 'PREDICATE' )
    key_fn   = env.lookup( 'KEY' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_sort, 'Invalid argument 1. LIST expected.' )
+      raise LRuntimePrimError( LP_sort, f'Invalid argument 1. LIST expected{got_str(seq)}.' )
 
    def _cmp( a, b ):
       ka = _extract_key( ctx, env, key_fn, a )
@@ -297,7 +297,7 @@ def LP_length( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    arg = args[0]
    if isinstance(arg, (list, str, dict)):
       return len(arg)
-   raise LRuntimePrimError( LP_length, 'Invalid argument 1. LIST, STRING, or DICT expected.' )
+   raise LRuntimePrimError( LP_length, f'Invalid argument 1. LIST, STRING, or DICT expected{got_str(arg)}.' )
 
 @primitive( 'subseq', '(sequence start &optional end)' )
 def LP_subseq( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -308,11 +308,11 @@ If end is not provided, returns from start to the end of the sequence."""
    end = args[2] if len(args) > 2 else None
 
    if not isinstance(seq, (list, str)):
-      raise LRuntimePrimError( LP_subseq, 'Invalid argument 1. LIST or STRING expected.' )
+      raise LRuntimePrimError( LP_subseq, f'Invalid argument 1. LIST or STRING expected{got_str(seq)}.' )
    if not isinstance(start, int) or isinstance(start, bool):
-      raise LRuntimePrimError( LP_subseq, 'Invalid argument 2. INTEGER expected.' )
+      raise LRuntimePrimError( LP_subseq, f'Invalid argument 2. INTEGER expected{got_str(start)}.' )
    if end is not None and (not isinstance(end, int) or isinstance(end, bool)):
-      raise LRuntimePrimError( LP_subseq, 'Invalid argument 3. INTEGER expected.' )
+      raise LRuntimePrimError( LP_subseq, f'Invalid argument 3. INTEGER expected{got_str(end)}.' )
 
    seqLen = len(seq)
    if start < 0:
@@ -344,7 +344,7 @@ Default :test is eql.  Default :key is identity (NIL)."""
    test_fn = env.lookup( 'TEST' )
    key_fn  = env.lookup( 'KEY' )
    if not isinstance( lst, list ):
-      raise LRuntimePrimError( LP_member, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_member, f'Invalid argument 2. LIST expected{got_str(lst)}.' )
    for i in range( len(lst) ):
       if _apply_test( ctx, env, test_fn, item, _extract_key( ctx, env, key_fn, lst[i] ) ):
          return lst[i:]
@@ -361,7 +361,7 @@ Returns NIL if no match is found.  Default :test is eql.  Default :key is identi
    test_fn = env.lookup( 'TEST' )
    key_fn  = env.lookup( 'KEY' )
    if not isinstance( alist, list ):
-      raise LRuntimePrimError( LP_assoc, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_assoc, f'Invalid argument 2. LIST expected{got_str(alist)}.' )
    for pair in alist:
       if isinstance( pair, list ) and pair:
          if _apply_test( ctx, env, test_fn, item, _extract_key( ctx, env, key_fn, pair[0] ) ):
@@ -382,7 +382,7 @@ to left and returns the rightmost match.  Returns NIL if not found."""
    start    = env.lookup( 'START' )
    end      = env.lookup( 'END' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_find, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_find, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    start_n, end_n = _validate_bounds( start, end, len(seq), LP_find )
    indices = range( start_n, end_n )
    if not _is_nil_val( from_end ):
@@ -405,7 +405,7 @@ returns the rightmost such element.  Returns NIL if none found."""
    start    = env.lookup( 'START' )
    end      = env.lookup( 'END' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_find_if, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_find_if, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    start_n, end_n = _validate_bounds( start, end, len(seq), LP_find_if )
    indices = range( start_n, end_n )
    if not _is_nil_val( from_end ):
@@ -430,7 +430,7 @@ rightmost such element.  Returns NIL if not found."""
    start    = env.lookup( 'START' )
    end      = env.lookup( 'END' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_position, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_position, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    start_n, end_n = _validate_bounds( start, end, len(seq), LP_position )
    indices = range( start_n, end_n )
    if not _is_nil_val( from_end ):
@@ -459,9 +459,9 @@ search."""
    start2   = env.lookup( 'START2' )
    end2     = env.lookup( 'END2' )
    if not isinstance( seq1, (list, str) ):
-      raise LRuntimePrimError( LP_search, 'Invalid argument 1. LIST or STRING expected.' )
+      raise LRuntimePrimError( LP_search, f'Invalid argument 1. LIST or STRING expected{got_str(seq1)}.' )
    if not isinstance( seq2, (list, str) ):
-      raise LRuntimePrimError( LP_search, 'Invalid argument 2. LIST or STRING expected.' )
+      raise LRuntimePrimError( LP_search, f'Invalid argument 2. LIST or STRING expected{got_str(seq2)}.' )
    if type(seq1) is not type(seq2):
       raise LRuntimePrimError( LP_search, 'Invalid argument 2. Same type as argument 1 expected.' )
    s1_n, e1_n = _validate_bounds( start1, end1, len(seq1), LP_search )
@@ -506,7 +506,7 @@ index of the rightmost such element.  Returns NIL if none found."""
    start    = env.lookup( 'START' )
    end      = env.lookup( 'END' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_position_if, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_position_if, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    start_n, end_n = _validate_bounds( start, end, len(seq), LP_position_if )
    indices = range( start_n, end_n )
    if not _is_nil_val( from_end ):
@@ -529,7 +529,7 @@ def LP_count( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    start   = env.lookup( 'START' )
    end     = env.lookup( 'END' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_count, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_count, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    start_n, end_n = _validate_bounds( start, end, len(seq), LP_count )
    n = 0
    for i in range( start_n, end_n ):
@@ -548,7 +548,7 @@ which pred returns true when applied to the element's :key."""
    start  = env.lookup( 'START' )
    end    = env.lookup( 'END' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_count_if, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_count_if, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    start_n, end_n = _validate_bounds( start, end, len(seq), LP_count_if )
    n = 0
    for i in range( start_n, end_n ):
@@ -573,7 +573,7 @@ are removed; :from-end causes removal from the right when :count is supplied."""
    end      = env.lookup( 'END' )
    count    = env.lookup( 'COUNT' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_remove, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_remove, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    seqlen = len( seq )
    start_n, end_n = _validate_bounds( start, end, seqlen, LP_remove )
    count_n = _validate_count( count, LP_remove )
@@ -604,7 +604,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
    end      = env.lookup( 'END' )
    count    = env.lookup( 'COUNT' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_remove_if, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_remove_if, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    seqlen = len( seq )
    start_n, end_n = _validate_bounds( start, end, seqlen, LP_remove_if )
    count_n = _validate_count( count, LP_remove_if )
@@ -636,7 +636,7 @@ for the element's :key.  Only the bounded region [:start, :end) is considered.
    end      = env.lookup( 'END' )
    count    = env.lookup( 'COUNT' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_remove_if_not, 'Invalid argument 2. LIST expected.' )
+      raise LRuntimePrimError( LP_remove_if_not, f'Invalid argument 2. LIST expected{got_str(seq)}.' )
    seqlen = len( seq )
    start_n, end_n = _validate_bounds( start, end, seqlen, LP_remove_if_not )
    count_n = _validate_count( count, LP_remove_if_not )
@@ -671,7 +671,7 @@ the bounded region [:start, :end) is considered.  :count limits replacements;
    end      = env.lookup( 'END' )
    count    = env.lookup( 'COUNT' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_substitute, 'Invalid argument 3. LIST expected.' )
+      raise LRuntimePrimError( LP_substitute, f'Invalid argument 3. LIST expected{got_str(seq)}.' )
    seqlen = len( seq )
    start_n, end_n = _validate_bounds( start, end, seqlen, LP_substitute )
    count_n = _validate_count( count, LP_substitute )
@@ -703,7 +703,7 @@ considered.  :count limits replacements; :from-end replaces from the right."""
    end      = env.lookup( 'END' )
    count    = env.lookup( 'COUNT' )
    if not isinstance( seq, list ):
-      raise LRuntimePrimError( LP_substitute_if, 'Invalid argument 3. LIST expected.' )
+      raise LRuntimePrimError( LP_substitute_if, f'Invalid argument 3. LIST expected{got_str(seq)}.' )
    seqlen = len( seq )
    start_n, end_n = _validate_bounds( start, end, seqlen, LP_substitute_if )
    count_n = _validate_count( count, LP_substitute_if )
@@ -732,7 +732,7 @@ a list of the results.  Stops at the shortest sequence."""
    seqs = args[1:]
    for i, s in enumerate(seqs):
       if not isinstance( s, list ):
-         raise LRuntimePrimError( LP_mapcar, f'Invalid argument {i + 2}. LIST expected.' )
+         raise LRuntimePrimError( LP_mapcar, f'Invalid argument {i + 2}. LIST expected{got_str(s)}.' )
    result = []
    for elts in zip( *seqs ):
       result.append( ctx.lApply( ctx, env, fn, list(elts) ) )

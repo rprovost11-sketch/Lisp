@@ -69,10 +69,10 @@ def columnize( lst: list[str], displayWidth: int=80, file=None, itemColor=None )
             texts[col]  = padded
       print(str("  ".join(texts)), file=file )
 
-def writeln_multiFile( outputString: str, *fileList ):
+def writeln_multiFile( outputString: str, *fileList, flush=False ):
    """Write output to multiple output streams using print.
    fileList is a python list containing output file objects.
    An output file object of None prints directly to the screen."""
    for fileStream in fileList:
-      print( outputString, end='\n', flush=True, file=fileStream )
+      print( outputString, end='\n', flush=flush, file=fileStream )
 

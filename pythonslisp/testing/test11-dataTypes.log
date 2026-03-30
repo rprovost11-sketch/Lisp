@@ -426,14 +426,14 @@
 >>> (point-x 42)
 ...
 
-%%% ERROR 'AT': Invalid argument 2. List, Dict, or String expected.
+%%% ERROR 'AT': Invalid argument 2. LIST, DICT, or STRING expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> (setf (point-x 42) 5)
 ...
 
-%%% ERROR 'SET-ACCESSOR!': Invalid argument 2. STRUCT INSTANCE expected.
+%%% ERROR 'SET-ACCESSOR!': Invalid argument 2. STRUCT INSTANCE expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (SET-ACCESSOR! accessor-symbol instance newValue)
 ==>
 
@@ -697,7 +697,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (typep 42 "not-a-symbol")
 %%%  ^
-%%% ERROR 'TYPEP': Invalid argument 2. TYPE SPECIFIER expected.
+%%% ERROR 'TYPEP': Invalid argument 2. TYPE SPECIFIER expected, got STRING "not-a-symbol".
 %%% PRIMITIVE USAGE: (TYPEP object type-specifier)
 
 ; --- typecase ---
@@ -816,7 +816,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (float "hello")
 %%%  ^
-%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected.
+%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected, got STRING "hello".
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1093,7 +1093,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (float 'abc)
 %%%  ^
-%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected.
+%%% ERROR 'FLOAT': Invalid argument 1. Number or numeric string expected, got SYMBOL ABC.
 %%% PRIMITIVE USAGE: (FLOAT number)
 ==>
 
@@ -1103,6 +1103,6 @@
 %%% Runtime Error: "" (2,2)
 %%% (integer 'abc)
 %%%  ^
-%%% ERROR 'INTEGER': Invalid argument 1. Number or numeric string expected.
+%%% ERROR 'INTEGER': Invalid argument 1. Number or numeric string expected, got SYMBOL ABC.
 %%% PRIMITIVE USAGE: (INTEGER number &optional (base 10))
 ==>

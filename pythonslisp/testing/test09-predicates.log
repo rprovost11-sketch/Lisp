@@ -1159,7 +1159,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (< "a" 1)
 %%%  ^
-%%% ERROR '<': Invalid argument 2. COMPARABLE VALUE expected.
+%%% ERROR '<': Invalid argument 2. COMPARABLE VALUE expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (< expr1 expr2 &rest exprs)
 ==>
 
@@ -1169,7 +1169,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (> "a" 1)
 %%%  ^
-%%% ERROR '>': Invalid argument 2. COMPARABLE VALUE expected.
+%%% ERROR '>': Invalid argument 2. COMPARABLE VALUE expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (> expr1 expr2 &rest exprs)
 ==>
 
@@ -1179,7 +1179,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (<= "a" 1)
 %%%  ^
-%%% ERROR '<=': Invalid argument 2. COMPARABLE VALUE expected.
+%%% ERROR '<=': Invalid argument 2. COMPARABLE VALUE expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (<= expr1 expr2 &rest exprs)
 ==>
 
@@ -1189,7 +1189,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (>= "a" 1)
 %%%  ^
-%%% ERROR '>=': Invalid argument 2. COMPARABLE VALUE expected.
+%%% ERROR '>=': Invalid argument 2. COMPARABLE VALUE expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (>= expr1 expr2 &rest exprs)
 ==>
 

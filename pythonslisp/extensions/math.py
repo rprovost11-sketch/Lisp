@@ -6,7 +6,7 @@ from fractions import Fraction
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LNUMBER, LMultipleValues
+from pythonslisp.AST import LNUMBER, LMultipleValues, got_str
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
 from pythonslisp.extensions import primitive
@@ -21,7 +21,7 @@ def _bad_number_arg( args, prim ):
    """After TypeError from a bulk numeric operation, find and report the first non-number argument."""
    for i, arg in enumerate(args, 1):
       if not isinstance(arg, LNUMBER):
-         raise LRuntimePrimError(prim, f'Invalid argument {i}. Number expected.')
+         raise LRuntimePrimError(prim, f'Invalid argument {i}. NUMBER expected{got_str(arg)}.')
    raise LRuntimePrimError(prim, 'Invalid argument.')
 
 
@@ -298,4 +298,4 @@ For float n returns a random float in [0.0, n)."""
          raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.' )
       return _random.uniform( 0.0, num )
    else:
-      raise LRuntimePrimError( LP_random, 'Invalid argument 1. Integer or float expected.' )
+      raise LRuntimePrimError( LP_random, f'Invalid argument 1. INTEGER or FLOAT expected{got_str(num)}.' )

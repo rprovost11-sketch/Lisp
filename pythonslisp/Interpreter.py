@@ -131,7 +131,7 @@ class Interpreter( InterpreterBase ):
             startEvalTime = time.perf_counter()
             returnVal = _cek_eval( ctx, self._env, form )
             evalTime += time.perf_counter() - startEvalTime
-            
+         
       except ContinuationInvoked:
          raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       except Thrown as e:

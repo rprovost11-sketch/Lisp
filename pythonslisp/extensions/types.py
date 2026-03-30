@@ -7,7 +7,7 @@ from io import IOBase, StringIO
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LPrimitive,
                                    LContinuation, prettyPrint, prettyPrintSExpr,
-                                   eql, equal, equalp )
+                                   eql, equal, equalp, lisp_type_name, got_str )
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Environment import ModuleEnvironment
@@ -227,37 +227,9 @@ or open-string), nil otherwise."""
 def LP_typeof( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the type of its argument as a symbol (CL type-of conventions)."""
    arg = args[0]
-   if isinstance( arg, list ):
-      return LSymbol('NULL') if len(arg) == 0 else LSymbol('CONS')
-   elif isinstance( arg, int ):
-      return LSymbol('INTEGER')
-   elif isinstance( arg, float ):
-      return LSymbol('FLOAT')
-   elif isinstance( arg, Fraction ):
-      return LSymbol('RATIO')
-   elif isinstance( arg, str ):
-      return LSymbol('STRING')
-   elif isinstance( arg, LSymbol ):
-      return LSymbol('SYMBOL')
-   elif isinstance( arg, dict ):
-      struct_type = arg.get(LSymbol('STRUCT-TYPE'))
-      return struct_type if struct_type is not None else LSymbol('DICT')
-   elif isinstance( arg, ModuleEnvironment ):
+   if isinstance( arg, ModuleEnvironment ):
       return LSymbol('MODULE')
-   elif isinstance( arg, LFunction ):
-      return LSymbol('FUNCTION')
-   elif isinstance( arg, LMacro ):
-      return LSymbol('MACRO')
-   elif isinstance( arg, LPrimitive ):
-      return LSymbol('PRIMITIVE')
-   elif isinstance( arg, LContinuation ):
-      return LSymbol('CONTINUATION')
-   elif isinstance( arg, StringIO ):
-      return LSymbol('STRING-STREAM')
-   elif isinstance( arg, IOBase ):
-      return LSymbol('FILE-STREAM')
-   else:
-      return LSymbol('T')
+   return LSymbol( lisp_type_name(arg) )
 
 @primitive( 'typep', '(object type-specifier)' )
 def LP_typep( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -271,7 +243,7 @@ Compound specifiers: (OR ...) (AND ...) (NOT t) (MEMBER v...) (SATISFIES fn)
   (NUMBER low high).  Bounds are * (unbounded), n (inclusive), or (n) (exclusive)."""
    obj, spec = args
    if not isinstance(spec, (LSymbol, list)):
-      raise LRuntimePrimError( LP_typep, 'Invalid argument 2. TYPE SPECIFIER expected.' )
+      raise LRuntimePrimError( LP_typep, f'Invalid argument 2. TYPE SPECIFIER expected{got_str(spec)}.' )
    return L_T if _typep(obj, spec, ctx, env) else L_NIL
 
 @primitive( 'not', '(object)' )
@@ -344,7 +316,7 @@ def LP_less( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior < mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
+            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -358,7 +330,7 @@ def LP_lessOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior <= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
+            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -372,7 +344,7 @@ def LP_greater( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior > mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
+            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -386,7 +358,7 @@ def LP_greaterOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior >= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected.' )
+            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. COMPARABLE VALUE expected{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -396,7 +368,7 @@ def LP_float( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return float(args[0])
    except (ValueError, TypeError):
-      raise LRuntimePrimError( LP_float, 'Invalid argument 1. Number or numeric string expected.' )
+      raise LRuntimePrimError( LP_float, f'Invalid argument 1. Number or numeric string expected{got_str(args[0])}.' )
 
 @primitive( 'integer', '(number &optional (base 10))' )
 def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -404,7 +376,7 @@ def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return int(*args)
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_integer, 'Invalid argument 1. Number or numeric string expected.' )
+      raise LRuntimePrimError( LP_integer, f'Invalid argument 1. Number or numeric string expected{got_str(args[0])}.' )
 
 @primitive( 'rational', '(number)' )
 def LP_rational( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -413,7 +385,7 @@ containing a valid lisp number that can be expressed as a fraction."""
    try:
       return Fraction(args[0])
    except (IndexError, TypeError, ValueError):
-      raise LRuntimePrimError( LP_rational, 'Invalid argument 1. Number expected.' )
+      raise LRuntimePrimError( LP_rational, f'Invalid argument 1. NUMBER expected{got_str(args[0])}.' )
 
 @primitive( 'string', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
 def LP_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -440,7 +412,7 @@ def LP_make_symbol( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Takes a string and returns a new symbol whose print string is that string."""
    arg = args[0]
    if not isinstance(arg, str):
-      raise LRuntimePrimError( LP_make_symbol, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_make_symbol, f'Invalid argument 1. STRING expected{got_str(arg)}.' )
    try:
       sym, _ = ctx.parseOne(arg)
    except ParseError:

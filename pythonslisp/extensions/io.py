@@ -8,7 +8,7 @@ from typing import Any
 from io import IOBase, StringIO
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr
+from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr, got_str
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError
@@ -215,7 +215,7 @@ def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if_exists = env.lookup( 'IF-EXISTS' )
    if_dne    = env.lookup( 'IF-DOES-NOT-EXIST' )
    if not isinstance( filespec, str ):
-      raise LRuntimePrimError( LP_open, 'Invalid argument 1. STRING FILE PATH expected.' )
+      raise LRuntimePrimError( LP_open, f'Invalid argument 1. STRING FILE PATH expected{got_str(filespec)}.' )
    if direction == LSymbol(':INPUT'):
       if isinstance( if_dne, list ) and not os.path.exists( filespec ):
          return L_NIL
@@ -265,7 +265,7 @@ but not including end (default: entire string)."""
    end   = env.lookup( 'END' )
    if not isinstance( s, str ):
       raise LRuntimePrimError( LP_make_string_input_stream,
-                                  'Invalid argument 1. STRING expected.' )
+                                  f'Invalid argument 1. STRING expected{got_str(s)}.' )
    start_py = start if isinstance( start, int ) else 0
    end_py   = end   if isinstance( end, int )   else None
    return StringIO( s[start_py:end_py] )
@@ -278,7 +278,7 @@ The stream remains open and writable.  (CL semantics.)"""
    stream = args[0]
    if not isinstance( stream, StringIO ):
       raise LRuntimePrimError( LP_get_output_stream_string,
-                                  'Invalid argument 1. STRING OUTPUT STREAM expected.' )
+                                  f'Invalid argument 1. STRING OUTPUT STREAM expected{got_str(stream)}.' )
    if stream.closed:
       raise LRuntimePrimError( LP_get_output_stream_string,
                                   'String stream is closed.' )
@@ -294,7 +294,7 @@ The :abort keyword argument is accepted for CL compatibility but is ignored
 in this implementation (flushing on close cannot be suppressed)."""
    stream = env.lookup( 'STREAM' )
    if not isinstance(stream, IOBase):
-      raise LRuntimePrimError( LP_close, 'Invalid argument 1. STREAM expected.' )
+      raise LRuntimePrimError( LP_close, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    stream.close()
    return L_T
 
@@ -304,7 +304,7 @@ def LP_flush( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if len(args) == 1:
       stream = args[0]
       if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_flush, 'Invalid argument 1. STREAM expected.' )
+         raise LRuntimePrimError( LP_flush, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
       stream.flush( )
    else:
       sys.stdout.flush()
@@ -315,7 +315,7 @@ def LP_open_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the stream is open, NIL if it is closed."""
    stream = args[0]
    if not isinstance(stream, IOBase):
-      raise LRuntimePrimError( LP_open_stream_p, 'Invalid argument 1. STREAM expected.' )
+      raise LRuntimePrimError( LP_open_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    return L_NIL if stream.closed else L_T
 
 @primitive( 'interactive-stream-p', '(stream)' )
@@ -323,7 +323,7 @@ def LP_interactive_stream_p( ctx: Context, env: Environment, args: list[Any] ) -
    """Returns T if the stream is interactive (connected to a terminal), NIL otherwise."""
    stream = args[0]
    if not isinstance(stream, IOBase):
-      raise LRuntimePrimError( LP_interactive_stream_p, 'Invalid argument 1. STREAM expected.' )
+      raise LRuntimePrimError( LP_interactive_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    return L_T if stream.isatty() else L_NIL
 
 @primitive( 'input-stream-p', '(stream)' )
@@ -331,7 +331,7 @@ def LP_input_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the stream can be read from, NIL otherwise."""
    stream = args[0]
    if not isinstance(stream, IOBase):
-      raise LRuntimePrimError( LP_input_stream_p, 'Invalid argument 1. STREAM expected.' )
+      raise LRuntimePrimError( LP_input_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    return L_T if stream.readable() else L_NIL
 
 @primitive( 'output-stream-p', '(stream)' )
@@ -339,7 +339,7 @@ def LP_output_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any
    """Returns T if the stream can be written to, NIL otherwise."""
    stream = args[0]
    if not isinstance(stream, IOBase):
-      raise LRuntimePrimError( LP_output_stream_p, 'Invalid argument 1. STREAM expected.' )
+      raise LRuntimePrimError( LP_output_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    return L_T if stream.writable() else L_NIL
 
 @primitive( 'stdin', '()' )
@@ -379,7 +379,7 @@ def LP_path_join( ctx: Context, env: Environment, args: list[Any] ) -> str:
    """Joins path-segments using the OS path separator.  Returns the result as a string."""
    for i, arg in enumerate(args):
       if not isinstance(arg, str):
-         raise LRuntimePrimError( LP_path_join, f'Invalid argument {i+1}. STRING expected.' )
+         raise LRuntimePrimError( LP_path_join, f'Invalid argument {i+1}. STRING expected{got_str(arg)}.' )
    return os.path.join(*args)
 
 @primitive( 'writef', '(formatString &optional dictOrList stream)' )
@@ -390,7 +390,7 @@ If no second argument is given, the format string is output unchanged.
 Returns the output string."""
    formatString = args[0]
    if not isinstance( formatString, str ):
-      raise LRuntimePrimError( LP_writef, 'Invalid argument 1. FORMAT STRING expected.' )
+      raise LRuntimePrimError( LP_writef, f'Invalid argument 1. FORMAT STRING expected{got_str(formatString)}.' )
 
    numArgs = len(args)
    if numArgs == 1:
@@ -408,13 +408,13 @@ Returns the output string."""
          if not stream.writable():
             raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
       else:
-         raise LRuntimePrimError( LP_writef, 'Invalid argument 2. LIST, DICT, or STREAM expected.' )
+         raise LRuntimePrimError( LP_writef, f'Invalid argument 2. LIST, DICT, or STREAM expected{got_str(otherArg)}.' )
    else: # numArgs == 3
       dictOrList, stream = args[1:]
       if not isinstance(dictOrList, (list, dict)):
-         raise LRuntimePrimError( LP_writef, 'Invalid argument 2. LIST or DICT expected.' )
+         raise LRuntimePrimError( LP_writef, f'Invalid argument 2. LIST or DICT expected{got_str(dictOrList)}.' )
       if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_writef, 'Invalid argument 3. STREAM expected.' )
+         raise LRuntimePrimError( LP_writef, f'Invalid argument 3. STREAM expected{got_str(stream)}.' )
       if not stream.writable():
          raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
 
@@ -500,7 +500,7 @@ def LP_terpri( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    else:
       stream = args[0]
       if not isinstance(stream, IOBase):
-         raise LRuntimePrimError( LP_terpri, 'Invalid argument 1. STREAM expected.' )
+         raise LRuntimePrimError( LP_terpri, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
       if not stream.writable():
          raise LRuntimePrimError( LP_terpri, 'Stream is not writable.' )
    print( end='\n', file=stream )
@@ -511,7 +511,7 @@ def LP_readall( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Reads and returns the entire contents of a readable stream as a single string."""
    stream = args[0]
    if not isinstance(stream, IOBase):
-      raise LRuntimePrimError( LP_readall, 'Invalid argument 1. STREAM expected.' )
+      raise LRuntimePrimError( LP_readall, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    if not stream.readable():
       raise LRuntimePrimError( LP_readall, 'Stream is not readable.' )
    return stream.read()
@@ -528,7 +528,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
    if len( args ) >= 1 and args[0] is not L_NIL:
       stream = args[0]
       if not isinstance( stream, IOBase ):
-         raise LRuntimePrimError( LP_read_line, 'Invalid argument 1. STREAM expected.' )
+         raise LRuntimePrimError( LP_read_line, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    if len( args ) >= 2:
       eof_error_p = args[1] is not L_NIL
    if len( args ) >= 3:
@@ -561,7 +561,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
    if len( args ) >= 1 and args[0] is not L_NIL:
       stream = args[0]
       if not isinstance( stream, IOBase ):
-         raise LRuntimePrimError( LP_read_char, 'Invalid argument 1. STREAM expected.' )
+         raise LRuntimePrimError( LP_read_char, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    if len( args ) >= 2:
       eof_error_p = args[1] is not L_NIL
    if len( args ) >= 3:
@@ -597,7 +597,7 @@ is accumulated."""
    if len( args ) >= 1 and args[0] is not L_NIL:
       stream = args[0]
       if not isinstance( stream, IOBase ):
-         raise LRuntimePrimError( LP_read, 'Invalid argument 1. STREAM expected.' )
+         raise LRuntimePrimError( LP_read, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    if len( args ) >= 2:
       eof_error_p = args[1] is not L_NIL
    if len( args ) >= 3:
@@ -646,7 +646,7 @@ def LP_save( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Saves python object to a text file."""
    filename, *objs = args
    if not isinstance(filename, str):
-      raise LRuntimePrimError( LP_save, 'Invalid argument 1. STRING FILE PATH expected.' )
+      raise LRuntimePrimError( LP_save, f'Invalid argument 1. STRING FILE PATH expected{got_str(filename)}.' )
    with open( filename, 'w', encoding='utf-8' ) as st:
       lines = [ f'{prettyPrintSExpr(obj)}\n' for obj in objs ]
       st.writelines( lines )
@@ -657,7 +657,7 @@ def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
    filename = args[0]
    if not isinstance(filename, str):
-      raise LRuntimePrimError( LP_load, 'Invalid argument 1. STRING FILE PATH expected.' )
+      raise LRuntimePrimError( LP_load, f'Invalid argument 1. STRING FILE PATH expected{got_str(filename)}.' )
    try:
       with open( filename, 'r', encoding='utf-8' ) as f:
          content = f.read()
@@ -673,7 +673,7 @@ in which case the message is formatted using Python str.format() before
 being raised.  With no second argument the format string is used as-is."""
    formatString = args[0]
    if not isinstance( formatString, str ):
-      raise LRuntimePrimError( LP_error, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_error, f'Invalid argument 1. STRING expected{got_str(formatString)}.' )
    if len(args) == 1:
       raise LRuntimeError( formatString )
    dictOrList = args[1]
@@ -684,7 +684,7 @@ being raised.  With no second argument the format string is used as-is."""
          strDict = { (k.name if isinstance(k, LSymbol) else k): v for k, v in dictOrList.items() }
          message = formatString.format( **strDict )
       else:
-         raise LRuntimePrimError( LP_error, 'Invalid argument 2. LIST or DICT expected.' )
+         raise LRuntimePrimError( LP_error, f'Invalid argument 2. LIST or DICT expected{got_str(dictOrList)}.' )
    except (IndexError, KeyError, ValueError) as e:
       raise LRuntimePrimError( LP_error, f'Format error: {e}' )
    raise LRuntimeError( message )
@@ -694,7 +694,7 @@ def LP_parse( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
    theExprStr = args[0]
    if not isinstance(theExprStr, str):
-      raise LRuntimePrimError( LP_parse, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_parse, f'Invalid argument 1. STRING expected{got_str(theExprStr)}.' )
    return ctx.parse( theExprStr )
 
 @primitive( 'python', '(string)' )
@@ -702,7 +702,7 @@ def LP_python( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Executes some python code from Lisp."""
    thePythonCode = args[0]
    if not isinstance(thePythonCode, str):
-      raise LRuntimePrimError( LP_python, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_python, f'Invalid argument 1. STRING expected{got_str(thePythonCode)}.' )
    theReturnVal = eval( thePythonCode, globals(), locals() )
    return theReturnVal
 
@@ -721,7 +721,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
 
    if substring is not L_NIL:
       if not isinstance( target, str ):
-         raise LRuntimePrimError( LP_help, ':substring t requires a string target.' )
+         raise LRuntimePrimError( LP_help, f':substring t requires a string target{got_str(target)}.' )
       printHelpListings( ctx.outStrm, env, find=target )
       return L_T
 
@@ -793,11 +793,11 @@ as a symbol.  An existing topic with the same name is overwritten.
    text     = env.lookup( 'TEXT-STRING' )
    category = env.lookup( 'CATEGORY' )
    if not isinstance( name, str ):
-      raise LRuntimePrimError( LP_define_help_topic, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_define_help_topic, f'Invalid argument 1. STRING expected{got_str(name)}.' )
    if not isinstance( text, str ):
-      raise LRuntimePrimError( LP_define_help_topic, 'Invalid argument 2. STRING expected.' )
+      raise LRuntimePrimError( LP_define_help_topic, f'Invalid argument 2. STRING expected{got_str(text)}.' )
    if not isinstance( category, str ):
-      raise LRuntimePrimError( LP_define_help_topic, 'Invalid keyword :category. STRING expected.' )
+      raise LRuntimePrimError( LP_define_help_topic, f'Invalid keyword :category. STRING expected{got_str(category)}.' )
    target_dir = HELP_DIR / category if category else HELP_DIR
    target_dir.mkdir( parents=True, exist_ok=True )
    topicFile  = target_dir / f'{name.upper()}.txt'
@@ -810,7 +810,7 @@ def LP_undefine_help_topic( ctx: Context, env: Environment, args: list[Any] ) ->
 Returns T if the topic existed and was removed, NIL if the topic was not found."""
    name = args[0]
    if not isinstance( name, str ):
-      raise LRuntimePrimError( LP_undefine_help_topic, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_undefine_help_topic, f'Invalid argument 1. STRING expected{got_str(name)}.' )
    topicFile = next(HELP_DIR.glob(f'**/{name.upper()}.txt'), None)
    if topicFile is not None:
       topicFile.unlink()
@@ -825,12 +825,12 @@ extension are returned.  Directories are excluded.  Returns NIL if dir
 does not exist or is empty."""
    dirPath = args[0]
    if not isinstance( dirPath, str ):
-      raise LRuntimePrimError( LP_directory_files, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_directory_files, f'Invalid argument 1. STRING expected{got_str(dirPath)}.' )
    ext = None
    if len(args) == 2:
       ext = args[1]
       if not isinstance( ext, str ):
-         raise LRuntimePrimError( LP_directory_files, 'Invalid argument 2. STRING expected.' )
+         raise LRuntimePrimError( LP_directory_files, f'Invalid argument 2. STRING expected{got_str(ext)}.' )
    if not os.path.isdir( dirPath ):
       return L_NIL
    entries = sorted( os.listdir( dirPath ) )
@@ -850,7 +850,7 @@ def LP_make_directory( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 Does nothing if the directory already exists.  Returns the path string."""
    path = args[0]
    if not isinstance( path, str ):
-      raise LRuntimePrimError( LP_make_directory, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_make_directory, f'Invalid argument 1. STRING expected{got_str(path)}.' )
    os.makedirs( path, exist_ok=True )
    return path
 
@@ -860,7 +860,7 @@ def LP_file_basename( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 the directory prefix).  E.g. (file-basename \"/foo/bar/baz.log\") => \"baz.log\"."""
    path = args[0]
    if not isinstance( path, str ):
-      raise LRuntimePrimError( LP_file_basename, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_file_basename, f'Invalid argument 1. STRING expected{got_str(path)}.' )
    return os.path.basename( path )
 
 @primitive( 'readline-add-history', '(string)' )
@@ -869,7 +869,7 @@ def LP_readline_add_history( ctx: Context, env: Environment, args: list[Any] ) -
 Has no effect if readline is not available.  Returns the string."""
    s = args[0]
    if not isinstance( s, str ):
-      raise LRuntimePrimError( LP_readline_add_history, 'Invalid argument 1. STRING expected.' )
+      raise LRuntimePrimError( LP_readline_add_history, f'Invalid argument 1. STRING expected{got_str(s)}.' )
    if _rl is not None:
       _rl.add_history( s )
    return s
@@ -880,7 +880,7 @@ def LP_readline_set_history_length( ctx: Context, env: Environment, args: list[A
 Has no effect if readline is not available.  Returns n."""
    n = args[0]
    if not isinstance( n, int ) or isinstance( n, bool ):
-      raise LRuntimePrimError( LP_readline_set_history_length, 'Invalid argument 1. INTEGER expected.' )
+      raise LRuntimePrimError( LP_readline_set_history_length, f'Invalid argument 1. INTEGER expected{got_str(n)}.' )
    if n < 1:
       raise LRuntimePrimError( LP_readline_set_history_length, 'Invalid argument 1. Positive INTEGER expected.' )
    if _rl is not None:
@@ -894,7 +894,7 @@ Has no effect if readline is not available.  Returns T on success, NIL if
 the file does not exist."""
    path = args[0] if args else os.path.expanduser( '~/.lisp_history' )
    if not isinstance( path, str ):
-      raise LRuntimePrimError( LP_readline_read_history_file, 'Invalid argument 1. STRING PATH expected.' )
+      raise LRuntimePrimError( LP_readline_read_history_file, f'Invalid argument 1. STRING PATH expected{got_str(path)}.' )
    if _rl is None:
       return L_NIL
    try:
@@ -909,7 +909,7 @@ def LP_readline_write_history_file( ctx: Context, env: Environment, args: list[A
 Has no effect if readline is not available.  Returns T on success."""
    path = args[0] if args else os.path.expanduser( '~/.lisp_history' )
    if not isinstance( path, str ):
-      raise LRuntimePrimError( LP_readline_write_history_file, 'Invalid argument 1. STRING PATH expected.' )
+      raise LRuntimePrimError( LP_readline_write_history_file, f'Invalid argument 1. STRING PATH expected{got_str(path)}.' )
    if _rl is None:
       return L_NIL
    _rl.write_history_file( path )
@@ -926,12 +926,12 @@ All list elements must be strings.  Returns NIL."""
    width = args[1]
    outFile = args[2] if len(args) == 3 else ctx.outStrm
    if not isinstance( lst, list ):
-      raise LRuntimePrimError( LP_columnize, 'Invalid argument 1. LIST expected.' )
+      raise LRuntimePrimError( LP_columnize, f'Invalid argument 1. LIST expected{got_str(lst)}.' )
    if not isinstance( width, int ) or isinstance( width, bool ):
-      raise LRuntimePrimError( LP_columnize, 'Invalid argument 2. INTEGER expected.' )
+      raise LRuntimePrimError( LP_columnize, f'Invalid argument 2. INTEGER expected{got_str(width)}.' )
    for i, item in enumerate( lst ):
       if not isinstance( item, str ):
-         raise LRuntimePrimError( LP_columnize, f'Invalid element {i+1}. STRING expected.' )
+         raise LRuntimePrimError( LP_columnize, f'Invalid element {i+1}. STRING expected{got_str(item)}.' )
    if not lst:
       return L_NIL
    columnize( lst, width, file=outFile )

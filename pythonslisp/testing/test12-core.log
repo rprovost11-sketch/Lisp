@@ -38,7 +38,7 @@
 %%% Runtime Error: "" (2,2)
 %%% (python 1)
 %%%  ^
-%%% ERROR 'PYTHON': Invalid argument 1. STRING expected.
+%%% ERROR 'PYTHON': Invalid argument 1. STRING expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
@@ -630,7 +630,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (makunbound 1)
 %%%  ^
-%%% ERROR 'MAKUNBOUND': Invalid argument 1. SYMBOL expected.
+%%% ERROR 'MAKUNBOUND': Invalid argument 1. SYMBOL expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
@@ -735,7 +735,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (makunbound 1)
 %%%  ^
-%%% ERROR 'MAKUNBOUND': Invalid argument 1. SYMBOL expected.
+%%% ERROR 'MAKUNBOUND': Invalid argument 1. SYMBOL expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (MAKUNBOUND symbol)
 ==>
 
@@ -783,7 +783,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (make-symbol 42)
 %%%  ^
-%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. STRING expected.
+%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. STRING expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -792,7 +792,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (make-symbol '())
 %%%  ^
-%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. STRING expected.
+%%% ERROR 'MAKE-SYMBOL': Invalid argument 1. STRING expected, got NULL NIL.
 %%% PRIMITIVE USAGE: (MAKE-SYMBOL string)
 ==>
 
@@ -878,7 +878,7 @@ T
 >>> ;;; setf at with non-list non-map container
 ... (setf (at 0 42) 5)
 
-%%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected.
+%%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
@@ -910,7 +910,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (defsetf-internal 1 2)
 %%%  ^
-%%% ERROR 'DEFSETF-INTERNAL': Invalid argument 1. SYMBOL expected.
+%%% ERROR 'DEFSETF-INTERNAL': Invalid argument 1. SYMBOL expected, got INTEGER 1.
 %%% PRIMITIVE USAGE: (DEFSETF-INTERNAL accessor-symbol field-symbol)
 ==>
 
@@ -923,7 +923,7 @@ T
 %%% (help 1 2)
 %%%  ^
 %%% Error binding arguments in call to function "HELP".
-%%% Argument 2: keyword symbol expected, found 2.
+%%% Argument 2: keyword symbol expected, got INTEGER 2.
 ==>
 
 >>> ;;; help with non-callable argument
@@ -942,7 +942,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (help :substring t)
 %%%  ^
-%%% ERROR 'HELP': :substring t requires a string target.
+%%% ERROR 'HELP': :substring t requires a string target, got NULL NIL.
 %%% PRIMITIVE USAGE: (HELP &optional target &key (substring nil))
 ==>
 
@@ -969,7 +969,7 @@ T
 %%% Runtime Error: "" (2,2)
 %%% (python 42)
 %%%  ^
-%%% ERROR 'PYTHON': Invalid argument 1. STRING expected.
+%%% ERROR 'PYTHON': Invalid argument 1. STRING expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (PYTHON string)
 ==>
 
@@ -989,7 +989,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (readall 42)
 %%%  ^
-%%% ERROR 'READALL': Invalid argument 1. STREAM expected.
+%%% ERROR 'READALL': Invalid argument 1. STREAM expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (READALL stream)
 ==>
 
@@ -1018,7 +1018,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (path-join 42)
 %%%  ^
-%%% ERROR 'PATH-JOIN': Invalid argument 1. STRING expected.
+%%% ERROR 'PATH-JOIN': Invalid argument 1. STRING expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 
@@ -1027,7 +1027,7 @@ T
 %%% Runtime Error: "" (1,2)
 %%% (path-join "a" 42)
 %%%  ^
-%%% ERROR 'PATH-JOIN': Invalid argument 2. STRING expected.
+%%% ERROR 'PATH-JOIN': Invalid argument 2. STRING expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (PATH-JOIN path-segment &rest more-segments)
 ==>
 

@@ -253,7 +253,7 @@
 %%% Runtime Error: "" (1,2)
 %%% (module-set! 42 'x 1)
 %%%  ^
-%%% ERROR 'MODULE-SET!': Invalid argument 1. MODULE expected.
+%%% ERROR 'MODULE-SET!': Invalid argument 1. MODULE expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (MODULE-SET! module symbol value)
 
 ; load-module with bad :name type

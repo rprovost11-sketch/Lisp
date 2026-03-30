@@ -4,7 +4,7 @@ import time
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LMacro
+from pythonslisp.AST import LSymbol, LMacro, got_str
 from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError
@@ -66,9 +66,9 @@ def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> An
    """Register a struct field accessor as a valid setf target."""
    accessor_sym, field_sym = args
    if not isinstance(accessor_sym, LSymbol):
-      raise LRuntimePrimError( LP_defsetf_internal, 'Invalid argument 1. SYMBOL expected.' )
+      raise LRuntimePrimError( LP_defsetf_internal, f'Invalid argument 1. SYMBOL expected{got_str(accessor_sym)}.' )
    if not isinstance(field_sym, LSymbol):
-      raise LRuntimePrimError( LP_defsetf_internal, 'Invalid argument 2. SYMBOL expected.' )
+      raise LRuntimePrimError( LP_defsetf_internal, f'Invalid argument 2. SYMBOL expected{got_str(field_sym)}.' )
    ctx.setfRegistry[accessor_sym.name] = field_sym
    return accessor_sym
 
@@ -77,13 +77,13 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Internal: write a struct field value via the defsetf registry."""
    accessor, instance, newval = args
    if not isinstance( accessor, LSymbol ):
-      raise LRuntimePrimError( LP_set_accessor, 'Invalid argument 1. SYMBOL expected.' )
+      raise LRuntimePrimError( LP_set_accessor, f'Invalid argument 1. SYMBOL expected{got_str(accessor)}.' )
    field_key = ctx.setfRegistry.get( accessor.name )
    if field_key is None:
       raise LRuntimePrimError( LP_set_accessor,
                                   f'No setf expander registered for {accessor.name}.' )
    if not isinstance( instance, dict ):
-      raise LRuntimePrimError( LP_set_accessor, 'Invalid argument 2. STRUCT INSTANCE expected.' )
+      raise LRuntimePrimError( LP_set_accessor, f'Invalid argument 2. STRUCT INSTANCE expected{got_str(instance)}.' )
    instance[ field_key ] = newval
    return newval
 
@@ -105,7 +105,7 @@ def LP_makunbound( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 The argument is evaluated: (makunbound 'x) unbinds X."""
    key = args[0]
    if not isinstance(key, LSymbol):
-      raise LRuntimePrimError( LP_makunbound, 'Invalid argument 1. SYMBOL expected.' )
+      raise LRuntimePrimError( LP_makunbound, f'Invalid argument 1. SYMBOL expected{got_str(key)}.' )
    env.getGlobalEnv().unbind( key.name )
    return L_NIL
 
@@ -156,7 +156,7 @@ def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
    sym = args[0]
    if not isinstance( sym, LSymbol ):
-      raise LRuntimePrimError( LP_boundp, 'Invalid argument 1. SYMBOL expected.' )
+      raise LRuntimePrimError( LP_boundp, f'Invalid argument 1. SYMBOL expected{got_str(sym)}.' )
    try:
       env.lookup( sym.name )
       return L_T
