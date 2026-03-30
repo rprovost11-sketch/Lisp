@@ -77,8 +77,8 @@ class Interpreter( InterpreterBase ):
       return prettyPrintSExpr( returnVal ).strip()
 
    def eval_instrumented( self, source: str, outStrm=None ) -> str:
-      returnVal,parseTime,execTime = self.rawEval_instrumented( source, outStrm=outStrm )
-      return prettyPrintSExpr( returnVal ).strip(), parseTime, execTime
+      returnVal, metrics = self.rawEval_instrumented( source, outStrm=outStrm )
+      return prettyPrintSExpr( returnVal ).strip(), metrics
 
    def evalFile( self, filename: str, outStrm=None ) -> str:
       self.rawEvalFile( filename, outStrm=outStrm )
@@ -91,7 +91,7 @@ class Interpreter( InterpreterBase ):
          top_level_forms = ast[1:]            # strip progn wrapper
          returnVal = L_NIL
          for form in top_level_forms:
-            form = Expander.expand( ctx, self._env, form )
+            form      = Expander.expand( ctx, self._env, form )
             Analyzer.analyze( self._env, form )
             returnVal = _cek_eval( ctx, self._env, form )
       except ContinuationInvoked:
@@ -105,21 +105,33 @@ class Interpreter( InterpreterBase ):
       return returnVal
 
    def rawEval_instrumented( self, source: str, outStrm=None ) -> Any:
+      startTotTime = time.perf_counter()
       self._ctx.outStrm = outStrm
       ctx = self._ctx
+      parseTime   = 0.0
+      expandTime  = 0.0
+      analyzeTime = 0.0
+      evalTime    = 0.0
       try:
          parseStartTime = time.perf_counter()
          ast = self._parser.parse( source )
          parseTime = time.perf_counter() - parseStartTime
 
-         startTime = time.perf_counter()
          top_level_forms = ast[1:]
          returnVal = L_NIL
          for form in top_level_forms:
+            startExpandTime = time.perf_counter()
             form = Expander.expand( ctx, self._env, form )
+            expandTime += time.perf_counter() - startExpandTime
+            
+            startAnalyzeTime = time.perf_counter()
             Analyzer.analyze( self._env, form )
+            analyzeTime += time.perf_counter() - startAnalyzeTime
+            
+            startEvalTime = time.perf_counter()
             returnVal = _cek_eval( ctx, self._env, form )
-         evalTime = time.perf_counter() - startTime
+            evalTime += time.perf_counter() - startEvalTime
+            
       except ContinuationInvoked:
          raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
       except Thrown as e:
@@ -128,7 +140,9 @@ class Interpreter( InterpreterBase ):
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
          raise LRuntimeError( f'Unhandled condition: {prettyPrintSExpr(e.condition)}' )
-      return returnVal, parseTime, evalTime
+      totTime = time.perf_counter() - startTotTime
+      metrics = { 'parse': parseTime, 'expand': expandTime, 'analyze': analyzeTime, 'eval': evalTime, 'total': totTime }
+      return returnVal, metrics
 
    def rawEvalFile( self, filename: str, outStrm=None ) -> Any:
       self._ctx.outStrm = outStrm

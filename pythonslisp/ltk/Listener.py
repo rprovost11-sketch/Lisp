@@ -120,13 +120,12 @@ class Listener( object ):
                   self._runListenerCommand( inputExprStr )
                else:
                   if self._instrumenting:
-                     start = time.perf_counter( )
-                     rawVal,parseTime,evalTime = self._interp.rawEval_instrumented( inputExprStr )
-                     totalTime = time.perf_counter( ) - start
+                     rawVal, metrics = self._interp.rawEval_instrumented( inputExprStr )
                      self._writeResult( rawVal )
-                     print( f'-------------  Parse time:              {parseTime:15.8f} sec' )
-                     print( f'-------------  Eval time:               {evalTime:15.8f} sec' )
-                     print( f'-------------     Total execution time: {totalTime:15.8f} sec' )
+                     for name, value in metrics.items():
+                        if name != 'total':
+                           print( f'-------------  {name.capitalize()+" time:": <24} {value:15.8f} sec' )
+                     print( f'-------------     {"Total time:": <21} {metrics["total"]:15.8f} sec' )
                   else:
                      rawVal = self._interp.rawEval( inputExprStr )
                      self._writeResult( rawVal )
@@ -575,11 +574,11 @@ class Listener( object ):
       stateStr   = 'ON' if state else 'OFF'
       print( f'Tracing is now {stateColor}{stateStr}{RESET}.' )
 
-   def _writeLn( self, value: str='', file=None ) -> None:
+   def _writeLn( self, value: str='', file=None, flush=False ) -> None:
       if self._logFile:
-         writeln_multiFile( value, file, self._logFile )
+         writeln_multiFile( value, file, self._logFile, flush=flush )
       else:
-         writeln_multiFile( value, file )
+         writeln_multiFile( value, file, flush=flush )
 
    def _writeResult( self, rawVal ) -> None:
       from pythonslisp.AST import LMultipleValues, prettyPrintSExpr
@@ -592,28 +591,22 @@ class Listener( object ):
             valStr    = prettyPrintSExpr( v ).strip()
             plainLine = f'\n==> {valStr}'
             colorLine = f'\n{BRIGHT_GREEN}==>{RESET} {BOLD_WHITE}{valStr}{RESET}'
-            print( colorLine if useColor else plainLine, flush=True )
-            if self._logFile:
-               print( plainLine, file=self._logFile, flush=True )
+            self._writeLn( colorLine if useColor else plainLine, file=None, flush=True )
       else:
          resultStr = prettyPrintSExpr( rawVal ).strip()
          plainLine = f'\n==> {resultStr}'
          colorLine = f'\n{BRIGHT_GREEN}==>{RESET} {BOLD_WHITE}{resultStr}{RESET}'
-         print( colorLine if useColor else plainLine, flush=True )
-         if self._logFile:
-            print( plainLine, file=self._logFile, flush=True )
+         self._writeLn( colorLine if useColor else plainLine, file=None, flush=True )
 
-   def _writeErrorMsg( self, errMsg: str, file=None ):
+   def _writeErrorMsg( self, errMsg: str, file=None ) -> None:
       RED   = '\033[91m'
       RESET = '\033[0m'
       useColor = sys.stdout.isatty()
       errMsgLinesOfText = errMsg.splitlines()
       for errMsgLine in errMsgLinesOfText:
          plainLine = f'%%% {errMsgLine}'
-         colorLine = f'{RED}{plainLine}{RESET}' if useColor else plainLine
-         print( colorLine, end='\n', flush=True, file=file )
-         if self._logFile:
-            print( plainLine, end='\n', flush=True, file=self._logFile )
+         colorLine = f'{RED}{plainLine}{RESET}'
+         self._writeLn( colorLine if useColor else plainLine, file=None, flush=True )
 
    def _prompt( self, prompt: str='' ) -> str:
       if sys.platform == 'win32' and self._rl and sys.stdin.isatty():
