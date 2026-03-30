@@ -17,10 +17,10 @@ class LRuntimeError( Exception ):
 
 
 class LRuntimePrimError( LRuntimeError ):
-   def __init__( self, lispCallable, errorMsg: str ) -> None:
+   def __init__( self, lispCallable, errorMsg: str, show_usage: bool = True ) -> None:
       prim   = getattr( lispCallable, 'primitive', lispCallable )
       fnName = prim.name
-      usage  = prim.usageString()
+      usage  = prim.usageString() if show_usage else ''
       errStr = f"ERROR '{fnName}': {errorMsg}\n{usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
       super().__init__( errStr )
 

@@ -1302,7 +1302,6 @@ ab
 %%% (read-line (make-string-input-stream ""))
 %%%             ^
 %%% ERROR 'READ-LINE': End of file.
-%%% PRIMITIVE USAGE: (READ-LINE &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 >>> ;;; read-line strips exactly one trailing newline: result has correct length
@@ -1346,7 +1345,6 @@ ab
 %%% (read-char (make-string-input-stream ""))
 %%%             ^
 %%% ERROR 'READ-CHAR': End of file.
-%%% PRIMITIVE USAGE: (READ-CHAR &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 >>> ;;; read-char: stream argument type error
@@ -1403,7 +1401,6 @@ ab
 %%% (read (make-string-input-stream ""))
 %%%        ^
 %%% ERROR 'READ': End of file.
-%%% PRIMITIVE USAGE: (READ &optional stream (eof-error-p t) eof-value recursive-p)
 ==>
 
 >>> ;;; read: stream argument type error
