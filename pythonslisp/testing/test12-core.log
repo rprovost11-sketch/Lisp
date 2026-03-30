@@ -889,7 +889,6 @@ T
 %%% (setf (at 99 (list 1 2)) 5)
 %%%               ^
 %%% ERROR 'AT-SET': Invalid argument 1. Key/index out of range or wrong type.
-%%% PRIMITIVE USAGE: (AT-SET keyOrIndex dictListOrStr newValue)
 ==>
 
 ; --- DEFSETF-INTERNAL errors ---

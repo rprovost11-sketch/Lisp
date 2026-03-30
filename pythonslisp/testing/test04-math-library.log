@@ -281,7 +281,6 @@
 %%% (/ 1 0)
 %%%  ^
 %%% ERROR '/': division by zero
-%%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
 
 >>> ;;; Error: atan with no arguments
@@ -885,7 +884,6 @@
 %%% (rem 7 0)
 %%%  ^
 %%% ERROR 'REM': division by zero
-%%% PRIMITIVE USAGE: (REM number divisor)
 ==>
 
 >>> ;;; rem with non-number
@@ -1063,7 +1061,6 @@
 %%% (random 0)
 %%%  ^
 %%% ERROR 'RANDOM': Invalid argument 1. Argument expected to be positive.
-%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random of 0.0 is an error (must be positive)
@@ -1073,7 +1070,6 @@
 %%% (random 0.0)
 %%%  ^
 %%% ERROR 'RANDOM': Invalid argument 1. Argument expected to be positive.
-%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 ; --- Arithmetic errors ---
@@ -1115,7 +1111,6 @@
 %%% (// 7 0)
 %%%  ^
 %%% ERROR '//': division by zero
-%%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
 
 >>> ;;; modulo by zero
@@ -1125,7 +1120,6 @@
 %%% (mod 7 0)
 %%%  ^
 %%% ERROR 'MOD': division by zero
-%%% PRIMITIVE USAGE: (MOD number divisor)
 ==>
 
 >>> ;;; integer division with non-number
@@ -1197,7 +1191,6 @@
 %%% (random -1)
 %%%  ^
 %%% ERROR 'RANDOM': Invalid argument 1. Argument expected to be positive.
-%%% PRIMITIVE USAGE: (RANDOM integerOrFloat)
 ==>
 
 >>> ;;; random with string
@@ -1345,7 +1338,6 @@
 %%% (/ 0 0)
 %%%  ^
 %%% ERROR '/': division by zero
-%%% PRIMITIVE USAGE: (/ number &rest more-numbers)
 ==>
 
 ; --- log domain errors ---
@@ -1357,7 +1349,6 @@
 %%% (log 0)
 %%%  ^
 %%% ERROR 'LOG': Invalid argument 1. Invalid value for logarithm.
-%%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
 
 >>> ;;; log of negative is domain error
@@ -1367,7 +1358,6 @@
 %%% (log -1)
 %%%  ^
 %%% ERROR 'LOG': Invalid argument 1. Invalid value for logarithm.
-%%% PRIMITIVE USAGE: (LOG number &optional (base e))
 ==>
 
 ; --- conversion errors ---

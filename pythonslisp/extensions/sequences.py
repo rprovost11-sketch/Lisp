@@ -32,17 +32,17 @@ def _apply_test( ctx: Any, env: Environment, test_fn: Any, item: Any, cell_key: 
 def _validate_bounds( start: Any, end: Any, seqlen: int, fn: Any ) -> tuple[int, int]:
    """Validate :start and :end; return (start_n, end_n) as concrete ints."""
    if not isinstance( start, int ) or isinstance( start, bool ):
-      raise LRuntimePrimError( fn, f':start must be a non-negative integer{got_str(start)}.' )
+      raise LRuntimePrimError( fn, f':start must be a non-negative integer{got_str(start)}.', show_usage=False )
    if start < 0:
-      raise LRuntimePrimError( fn, ':start must be non-negative.' )
+      raise LRuntimePrimError( fn, ':start must be non-negative.', show_usage=False )
    if _is_nil_val( end ):
       return start, seqlen
    if not isinstance( end, int ) or isinstance( end, bool ):
-      raise LRuntimePrimError( fn, f':end must be a non-negative integer or NIL{got_str(end)}.' )
+      raise LRuntimePrimError( fn, f':end must be a non-negative integer or NIL{got_str(end)}.', show_usage=False )
    if end < 0 or end > seqlen:
-      raise LRuntimePrimError( fn, f':end {end} out of range for sequence of length {seqlen}.' )
+      raise LRuntimePrimError( fn, f':end {end} out of range for sequence of length {seqlen}.', show_usage=False )
    if end < start:
-      raise LRuntimePrimError( fn, f':end {end} must be >= :start {start}.' )
+      raise LRuntimePrimError( fn, f':end {end} must be >= :start {start}.', show_usage=False )
    return start, end
 
 
@@ -51,9 +51,9 @@ def _validate_count( count: Any, fn: Any ):
    if _is_nil_val( count ):
       return None
    if not isinstance( count, int ) or isinstance( count, bool ):
-      raise LRuntimePrimError( fn, f':count must be a non-negative integer or NIL{got_str(count)}.' )
+      raise LRuntimePrimError( fn, f':count must be a non-negative integer or NIL{got_str(count)}.', show_usage=False )
    if count < 0:
-      raise LRuntimePrimError( fn, ':count must be non-negative.' )
+      raise LRuntimePrimError( fn, ':count must be non-negative.', show_usage=False )
    return count
 
 
@@ -119,7 +119,7 @@ def LP_pop( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       value = alist.pop()
    except IndexError:
-      raise LRuntimePrimError( LP_pop, 'Invalid argument 1. NON-EMPTY LIST expected.' )
+      raise LRuntimePrimError( LP_pop, 'Invalid argument 1. NON-EMPTY LIST expected.', show_usage=False )
    return value
 
 @primitive( 'at', '(keyOrIndex dictListOrStr)' )
@@ -134,7 +134,7 @@ def LP_at( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return keyed[ key ]
    except ( KeyError, IndexError, TypeError ):
-      raise LRuntimePrimError( LP_at, 'Invalid argument 1. Key/index out of range or wrong type.' )
+      raise LRuntimePrimError( LP_at, 'Invalid argument 1. Key/index out of range or wrong type.', show_usage=False )
 
 @primitive( 'at-set', '(keyOrIndex dictListOrStr newValue)' )
 def LP_atSet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -148,7 +148,7 @@ def LP_atSet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       keyed[ key ] = newValue
    except ( KeyError, IndexError, TypeError ):
-      raise LRuntimePrimError( LP_atSet, 'Invalid argument 1. Key/index out of range or wrong type.' )
+      raise LRuntimePrimError( LP_atSet, 'Invalid argument 1. Key/index out of range or wrong type.', show_usage=False )
 
    return newValue
 
@@ -163,7 +163,7 @@ def LP_atDelete( ctx: Context, env: Environment, args: list[Any] ) -> bool:
    try:
       del keyed[key]
    except ( IndexError, KeyError, TypeError ):
-      raise LRuntimePrimError( LP_atDelete, 'Invalid argument 1. Valid key or index expected.' )
+      raise LRuntimePrimError( LP_atDelete, 'Invalid argument 1. Valid key or index expected.', show_usage=False )
 
    return L_T
 
@@ -289,7 +289,7 @@ The optional :key function extracts the comparison key from each element."""
    try:
       return sorted( seq, key=functools.cmp_to_key(_cmp) )
    except TypeError:
-      raise LRuntimePrimError( LP_sort, 'Cannot sort a list with incomparable types.' )
+      raise LRuntimePrimError( LP_sort, 'Cannot sort a list with incomparable types.', show_usage=False )
 
 @primitive( 'length', '(sequence)' )
 def LP_length( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -316,16 +316,16 @@ If end is not provided, returns from start to the end of the sequence."""
 
    seqLen = len(seq)
    if start < 0:
-      raise LRuntimePrimError( LP_subseq, 'Start index must be non-negative.' )
+      raise LRuntimePrimError( LP_subseq, 'Start index must be non-negative.', show_usage=False )
    if start > seqLen:
-      raise LRuntimePrimError( LP_subseq, 'Start index out of bounds.' )
+      raise LRuntimePrimError( LP_subseq, 'Start index out of bounds.', show_usage=False )
    if end is not None:
       if end < 0:
-         raise LRuntimePrimError( LP_subseq, 'End index must be non-negative.' )
+         raise LRuntimePrimError( LP_subseq, 'End index must be non-negative.', show_usage=False )
       if end > seqLen:
-         raise LRuntimePrimError( LP_subseq, 'End index out of bounds.' )
+         raise LRuntimePrimError( LP_subseq, 'End index out of bounds.', show_usage=False )
       if end < start:
-         raise LRuntimePrimError( LP_subseq, 'End index must be >= start index.' )
+         raise LRuntimePrimError( LP_subseq, 'End index must be >= start index.', show_usage=False )
       return seq[start:end]
 
    return seq[start:]

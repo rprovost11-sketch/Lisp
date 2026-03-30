@@ -840,7 +840,6 @@
 %%% (at 'missing (make-dict (a 1)))
 %%%  ^
 %%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
-%%% PRIMITIVE USAGE: (AT keyOrIndex dictListOrStr)
 ==>
 
 >>> ;;; at-delete missing key on map
@@ -850,5 +849,4 @@
 %%% (at-delete 'missing (make-dict (a 1)))
 %%%  ^
 %%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.
-%%% PRIMITIVE USAGE: (AT-DELETE keyOrIndex dictOrList)
 ==>

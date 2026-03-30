@@ -222,7 +222,7 @@ def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       try:
          return open( filespec, 'r' )
       except FileNotFoundError:
-         raise LRuntimePrimError( LP_open, f'File not found "{filespec}".' )
+         raise LRuntimePrimError( LP_open, f'File not found "{filespec}".', show_usage=False )
    elif direction == LSymbol(':OUTPUT'):
       if isinstance( if_exists, list ):           # nil
          if os.path.exists( filespec ):
@@ -234,7 +234,7 @@ def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
          mode_str = 'a'
       elif if_exists == LSymbol(':ERROR'):
          if os.path.exists( filespec ):
-            raise LRuntimePrimError( LP_open, f'File already exists "{filespec}".' )
+            raise LRuntimePrimError( LP_open, f'File already exists "{filespec}".', show_usage=False )
          mode_str = 'w'
       else:
          raise LRuntimePrimError( LP_open,
@@ -244,7 +244,7 @@ def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       try:
          return open( filespec, mode_str )
       except (FileNotFoundError, OSError):
-         raise LRuntimePrimError( LP_open, f'Cannot open file "{filespec}".' )
+         raise LRuntimePrimError( LP_open, f'Cannot open file "{filespec}".', show_usage=False )
    else:
       raise LRuntimePrimError( LP_open, ':direction must be :input or :output.' )
 
@@ -281,7 +281,7 @@ The stream remains open and writable.  (CL semantics.)"""
                                   f'Invalid argument 1. STRING OUTPUT STREAM expected{got_str(stream)}.' )
    if stream.closed:
       raise LRuntimePrimError( LP_get_output_stream_string,
-                                  'String stream is closed.' )
+                                  'String stream is closed.', show_usage=False )
    content = stream.getvalue()
    stream.seek( 0 )
    stream.truncate( 0 )
@@ -406,7 +406,7 @@ Returns the output string."""
          dictOrList = None
          stream = otherArg
          if not stream.writable():
-            raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
+            raise LRuntimePrimError( LP_writef, 'Stream is not writable.', show_usage=False )
       else:
          raise LRuntimePrimError( LP_writef, f'Invalid argument 2. LIST, DICT, or STREAM expected{got_str(otherArg)}.' )
    else: # numArgs == 3
@@ -416,7 +416,7 @@ Returns the output string."""
       if not isinstance(stream, IOBase):
          raise LRuntimePrimError( LP_writef, f'Invalid argument 3. STREAM expected{got_str(stream)}.' )
       if not stream.writable():
-         raise LRuntimePrimError( LP_writef, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_writef, 'Stream is not writable.', show_usage=False )
 
    try:
       if dictOrList is None:
@@ -429,7 +429,7 @@ Returns the output string."""
       else:
          raise LRuntimePrimError( LP_writef, 'Invalid argument 2. LIST or DICT expected.' )
    except (IndexError, KeyError, ValueError) as e:
-      raise LRuntimePrimError( LP_writef, f"Format error: {e}" )
+      raise LRuntimePrimError( LP_writef, f"Format error: {e}", show_usage=False )
 
    print( formattedStr, end='', file=stream )
    return formattedStr
@@ -443,7 +443,7 @@ the output is written.  If stream is omitted, output goes to stdout."""
       stream = args[0]
       args = args[1:]
       if not stream.writable():
-         raise LRuntimePrimError( LP_write, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_write, 'Stream is not writable.', show_usage=False )
    else:
       stream = _get_output_stream( ctx, env )
    return lwrite( stream, *args, end='' )
@@ -458,7 +458,7 @@ Returns the last value printed."""
       stream = args[0]
       args = args[1:]
       if not stream.writable():
-         raise LRuntimePrimError( LP_write_line, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_write_line, 'Stream is not writable.', show_usage=False )
    else:
       stream = _get_output_stream( ctx, env )
    return lwrite( stream, *args, end='\n' )
@@ -472,7 +472,7 @@ If stream is omitted, output goes to stdout.  Returns the last value printed."""
       stream = args[0]
       args = args[1:]
       if not stream.writable():
-         raise LRuntimePrimError( LP_uwrite, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_uwrite, 'Stream is not writable.', show_usage=False )
    else:
       stream = _get_output_stream( ctx, env )
    return luwrite( stream, *args, end='' )
@@ -487,7 +487,7 @@ Returns the last value printed."""
       stream = args[0]
       args = args[1:]
       if not stream.writable():
-         raise LRuntimePrimError( LP_uwrite_line, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_uwrite_line, 'Stream is not writable.', show_usage=False )
    else:
       stream = _get_output_stream( ctx, env )
    return luwrite( stream, *args, end='\n' )
@@ -502,7 +502,7 @@ def LP_terpri( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       if not isinstance(stream, IOBase):
          raise LRuntimePrimError( LP_terpri, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
       if not stream.writable():
-         raise LRuntimePrimError( LP_terpri, 'Stream is not writable.' )
+         raise LRuntimePrimError( LP_terpri, 'Stream is not writable.', show_usage=False )
    print( end='\n', file=stream )
    return L_NIL
 
@@ -513,7 +513,7 @@ def LP_readall( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if not isinstance(stream, IOBase):
       raise LRuntimePrimError( LP_readall, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    if not stream.readable():
-      raise LRuntimePrimError( LP_readall, 'Stream is not readable.' )
+      raise LRuntimePrimError( LP_readall, 'Stream is not readable.', show_usage=False )
    return stream.read()
 
 @primitive( 'read-line', '(&optional stream (eof-error-p t) eof-value recursive-p)' )
@@ -541,7 +541,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
             raise LRuntimePrimError( LP_read_line, 'End of file on standard input.', show_usage=False )
          return eof_value
    if not stream.readable( ):
-      raise LRuntimePrimError( LP_read_line, 'Stream is not readable.' )
+      raise LRuntimePrimError( LP_read_line, 'Stream is not readable.', show_usage=False )
    line = stream.readline( )
    if line == '':
       if eof_error_p:
@@ -574,7 +574,7 @@ returns eof-value (default NIL).  recursive-p is accepted but ignored."""
          return eof_value
       return ch
    if not stream.readable( ):
-      raise LRuntimePrimError( LP_read_char, 'Stream is not readable.' )
+      raise LRuntimePrimError( LP_read_char, 'Stream is not readable.', show_usage=False )
    ch = stream.read( 1 )
    if ch == '':
       if eof_error_p:
@@ -605,7 +605,7 @@ is accumulated."""
    if stream is None:
       stream = sys.stdin
    if not stream.readable( ):
-      raise LRuntimePrimError( LP_read, 'Stream is not readable.' )
+      raise LRuntimePrimError( LP_read, 'Stream is not readable.', show_usage=False )
    if stream.seekable( ):
       pos     = stream.tell( )
       content = stream.read( )
@@ -662,7 +662,7 @@ def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       with open( filename, 'r', encoding='utf-8' ) as f:
          content = f.read()
    except FileNotFoundError:
-      raise LRuntimePrimError( LP_load, f'File not found "{filename}".' )
+      raise LRuntimePrimError( LP_load, f'File not found "{filename}".', show_usage=False )
    return ctx.parse( content )   # (progn form1 form2 ...)
 
 @primitive( 'error', '(formatString &optional dictOrList)' )
@@ -686,7 +686,7 @@ being raised.  With no second argument the format string is used as-is."""
       else:
          raise LRuntimePrimError( LP_error, f'Invalid argument 2. LIST or DICT expected{got_str(dictOrList)}.' )
    except (IndexError, KeyError, ValueError) as e:
-      raise LRuntimePrimError( LP_error, f'Format error: {e}' )
+      raise LRuntimePrimError( LP_error, f'Format error: {e}', show_usage=False )
    raise LRuntimeError( message )
 
 @primitive( 'parse', '(string)' )
@@ -756,7 +756,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
       try:
          pos_arg = env.lookupGlobal(pos_arg.name)
       except KeyError:
-         raise LRuntimePrimError( LP_help, f'Unbound variable: {pos_arg.name}.' )
+         raise LRuntimePrimError( LP_help, f'Unbound variable: {pos_arg.name}.', show_usage=False )
 
    if is_struct_descriptor(pos_arg):
       print_struct_help( pos_arg, ctx.outStrm )
@@ -882,7 +882,7 @@ Has no effect if readline is not available.  Returns n."""
    if not isinstance( n, int ) or isinstance( n, bool ):
       raise LRuntimePrimError( LP_readline_set_history_length, f'Invalid argument 1. INTEGER expected{got_str(n)}.' )
    if n < 1:
-      raise LRuntimePrimError( LP_readline_set_history_length, 'Invalid argument 1. Positive INTEGER expected.' )
+      raise LRuntimePrimError( LP_readline_set_history_length, 'Invalid argument 1. Positive INTEGER expected.', show_usage=False )
    if _rl is not None:
       _rl.set_history_length( n )
    return n

@@ -226,7 +226,6 @@
 %%%    (if (= n 0) (// 1 0) (tco-err (- n 1))))
 %%%                 ^
 %%% ERROR '//': division by zero
-%%% PRIMITIVE USAGE: (// dividend divisor)
 ==>
 
 ; --- 13. Arity error in tail position preserves function name ---
