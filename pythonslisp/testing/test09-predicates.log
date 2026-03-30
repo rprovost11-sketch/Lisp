@@ -416,7 +416,7 @@
 >>> ;;; Error: predicates require exactly one argument
 ... (numberp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (numberp)
 %%%  ^
 %%% ERROR 'NUMBERP': 0 arguments provided; 1 expected.
@@ -425,7 +425,7 @@
 
 >>> (numberp 1 2)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (numberp 1 2)
 %%%  ^
 %%% ERROR 'NUMBERP': 2 arguments provided; 1 expected.
@@ -434,7 +434,7 @@
 
 >>> (integerp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (integerp)
 %%%  ^
 %%% ERROR 'INTEGERP': 0 arguments provided; 1 expected.
@@ -443,7 +443,7 @@
 
 >>> (floatp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (floatp)
 %%%  ^
 %%% ERROR 'FLOATP': 0 arguments provided; 1 expected.
@@ -452,7 +452,7 @@
 
 >>> (rationalp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (rationalp)
 %%%  ^
 %%% ERROR 'RATIONALP': 0 arguments provided; 1 expected.
@@ -461,7 +461,7 @@
 
 >>> (symbolp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (symbolp)
 %%%  ^
 %%% ERROR 'SYMBOLP': 0 arguments provided; 1 expected.
@@ -470,7 +470,7 @@
 
 >>> (listp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (listp)
 %%%  ^
 %%% ERROR 'LISTP': 0 arguments provided; 1 expected.
@@ -479,7 +479,7 @@
 
 >>> (stringp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (stringp)
 %%%  ^
 %%% ERROR 'STRINGP': 0 arguments provided; 1 expected.
@@ -488,7 +488,7 @@
 
 >>> (functionp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (functionp)
 %%%  ^
 %%% ERROR 'FUNCTIONP': 0 arguments provided; 1 expected.
@@ -497,7 +497,7 @@
 
 >>> (macrop)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (macrop)
 %%%  ^
 %%% ERROR 'MACROP': 0 arguments provided; 1 expected.
@@ -533,7 +533,7 @@
 >>> ;;; consp error: no args
 ... (consp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (consp)
 %%%  ^
 %%% ERROR 'CONSP': 0 arguments provided; 1 expected.
@@ -543,7 +543,7 @@
 >>> ;;; consp error: too many args
 ... (consp 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (consp 1 2)
 %%%  ^
 %%% ERROR 'CONSP': 2 arguments provided; 1 expected.
@@ -829,7 +829,7 @@
 >>> ;;; Error: relational operators need at least 2 arguments
 ... (= 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (= 1)
 %%%  ^
 %%% ERROR '=': 1 argument provided; at least 2 expected.
@@ -838,7 +838,7 @@
 
 >>> (/= 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (/= 1)
 %%%  ^
 %%% ERROR '/=': 1 argument provided; at least 2 expected.
@@ -847,7 +847,7 @@
 
 >>> (< 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (< 1)
 %%%  ^
 %%% ERROR '<': 1 argument provided; at least 2 expected.
@@ -856,7 +856,7 @@
 
 >>> (<= 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (<= 1)
 %%%  ^
 %%% ERROR '<=': 1 argument provided; at least 2 expected.
@@ -865,7 +865,7 @@
 
 >>> (> 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (> 1)
 %%%  ^
 %%% ERROR '>': 1 argument provided; at least 2 expected.
@@ -874,7 +874,7 @@
 
 >>> (>= 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (>= 1)
 %%%  ^
 %%% ERROR '>=': 1 argument provided; at least 2 expected.
@@ -1156,7 +1156,7 @@
 >>> ;;; less-than with incomparable types
 ... (< "a" 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (< "a" 1)
 %%%  ^
 %%% ERROR '<': Invalid argument 2. STRING and INTEGER are not comparable, got INTEGER 1.
@@ -1166,7 +1166,7 @@
 >>> ;;; greater-than with incomparable types
 ... (> "a" 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (> "a" 1)
 %%%  ^
 %%% ERROR '>': Invalid argument 2. STRING and INTEGER are not comparable, got INTEGER 1.
@@ -1176,7 +1176,7 @@
 >>> ;;; less-equal with incomparable types
 ... (<= "a" 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (<= "a" 1)
 %%%  ^
 %%% ERROR '<=': Invalid argument 2. STRING and INTEGER are not comparable, got INTEGER 1.
@@ -1186,7 +1186,7 @@
 >>> ;;; greater-equal with incomparable types
 ... (>= "a" 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (>= "a" 1)
 %%%  ^
 %%% ERROR '>=': Invalid argument 2. STRING and INTEGER are not comparable, got INTEGER 1.
@@ -1198,7 +1198,7 @@
 >>> ;;; atom with no arguments
 ... (atom)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (atom)
 %%%  ^
 %%% ERROR 'ATOM': 0 arguments provided; 1 expected.
@@ -1208,7 +1208,7 @@
 >>> ;;; atom with too many arguments
 ... (atom 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (atom 1 2)
 %%%  ^
 %%% ERROR 'ATOM': 2 arguments provided; 1 expected.
@@ -1220,7 +1220,7 @@
 >>> ;;; is? with no arguments
 ... (is?)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (is?)
 %%%  ^
 %%% ERROR 'EQ': 0 arguments provided; 2 expected.
@@ -1230,7 +1230,7 @@
 >>> ;;; is? with one argument
 ... (is? 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (is? 1)
 %%%  ^
 %%% ERROR 'EQ': 1 argument provided; 2 expected.
@@ -1240,7 +1240,7 @@
 >>> ;;; is? with too many arguments
 ... (is? 1 2 3)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (is? 1 2 3)
 %%%  ^
 %%% ERROR 'EQ': 3 arguments provided; 2 expected.
@@ -1252,7 +1252,7 @@
 >>> ;;; evenp with no arguments
 ... (evenp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (evenp)
 %%%  ^
 %%% Error binding arguments in call to function "EVENP".
@@ -1263,7 +1263,7 @@
 >>> ;;; oddp with no arguments
 ... (oddp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (oddp)
 %%%  ^
 %%% Error binding arguments in call to function "ODDP".
@@ -1274,7 +1274,7 @@
 >>> ;;; zerop with no arguments
 ... (zerop)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (zerop)
 %%%  ^
 %%% Error binding arguments in call to function "ZEROP".
@@ -1285,7 +1285,7 @@
 >>> ;;; minusp with no arguments
 ... (minusp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (minusp)
 %%%  ^
 %%% Error binding arguments in call to function "MINUSP".
@@ -1296,7 +1296,7 @@
 >>> ;;; plusp with no arguments
 ... (plusp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (plusp)
 %%%  ^
 %%% Error binding arguments in call to function "PLUSP".
@@ -1421,7 +1421,7 @@
 >>> ;;; Error: not requires exactly one argument
 ... (not)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (not)
 %%%  ^
 %%% ERROR 'NOT': 0 arguments provided; 1 expected.
@@ -1430,7 +1430,7 @@
 
 >>> (not 1 2)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (not 1 2)
 %%%  ^
 %%% ERROR 'NOT': 2 arguments provided; 1 expected.

@@ -108,7 +108,7 @@
 >>> ;;; Unmatched open paren
 ... (
 
-%%% Syntax Error: "" (3,3)
+%%% Syntax Error: "<repl>" (3,3)
 %%% (
 %%%   ^
 %%% ) expected.
@@ -117,7 +117,7 @@
 >>> ;;; Unmatched close paren
 ... )
 
-%%% Syntax Error: "" (2,2)
+%%% Syntax Error: "<repl>" (2,2)
 %%% )
 %%%  ^
 %%% Object expected.
@@ -126,7 +126,7 @@
 >>> ;;; Incomplete expression
 ... (+ 1
 
-%%% Syntax Error: "" (3,6)
+%%% Syntax Error: "<repl>" (3,6)
 %%% (+ 1
 %%%      ^
 %%% ) expected.
@@ -135,7 +135,7 @@
 >>> ;;; Extra close paren
 ... (+ 1 2))
 
-%%% Syntax Error: "" (2,9)
+%%% Syntax Error: "<repl>" (2,9)
 %%% (+ 1 2))
 %%%         ^
 %%% Object expected.
@@ -144,7 +144,7 @@
 >>> ;;; Unterminated string
 ... "unterminated
 
-%%% Syntax Error: "" (3,15)
+%%% Syntax Error: "<repl>" (3,15)
 %%% "unterminated
 %%%               ^
 %%% '"' expected.  A string literal may be unterminated.
@@ -153,7 +153,7 @@
 >>> ;;; Quote with nothing after it
 ... '
 
-%%% Syntax Error: "" (3,3)
+%%% Syntax Error: "<repl>" (3,3)
 %%% '
 %%%   ^
 %%% Unexpected end of input after quote.
@@ -162,7 +162,7 @@
 >>> ;;; Quote before close paren
 ... ')
 
-%%% Syntax Error: "" (2,3)
+%%% Syntax Error: "<repl>" (2,3)
 %%% ')
 %%%   ^
 %%% Object expected.
@@ -172,7 +172,7 @@
 
 >>> (parse)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (parse)
 %%%  ^
 %%% ERROR 'PARSE': 0 arguments provided; 1 expected.
@@ -182,7 +182,7 @@
 >>> ;;; parse with non-string
 ... (parse 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (parse 1)
 %%%  ^
 %%% ERROR 'PARSE': Invalid argument 1. STRING expected, got INTEGER 1.

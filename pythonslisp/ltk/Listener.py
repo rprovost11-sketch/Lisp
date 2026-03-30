@@ -71,6 +71,7 @@ class Listener( object ):
       print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.' )
       print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
+      print( f'Use \'{CYAN}]traces on{RESET}\' to enable call-stack traces on errors.' )
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
       if not Listener._rl:
@@ -468,6 +469,7 @@ class Listener( object ):
       print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.' )
       print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
+      print( f'Use \'{CYAN}]traces on{RESET}\' to enable call-stack traces on errors.' )
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
 

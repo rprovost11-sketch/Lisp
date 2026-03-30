@@ -339,21 +339,21 @@ class Parser( ParserBase ):
    def __init__( self ) -> None:
       self._scanner    = Lexer( )
 
-   def parse( self, source: str ) -> Any:  # Returns an AST of inputString
-      self._scanner.reset( source )
+   def parse( self, source: str, filename: str = '' ) -> Any:  # Returns an AST of inputString
+      self._scanner.reset( source, filename )
       return self._parse( )
    
    def parseFile( self, filename: str ) -> Any:
       self._scanner.resetFromFile( filename )
       return self._parse( )
 
-   def parseOne( self, source: str ):
+   def parseOne( self, source: str, filename: str = '' ):
       """Parse exactly one s-expression from the start of source.
       Returns (ast, chars_consumed) where chars_consumed is the number of
       characters consumed from source, including the expression itself and
       any trailing whitespace/comments up to the next expression.
       Raises ParseError if source contains no parseable expression."""
-      self._scanner.reset( source )
+      self._scanner.reset( source, filename )
       if self._scanner.peekToken( ) == Lexer.EOF_TOK:
          raise ParseError( self._scanner, 'End of file: no expression found.' )
       ast = self._parseObject( )

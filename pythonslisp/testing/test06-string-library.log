@@ -231,7 +231,7 @@
 
 ; error: separator must be a string
 >>> (string-join 42 (list 1 2))
-%%% Runtime Error: "" (1,18)
+%%% Runtime Error: "<repl>" (1,18)
 %%% (string-join 42 (list 1 2))
 %%%                  ^
 %%% ERROR 'STRING-JOIN': Invalid argument 1. STRING expected, got INTEGER 42.
@@ -239,7 +239,7 @@
 
 ; error: second arg must be a list
 >>> (string-join ", " 99)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (string-join ", " 99)
 %%%  ^
 %%% ERROR 'STRING-JOIN': Invalid argument 2. LIST expected, got INTEGER 99.
@@ -274,7 +274,7 @@
 
 ; error: first arg must be a string
 >>> (string-split 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (string-split 42)
 %%%  ^
 %%% ERROR 'STRING-SPLIT': Invalid argument 1. STRING expected, got INTEGER 42.
@@ -297,7 +297,7 @@
 
 ; error: arg must be a string
 >>> (string-lines 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (string-lines 42)
 %%%  ^
 %%% ERROR 'STRING-LINES': Invalid argument 1. STRING expected, got INTEGER 42.
@@ -320,7 +320,7 @@
 
 ; error: arg must be a string
 >>> (now-string 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (now-string 42)
 %%%  ^
 %%% ERROR 'NOW-STRING': Invalid argument 1. FORMAT STRING expected.
@@ -333,7 +333,7 @@
 >>> ;;; Error: string requires at least one argument
 ... (string)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (string)
 %%%  ^
 %%% ERROR 'STRING': 0 arguments provided; at least 1 expected.
@@ -404,7 +404,7 @@
 
 >>> (string)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (string)
 %%%  ^
 %%% ERROR 'STRING': 0 arguments provided; at least 1 expected.
@@ -413,7 +413,7 @@
 
 >>> (ustring)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (ustring)
 %%%  ^
 %%% ERROR 'USTRING': 0 arguments provided; at least 1 expected.
@@ -425,7 +425,7 @@
 >>> ;;; at out of range on string
 ... (at 5 "hi")
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at 5 "hi")
 %%%  ^
 %%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
@@ -434,7 +434,7 @@
 >>> ;;; at on empty string
 ... (at 0 "")
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at 0 "")
 %%%  ^
 %%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.

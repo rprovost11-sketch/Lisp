@@ -31,9 +31,9 @@ class LexerBuffer( object ):
       self._mark:int      = 0   # the first character of the lexeme currently being scanned
       self._lineNum:int   = 1   # the current line number
 
-   def reset( self, source: str ) -> None:
+   def reset( self, source: str, filename: str = '' ) -> None:
       '''Re-initialize the instance over a new or the current string.'''
-      self._filename  = ''
+      self._filename  = filename
       self._source    = source
       self._sourceLen = len(source)
       self._nextChar  = source[0] if self._sourceLen > 0 else ''
@@ -203,9 +203,9 @@ class LexerBase( ABC ):
       self.buffer:LexerBuffer  = LexerBuffer( )
       self._tok:int = -1               # The next token
 
-   def reset( self, source: str ) -> None:
+   def reset( self, source: str, filename: str = '' ) -> None:
       '''Re-initialize the instance over a new string.'''
-      self.buffer.reset( source )
+      self.buffer.reset( source, filename )
       self.consume( )                           # prime the scanner.
 
    def resetFromFile( self, filename: str ) -> None:

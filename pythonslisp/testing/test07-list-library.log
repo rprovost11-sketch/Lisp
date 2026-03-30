@@ -106,7 +106,7 @@
 >>> ;;; Error: car/cdr require a list argument
 ... (car 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (car 1)
 %%%  ^
 %%% ERROR 'CAR': Invalid argument 1. LIST expected, got INTEGER 1.
@@ -115,7 +115,7 @@
 
 >>> (cdr "str")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (cdr "str")
 %%%  ^
 %%% ERROR 'CDR': Invalid argument 1. LIST expected, got STRING "str".
@@ -125,7 +125,7 @@
 >>> ;;; Error: cons requires exactly two arguments
 ... (cons 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cons 1)
 %%%  ^
 %%% ERROR 'CONS': 1 argument provided; 2 expected.
@@ -147,7 +147,7 @@
 >>> ;;; Error: append requires list arguments
 ... (append 1 '(2 3))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (append 1 '(2 3))
 %%%  ^
 %%% ERROR 'APPEND': Invalid argument 1. LIST expected, got INTEGER 1.
@@ -157,7 +157,7 @@
 >>> ;;; Error: at with out-of-range index
 ... (at 5 '(1 2 3))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at 5 '(1 2 3))
 %%%  ^
 %%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
@@ -166,7 +166,7 @@
 >>> ;;; Error: sort requires a list argument (predicate now required)
 ... (sort 1 <)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (sort 1 <)
 %%%  ^
 %%% ERROR 'SORT': Invalid argument 1. LIST expected, got INTEGER 1.
@@ -213,7 +213,7 @@
 >>> ;;; not a list or string
 ... (subseq 42 0)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq 42 0)
 %%%  ^
 %%% ERROR 'SUBSEQ': Invalid argument 1. LIST or STRING expected, got INTEGER 42.
@@ -223,7 +223,7 @@
 >>> ;;; start not integer
 ... (subseq '(1 2 3) 1.0)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq '(1 2 3) 1.0)
 %%%  ^
 %%% ERROR 'SUBSEQ': Invalid argument 2. INTEGER expected, got FLOAT 1.0.
@@ -233,7 +233,7 @@
 >>> ;;; negative start
 ... (subseq '(1 2 3) -1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq '(1 2 3) -1)
 %%%  ^
 %%% ERROR 'SUBSEQ': Start index must be non-negative.
@@ -242,7 +242,7 @@
 >>> ;;; start out of bounds
 ... (subseq '(1 2 3) 4)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq '(1 2 3) 4)
 %%%  ^
 %%% ERROR 'SUBSEQ': Start index out of bounds.
@@ -251,7 +251,7 @@
 >>> ;;; end < start
 ... (subseq '(1 2 3) 2 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq '(1 2 3) 2 1)
 %%%  ^
 %%% ERROR 'SUBSEQ': End index must be >= start index.
@@ -260,7 +260,7 @@
 >>> ;;; too few args
 ... (subseq '(1 2 3))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq '(1 2 3))
 %%%  ^
 %%% ERROR 'SUBSEQ': 1 argument provided; 2 or 3 expected.
@@ -270,7 +270,7 @@
 >>> ;;; too many args
 ... (subseq '(1 2 3) 0 2 99)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (subseq '(1 2 3) 0 2 99)
 %%%  ^
 %%% ERROR 'SUBSEQ': 4 arguments provided; 2 or 3 expected.
@@ -1426,7 +1426,7 @@
 
 ; error: mixed types
 >>> (search "hello" '(1 2 3))
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (search "hello" '(1 2 3))
 %%%  ^
 %%% ERROR 'SEARCH': Invalid argument 2. Same type as argument 1 expected.
@@ -1573,7 +1573,7 @@
 >>> ;;; too few arguments
 ... (at-set 0 (list 1 2 3))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-set 0 (list 1 2 3))
 %%%  ^
 %%% ERROR 'AT-SET': 2 arguments provided; 3 expected.
@@ -1583,7 +1583,7 @@
 >>> ;;; too many arguments
 ... (at-set 0 (list 1 2 3) 9 9)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-set 0 (list 1 2 3) 9 9)
 %%%  ^
 %%% ERROR 'AT-SET': 4 arguments provided; 3 expected.
@@ -1593,7 +1593,7 @@
 >>> ;;; second argument is an integer (not a list or map)
 ... (at-set 0 42 9)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-set 0 42 9)
 %%%  ^
 %%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected, got INTEGER 42.
@@ -1603,7 +1603,7 @@
 >>> ;;; second argument is a string (strings are immutable)
 ... (at-set 0 "abc" 9)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-set 0 "abc" 9)
 %%%  ^
 %%% ERROR 'AT-SET': Invalid argument 2. LIST or DICT expected, got STRING "abc".
@@ -1613,7 +1613,7 @@
 >>> ;;; list index out of range
 ... (at-set 99 (list 1 2 3) 0)
 
-%%% Runtime Error: "" (2,13)
+%%% Runtime Error: "<repl>" (2,13)
 %%% (at-set 99 (list 1 2 3) 0)
 %%%             ^
 %%% ERROR 'AT-SET': Invalid argument 1. Key/index out of range or wrong type.
@@ -1622,7 +1622,7 @@
 >>> ;;; float index into a list
 ... (at-set 1.5 (list 1 2 3) 0)
 
-%%% Runtime Error: "" (2,14)
+%%% Runtime Error: "<repl>" (2,14)
 %%% (at-set 1.5 (list 1 2 3) 0)
 %%%              ^
 %%% ERROR 'AT-SET': Invalid argument 1. Key/index out of range or wrong type.
@@ -1675,7 +1675,7 @@
 >>> ;;; push! with non-list
 ... (push! 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (push! 1 2)
 %%%  ^
 %%% ERROR 'PUSH!': Invalid argument 1. LIST expected, got INTEGER 1.
@@ -1685,7 +1685,7 @@
 >>> ;;; pop! with non-list
 ... (pop! 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (pop! 1)
 %%%  ^
 %%% ERROR 'POP!': Invalid argument 1. LIST expected, got INTEGER 1.
@@ -1695,7 +1695,7 @@
 >>> ;;; pop! on empty list
 ... (pop! '())
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (pop! '())
 %%%  ^
 %%% ERROR 'POP!': Invalid argument 1. NON-EMPTY LIST expected.
@@ -1704,7 +1704,7 @@
 >>> ;;; cons with non-list second arg
 ... (cons 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cons 1 2)
 %%%  ^
 %%% ERROR 'CONS': Invalid argument 2. LIST expected, got INTEGER 2.
@@ -1714,7 +1714,7 @@
 >>> ;;; at-insert with non-integer index
 ... (at-insert "a" '(1 2) 3)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-insert "a" '(1 2) 3)
 %%%  ^
 %%% ERROR 'AT-INSERT': Invalid argument 1. INTEGER expected, got STRING "a".
@@ -1724,7 +1724,7 @@
 >>> ;;; at-insert with non-list
 ... (at-insert 0 1 3)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-insert 0 1 3)
 %%%  ^
 %%% ERROR 'AT-INSERT': Invalid argument 2. LIST expected, got INTEGER 1.
@@ -1734,7 +1734,7 @@
 >>> ;;; at on non-collection
 ... (at 0 42)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at 0 42)
 %%%  ^
 %%% ERROR 'AT': Invalid argument 2. LIST, DICT, or STRING expected, got INTEGER 42.
@@ -1744,7 +1744,7 @@
 >>> ;;; at-delete with bad index
 ... (at-delete 5 '(1 2 3))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-delete 5 '(1 2 3))
 %%%  ^
 %%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.
@@ -1753,7 +1753,7 @@
 >>> ;;; at-delete on non-collection
 ... (at-delete 1 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-delete 1 1)
 %%%  ^
 %%% ERROR 'AT-DELETE': Invalid argument 2. LIST or DICT expected, got INTEGER 1.
@@ -1763,7 +1763,7 @@
 >>> ;;; sort requires a predicate argument
 ... (sort (list 3 "a" 1))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (sort (list 3 "a" 1))
 %%%  ^
 %%% ERROR 'SORT': 1 argument provided; at least 2 expected.
@@ -1774,7 +1774,7 @@
 
 >>> (push!)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (push!)
 %%%  ^
 %%% ERROR 'PUSH!': 0 arguments provided; 2 expected.
@@ -1783,7 +1783,7 @@
 
 >>> (push! '() 1 2)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (push! '() 1 2)
 %%%  ^
 %%% ERROR 'PUSH!': 3 arguments provided; 2 expected.
@@ -1792,7 +1792,7 @@
 
 >>> (pop!)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (pop!)
 %%%  ^
 %%% ERROR 'POP!': 0 arguments provided; 1 expected.
@@ -1801,7 +1801,7 @@
 
 >>> (pop! '() 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (pop! '() 1)
 %%%  ^
 %%% ERROR 'POP!': 2 arguments provided; 1 expected.
@@ -1810,7 +1810,7 @@
 
 >>> (at)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at)
 %%%  ^
 %%% ERROR 'AT': 0 arguments provided; 2 expected.
@@ -1819,7 +1819,7 @@
 
 >>> (at 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at 1)
 %%%  ^
 %%% ERROR 'AT': 1 argument provided; 2 expected.
@@ -1828,7 +1828,7 @@
 
 >>> (at 1 2 3)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at 1 2 3)
 %%%  ^
 %%% ERROR 'AT': 3 arguments provided; 2 expected.
@@ -1837,7 +1837,7 @@
 
 >>> (at-delete)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at-delete)
 %%%  ^
 %%% ERROR 'AT-DELETE': 0 arguments provided; 2 expected.
@@ -1846,7 +1846,7 @@
 
 >>> (at-delete 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at-delete 1)
 %%%  ^
 %%% ERROR 'AT-DELETE': 1 argument provided; 2 expected.
@@ -1855,7 +1855,7 @@
 
 >>> (at-insert)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at-insert)
 %%%  ^
 %%% ERROR 'AT-INSERT': 0 arguments provided; 3 expected.
@@ -1864,7 +1864,7 @@
 
 >>> (at-insert 1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at-insert 1)
 %%%  ^
 %%% ERROR 'AT-INSERT': 1 argument provided; 3 expected.
@@ -1873,7 +1873,7 @@
 
 >>> (at-insert 1 2)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (at-insert 1 2)
 %%%  ^
 %%% ERROR 'AT-INSERT': 2 arguments provided; 3 expected.
@@ -1885,7 +1885,7 @@
 >>> ;;; car with no arguments
 ... (car)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (car)
 %%%  ^
 %%% ERROR 'CAR': 0 arguments provided; 1 expected.
@@ -1895,7 +1895,7 @@
 >>> ;;; car with too many arguments
 ... (car 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (car 1 2)
 %%%  ^
 %%% ERROR 'CAR': 2 arguments provided; 1 expected.
@@ -1905,7 +1905,7 @@
 >>> ;;; cdr with no arguments
 ... (cdr)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cdr)
 %%%  ^
 %%% ERROR 'CDR': 0 arguments provided; 1 expected.
@@ -1915,7 +1915,7 @@
 >>> ;;; cdr with too many arguments
 ... (cdr 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cdr 1 2)
 %%%  ^
 %%% ERROR 'CDR': 2 arguments provided; 1 expected.
@@ -1938,7 +1938,7 @@
 >>> ;;; append with non-list in middle
 ... (append '(1) 2 '(3))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (append '(1) 2 '(3))
 %%%  ^
 %%% ERROR 'APPEND': Invalid argument 2. LIST expected, got INTEGER 2.
@@ -1950,7 +1950,7 @@
 >>> ;;; sort with non-list argument
 ... (sort 'abc <)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (sort 'abc <)
 %%%  ^
 %%% ERROR 'SORT': Invalid argument 1. LIST expected, got SYMBOL ABC.
@@ -1962,7 +1962,7 @@
 >>> ;;; at-delete out of range on list
 ... (at-delete 10 '(1 2))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-delete 10 '(1 2))
 %%%  ^
 %%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.

@@ -152,7 +152,7 @@ ABC
 
 ; Error: initSpec not a list
 >>> (for x (< x 5) (+ x 1) nil)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (for x (< x 5) (+ x 1) nil)
 %%%  ^
 %%% Error binding arguments in call to macro FOR.
@@ -161,7 +161,7 @@ ABC
 
 ; Error: initSpec wrong number of elements
 >>> (for (x) (< x 5) (+ x 1) nil)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (for (x) (< x 5) (+ x 1) nil)
 %%%  ^
 %%% Error binding arguments in call to macro FOR.
@@ -251,7 +251,7 @@ ABC
 
 >>> (while)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (while)
 %%%  ^
 %%% Error binding arguments in call to macro WHILE.
@@ -270,7 +270,7 @@ ABC
 
 >>> (dotimes)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dotimes)
 %%%  ^
 %%% Error binding arguments in call to macro DOTIMES.
@@ -281,7 +281,7 @@ ABC
 >>> ;;; dotimes control list must be a list
 ... (dotimes i 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (dotimes i 1)
 %%%  ^
 %%% Error binding arguments in call to macro DOTIMES.
@@ -292,7 +292,7 @@ ABC
 >>> ;;; dotimes control list must have at most 3 elements
 ... (dotimes (i 3 4 5) 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (dotimes (i 3 4 5) 1)
 %%%  ^
 %%% Error binding arguments in call to macro DOTIMES.
@@ -317,7 +317,7 @@ ABC
 
 >>> (dolist)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dolist)
 %%%  ^
 %%% Error binding arguments in call to macro DOLIST.
@@ -328,7 +328,7 @@ ABC
 >>> ;;; dolist with bad control spec
 ... (dolist x (write! x))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (dolist x (write! x))
 %%%  ^
 %%% Error binding arguments in call to macro DOLIST.

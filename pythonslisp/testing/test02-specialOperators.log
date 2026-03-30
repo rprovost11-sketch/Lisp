@@ -34,7 +34,7 @@
 
 >>> (quote)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (quote)
 %%%  ^
 %%% ERROR 'QUOTE': 1 argument expected.
@@ -43,7 +43,7 @@
 
 >>> (quote 1 2)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (quote 1 2)
 %%%  ^
 %%% ERROR 'QUOTE': 1 argument expected.
@@ -126,7 +126,7 @@
 >>> ;;; Error: cond requires at least one clause
 ... (cond)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cond)
 %%%  ^
 %%% ERROR 'COND': 1 or more arguments expected.
@@ -196,7 +196,7 @@
 
 >>> (case)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (case)
 %%%  ^
 %%% ERROR 'CASE': 2 or more arguments expected.
@@ -231,7 +231,7 @@
 
 >>> (let)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (let)
 %%%  ^
 %%% ERROR 'LET': 2 or more arguments expected.
@@ -241,7 +241,7 @@
 >>> ;;; let first arg must be list
 ... (let 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let 1 2)
 %%%  ^
 %%% ERROR 'LET': Invalid argument 1. LIST OF VARIABLE BINDINGS expected.
@@ -251,7 +251,7 @@
 >>> ;;; let var spec first element must be symbol
 ... (let ((1 2)) 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let ((1 2)) 1)
 %%%  ^
 %%% ERROR 'LET': Variable binding name expected to be a SYMBOL.
@@ -261,7 +261,7 @@
 >>> ;;; let var spec must be 1 or 2 elements
 ... (let ((x 1 2)) 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let ((x 1 2)) 1)
 %%%  ^
 %%% ERROR 'LET': Variable initializer expected to be 1 or 2 elements.
@@ -288,7 +288,7 @@
 
 >>> (let*)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (let*)
 %%%  ^
 %%% ERROR 'LET*': 2 or more arguments expected.
@@ -298,7 +298,7 @@
 >>> ;;; let* first arg must be list
 ... (let* 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let* 1 2)
 %%%  ^
 %%% ERROR 'LET*': Invalid argument 1. LIST OF VARIABLE BINDINGS expected.
@@ -422,7 +422,7 @@
 >>> ;;; no arguments
 ... (setq)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (setq)
 %%%  ^
 %%% ERROR 'SETQ': At least 2 arguments expected.
@@ -432,7 +432,7 @@
 >>> ;;; odd number of arguments
 ... (setq sq1 1 sq2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (setq sq1 1 sq2)
 %%%  ^
 %%% ERROR 'SETQ': An even number of arguments expected; 3 provided.
@@ -442,7 +442,7 @@
 >>> ;;; non-symbol lvalue
 ... (setq 42 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (setq 42 1)
 %%%  ^
 %%% ERROR 'SETQ': Assignment target must be a SYMBOL.
@@ -677,14 +677,14 @@
 
 ; Error: block name must be a symbol (not an integer)
 >>> (block 42 1 2 3)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (block 42 1 2 3)
 %%%  ^
 %%% block: name must be a SYMBOL or NIL.
 
 ; Error: return-from name must be a symbol
 >>> (return-from 42 99)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (return-from 42 99)
 %%%  ^
 %%% return-from: name must be a SYMBOL or NIL.
@@ -746,7 +746,7 @@
 
 ; throw requires exactly 2 args
 >>> (throw 'foo)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (throw 'foo)
 %%%  ^
 %%% ERROR 'THROW': 1 argument provided; 2 expected.
@@ -883,14 +883,14 @@
 
 ; condition-type and condition-message error on non-condition
 >>> (condition-type 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (condition-type 42)
 %%%  ^
 %%% ERROR 'CONDITION-TYPE': Invalid argument 1. CONDITION expected, got INTEGER 42.
 %%% PRIMITIVE USAGE: (CONDITION-TYPE condition)
 
 >>> (condition-message "oops")
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (condition-message "oops")
 %%%  ^
 %%% ERROR 'CONDITION-MESSAGE': Invalid argument 1. CONDITION expected, got STRING "oops".
@@ -898,7 +898,7 @@
 
 ; make-condition error: type not a symbol
 >>> (make-condition 1)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (make-condition 1)
 %%%  ^
 %%% ERROR 'MAKE-CONDITION': Invalid argument 1. SYMBOL expected, got INTEGER 1.
@@ -906,7 +906,7 @@
 
 ; make-condition error: message not a string
 >>> (make-condition 'foo 1)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (make-condition 'foo 1)
 %%%  ^
 %%% ERROR 'MAKE-CONDITION': Invalid argument 2. STRING expected, got INTEGER 1.
@@ -914,7 +914,7 @@
 
 ; signal error on non-symbol, non-condition first arg
 >>> (signal 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (signal 42)
 %%%  ^
 %%% ERROR 'SIGNAL': Invalid argument 1. CONDITION or SYMBOL expected, got INTEGER 42.
@@ -922,7 +922,7 @@
 
 ; signal error: message not a string
 >>> (signal 'foo 1)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (signal 'foo 1)
 %%%  ^
 %%% ERROR 'SIGNAL': Invalid argument 2. STRING expected, got INTEGER 1.
@@ -1172,7 +1172,7 @@ Y
 
 ; call/cc requires exactly 1 argument
 >>> (call/cc)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (call/cc)
 %%%  ^
 %%% ERROR 'CALL/CC': 0 arguments provided; 1 expected.
@@ -1190,7 +1190,7 @@ Y
 
 ; Continuation requires exactly 1 argument
 >>> (call/cc (lambda (k) (k 1 2)))
-%%% Runtime Error: "" (1,23)
+%%% Runtime Error: "<repl>" (1,23)
 %%% (call/cc (lambda (k) (k 1 2)))
 %%%                       ^
 %%% Continuation expects exactly 1 argument, got 2.
@@ -2476,7 +2476,7 @@ Y
 >>> ;;; zero args
 ... (setf)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (setf)
 %%%  ^
 %%% Error binding arguments in call to macro SETF.
@@ -2487,7 +2487,7 @@ Y
 >>> ;;; one arg (missing value)
 ... (setf sf-a)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (setf sf-a)
 %%%  ^
 %%% Error binding arguments in call to macro SETF.
@@ -2586,7 +2586,7 @@ Y
 >>> ;;; Error: funcall with no arguments
 ... (funcall)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (funcall)
 %%%  ^
 %%% ERROR 'FUNCALL': 0 arguments provided; at least 1 expected.
@@ -2598,7 +2598,7 @@ Y
 >>> ;;; Error: apply with no arguments
 ... (apply)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (apply)
 %%%  ^
 %%% ERROR 'APPLY': 0 arguments provided; at least 2 expected.
@@ -2622,7 +2622,7 @@ Y
 >>> ;;; Error: funcall with no arguments
 ... (funcall)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (funcall)
 %%%  ^
 %%% ERROR 'FUNCALL': 0 arguments provided; at least 1 expected.
@@ -2634,7 +2634,7 @@ Y
 >>> ;;; Error: apply with no arguments
 ... (apply)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (apply)
 %%%  ^
 %%% ERROR 'APPLY': 0 arguments provided; at least 2 expected.
@@ -2658,7 +2658,7 @@ Y
 >>> ;;; if with no arguments
 ... (if)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (if)
 %%%  ^
 %%% ERROR 'IF': 2 or 3 arguments expected.
@@ -2668,7 +2668,7 @@ Y
 >>> ;;; if with too many arguments
 ... (if t 1 2 3)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (if t 1 2 3)
 %%%  ^
 %%% ERROR 'IF': 2 or 3 arguments expected.
@@ -2680,7 +2680,7 @@ Y
 >>> ;;; cond entry that is not a list
 ... (cond 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cond 1)
 %%%  ^
 %%% ERROR 'COND': Entry 1 must be a non-empty list.
@@ -2697,7 +2697,7 @@ Y
 >>> ;;; case with no clauses
 ... (case 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (case 1)
 %%%  ^
 %%% ERROR 'CASE': 2 or more arguments expected.
@@ -2707,7 +2707,7 @@ Y
 >>> ;;; case entry that is not a list
 ... (case 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (case 1 2)
 %%%  ^
 %%% ERROR 'CASE': Entry 1 must be a non-empty list.
@@ -2724,7 +2724,7 @@ Y
 >>> ;;; let with non-symbol non-list initializer
 ... (let (1) x)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let (1) x)
 %%%  ^
 %%% ERROR 'LET': Variable initializer expected to be a SYMBOL or LIST.
@@ -2736,7 +2736,7 @@ Y
 >>> ;;; let* first element of initializer pair must be symbol
 ... (let* ((1 2)) 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let* ((1 2)) 1)
 %%%  ^
 %%% ERROR 'LET*': Variable binding name expected to be a SYMBOL.
@@ -2746,7 +2746,7 @@ Y
 >>> ;;; let* initializer spec too long
 ... (let* ((x 1 2)) 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let* ((x 1 2)) 1)
 %%%  ^
 %%% ERROR 'LET*': Variable initializer expected to be 1 or 2 elements.
@@ -2756,7 +2756,7 @@ Y
 >>> ;;; let* with non-symbol non-list initializer
 ... (let* (1) x)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (let* (1) x)
 %%%  ^
 %%% ERROR 'LET*': Variable initializer expected to be a SYMBOL or LIST.
@@ -2782,7 +2782,7 @@ Y
 >>> ;;; cond with non-list entry in second position
 ... (cond (nil 1) 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (cond (nil 1) 2)
 %%%  ^
 %%% ERROR 'COND': Entry 2 must be a non-empty list.
@@ -2794,7 +2794,7 @@ Y
 >>> ;;; case with non-list entry in second position (non-matching first)
 ... (case 99 (1 "one") 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (case 99 (1 "one") 2)
 %%%  ^
 %%% ERROR 'CASE': Entry 2 must be a non-empty list.
@@ -2805,7 +2805,7 @@ Y
 >>> ;;; quasiquote with no arguments
 ... (quasiquote)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (quasiquote)
 %%%  ^
 %%% ERROR 'QUASIQUOTE': 1 argument expected.
@@ -2815,7 +2815,7 @@ Y
 >>> ;;; quasiquote with too many arguments
 ... (quasiquote 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (quasiquote 1 2)
 %%%  ^
 %%% ERROR 'QUASIQUOTE': 1 argument expected.
@@ -2827,7 +2827,7 @@ Y
 >>> ;;; funcall with no arguments
 ... (funcall)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (funcall)
 %%%  ^
 %%% ERROR 'FUNCALL': 0 arguments provided; at least 1 expected.

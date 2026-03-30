@@ -181,7 +181,7 @@
 ; error: argument is a list
 >>> (dict-keys '(1 2 3))
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-keys '(1 2 3))
 %%%  ^
 %%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected, got CONS (1 2 3).
@@ -191,7 +191,7 @@
 ; error: argument is an integer
 >>> (dict-keys 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-keys 42)
 %%%  ^
 %%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected, got INTEGER 42.
@@ -201,7 +201,7 @@
 ; error: argument is a string
 >>> (dict-keys "hello")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-keys "hello")
 %%%  ^
 %%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected, got STRING "hello".
@@ -211,7 +211,7 @@
 ; error: argument is NIL
 >>> (dict-keys nil)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-keys nil)
 %%%  ^
 %%% ERROR 'DICT-KEYS': Invalid argument 1. DICT expected, got NULL NIL.
@@ -221,7 +221,7 @@
 ; error: too few arguments
 >>> (dict-keys)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-keys)
 %%%  ^
 %%% ERROR 'DICT-KEYS': 0 arguments provided; 1 expected.
@@ -231,7 +231,7 @@
 ; error: too many arguments
 >>> (dict-keys d1 d1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-keys d1 d1)
 %%%  ^
 %%% ERROR 'DICT-KEYS': 2 arguments provided; 1 expected.
@@ -245,7 +245,7 @@
 ; error: argument is a list
 >>> (dict-values '(1 2 3))
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-values '(1 2 3))
 %%%  ^
 %%% ERROR 'DICT-VALUES': Invalid argument 1. DICT expected, got CONS (1 2 3).
@@ -255,7 +255,7 @@
 ; error: argument is an integer
 >>> (dict-values 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-values 42)
 %%%  ^
 %%% ERROR 'DICT-VALUES': Invalid argument 1. DICT expected, got INTEGER 42.
@@ -265,7 +265,7 @@
 ; error: argument is NIL
 >>> (dict-values nil)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-values nil)
 %%%  ^
 %%% ERROR 'DICT-VALUES': Invalid argument 1. DICT expected, got NULL NIL.
@@ -275,7 +275,7 @@
 ; error: too few arguments
 >>> (dict-values)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-values)
 %%%  ^
 %%% ERROR 'DICT-VALUES': 0 arguments provided; 1 expected.
@@ -285,7 +285,7 @@
 ; error: too many arguments
 >>> (dict-values d1 d1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-values d1 d1)
 %%%  ^
 %%% ERROR 'DICT-VALUES': 2 arguments provided; 1 expected.
@@ -299,7 +299,7 @@
 ; error: argument is a list
 >>> (dict-pairs '(1 2 3))
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-pairs '(1 2 3))
 %%%  ^
 %%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected, got CONS (1 2 3).
@@ -309,7 +309,7 @@
 ; error: argument is an integer
 >>> (dict-pairs 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-pairs 42)
 %%%  ^
 %%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected, got INTEGER 42.
@@ -319,7 +319,7 @@
 ; error: argument is a string
 >>> (dict-pairs "hello")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-pairs "hello")
 %%%  ^
 %%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected, got STRING "hello".
@@ -329,7 +329,7 @@
 ; error: argument is NIL
 >>> (dict-pairs nil)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-pairs nil)
 %%%  ^
 %%% ERROR 'DICT-PAIRS': Invalid argument 1. DICT expected, got NULL NIL.
@@ -339,7 +339,7 @@
 ; error: too few arguments
 >>> (dict-pairs)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-pairs)
 %%%  ^
 %%% ERROR 'DICT-PAIRS': 0 arguments provided; 1 expected.
@@ -349,7 +349,7 @@
 ; error: too many arguments
 >>> (dict-pairs d1 d1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-pairs d1 d1)
 %%%  ^
 %%% ERROR 'DICT-PAIRS': 2 arguments provided; 1 expected.
@@ -380,7 +380,7 @@
 ; error: argument is a list
 >>> (dict-length '(1 2 3))
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-length '(1 2 3))
 %%%  ^
 %%% ERROR 'DICT-LENGTH': Invalid argument 1. DICT expected, got CONS (1 2 3).
@@ -390,7 +390,7 @@
 ; error: argument is NIL
 >>> (dict-length nil)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-length nil)
 %%%  ^
 %%% ERROR 'DICT-LENGTH': Invalid argument 1. DICT expected, got NULL NIL.
@@ -400,7 +400,7 @@
 ; error: too few arguments
 >>> (dict-length)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-length)
 %%%  ^
 %%% ERROR 'DICT-LENGTH': 0 arguments provided; 1 expected.
@@ -410,7 +410,7 @@
 ; error: too many arguments
 >>> (dict-length d1 d1)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (dict-length d1 d1)
 %%%  ^
 %%% ERROR 'DICT-LENGTH': 2 arguments provided; 1 expected.
@@ -712,7 +712,7 @@
 
 >>> (has-value-p)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (has-value-p)
 %%%  ^
 %%% ERROR 'HAS-VALUE-P': 0 arguments provided; 2 expected.
@@ -722,7 +722,7 @@
 >>> ;;; has-value-p on non-collection
 ... (has-value-p 2 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (has-value-p 2 1)
 %%%  ^
 %%% ERROR 'HAS-VALUE-P': Invalid argument 2. LIST or DICT expected, got INTEGER 1.
@@ -731,7 +731,7 @@
 
 >>> (has-key-p)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (has-key-p)
 %%%  ^
 %%% ERROR 'HAS-KEY-P': 0 arguments provided; 2 expected.
@@ -741,7 +741,7 @@
 >>> ;;; has-key-p with non-map second arg
 ... (has-key-p "a" 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (has-key-p "a" 1)
 %%%  ^
 %%% ERROR 'HAS-KEY-P': Invalid argument 2. DICT expected, got INTEGER 1.
@@ -750,7 +750,7 @@
 
 >>> (update!)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (update!)
 %%%  ^
 %%% ERROR 'UPDATE!': 0 arguments provided; 2 expected.
@@ -760,7 +760,7 @@
 >>> ;;; update! with non-map first arg
 ... (update! 1 (make-dict))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (update! 1 (make-dict))
 %%%  ^
 %%% ERROR 'UPDATE!': Invalid argument 1. DICT expected, got INTEGER 1.
@@ -770,7 +770,7 @@
 >>> ;;; update! with non-map second arg
 ... (update! (make-dict) 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (update! (make-dict) 1)
 %%%  ^
 %%% ERROR 'UPDATE!': Invalid argument 2. DICT expected, got INTEGER 1.
@@ -782,7 +782,7 @@
 >>> ;;; make-dict with mixed key types
 ... (make-dict (a 1) (2 2))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-dict (a 1) (2 2))
 %%%  ^
 %%% ERROR 'MAKE-DICT': All keys in a map must be the same type. Entry 2 is int, expected str.
@@ -792,7 +792,7 @@
 >>> ;;; make-dict entry with single element (not a pair)
 ... (make-dict (1))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-dict (1))
 %%%  ^
 %%% ERROR 'MAKE-DICT': Entry 1 does not contain a (key value) pair.
@@ -802,7 +802,7 @@
 >>> ;;; make-dict with list as key
 ... (make-dict ('(1) 2))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-dict ('(1) 2))
 %%%  ^
 %%% ERROR 'MAKE-DICT': Entry 1 has an invalid key type.
@@ -814,7 +814,7 @@
 >>> ;;; dictp with no arguments
 ... (dictp)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (dictp)
 %%%  ^
 %%% ERROR 'DICTP': 0 arguments provided; 1 expected.
@@ -824,7 +824,7 @@
 >>> ;;; dictp with too many arguments
 ... (dictp 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (dictp 1 2)
 %%%  ^
 %%% ERROR 'DICTP': 2 arguments provided; 1 expected.
@@ -836,7 +836,7 @@
 >>> ;;; at with missing key on map
 ... (at 'missing (make-dict (a 1)))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at 'missing (make-dict (a 1)))
 %%%  ^
 %%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.
@@ -845,7 +845,7 @@
 >>> ;;; at-delete missing key on map
 ... (at-delete 'missing (make-dict (a 1)))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (at-delete 'missing (make-dict (a 1)))
 %%%  ^
 %%% ERROR 'AT-DELETE': Invalid argument 1. Valid key or index expected.

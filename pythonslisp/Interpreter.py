@@ -87,7 +87,7 @@ class Interpreter( InterpreterBase ):
       self._ctx.outStrm = outStrm
       ctx = self._ctx
       try:
-         ast = self._parser.parse( source )   # (progn form1 form2 ...)
+         ast = self._parser.parse( source, filename='<repl>' )   # (progn form1 form2 ...)
          top_level_forms = ast[1:]            # strip progn wrapper
          returnVal = L_NIL
          for form in top_level_forms:
@@ -116,7 +116,7 @@ class Interpreter( InterpreterBase ):
       evalTime    = 0.0
       try:
          parseStartTime = time.perf_counter()
-         ast = self._parser.parse( source )
+         ast = self._parser.parse( source, filename='<repl>' )
          parseTime = time.perf_counter() - parseStartTime
 
          top_level_forms = ast[1:]

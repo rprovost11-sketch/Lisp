@@ -151,7 +151,7 @@
 >>> (type-of)
 ...
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (type-of)
 %%%  ^
 %%% ERROR 'TYPE-OF': 0 arguments provided; 1 expected.
@@ -162,7 +162,7 @@
 >>> (type-of 1 2)
 ...
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (type-of 1 2)
 %%%  ^
 %%% ERROR 'TYPE-OF': 2 arguments provided; 1 expected.
@@ -449,7 +449,7 @@
 >>> (make-point :z 99)
 ...
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (make-point :z 99)
 %%%  ^
 %%% Error binding arguments in call to function "MAKE-POINT".
@@ -694,7 +694,7 @@
 ; --- typep: error ---
 
 >>> (typep 42 "not-a-symbol")
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (typep 42 "not-a-symbol")
 %%%  ^
 %%% ERROR 'TYPEP': Invalid argument 2. TYPE SPECIFIER expected, got STRING "not-a-symbol".
@@ -813,7 +813,7 @@
 >>> ;;; Error: float rejects non-numeric strings
 ... (float "hello")
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (float "hello")
 %%%  ^
 %%% ERROR 'FLOAT': Invalid argument 1. NUMBER or NUMERIC STRING expected, got STRING "hello".
@@ -823,7 +823,7 @@
 >>> ;;; Error: rational requires exactly one argument
 ... (rational)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (rational)
 %%%  ^
 %%% ERROR 'RATIONAL': 0 arguments provided; 1 expected.
@@ -832,7 +832,7 @@
 
 >>> (rational 1 2)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (rational 1 2)
 %%%  ^
 %%% ERROR 'RATIONAL': 2 arguments provided; 1 expected.
@@ -842,7 +842,7 @@
 >>> ;;; Error: make-symbol requires exactly one argument
 ... (make-symbol)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-symbol)
 %%%  ^
 %%% ERROR 'MAKE-SYMBOL': 0 arguments provided; 1 expected.
@@ -1090,7 +1090,7 @@
 >>> ;;; float with symbol argument
 ... (float 'abc)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (float 'abc)
 %%%  ^
 %%% ERROR 'FLOAT': Invalid argument 1. NUMBER or NUMERIC STRING expected, got SYMBOL ABC.
@@ -1100,7 +1100,7 @@
 >>> ;;; integer with symbol argument
 ... (integer 'abc)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (integer 'abc)
 %%%  ^
 %%% ERROR 'INTEGER': Invalid argument 1. NUMBER or NUMERIC STRING expected, got SYMBOL ABC.

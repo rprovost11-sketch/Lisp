@@ -67,7 +67,7 @@ no substitution needed
 >>> ;;; Error: writef requires at least one argument
 ... (writef)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (writef)
 %%%  ^
 %%% ERROR 'WRITEF': 0 arguments provided; 1 to 3 expected.
@@ -77,7 +77,7 @@ no substitution needed
 >>> ;;; Error: writef first argument must be a format string
 ... (writef 1 '(a b))
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (writef 1 '(a b))
 %%%  ^
 %%% ERROR 'WRITEF': Invalid argument 1. FORMAT STRING expected, got INTEGER 1.
@@ -87,7 +87,7 @@ no substitution needed
 >>> ;;; Error: writef second argument must be a list or map
 ... (writef "hello" 1)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (writef "hello" 1)
 %%%  ^
 %%% ERROR 'WRITEF': Invalid argument 2. LIST, DICT, or STREAM expected, got INTEGER 1.
@@ -533,7 +533,7 @@ ab
 
 >>> (streamp)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (streamp)
 %%%  ^
 %%% ERROR 'STREAMP': 0 arguments provided; 1 expected.
@@ -542,7 +542,7 @@ ab
 
 >>> (open)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (open)
 %%%  ^
 %%% ERROR 'OPEN': 0 arguments provided; at least 1 expected.
@@ -551,7 +551,7 @@ ab
 
 >>> (close)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (close)
 %%%  ^
 %%% ERROR 'CLOSE': 0 arguments provided; at least 1 expected.
@@ -560,7 +560,7 @@ ab
 
 >>> (open-stream-p)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (open-stream-p)
 %%%  ^
 %%% ERROR 'OPEN-STREAM-P': 0 arguments provided; 1 expected.
@@ -569,7 +569,7 @@ ab
 
 >>> (input-stream-p)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (input-stream-p)
 %%%  ^
 %%% ERROR 'INPUT-STREAM-P': 0 arguments provided; 1 expected.
@@ -578,7 +578,7 @@ ab
 
 >>> (output-stream-p)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (output-stream-p)
 %%%  ^
 %%% ERROR 'OUTPUT-STREAM-P': 0 arguments provided; 1 expected.
@@ -587,7 +587,7 @@ ab
 
 >>> (interactive-stream-p)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (interactive-stream-p)
 %%%  ^
 %%% ERROR 'INTERACTIVE-STREAM-P': 0 arguments provided; 1 expected.
@@ -596,7 +596,7 @@ ab
 
 >>> (save)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (save)
 %%%  ^
 %%% ERROR 'SAVE': 0 arguments provided; at least 1 expected.
@@ -605,7 +605,7 @@ ab
 
 >>> (load)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (load)
 %%%  ^
 %%% ERROR 'LOAD': 0 arguments provided; 1 expected.
@@ -619,7 +619,7 @@ ab
 >>> ;;; non-string filename
 ... (open 42)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (open 42)
 %%%  ^
 %%% ERROR 'OPEN': Invalid argument 1. STRING FILE PATH expected, got INTEGER 42.
@@ -629,7 +629,7 @@ ab
 >>> ;;; file not found
 ... (open "no-such-file-42.tmp")
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (open "no-such-file-42.tmp")
 %%%  ^
 %%% ERROR 'OPEN': File not found "no-such-file-42.tmp".
@@ -638,7 +638,7 @@ ab
 >>> ;;; bad :direction value
 ... (open (path-join (tmpdir) "test14-stream.tmp") :direction :bad)
 
-%%% Runtime Error: "" (2,19)
+%%% Runtime Error: "<repl>" (2,19)
 %%% (open (path-join (tmpdir) "test14-stream.tmp") :direction :bad)
 %%%                   ^
 %%% ERROR 'OPEN': :direction must be :input or :output.
@@ -652,7 +652,7 @@ ab
 >>> ;;; :if-exists :error raises an error when file already exists
 ... (open "_wof_test_ifexists_.tmp" :direction :output :if-exists :error)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (open "_wof_test_ifexists_.tmp" :direction :output :if-exists :error)
 %%%  ^
 %%% ERROR 'OPEN': File already exists "_wof_test_ifexists_.tmp".
@@ -668,7 +668,7 @@ ab
 
 >>> (close 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (close 42)
 %%%  ^
 %%% ERROR 'CLOSE': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -677,7 +677,7 @@ ab
 
 >>> (open-stream-p 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (open-stream-p 42)
 %%%  ^
 %%% ERROR 'OPEN-STREAM-P': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -686,7 +686,7 @@ ab
 
 >>> (input-stream-p 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (input-stream-p 42)
 %%%  ^
 %%% ERROR 'INPUT-STREAM-P': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -695,7 +695,7 @@ ab
 
 >>> (output-stream-p 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (output-stream-p 42)
 %%%  ^
 %%% ERROR 'OUTPUT-STREAM-P': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -704,7 +704,7 @@ ab
 
 >>> (interactive-stream-p 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (interactive-stream-p 42)
 %%%  ^
 %%% ERROR 'INTERACTIVE-STREAM-P': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -713,7 +713,7 @@ ab
 
 >>> (flush 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (flush 42)
 %%%  ^
 %%% ERROR 'FLUSH': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -722,7 +722,7 @@ ab
 
 >>> (save 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (save 42)
 %%%  ^
 %%% ERROR 'SAVE': Invalid argument 1. STRING FILE PATH expected, got INTEGER 42.
@@ -731,7 +731,7 @@ ab
 
 >>> (load 42)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (load 42)
 %%%  ^
 %%% ERROR 'LOAD': Invalid argument 1. STRING FILE PATH expected, got INTEGER 42.
@@ -740,7 +740,7 @@ ab
 
 >>> (load "no-such-file-43.tmp")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (load "no-such-file-43.tmp")
 %%%  ^
 %%% ERROR 'LOAD': File not found "no-such-file-43.tmp".
@@ -755,7 +755,7 @@ ab
 
 >>> (write! st14r "hello")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (write! st14r "hello")
 %%%  ^
 %%% ERROR 'WRITE!': Stream is not writable.
@@ -763,7 +763,7 @@ ab
 
 >>> (write-line st14r "hello")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (write-line st14r "hello")
 %%%  ^
 %%% ERROR 'WRITE-LINE': Stream is not writable.
@@ -771,7 +771,7 @@ ab
 
 >>> (uwrite! st14r "hello")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (uwrite! st14r "hello")
 %%%  ^
 %%% ERROR 'UWRITE!': Stream is not writable.
@@ -779,7 +779,7 @@ ab
 
 >>> (uwrite-line st14r "hello")
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (uwrite-line st14r "hello")
 %%%  ^
 %%% ERROR 'UWRITE-LINE': Stream is not writable.
@@ -787,7 +787,7 @@ ab
 
 >>> (terpri st14r)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (terpri st14r)
 %%%  ^
 %%% ERROR 'TERPRI': Stream is not writable.
@@ -795,7 +795,7 @@ ab
 
 >>> (writef "hello" st14r)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (writef "hello" st14r)
 %%%  ^
 %%% ERROR 'WRITEF': Stream is not writable.
@@ -809,7 +809,7 @@ ab
 
 >>> (read-line st14w)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (read-line st14w)
 %%%  ^
 %%% ERROR 'READ-LINE': Stream is not readable.
@@ -990,7 +990,7 @@ ab
 >>> ;;; make-string-output-stream takes no arguments
 ... (make-string-output-stream 42)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-string-output-stream 42)
 %%%  ^
 %%% ERROR 'MAKE-STRING-OUTPUT-STREAM': 1 argument provided; 0 expected.
@@ -1000,7 +1000,7 @@ ab
 >>> ;;; get-output-stream-string requires exactly 1 argument
 ... (get-output-stream-string)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (get-output-stream-string)
 %%%  ^
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': 0 arguments provided; 1 expected.
@@ -1009,7 +1009,7 @@ ab
 
 >>> (get-output-stream-string (make-string-output-stream) (make-string-output-stream))
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (get-output-stream-string (make-string-output-stream) (make-string-output-stream))
 %%%  ^
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': 2 arguments provided; 1 expected.
@@ -1019,7 +1019,7 @@ ab
 >>> ;;; get-output-stream-string rejects a non-string-stream value
 ... (get-output-stream-string 42)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (get-output-stream-string 42)
 %%%  ^
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': Invalid argument 1. STRING OUTPUT STREAM expected, got INTEGER 42.
@@ -1032,7 +1032,7 @@ ab
 
 >>> (get-output-stream-string ss14f)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (get-output-stream-string ss14f)
 %%%  ^
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': Invalid argument 1. STRING OUTPUT STREAM expected, got FILE-STREAM #<STREAM>.
@@ -1051,7 +1051,7 @@ ab
 
 >>> (get-output-stream-string ss14c)
 
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (get-output-stream-string ss14c)
 %%%  ^
 %%% ERROR 'GET-OUTPUT-STREAM-STRING': String stream is closed.
@@ -1108,7 +1108,7 @@ ab
 >>> ;;; arity: requires at least 1 argument
 ... (make-string-input-stream)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-string-input-stream)
 %%%  ^
 %%% ERROR 'MAKE-STRING-INPUT-STREAM': 0 arguments provided; 1 to 3 expected.
@@ -1118,7 +1118,7 @@ ab
 >>> ;;; too many arguments
 ... (make-string-input-stream "a" 0 1 2)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-string-input-stream "a" 0 1 2)
 %%%  ^
 %%% ERROR 'MAKE-STRING-INPUT-STREAM': 4 arguments provided; 1 to 3 expected.
@@ -1128,7 +1128,7 @@ ab
 >>> ;;; non-string argument
 ... (make-string-input-stream 42)
 
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (make-string-input-stream 42)
 %%%  ^
 %%% ERROR 'MAKE-STRING-INPUT-STREAM': Invalid argument 1. STRING expected, got INTEGER 42.
@@ -1287,7 +1287,7 @@ ab
 
 >>> ;;; read-line at EOF with eof-error-p T (default) signals error
 ... (read-line (make-string-input-stream ""))
-%%% Runtime Error: "" (2,13)
+%%% Runtime Error: "<repl>" (2,13)
 %%% (read-line (make-string-input-stream ""))
 %%%             ^
 %%% ERROR 'READ-LINE': End of file.
@@ -1307,7 +1307,7 @@ ab
 
 >>> ;;; read-line: stream argument type error
 ... (read-line 42)
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (read-line 42)
 %%%  ^
 %%% ERROR 'READ-LINE': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -1330,7 +1330,7 @@ ab
 
 >>> ;;; read-char at EOF with eof-error-p T signals error
 ... (read-char (make-string-input-stream ""))
-%%% Runtime Error: "" (2,13)
+%%% Runtime Error: "<repl>" (2,13)
 %%% (read-char (make-string-input-stream ""))
 %%%             ^
 %%% ERROR 'READ-CHAR': End of file.
@@ -1338,7 +1338,7 @@ ab
 
 >>> ;;; read-char: stream argument type error
 ... (read-char 42)
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (read-char 42)
 %%%  ^
 %%% ERROR 'READ-CHAR': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -1386,7 +1386,7 @@ ab
 
 >>> ;;; read at EOF with eof-error-p T signals error
 ... (read (make-string-input-stream ""))
-%%% Runtime Error: "" (2,8)
+%%% Runtime Error: "<repl>" (2,8)
 %%% (read (make-string-input-stream ""))
 %%%        ^
 %%% ERROR 'READ': End of file.
@@ -1394,7 +1394,7 @@ ab
 
 >>> ;;; read: stream argument type error
 ... (read 42)
-%%% Runtime Error: "" (2,2)
+%%% Runtime Error: "<repl>" (2,2)
 %%% (read 42)
 %%%  ^
 %%% ERROR 'READ': Invalid argument 1. STREAM expected, got INTEGER 42.
@@ -1415,7 +1415,7 @@ ab
 
 ; error: arg must be a string
 >>> (file-basename 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (file-basename 42)
 %%%  ^
 %%% ERROR 'FILE-BASENAME': Invalid argument 1. STRING expected, got INTEGER 42.
@@ -1449,7 +1449,7 @@ ab
 
 ; error: arg must be a string
 >>> (readline-add-history 42)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (readline-add-history 42)
 %%%  ^
 %%% ERROR 'READLINE-ADD-HISTORY': Invalid argument 1. STRING expected, got INTEGER 42.
@@ -1463,14 +1463,14 @@ ab
 
 ; error: must be positive
 >>> (readline-set-history-length 0)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (readline-set-history-length 0)
 %%%  ^
 %%% ERROR 'READLINE-SET-HISTORY-LENGTH': Invalid argument 1. Positive INTEGER expected.
 
 ; error: arg must be an integer
 >>> (readline-set-history-length "big")
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (readline-set-history-length "big")
 %%%  ^
 %%% ERROR 'READLINE-SET-HISTORY-LENGTH': Invalid argument 1. INTEGER expected, got STRING "big".
@@ -1515,7 +1515,7 @@ ab
 >>> ;;; writef with out-of-range format index
 ... (writef "{2}" (list 1))
 
-%%% Runtime Error: "" (2,16)
+%%% Runtime Error: "<repl>" (2,16)
 %%% (writef "{2}" (list 1))
 %%%                ^
 %%% ERROR 'WRITEF': Format error: Replacement index 2 out of range for positional args tuple

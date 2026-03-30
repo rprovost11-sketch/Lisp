@@ -250,7 +250,7 @@
 
 ; module-set! on non-module
 >>> (module-set! 42 'x 1)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (module-set! 42 'x 1)
 %%%  ^
 %%% ERROR 'MODULE-SET!': Invalid argument 1. MODULE expected, got INTEGER 42.
@@ -258,7 +258,7 @@
 
 ; load-module with bad :name type
 >>> (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (load-module "pythonslisp/testing/module-fixture.lisp" :name 99)
 %%%  ^
 %%% ERROR 'LOAD-MODULE': Invalid keyword :name. SYMBOL, STRING, or PATH expected.
@@ -266,7 +266,7 @@
 
 ; load-extension with bad :name type
 >>> (load-extension "pythonslisp/examples/my_extension.py" :name 99)
-%%% Runtime Error: "" (1,2)
+%%% Runtime Error: "<repl>" (1,2)
 %%% (load-extension "pythonslisp/examples/my_extension.py" :name 99)
 %%%  ^
 %%% ERROR 'LOAD-EXTENSION': Invalid keyword :name. SYMBOL, STRING, or PATH expected.
