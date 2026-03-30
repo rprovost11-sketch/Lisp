@@ -8,7 +8,7 @@ from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LNUMBER, LMultipleValues, got_str
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimePrimError
+from pythonslisp.Exceptions import LRuntimePrimError, LRuntimeUsageError
 from pythonslisp.extensions import primitive
 
 
@@ -21,8 +21,8 @@ def _bad_number_arg( args, prim ):
    """After TypeError from a bulk numeric operation, find and report the first non-number argument."""
    for i, arg in enumerate(args, 1):
       if not isinstance(arg, LNUMBER):
-         raise LRuntimePrimError(prim, f'Invalid argument {i}. NUMBER expected{got_str(arg)}.')
-   raise LRuntimePrimError(prim, 'Invalid argument.')
+         raise LRuntimeUsageError(prim, f'Invalid argument {i}. NUMBER expected{got_str(arg)}.')
+   raise LRuntimeUsageError(prim, 'Invalid argument.')
 
 
 @primitive( '+', '(&rest numbers)' )
@@ -73,7 +73,7 @@ when the denominator is 1).  Any float input yields a float result."""
    except (TypeError, ValueError):
       _bad_number_arg(args, LP_div)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_div, 'division by zero', show_usage=False )
+      raise LRuntimePrimError( LP_div, 'division by zero')
 
 @primitive( '//', '(dividend divisor)' )
 def LP_intdiv( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -83,7 +83,7 @@ def LP_intdiv( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    except TypeError:
       _bad_number_arg(args[:2], LP_intdiv)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_intdiv, 'division by zero', show_usage=False )
+      raise LRuntimePrimError( LP_intdiv, 'division by zero')
 
 @primitive( 'mod', '(number divisor)' )
 def LP_mod( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -94,7 +94,7 @@ the sign of the divisor (second argument)."""
    except TypeError:
       _bad_number_arg(args[:2], LP_mod)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_mod, 'division by zero', show_usage=False )
+      raise LRuntimePrimError( LP_mod, 'division by zero')
 
 @primitive( 'rem', '(number divisor)' )
 def LP_rem( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -109,7 +109,7 @@ result matches the sign of the dividend (first argument)."""
    except TypeError:
       _bad_number_arg(args[:2], LP_rem)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_rem, 'division by zero', show_usage=False )
+      raise LRuntimePrimError( LP_rem, 'division by zero')
 
 @primitive( 'gcd', '(&rest integers)' )
 def LP_gcd( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -138,7 +138,7 @@ logarithm (base e).  An optional second argument specifies the base."""
    except TypeError:
       _bad_number_arg(args, LP_log)
    except ValueError:
-      raise LRuntimePrimError( LP_log, 'Invalid argument 1. Invalid value for logarithm.', show_usage=False )
+      raise LRuntimePrimError( LP_log, 'Invalid argument 1. Invalid value for logarithm.')
 
 @primitive( 'expt', '(base power)' )
 def LP_expt( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -157,7 +157,7 @@ def LP_sin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.sin(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_sin, 'Invalid argument 1. Number expected.' )
+      raise LRuntimeUsageError( LP_sin, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'cos', '(radians)' )
 def LP_cos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -165,7 +165,7 @@ def LP_cos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.cos(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_cos, 'Invalid argument 1. Number expected.' )
+      raise LRuntimeUsageError( LP_cos, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'asin', '(number)' )
 def LP_asin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -173,7 +173,7 @@ def LP_asin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.asin(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_asin, 'Invalid argument 1. Number expected.' )
+      raise LRuntimeUsageError( LP_asin, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'acos', '(number)' )
 def LP_acos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -181,7 +181,7 @@ def LP_acos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return math.acos(args[0])
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_acos, 'Invalid argument 1. Number expected.' )
+      raise LRuntimeUsageError( LP_acos, 'Invalid argument 1. Number expected.' )
 
 @primitive( 'atan', '(number1 &optional number2)' )
 def LP_atan( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -210,7 +210,7 @@ quotient is used."""
    except (TypeError, ValueError):
       _bad_number_arg(args[:2], LP_floor)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_floor, 'Invalid argument 2. Division by zero.', show_usage=False )
+      raise LRuntimePrimError( LP_floor, 'Invalid argument 2. Division by zero.')
 
 @primitive( 'ceiling', '(number &optional divisor)' )
 def LP_ceiling( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -228,7 +228,7 @@ quotient is used."""
    except (TypeError, ValueError):
       _bad_number_arg(args[:2], LP_ceiling)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_ceiling, 'Invalid argument 2. Division by zero.', show_usage=False )
+      raise LRuntimePrimError( LP_ceiling, 'Invalid argument 2. Division by zero.')
 
 @primitive( 'round', '(number &optional divisor)' )
 def LP_round( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -246,7 +246,7 @@ even, per CL) (or rounded quotient of number/divisor), and the remainder
    except (TypeError, ValueError):
       _bad_number_arg(args[:2], LP_round)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_round, 'Invalid argument 2. Division by zero.', show_usage=False )
+      raise LRuntimePrimError( LP_round, 'Invalid argument 2. Division by zero.')
 
 @primitive( 'truncate', '(number &optional divisor)' )
 def LP_truncate( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -264,7 +264,7 @@ In scalar context only the quotient is used."""
    except (TypeError, ValueError):
       _bad_number_arg(args[:2], LP_truncate)
    except ZeroDivisionError:
-      raise LRuntimePrimError( LP_truncate, 'Invalid argument 2. Division by zero.', show_usage=False )
+      raise LRuntimePrimError( LP_truncate, 'Invalid argument 2. Division by zero.')
 
 @primitive( 'min', '(&rest numbers)' )
 def LP_min( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -291,11 +291,11 @@ For float n returns a random float in [0.0, n)."""
 
    if isinstance( num, int ):
       if num <= 0:
-         raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.', show_usage=False )
+         raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.')
       return _random.randrange( num )
    elif isinstance( num, float ):
       if num <= 0.0:
-         raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.', show_usage=False )
+         raise LRuntimePrimError( LP_random, 'Invalid argument 1. Argument expected to be positive.')
       return _random.uniform( 0.0, num )
    else:
-      raise LRuntimePrimError( LP_random, f'Invalid argument 1. INTEGER or FLOAT expected{got_str(num)}.' )
+      raise LRuntimeUsageError( LP_random, f'Invalid argument 1. INTEGER or FLOAT expected{got_str(num)}.' )

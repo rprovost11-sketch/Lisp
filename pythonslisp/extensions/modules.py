@@ -6,7 +6,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, prettyPrint, got_str
 from pythonslisp.Context import Context
 from pythonslisp.Environment import ModuleEnvironment
-from pythonslisp.Exceptions import LRuntimePrimError
+from pythonslisp.Exceptions import LRuntimeUsageError
 from pythonslisp.Parser import ParseError
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.AST import L_NIL
@@ -33,7 +33,7 @@ def _navigate_or_create_path( path_syms, global_env, evalFn ):
 def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
    """Resolve a :name argument to an existing-or-new ModuleEnvironment.
    Returns None if name_arg is NIL (caller should bind globally).
-   Raises LRuntimePrimError for bad types or conflicts."""
+   Raises LRuntimeUsageError for bad types or conflicts."""
    try:
       if isinstance( name_arg, list ) and len(name_arg) == 0:
          return None
@@ -48,14 +48,14 @@ def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
              and name_arg[0].name == ':' ):
          path = name_arg[1:]
          if not all( isinstance(s, LSymbol) for s in path ):
-            raise LRuntimePrimError( prim_for_error,
+            raise LRuntimeUsageError( prim_for_error,
                'Invalid keyword :name. SYMBOL PATH expected.' )
          return _navigate_or_create_path( path, global_env, ctx.lEval )
       else:
-         raise LRuntimePrimError( prim_for_error,
+         raise LRuntimeUsageError( prim_for_error,
             'Invalid keyword :name. SYMBOL, STRING, or PATH expected.' )
    except ValueError as exc:
-      raise LRuntimePrimError( prim_for_error,
+      raise LRuntimeUsageError( prim_for_error,
          f'{exc.args[0]} already exists but is not a module.' )
 
 
@@ -67,7 +67,7 @@ The first argument is evaluated to obtain the root module or package.
 Each subsequent argument must be a symbol naming the next level.
 (: mymodule myfn)          -- returns myfn from mymodule
 (: mypkg mymodule myfn)    -- navigates pkg -> module -> symbol"""
-   raise LRuntimePrimError( LP_colon, 'Handled by CEK machine.' )
+   raise LRuntimeUsageError( LP_colon, 'Handled by CEK machine.' )
 
 @primitive( 'module-set!', '(module symbol value)' )
 def LP_module_set( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -76,9 +76,9 @@ MODULE must be a module object.  SYMBOL must be a symbol naming the binding.
 Returns VALUE."""
    module, sym, value = args
    if not isinstance( module, ModuleEnvironment ):
-      raise LRuntimePrimError( LP_module_set, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
+      raise LRuntimeUsageError( LP_module_set, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
    if not isinstance( sym, LSymbol ):
-      raise LRuntimePrimError( LP_module_set, f'Invalid argument 2. SYMBOL expected{got_str(sym)}.' )
+      raise LRuntimeUsageError( LP_module_set, f'Invalid argument 2. SYMBOL expected{got_str(sym)}.' )
    module._bindings[ sym.name ] = value
    return value
 
@@ -92,7 +92,7 @@ Returns the new module object."""
    filespec = env.lookup( 'FILESPEC' )
    name_arg = env.lookup( 'NAME' )
    if not isinstance( filespec, str ):
-      raise LRuntimePrimError( LP_load_module, f'Invalid argument 1. STRING FILE PATH expected{got_str(filespec)}.' )
+      raise LRuntimeUsageError( LP_load_module, f'Invalid argument 1. STRING FILE PATH expected{got_str(filespec)}.' )
    global_env = env.getGlobalEnv()
    # Determine module name and binding location from :name argument.
    # :name may be NIL, a symbol, a string, or a quoted (: ...) path form.
@@ -108,7 +108,7 @@ Returns the new module object."""
          # Quoted (: pkg subpkg ... module) path - navigate/create intermediate packages
          path = name_arg[1:]
          if not all( isinstance(s, LSymbol) for s in path ):
-            raise LRuntimePrimError( LP_load_module,
+            raise LRuntimeUsageError( LP_load_module,
                'Invalid keyword :name. SYMBOL PATH expected.' )
          module_name = path[-1].name
          container   = _navigate_or_create_path( path[:-1], global_env, ctx.lEval )
@@ -120,15 +120,15 @@ Returns the new module object."""
          try:
             sym, _ = ctx.parseOne( module_name )
          except ParseError:
-            raise LRuntimePrimError( LP_load_module, f'Invalid keyword :name. "{name_arg}" is not a valid module name.' )
+            raise LRuntimeUsageError( LP_load_module, f'Invalid keyword :name. "{name_arg}" is not a valid module name.' )
          if not isinstance( sym, LSymbol ):
-            raise LRuntimePrimError( LP_load_module, f'Invalid keyword :name. "{name_arg}" is not a valid module name.' )
+            raise LRuntimeUsageError( LP_load_module, f'Invalid keyword :name. "{name_arg}" is not a valid module name.' )
          container   = global_env
       else:
-         raise LRuntimePrimError( LP_load_module,
+         raise LRuntimeUsageError( LP_load_module,
             'Invalid keyword :name. SYMBOL, STRING, or PATH expected.' )
    except ValueError as exc:
-      raise LRuntimePrimError( LP_load_module,
+      raise LRuntimeUsageError( LP_load_module,
          f'{exc.args[0]} already exists but is not a module.' )
    module_env = ModuleEnvironment( name=module_name, parent=global_env, evalFn=ctx.lEval )
    ast = ctx.parseFile( filespec )
@@ -148,11 +148,11 @@ NAME may be a symbol or a string.  The module is bound in the global environment
       try:
          sym, _ = ctx.parseOne( module_name )
       except ParseError:
-         raise LRuntimePrimError( LP_make_module, f'Invalid argument 1. "{name_arg}" is not a valid module name.' )
+         raise LRuntimeUsageError( LP_make_module, f'Invalid argument 1. "{name_arg}" is not a valid module name.' )
       if not isinstance( sym, LSymbol ):
-         raise LRuntimePrimError( LP_make_module, f'Invalid argument 1. "{name_arg}" is not a valid module name.' )
+         raise LRuntimeUsageError( LP_make_module, f'Invalid argument 1. "{name_arg}" is not a valid module name.' )
    else:
-      raise LRuntimePrimError( LP_make_module, f'Invalid argument 1. SYMBOL or STRING expected{got_str(name_arg)}.' )
+      raise LRuntimeUsageError( LP_make_module, f'Invalid argument 1. SYMBOL or STRING expected{got_str(name_arg)}.' )
    global_env = env.getGlobalEnv()
    module_env = ModuleEnvironment( name=module_name, parent=global_env, evalFn=ctx.lEval )
    env.bindGlobal( module_name, module_env )
@@ -163,7 +163,7 @@ def LP_module_name( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the name of a module as a string."""
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):
-      raise LRuntimePrimError( LP_module_name, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
+      raise LRuntimeUsageError( LP_module_name, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
    return module.name
 
 @primitive( 'module-symbols', '(module)' )
@@ -171,5 +171,5 @@ def LP_module_symbols( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns a sorted list of symbols defined directly in the module."""
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):
-      raise LRuntimePrimError( LP_module_symbols, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
+      raise LRuntimeUsageError( LP_module_symbols, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
    return [ LSymbol(name) for name in sorted( module._bindings.keys() ) ]

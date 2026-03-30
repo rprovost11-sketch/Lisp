@@ -17,12 +17,21 @@ class LRuntimeError( Exception ):
 
 
 class LRuntimePrimError( LRuntimeError ):
-   def __init__( self, lispCallable, errorMsg: str, show_usage: bool = True ) -> None:
+   """Runtime error attributed to a specific primitive (no usage hint).
+   Use for runtime conditions: division by zero, file not found, stream state, etc."""
+   def __init__( self, lispCallable, errorMsg: str ) -> None:
       prim   = getattr( lispCallable, 'primitive', lispCallable )
       fnName = prim.name
-      usage  = prim.usageString() if show_usage else ''
-      errStr = f"ERROR '{fnName}': {errorMsg}\n{usage}" if usage else f"ERROR '{fnName}': {errorMsg}"
-      super().__init__( errStr )
+      super().__init__( f"ERROR '{fnName}': {errorMsg}" )
+
+
+class LRuntimeUsageError( LRuntimePrimError ):
+   """Runtime error attributed to a specific primitive, with PRIMITIVE USAGE hint.
+   Use for type/arity misuse: wrong argument type, wrong count, bad keyword, etc."""
+   def __init__( self, lispCallable, errorMsg: str ) -> None:
+      prim  = getattr( lispCallable, 'primitive', lispCallable )
+      usage = prim.usageString()
+      super().__init__( lispCallable, f"{errorMsg}\n{usage}" if usage else errorMsg )
 
 
 class LArgBindingError( LRuntimeError ):

@@ -11,7 +11,7 @@ from pythonslisp.AST import ( LSymbol, LNUMBER, LCallable, LFunction, LMacro, LP
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Environment import ModuleEnvironment
-from pythonslisp.Exceptions import LRuntimePrimError, LRuntimeError
+from pythonslisp.Exceptions import LRuntimeUsageError, LRuntimeError
 from pythonslisp.Parser import ParseError
 from pythonslisp.extensions import LambdaListMode, primitive
 
@@ -243,11 +243,11 @@ Compound specifiers: (OR ...) (AND ...) (NOT t) (MEMBER v...) (SATISFIES fn)
   (NUMBER low high).  Bounds are * (unbounded), n (inclusive), or (n) (exclusive)."""
    obj, spec = args
    if not isinstance(spec, (LSymbol, list)):
-      raise LRuntimePrimError( LP_typep, f'Invalid argument 2. TYPE SPECIFIER expected{got_str(spec)}.' )
+      raise LRuntimeUsageError( LP_typep, f'Invalid argument 2. TYPE SPECIFIER expected{got_str(spec)}.' )
    try:
       return L_T if _typep(obj, spec, ctx, env) else L_NIL
    except LRuntimeError as e:
-      raise LRuntimePrimError( LP_typep, str(e).replace('typep: ', '') ) from e
+      raise LRuntimeUsageError( LP_typep, str(e).replace('typep: ', '') ) from e
 
 @primitive( 'not', '(object)' )
 def LP_not( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -319,7 +319,7 @@ def LP_less( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior < mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_less, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
+            raise LRuntimeUsageError( LP_less, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -333,7 +333,7 @@ def LP_lessOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior <= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_lessOrEqual, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
+            raise LRuntimeUsageError( LP_lessOrEqual, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -347,7 +347,7 @@ def LP_greater( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior > mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greater, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
+            raise LRuntimeUsageError( LP_greater, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -361,7 +361,7 @@ def LP_greaterOrEqual( ctx: Context, env: Environment, args: list[Any] ) -> Any:
             if not( prior >= mbr ):
                return L_NIL
          except TypeError:
-            raise LRuntimePrimError( LP_greaterOrEqual, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
+            raise LRuntimeUsageError( LP_greaterOrEqual, f'Invalid argument {i}. {lisp_type_name(prior)} and {lisp_type_name(mbr)} are not comparable{got_str(mbr)}.' )
       prior = mbr
    return L_T
 
@@ -371,7 +371,7 @@ def LP_float( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return float(args[0])
    except (ValueError, TypeError):
-      raise LRuntimePrimError( LP_float, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
+      raise LRuntimeUsageError( LP_float, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
 
 @primitive( 'integer', '(number &optional (base 10))' )
 def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -379,7 +379,7 @@ def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    try:
       return int(*args)
    except (TypeError, ValueError):
-      raise LRuntimePrimError( LP_integer, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
+      raise LRuntimeUsageError( LP_integer, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
 
 @primitive( 'rational', '(number)' )
 def LP_rational( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -388,7 +388,7 @@ containing a valid lisp number that can be expressed as a fraction."""
    try:
       return Fraction(args[0])
    except (IndexError, TypeError, ValueError):
-      raise LRuntimePrimError( LP_rational, f'Invalid argument 1. NUMBER expected{got_str(args[0])}.' )
+      raise LRuntimeUsageError( LP_rational, f'Invalid argument 1. NUMBER expected{got_str(args[0])}.' )
 
 @primitive( 'string', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
 def LP_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -415,11 +415,11 @@ def LP_make_symbol( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Takes a string and returns a new symbol whose print string is that string."""
    arg = args[0]
    if not isinstance(arg, str):
-      raise LRuntimePrimError( LP_make_symbol, f'Invalid argument 1. STRING expected{got_str(arg)}.' )
+      raise LRuntimeUsageError( LP_make_symbol, f'Invalid argument 1. STRING expected{got_str(arg)}.' )
    try:
       sym, _ = ctx.parseOne(arg)
    except ParseError:
-      raise LRuntimePrimError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
+      raise LRuntimeUsageError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
    if not isinstance(sym, LSymbol):
-      raise LRuntimePrimError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
+      raise LRuntimeUsageError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
    return sym

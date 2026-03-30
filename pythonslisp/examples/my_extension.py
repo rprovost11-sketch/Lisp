@@ -48,7 +48,7 @@ from pythonslisp.Environment import Environment, ModuleEnvironment
 # Exceptions - raise these to signal errors back to the interpreter
 from pythonslisp.Exceptions import (
     LRuntimeError,     # general runtime error
-    LRuntimePrimError, # runtime error attributed to a specific primitive (preferred)
+    LRuntimeUsageError, # usage error: wrong type/arity — includes PRIMITIVE USAGE hint
 )
 
 # primitive - decorator for defining Lisp primitives
@@ -70,7 +70,7 @@ def LP_greet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     name = args[0]
     greeting = args[1] if len(args) > 1 else "Hello"
     if not isinstance(name, str):
-        raise LRuntimePrimError( LP_greet, '1st argument NAME must be a string.' )
+        raise LRuntimeUsageError( LP_greet, '1st argument NAME must be a string.' )
     return f'{greeting}, {prettyPrint(name)}!'
 
 # -----------------------------------------------------------------------
@@ -93,11 +93,11 @@ def LP_repeat_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     count     = env.lookup('COUNT')
     separator = env.lookup('SEPARATOR')
     if not isinstance(string, str):
-        raise LRuntimePrimError( LP_repeat_string, '1st argument STRING must be a string.' )
+        raise LRuntimeUsageError( LP_repeat_string, '1st argument STRING must be a string.' )
     if not isinstance(count, int) or count < 0:
-        raise LRuntimePrimError( LP_repeat_string, ':count must be a non-negative integer.' )
+        raise LRuntimeUsageError( LP_repeat_string, ':count must be a non-negative integer.' )
     if not isinstance(separator, str):
-        raise LRuntimePrimError( LP_repeat_string, ':separator must be a string.' )
+        raise LRuntimeUsageError( LP_repeat_string, ':separator must be a string.' )
     return separator.join([string] * count)
 
 # -----------------------------------------------------------------------

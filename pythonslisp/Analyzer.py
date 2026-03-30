@@ -16,7 +16,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LPrimitive, LFunction, LList, arity_mismatch_msg
 from pythonslisp.Exceptions import ( LAnalysisError,      # noqa: F401 (re-exported)
                                          LRuntimeError,
-                                         LRuntimePrimError,
+                                         LRuntimeUsageError,
                                          LArgBindingError )
 
 
@@ -60,20 +60,20 @@ class Analyzer:
       # ---------- QUOTE --------------------------------------------------
       if name == 'QUOTE':
          if len(args) != 1:
-            raise LRuntimePrimError(env.lookup('QUOTE'), '1 argument expected.')
+            raise LRuntimeUsageError(env.lookup('QUOTE'), '1 argument expected.')
          return  # Don't recurse into quoted data
 
       # ---------- QUASIQUOTE -----------------------------------------------
       if name == 'QUASIQUOTE':
          if len(args) != 1:
-            raise LRuntimePrimError(env.lookup('QUASIQUOTE'), '1 argument expected.')
+            raise LRuntimeUsageError(env.lookup('QUASIQUOTE'), '1 argument expected.')
          return  # Don't recurse into quasiquote templates
 
       # ---------- IF -------------------------------------------------------
       if name == 'IF':
          numArgs = len(args)
          if not (2 <= numArgs <= 3):
-            raise LRuntimePrimError(env.lookup('IF'), '2 or 3 arguments expected.')
+            raise LRuntimeUsageError(env.lookup('IF'), '2 or 3 arguments expected.')
          for elt in args:
             Analyzer.analyze(env, elt)
          return
@@ -133,9 +133,9 @@ class Analyzer:
       # ---------- LAMBDA --------------------------------------------------
       if name == 'LAMBDA':
          if len(args) < 1:
-            raise LRuntimePrimError(env.lookup('LAMBDA'), '1 or more arguments expected.')
+            raise LRuntimeUsageError(env.lookup('LAMBDA'), '1 or more arguments expected.')
          if not isinstance(args[0], list):
-            raise LRuntimePrimError(env.lookup('LAMBDA'), 'Invalid argument 1. PARAMETER LIST expected.')
+            raise LRuntimeUsageError(env.lookup('LAMBDA'), 'Invalid argument 1. PARAMETER LIST expected.')
          Analyzer.analyzeLambdaList(args[0])
          for bodyForm in args[1:]:
             Analyzer.analyze(env, bodyForm)
@@ -144,19 +144,19 @@ class Analyzer:
       # ---------- DEFMACRO ------------------------------------------------
       if name == 'DEFMACRO':
          if len(args) < 2:
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), '3 or more arguments expected.')
+            raise LRuntimeUsageError(env.lookup('DEFMACRO'), '3 or more arguments expected.')
          if not isinstance(args[0], LSymbol):
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Invalid argument 1. SYMBOL expected.')
+            raise LRuntimeUsageError(env.lookup('DEFMACRO'), 'Invalid argument 1. SYMBOL expected.')
          if not isinstance(args[1], list):
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'Invalid argument 2. PARAMETER LIST expected.')
+            raise LRuntimeUsageError(env.lookup('DEFMACRO'), 'Invalid argument 2. PARAMETER LIST expected.')
          Analyzer.analyzeLambdaList(args[1], destructuring=True)
          funcBody = list(args[2:])
          if len(funcBody) < 1:
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
+            raise LRuntimeUsageError(env.lookup('DEFMACRO'), 'At least one body expression expected.')
          if isinstance(funcBody[0], str):
             funcBody = funcBody[1:]
          if len(funcBody) < 1:
-            raise LRuntimePrimError(env.lookup('DEFMACRO'), 'At least one body expression expected after docstring.')
+            raise LRuntimeUsageError(env.lookup('DEFMACRO'), 'At least one body expression expected after docstring.')
          return
 
       # ---------- MAKE-DICT ------------------------------------------------
@@ -175,7 +175,7 @@ class Analyzer:
                   tooFew  = numArgs < callableObj.min_args
                   tooMany = callableObj.max_args is not None and numArgs > callableObj.max_args
                   if tooFew or tooMany:
-                     raise LRuntimePrimError(callableObj,
+                     raise LRuntimeUsageError(callableObj,
                         arity_mismatch_msg(callableObj.min_args, callableObj.max_args, numArgs))
             elif isinstance(callableObj, LFunction):
                cll     = callableObj.compiledLambdaList
@@ -201,13 +201,13 @@ class Analyzer:
    def _analyzeLet( env: Environment, name: str, args: list ) -> None:
       """Structural checks for (let ...) and (let* ...) forms."""
       if len(args) < 1:
-         raise LRuntimePrimError(env.lookup(name), '2 or more arguments expected.')
+         raise LRuntimeUsageError(env.lookup(name), '2 or more arguments expected.')
 
       vardefs = args[0]
       body    = args[1:]
 
       if not isinstance(vardefs, list):
-         raise LRuntimePrimError(env.lookup(name),
+         raise LRuntimeUsageError(env.lookup(name),
                'Invalid argument 1. LIST OF VARIABLE BINDINGS expected.')
 
       for varSpec in vardefs:
@@ -217,19 +217,19 @@ class Analyzer:
             varSpecLen = len(varSpec)
             if varSpecLen == 1:
                if not isinstance(varSpec[0], LSymbol):
-                  raise LRuntimePrimError(env.lookup(name),
+                  raise LRuntimeUsageError(env.lookup(name),
                         'Variable binding name expected to be a SYMBOL.')
             elif varSpecLen == 2:
                varName, initForm = varSpec
                if not isinstance(varName, LSymbol):
-                  raise LRuntimePrimError(env.lookup(name),
+                  raise LRuntimeUsageError(env.lookup(name),
                         'Variable binding name expected to be a SYMBOL.')
                Analyzer.analyze(env, initForm)
             else:
-               raise LRuntimePrimError(env.lookup(name),
+               raise LRuntimeUsageError(env.lookup(name),
                      'Variable initializer expected to be 1 or 2 elements.')
          else:
-            raise LRuntimePrimError(env.lookup(name),
+            raise LRuntimeUsageError(env.lookup(name),
                   'Variable initializer expected to be a SYMBOL or LIST.')
 
       for bodyForm in body:
@@ -240,15 +240,15 @@ class Analyzer:
       """Structural checks for (setq ...) forms."""
       numArgs = len(args)
       if numArgs == 0:
-         raise LRuntimePrimError(env.lookup('SETQ'), 'At least 2 arguments expected.')
+         raise LRuntimeUsageError(env.lookup('SETQ'), 'At least 2 arguments expected.')
       if (numArgs % 2) != 0:
-         raise LRuntimePrimError(env.lookup('SETQ'),
+         raise LRuntimeUsageError(env.lookup('SETQ'),
                f'An even number of arguments expected; {numArgs} provided.')
       for i in range(0, numArgs, 2):
          lval = args[i]
          rval = args[i + 1]
          if not isinstance(lval, LSymbol):
-            raise LRuntimePrimError(env.lookup('SETQ'), 'Assignment target must be a SYMBOL.')
+            raise LRuntimeUsageError(env.lookup('SETQ'), 'Assignment target must be a SYMBOL.')
          Analyzer.analyze(env, rval)
 
    @staticmethod
@@ -280,10 +280,10 @@ class Analyzer:
    def _analyzeCond( env: Environment, args: list ) -> None:
       """Structural checks for (cond ...) forms."""
       if len(args) < 1:
-         raise LRuntimePrimError(env.lookup('COND'), '1 or more arguments expected.')
+         raise LRuntimeUsageError(env.lookup('COND'), '1 or more arguments expected.')
       for i, clause in enumerate(args):
          if not isinstance(clause, list) or len(clause) == 0:
-            raise LRuntimePrimError(env.lookup('COND'),
+            raise LRuntimeUsageError(env.lookup('COND'),
                   f'Entry {i+1} must be a non-empty list.')
          Analyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
@@ -293,11 +293,11 @@ class Analyzer:
    def _analyzeCase( env: Environment, args: list ) -> None:
       """Structural checks for (case ...) forms."""
       if len(args) < 2:
-         raise LRuntimePrimError(env.lookup('CASE'), '2 or more arguments expected.')
+         raise LRuntimeUsageError(env.lookup('CASE'), '2 or more arguments expected.')
       Analyzer.analyze(env, args[0])
       for i, clause in enumerate(args[1:]):
          if not isinstance(clause, list) or len(clause) == 0:
-            raise LRuntimePrimError(env.lookup('CASE'),
+            raise LRuntimeUsageError(env.lookup('CASE'),
                   f'Entry {i+1} must be a non-empty list.')
          Analyzer.analyze(env, clause[0])
          for bodyForm in clause[1:]:
@@ -514,7 +514,7 @@ class Analyzer:
       requiredKeyType = None
       for entryNum, pair in enumerate(args):
          if not isinstance(pair, list) or len(pair) != 2:
-            raise LRuntimePrimError(env.lookup('MAKE-DICT'),
+            raise LRuntimeUsageError(env.lookup('MAKE-DICT'),
                   f'Entry {entryNum + 1} does not contain a (key value) pair.')
          key, expr = pair
          if isinstance(key, LSymbol):
@@ -522,12 +522,12 @@ class Analyzer:
          elif isinstance(key, (int, float, str)):
             effectiveType = type(key)
          else:
-            raise LRuntimePrimError(env.lookup('MAKE-DICT'),
+            raise LRuntimeUsageError(env.lookup('MAKE-DICT'),
                   f'Entry {entryNum + 1} has an invalid key type.')
          if requiredKeyType is None:
             requiredKeyType = effectiveType
          elif effectiveType != requiredKeyType:
-            raise LRuntimePrimError(env.lookup('MAKE-DICT'),
+            raise LRuntimeUsageError(env.lookup('MAKE-DICT'),
                   f'All keys in a map must be the same type. '
                   f'Entry {entryNum + 1} is {effectiveType.__name__}, '
                   f'expected {requiredKeyType.__name__}.')

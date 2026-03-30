@@ -7,7 +7,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LMacro, got_str
 from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimePrimError
+from pythonslisp.Exceptions import LRuntimeUsageError
 from pythonslisp.Parser import ParseError
 from pythonslisp.Expander import Expander
 from pythonslisp.extensions import LambdaListMode, primitive
@@ -18,7 +18,7 @@ from pythonslisp.extensions.modules import resolve_module_path
 def LP_defmacro( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
-   raise LRuntimePrimError( LP_defmacro, 'Handled by CEK machine.' )
+   raise LRuntimeUsageError( LP_defmacro, 'Handled by CEK machine.' )
 
 @primitive( 'macroexpand', '(\'form)',
             mode=LambdaListMode.DOC_ONLY, min_args=1, max_args=1 )
@@ -66,9 +66,9 @@ def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> An
    """Register a struct field accessor as a valid setf target."""
    accessor_sym, field_sym = args
    if not isinstance(accessor_sym, LSymbol):
-      raise LRuntimePrimError( LP_defsetf_internal, f'Invalid argument 1. SYMBOL expected{got_str(accessor_sym)}.' )
+      raise LRuntimeUsageError( LP_defsetf_internal, f'Invalid argument 1. SYMBOL expected{got_str(accessor_sym)}.' )
    if not isinstance(field_sym, LSymbol):
-      raise LRuntimePrimError( LP_defsetf_internal, f'Invalid argument 2. SYMBOL expected{got_str(field_sym)}.' )
+      raise LRuntimeUsageError( LP_defsetf_internal, f'Invalid argument 2. SYMBOL expected{got_str(field_sym)}.' )
    ctx.setfRegistry[accessor_sym.name] = field_sym
    return accessor_sym
 
@@ -77,13 +77,13 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Internal: write a struct field value via the defsetf registry."""
    accessor, instance, newval = args
    if not isinstance( accessor, LSymbol ):
-      raise LRuntimePrimError( LP_set_accessor, f'Invalid argument 1. SYMBOL expected{got_str(accessor)}.' )
+      raise LRuntimeUsageError( LP_set_accessor, f'Invalid argument 1. SYMBOL expected{got_str(accessor)}.' )
    field_key = ctx.setfRegistry.get( accessor.name )
    if field_key is None:
-      raise LRuntimePrimError( LP_set_accessor,
+      raise LRuntimeUsageError( LP_set_accessor,
                                   f'No setf expander registered for {accessor.name}.' )
    if not isinstance( instance, dict ):
-      raise LRuntimePrimError( LP_set_accessor, f'Invalid argument 2. STRUCT INSTANCE expected{got_str(instance)}.' )
+      raise LRuntimeUsageError( LP_set_accessor, f'Invalid argument 2. STRUCT INSTANCE expected{got_str(instance)}.' )
    instance[ field_key ] = newval
    return newval
 
@@ -97,7 +97,7 @@ value is updated.  If it's not located a new global is defined and set the
 value.
 
 Alternate usage: (setf (at keyOrIndex dictOrList) newValue)"""
-   raise LRuntimePrimError( LP_setq, 'Handled by main eval loop.' )
+   raise LRuntimeUsageError( LP_setq, 'Handled by main eval loop.' )
 
 @primitive( 'makunbound', '(symbol)' )
 def LP_makunbound( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -105,7 +105,7 @@ def LP_makunbound( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 The argument is evaluated: (makunbound 'x) unbinds X."""
    key = args[0]
    if not isinstance(key, LSymbol):
-      raise LRuntimePrimError( LP_makunbound, f'Invalid argument 1. SYMBOL expected{got_str(key)}.' )
+      raise LRuntimeUsageError( LP_makunbound, f'Invalid argument 1. SYMBOL expected{got_str(key)}.' )
    env.getGlobalEnv().unbind( key.name )
    return L_NIL
 
@@ -127,13 +127,13 @@ is last."""
 def LP_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
-   raise LRuntimePrimError( LP_trace, 'Handled by CEK machine.' )
+   raise LRuntimeUsageError( LP_trace, 'Handled by CEK machine.' )
 
 @primitive( 'untrace', '(&rest fn-names)' )
 def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
-   raise LRuntimePrimError( LP_untrace, 'Handled by CEK machine.' )
+   raise LRuntimeUsageError( LP_untrace, 'Handled by CEK machine.' )
 
 @primitive( 'toggle-global-trace', '()' )
 def LP_toggle_global_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -149,14 +149,14 @@ Invoking the continuation with a value restores the captured computation
 state and delivers that value as the result of the original call/cc expression.
 Continuations are fully re-invocable: the same continuation may be called
 multiple times, reinstating the saved state each time."""
-   raise LRuntimePrimError( LP_callcc, 'Handled by CEK machine.' )
+   raise LRuntimeUsageError( LP_callcc, 'Handled by CEK machine.' )
 
 @primitive( 'boundp', '(symbol)' )
 def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
    sym = args[0]
    if not isinstance( sym, LSymbol ):
-      raise LRuntimePrimError( LP_boundp, f'Invalid argument 1. SYMBOL expected{got_str(sym)}.' )
+      raise LRuntimeUsageError( LP_boundp, f'Invalid argument 1. SYMBOL expected{got_str(sym)}.' )
    try:
       env.lookup( sym.name )
       return L_T
@@ -182,9 +182,9 @@ non-negative integer it is used as the numeric suffix directly and
       try:
          sym, _ = ctx.parseOne( combined )
       except ParseError:
-         raise LRuntimePrimError( LP_gensym, 'Invalid argument 1. Valid SYMBOL PREFIX expected.' )
+         raise LRuntimeUsageError( LP_gensym, 'Invalid argument 1. Valid SYMBOL PREFIX expected.' )
       if not isinstance( sym, LSymbol ):
-         raise LRuntimePrimError( LP_gensym, 'Invalid argument 1. Valid SYMBOL PREFIX expected.' )
+         raise LRuntimeUsageError( LP_gensym, 'Invalid argument 1. Valid SYMBOL PREFIX expected.' )
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
       return sym
    elif isinstance( x, LSymbol ):
@@ -192,7 +192,7 @@ non-negative integer it is used as the numeric suffix directly and
       return LSymbol( f'{x.name}{counter}' )
    elif isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
       return LSymbol( f'G{x}' )
-   raise LRuntimePrimError( LP_gensym, 'Invalid argument 1. STRING, SYMBOL, or NON-NEGATIVE INTEGER expected.' )
+   raise LRuntimeUsageError( LP_gensym, 'Invalid argument 1. STRING, SYMBOL, or NON-NEGATIVE INTEGER expected.' )
 
 _ITUPS = 1_000_000
 
@@ -217,7 +217,7 @@ With a format string, uses strftime formatting (e.g. \"%Y-%m-%d-%H%M%S\")."""
       return now.isoformat()
    fmt = args[0]
    if not isinstance( fmt, str ):
-      raise LRuntimePrimError( LP_now_string, 'Invalid argument 1. FORMAT STRING expected.' )
+      raise LRuntimeUsageError( LP_now_string, 'Invalid argument 1. FORMAT STRING expected.' )
    return now.strftime( fmt )
 
 @primitive( 'load-extension', '(&rest files &key name)',
@@ -238,7 +238,7 @@ Returns T if all files loaded successfully."""
       arg = args[i]
       if isinstance( arg, LSymbol ) and arg.name == ':NAME':
          if i + 1 >= len(args):
-            raise LRuntimePrimError( LP_load_extensions, 'Invalid keyword :name. Value required.' )
+            raise LRuntimeUsageError( LP_load_extensions, 'Invalid keyword :name. Value required.' )
          name_arg = args[i + 1]
          i += 2
       else:
@@ -246,7 +246,7 @@ Returns T if all files loaded successfully."""
          i += 1
    for i, path in enumerate(files, 1):
       if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_extensions, f'Invalid argument {i}. STRING PATH expected.' )
+         raise LRuntimeUsageError( LP_load_extensions, f'Invalid argument {i}. STRING PATH expected.' )
    target_env = resolve_module_path( name_arg, env.getGlobalEnv(), ctx, LP_load_extensions )
    for path in files:
       ctx.loadExt( path, target_env )
@@ -261,7 +261,7 @@ All arguments must be string paths.  Returns T if all directories loaded
 successfully."""
    for i, path in enumerate(args, 1):
       if not isinstance( path, str ):
-         raise LRuntimePrimError( LP_load_extension_dirs, f'Invalid argument {i}. STRING PATH expected.' )
+         raise LRuntimeUsageError( LP_load_extension_dirs, f'Invalid argument {i}. STRING PATH expected.' )
    for path in args:
       ctx.loadExtDir( path )
    return L_T
