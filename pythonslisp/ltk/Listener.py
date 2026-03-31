@@ -70,8 +70,9 @@ class Listener( object ):
       print( )
       print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
       print( 'Enter any expression to have it evaluated by the interpreter.' )
-      print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
+      print( f'For online lisp help evaluate \'{CYAN}(help){RESET}\'.' )
       print( f'Use \'{CYAN}]traces on{RESET}\' to enable call-stack traces on errors.' )
+      print( f'Use \'{CYAN}Ctrl+C{RESET}\' to interrupt a running evaluation.' )
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
       if not Listener._rl:
@@ -111,6 +112,10 @@ class Listener( object ):
                lineInput = self._prompt( '... ' )
          except EOFError:
             break
+         except KeyboardInterrupt:
+            print( )
+            inputExprLineList = [ ]
+            continue
 
          if (lineInput == '') and (len(inputExprLineList) != 0):
             inputExprStr = '\n'.join( inputExprLineList ).strip()
@@ -136,6 +141,9 @@ class Listener( object ):
 
             except (ParserBase.ParseError, ListenerCommandError) as ex:
                self._writeErrorMsg( ex.args[-1] if ex.args else str(ex) )
+
+            except KeyboardInterrupt:
+               self._writeErrorMsg( 'Interrupted.' )
 
             except Exception as ex:   # Unknowns raised by the interpreter
                self._writeErrorMsg( str(ex) if ex.args else '' )
@@ -470,6 +478,7 @@ class Listener( object ):
       print( 'Enter any expression to have it evaluated by the interpreter.' )
       print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
       print( f'Use \'{CYAN}]traces on{RESET}\' to enable call-stack traces on errors.' )
+      print( f'Use \'{CYAN}Ctrl+C{RESET}\' to interrupt a running evaluation.' )
       print( f'{BOLD_GREEN}Welcome!{RESET}' )
       print( )
 
