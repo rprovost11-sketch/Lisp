@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, got_str
-from pythonslisp.AST import T_SYM, L_NIL
+from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimePrimError, LRuntimeUsageError
 from pythonslisp.extensions import LambdaListMode, primitive
@@ -165,7 +165,7 @@ def LP_atDelete( ctx: Context, env: Environment, args: list[Any] ) -> bool:
    except ( IndexError, KeyError, TypeError ):
       raise LRuntimePrimError( LP_atDelete, 'Invalid argument 1. Valid key or index expected.')
 
-   return T_SYM
+   return L_T
 
 @primitive( 'at-insert', '(index list newItem)' )
 def LP_atInsert( ctx: Context, env: Environment, args: list[Any] ) -> bool:
@@ -208,7 +208,7 @@ def LP_has_value_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    else:
       raise LRuntimeUsageError( LP_has_value_p, f'Invalid argument 2. LIST or DICT expected{got_str(keyed)}.' )
 
-   return T_SYM if aVal in keyed else L_NIL
+   return L_T if aVal in keyed else L_NIL
 
 @primitive( 'update!', '(dict1 dict2)' )
 def LP_update( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -232,7 +232,7 @@ def LP_has_key_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if not isinstance(aMap, dict):
       raise LRuntimeUsageError( LP_has_key_p, f'Invalid argument 2. DICT expected{got_str(aMap)}.' )
 
-   return T_SYM if aKey in aMap else L_NIL
+   return L_T if aKey in aMap else L_NIL
 
 @primitive( 'dict-keys', '(dict)' )
 def LP_dict_keys( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -748,7 +748,7 @@ Returns NIL at the first false result.  Returns T for empty sequences."""
       result = ctx.lApply( ctx, env, pred, list(elts) )
       if _is_nil_val( result ):
          return L_NIL
-   return T_SYM
+   return L_T
 
 @primitive( 'some', '(pred seq &rest more-seqs)' )
 def LP_some( ctx: Context, env: Environment, args: list[Any] ) -> Any:

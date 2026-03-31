@@ -10,7 +10,7 @@ from pythonslisp.AST import (
     LFunction,        # a user-defined function (defun/lambda)
     LMacro,           # a user-defined macro (defmacro)
     LNUMBER,          # isinstance tuple: (int, float, Fraction)
-    T_SYM,            # the interned T symbol
+    L_T,              # the singleton T value
     L_NIL,            # the singleton NIL value
     prettyPrint,      # convert any Lisp value to a user-readable string
     prettyPrintSExpr, # convert any Lisp value to a programmer-readable string

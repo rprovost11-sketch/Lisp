@@ -5,8 +5,7 @@ from typing import Any
 
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LMacro, got_str
-from pythonslisp.AST import ( T_SYM, L_NIL, LSymbol,
-                               prettyPrint, prettyPrintSExpr )
+from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeUsageError
 from pythonslisp.Parser import ParseError
@@ -141,7 +140,7 @@ def LP_toggle_global_trace( ctx: Context, env: Environment, args: list[Any] ) ->
    """Toggles global function tracing on or off.  When global tracing is on,
 every call to a user-defined function is reported with its arguments and
 return value.  Returns T if tracing is now on, NIL if now off."""
-   return T_SYM if ctx.tracer.toggle_global() else L_NIL
+   return L_T if ctx.tracer.toggle_global() else L_NIL
 
 @primitive( 'call/cc', '(procedure)' )
 def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -160,7 +159,7 @@ def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       raise LRuntimeUsageError( LP_boundp, f'Invalid argument 1. SYMBOL expected{got_str(sym)}.' )
    try:
       env.lookup( sym.name )
-      return T_SYM
+      return L_T
    except KeyError:
       return L_NIL
 
@@ -176,7 +175,7 @@ non-negative integer it is used as the numeric suffix directly and
    counter = env.lookupGlobalWithDefault( '*GENSYM-COUNTER*', 0 )
    if not args:
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
-      return LSymbol.makeSymbol( f'G{counter}' )
+      return LSymbol( f'G{counter}' )
    x = args[0]
    if isinstance( x, str ):
       combined = f'{x}{counter}'
@@ -190,9 +189,9 @@ non-negative integer it is used as the numeric suffix directly and
       return sym
    elif isinstance( x, LSymbol ):
       env.bindGlobal( '*GENSYM-COUNTER*', counter + 1 )
-      return LSymbol.makeSymbol( f'{x.name}{counter}' )
+      return LSymbol( f'{x.name}{counter}' )
    elif isinstance( x, int ) and not isinstance( x, bool ) and x >= 0:
-      return LSymbol.makeSymbol( f'G{x}' )
+      return LSymbol( f'G{x}' )
    raise LRuntimeUsageError( LP_gensym, 'Invalid argument 1. STRING, SYMBOL, or NON-NEGATIVE INTEGER expected.' )
 
 _ITUPS = 1_000_000
@@ -251,7 +250,7 @@ Returns T if all files loaded successfully."""
    target_env = resolve_module_path( name_arg, env.getGlobalEnv(), ctx, LP_load_extensions )
    for path in files:
       ctx.loadExt( path, target_env )
-   return T_SYM
+   return L_T
 
 @primitive( 'load-extension-dirs', '(&rest dirs)',
                mode=LambdaListMode.DOC_ONLY, min_args=0 )
@@ -265,7 +264,7 @@ successfully."""
          raise LRuntimeUsageError( LP_load_extension_dirs, f'Invalid argument {i}. STRING PATH expected.' )
    for path in args:
       ctx.loadExtDir( path )
-   return T_SYM
+   return L_T
 
 @primitive( 'interpreter-reboot', '()' )
 def LP_interpreter_reboot( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -273,4 +272,4 @@ def LP_interpreter_reboot( ctx: Context, env: Environment, args: list[Any] ) -> 
 reloads the standard library, and re-runs startup.lisp.  Equivalent to the
 ]reboot listener command.  Returns T."""
    ctx.reboot()
-   return T_SYM
+   return L_T

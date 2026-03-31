@@ -3,8 +3,7 @@ from typing import Any
 
 from pythonslisp.Environment import Environment
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import ( LSymbol, LCallable, LFunction, LMultipleValues,
-                               L_NIL, eql, prettyPrintSExpr, UNKNOWN_SYM )
+from pythonslisp.AST import LSymbol, LCallable, LFunction, LMultipleValues, L_NIL, eql, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import ( LRuntimeError, LRuntimeUsageError, LArgBindingError,
                                       Thrown, Signaled, ContinuationInvoked )
@@ -171,7 +170,7 @@ Use as (raweval-for-display input-string) or (raweval-for-display input-string s
    except LRuntimeError:
       raise
    except Signaled as e:
-      _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', UNKNOWN_SYM) )
+      _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
       _cm = e.condition.get('MESSAGE', '')
       raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' ) from e
    except Thrown as e:

@@ -22,11 +22,9 @@ Frames that return values       → return (_Val(v),  env)
 from __future__ import annotations
 from typing import Any
 
-from pythonslisp.AST import ( LSymbol, L_NIL, T_SYM,
+from pythonslisp.AST import ( LSymbol, L_NIL, L_T,
                                LCallable, LFunction, LPrimitive, LMacro, LContinuation,
-                               LMultipleValues, LList, eql, prettyPrintSExpr,
-                               QUASIQUOTE_SYM, UNQUOTE_SYM, UNQUOTE_SPLICING_SYM,
-                               ANONYMOUS_SYM, ERROR_SYM )
+                               LMultipleValues, LList, eql, prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LArgBindingError,
                                       ContinuationInvoked, ReturnFrom,
                                       Thrown, Signaled )
@@ -106,13 +104,13 @@ def _lquasiquoteExpand( ctx, env, expr, depth=1 ):
    headName = head.name if type(head) is LSymbol else None
    if headName == 'QUASIQUOTE':
       inner = _lquasiquoteExpand(ctx, env, expr[1], depth + 1)
-      return [QUASIQUOTE_SYM, inner]
+      return [LSymbol('QUASIQUOTE'), inner]
    if headName == 'UNQUOTE':
       if depth == 1:
          return ctx.lEval(env, expr[1])
       else:
          inner = _lquasiquoteExpand(ctx, env, expr[1], depth - 1)
-         return [UNQUOTE_SYM, inner]
+         return [LSymbol('UNQUOTE'), inner]
    if headName == 'UNQUOTE-SPLICING':
       if depth == 1:
          result = ctx.lEval(env, expr[1])
@@ -120,10 +118,10 @@ def _lquasiquoteExpand( ctx, env, expr, depth=1 ):
             raise LRuntimeError(
                "ERROR 'UNQUOTE-SPLICING': Argument 1 must evaluate to a List.\n"
                "PRIMITIVE USAGE: (UNQUOTE-SPLICING sexpr)")
-         return [UNQUOTE_SPLICING_SYM, result]
+         return [LSymbol('UNQUOTE-SPLICING'), result]
       else:
          inner = _lquasiquoteExpand(ctx, env, expr[1], depth - 1)
-         return [UNQUOTE_SPLICING_SYM, inner]
+         return [LSymbol('UNQUOTE-SPLICING'), inner]
    resultList = []
    for listElt in expr:
       resultListElt = _lquasiquoteExpand(ctx, env, listElt, depth)
@@ -354,7 +352,7 @@ class ArgFrame:
                return self.pending[0], self.env   # expression
             if type(fn) is LMacro:
                raise LRuntimeError( f'Invalid argument 1. CALLABLE expected; macros are not callable via FUNCALL.' )
-            if type(fn) is LPrimitive and LSymbol.makeSymbol(fn.name) in _SPECIAL_OPERATOR_SET:
+            if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
                raise LRuntimeError( 'Invalid argument 1. CALLABLE expected; special forms are not callable.' )
 
 
@@ -372,7 +370,7 @@ class ArgFrame:
                raise LRuntimeError( 'Invalid argument 1. CALLABLE or SYMBOL expected.' )
             if type(fn) is LMacro:
                raise LRuntimeError( f'Invalid argument 1. CALLABLE expected; macros cannot be applied.' )
-            if type(fn) is LPrimitive and LSymbol.makeSymbol(fn.name) in _SPECIAL_OPERATOR_SET:
+            if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
                raise LRuntimeError( 'Invalid argument 1. CALLABLE expected; special forms cannot be applied.' )
 
          else:  # 'call'
@@ -676,7 +674,7 @@ class CallCCProcFrame:
          raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       if type(proc) is LMacro:
          raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; macros are not callable.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
-      if type(proc) is LPrimitive and LSymbol.makeSymbol(proc.name) in _SPECIAL_OPERATOR_SET:
+      if type(proc) is LPrimitive and proc.name in _SPECIAL_OPERATOR_SET:
          raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; special forms are not callable.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       K.append( ArgFrame(None, [_Val(self.cont)], [], E, 'funcall') )
       return _Val(proc), E
@@ -918,7 +916,7 @@ def _run_loop( C, E, K, ctx ) -> Any:
       head    = C[0]
       headStr = head.name if type(head) is LSymbol else None
 
-      if type(head) is not LSymbol or head not in _SPECIAL_OPERATOR_SET:
+      if headStr not in _SPECIAL_OPERATOR_SET:
          K.append( ArgFrame(None, list(C[1:]), [], E, 'call') )
          C = C[0]
          continue
@@ -942,9 +940,11 @@ def set_stack_traces( enabled: bool ) -> None:
    _stack_traces_enabled = enabled
 
 
-_SPECIAL_OPERATOR_SET = frozenset(LSymbol.makeSymbol(name) for name in (
+_SPECIAL_OPERATOR_SET = frozenset({
+   # existing
    'IF', 'QUOTE', 'LET', 'LET*', 'PROGN', 'SETQ', 'COND', 'CASE',
    'FUNCALL', 'APPLY',
+   # new
    'LAMBDA', 'DEFMACRO',
    'QUASIQUOTE', 'UNQUOTE', 'UNQUOTE-SPLICING',
    'TRACE', 'UNTRACE',
@@ -954,7 +954,7 @@ _SPECIAL_OPERATOR_SET = frozenset(LSymbol.makeSymbol(name) for name in (
    'MULTIPLE-VALUE-BIND', 'MULTIPLE-VALUE-LIST', 'NTH-VALUE',
    'MAKE-DICT',
    ':', 'CALL/CC', 'DYNAMIC-WIND',
-))
+})
 
 
 def cek_eval( ctx, env, expr ) -> Any:
@@ -1006,7 +1006,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          head    = C[0]
          headStr = head.name if type(head) is LSymbol else None
 
-         if type(head) is not LSymbol or head not in _SPECIAL_OPERATOR_SET:
+         if headStr not in _SPECIAL_OPERATOR_SET:
             _last_call_form = C   # capture before C is overwritten; used by error handler
             K.append( ArgFrame(None, list(C[1:]), [], E) )
             if _stack_traces_enabled:
@@ -1120,7 +1120,7 @@ def cek_eval( ctx, env, expr ) -> Any:
             else:
                docString = ''
             compiledLL = compileLambdaList( funcParams )
-            C = _Val( LFunction(ANONYMOUS_SYM, funcParams, docString, funcBody,
+            C = _Val( LFunction(LSymbol(''), funcParams, docString, funcBody,
                                 capturedEnvironment=E, compiledLambdaList=compiledLL) )
             continue
 
@@ -1143,7 +1143,7 @@ def cek_eval( ctx, env, expr ) -> Any:
             result = _lquasiquoteExpand(ctx, E, C[1])
             if ( isinstance(result, list) and
                  len(result) > 0 and
-                 result[0] == UNQUOTE_SPLICING_SYM ):
+                 result[0] == LSymbol('UNQUOTE-SPLICING') ):
                raise LRuntimeError(
                   'Ill-placed ,@ (UNQUOTE-SPLICING): splice requires a list context.')
             C = _Val(result)
@@ -1163,13 +1163,13 @@ def cek_eval( ctx, env, expr ) -> Any:
             tracer = ctx.tracer
             syms   = C[1:]
             if not syms:
-               C = _Val( [LSymbol.makeSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
+               C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
                continue
             for sym in syms:
                if type(sym) is not LSymbol:
                   raise LRuntimeError("trace: arguments must be symbols.")
                tracer.addFnTrace(sym.name)
-            C = _Val( [LSymbol.makeSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
+            C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
             continue
 
          if headStr == 'UNTRACE':
@@ -1182,7 +1182,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                   if type(sym) is not LSymbol:
                      raise LRuntimeError("untrace: arguments must be symbols.")
                   tracer.removeFnTrace(sym.name)
-            C = _Val( [LSymbol.makeSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
+            C = _Val( [LSymbol(name) for name in sorted(tracer.getFnsToTrace())] )
             continue
 
          if headStr == 'BLOCK':
@@ -1307,7 +1307,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          continue
 
       except Signaled as e:
-         ctype_sym   = e.condition.get('CONDITION-TYPE', ERROR_SYM)
+         ctype_sym   = e.condition.get('CONDITION-TYPE', LSymbol('ERROR'))
          type_name   = ctype_sym.name if type(ctype_sym) is LSymbol else 'ERROR'
          handler_idx = None
          handler_frame = None
@@ -1361,7 +1361,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
          del K[handler_idx:]
          new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
-         cond    = {'CONDITION-TYPE': ERROR_SYM, 'MESSAGE': e.args[0] if e.args else ''}
+         cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': e.args[0] if e.args else ''}
          if var is not None:
             new_env.bindLocal(var.name, cond)
          C, E = _eval_body(body, new_env, K)
