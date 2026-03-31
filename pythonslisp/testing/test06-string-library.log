@@ -1,7 +1,7 @@
 ; test04-string-library.log  --  string library tests
 
 ; --------------------------------------------------------
-; string / ustring — basic conversion
+; string / ustring - basic conversion
 ; --------------------------------------------------------
 
 >>> (string 3.5 "Hello" 1/2 )
@@ -57,7 +57,7 @@
 >>> (ustring 'a 'b 'c :sep "->")
 ==> "A->B->C"
 
-; :sep defaults to "" — existing behaviour preserved
+; :sep defaults to "" - existing behaviour preserved
 >>> (ustring "x" "y")
 ==> "xy"
 

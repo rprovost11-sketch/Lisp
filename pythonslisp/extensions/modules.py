@@ -40,7 +40,7 @@ def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
       elif isinstance( name_arg, LSymbol ):
          return _navigate_or_create_path( [name_arg], global_env, ctx.lEval )
       elif isinstance( name_arg, str ):
-         return _navigate_or_create_path( [LSymbol( name_arg.upper() )],
+         return _navigate_or_create_path( [LSymbol.makeSymbol( name_arg.upper() )],
                                           global_env, ctx.lEval )
       elif ( isinstance( name_arg, list )
              and len(name_arg) >= 2
@@ -172,4 +172,4 @@ def LP_module_symbols( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    module = args[0]
    if not isinstance( module, ModuleEnvironment ):
       raise LRuntimeUsageError( LP_module_symbols, f'Invalid argument 1. MODULE expected{got_str(module)}.' )
-   return [ LSymbol(name) for name in sorted( module._bindings.keys() ) ]
+   return [ LSymbol.makeSymbol(name) for name in sorted( module._bindings.keys() ) ]

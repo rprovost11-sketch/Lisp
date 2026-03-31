@@ -6,14 +6,19 @@ class LRuntimeError( Exception ):
    def __init__( self, message: str = '' ) -> None:
       super().__init__( message )
       self.source_info = None   # set to (filename, line_num, col_num, source_line) by evaluator/analyzer
+      self.call_stack  = []    # list of formatted frame strings; prepended before error output
 
    def __str__( self ) -> str:
       base = self.args[0] if self.args else ''
       if self.source_info is None:
-         return base
-      filename, line_num, col_num, source_line = self.source_info
-      indent = ' ' * ( col_num - 1 )
-      return f'{self._label}: "{filename}" ({line_num},{col_num})\n{source_line}\n{indent}^\n{base}'
+         error_str = base
+      else:
+         filename, line_num, col_num, source_line = self.source_info
+         indent    = ' ' * ( col_num - 1 )
+         error_str = f'{self._label}: "{filename}" ({line_num},{col_num})\n{source_line}\n{indent}^\n{base}'
+      if not self.call_stack:
+         return error_str
+      return 'Call stack:\n' + '\n'.join( self.call_stack ) + '\n' + error_str
 
 
 class LRuntimePrimError( LRuntimeError ):

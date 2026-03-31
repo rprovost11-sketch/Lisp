@@ -7,8 +7,9 @@ from typing import Any
 
 from pythonslisp.Parser import Parser
 from pythonslisp.ltk.Listener import InterpreterBase
-from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LMacro,
-                              LMultipleValues, prettyPrintSExpr, derive_arity )
+from pythonslisp.AST import ( LSymbol, T_SYM, L_NIL, LPrimitive, LMacro,
+                              LMultipleValues, prettyPrintSExpr, derive_arity,
+                              UNKNOWN_SYM )
 from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
                                      ReturnFrom, Thrown, Signaled )
 from pythonslisp.Environment import Environment
@@ -48,7 +49,7 @@ class Interpreter( InterpreterBase ):
 
       # Bootstrap: create the global environment env; initialize with T and NIL;
       #    bind extensions into it.
-      primitiveDict: dict[str, Any] = {'T': L_T, 'NIL': L_NIL}
+      primitiveDict: dict[str, Any] = {'T': T_SYM, 'NIL': L_NIL}
       self._ctx = self._makeContext( outStrm )
       self._env = Environment( parent=None, initialBindings=primitiveDict,
                                evalFn=self._ctx.lEval )
@@ -101,7 +102,7 @@ class Interpreter( InterpreterBase ):
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
-         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', UNKNOWN_SYM) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       return returnVal
@@ -141,7 +142,7 @@ class Interpreter( InterpreterBase ):
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
-         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', UNKNOWN_SYM) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       totTime = time.perf_counter() - startTotTime
@@ -166,7 +167,7 @@ class Interpreter( InterpreterBase ):
       except ReturnFrom as e:
          raise LRuntimeError( f'return-from: no block named {e.name} is currently active.' )
       except Signaled as e:
-         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+         _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', UNKNOWN_SYM) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
       return returnVal
@@ -273,7 +274,7 @@ Used by extension .py files that need to register macros via @macro."""
       _target_env = targetEnv
 
       def bind_macro( name: str, params_str: str, body_str: str, docstring: str ) -> None:
-         name_sym     = LSymbol( name )
+         name_sym     = LSymbol.makeSymbol( name )
          params_ast   = interpreter._parser.parse( params_str )[1]
          body_ast     = interpreter._parser.parse( body_str )[1:]   # strip PROGN, get forms
          from pythonslisp.Analyzer import Analyzer

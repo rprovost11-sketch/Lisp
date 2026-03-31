@@ -9,7 +9,11 @@ from io import IOBase, StringIO
 
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr, got_str
-from pythonslisp.AST import L_T, L_NIL
+from pythonslisp.AST import ( T_SYM, L_NIL,
+                               STRUCT_TYPE_SYM, STRUCT_DESCRIPTOR_SYM,
+                               STRUCT_NAME_SYM, STRUCT_DOCSTRING_SYM, STRUCT_FIELDS_SYM,
+                               KW_INPUT_SYM, KW_OUTPUT_SYM, KW_SUPERSEDE_SYM,
+                               KW_APPEND_SYM, KW_ERROR_SYM )
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, LRuntimeUsageError
 from pythonslisp.Parser import ParseError
@@ -71,12 +75,12 @@ output at the Python level."""
    return ctx.outStrm
 
 def is_struct_descriptor( obj ) -> bool:
-   return isinstance(obj, dict) and obj.get(LSymbol('STRUCT-TYPE')) == LSymbol('%STRUCT-DESCRIPTOR%')
+   return isinstance(obj, dict) and obj.get(STRUCT_TYPE_SYM) == STRUCT_DESCRIPTOR_SYM
 
 def print_struct_help( descriptor, outStrm ) -> None:
-   name    = descriptor.get(LSymbol('NAME'), LSymbol('?'))
-   docstr  = descriptor.get(LSymbol('DOCSTRING'), L_NIL)
-   fields  = descriptor.get(LSymbol('FIELDS'), [])
+   name    = descriptor.get(STRUCT_NAME_SYM, LSymbol.makeSymbol('?'))
+   docstr  = descriptor.get(STRUCT_DOCSTRING_SYM, L_NIL)
+   fields  = descriptor.get(STRUCT_FIELDS_SYM, [])
    nameStr = name.name if isinstance(name, LSymbol) else str(name)
    nameLow = nameStr.lower()
    field_names = [ f[0].name.lower()
@@ -216,23 +220,23 @@ def LP_open( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if_dne    = env.lookup( 'IF-DOES-NOT-EXIST' )
    if not isinstance( filespec, str ):
       raise LRuntimeUsageError( LP_open, f'Invalid argument 1. STRING FILE PATH expected{got_str(filespec)}.' )
-   if direction == LSymbol(':INPUT'):
+   if direction == KW_INPUT_SYM:
       if isinstance( if_dne, list ) and not os.path.exists( filespec ):
          return L_NIL
       try:
          return open( filespec, 'r' )
       except FileNotFoundError:
          raise LRuntimePrimError( LP_open, f'File not found "{filespec}".')
-   elif direction == LSymbol(':OUTPUT'):
+   elif direction == KW_OUTPUT_SYM:
       if isinstance( if_exists, list ):           # nil
          if os.path.exists( filespec ):
             return L_NIL
          mode_str = 'w'
-      elif if_exists == LSymbol(':SUPERSEDE'):
+      elif if_exists == KW_SUPERSEDE_SYM:
          mode_str = 'w'
-      elif if_exists == LSymbol(':APPEND'):
+      elif if_exists == KW_APPEND_SYM:
          mode_str = 'a'
-      elif if_exists == LSymbol(':ERROR'):
+      elif if_exists == KW_ERROR_SYM:
          if os.path.exists( filespec ):
             raise LRuntimePrimError( LP_open, f'File already exists "{filespec}".')
          mode_str = 'w'
@@ -296,7 +300,7 @@ in this implementation (flushing on close cannot be suppressed)."""
    if not isinstance(stream, IOBase):
       raise LRuntimeUsageError( LP_close, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
    stream.close()
-   return L_T
+   return T_SYM
 
 @primitive( 'flush', '(&optional stream)' )
 def LP_flush( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -308,7 +312,7 @@ def LP_flush( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       stream.flush( )
    else:
       sys.stdout.flush()
-   return L_T
+   return T_SYM
 
 @primitive( 'open-stream-p', '(stream)' )
 def LP_open_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -316,7 +320,7 @@ def LP_open_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    stream = args[0]
    if not isinstance(stream, IOBase):
       raise LRuntimeUsageError( LP_open_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
-   return L_NIL if stream.closed else L_T
+   return L_NIL if stream.closed else T_SYM
 
 @primitive( 'interactive-stream-p', '(stream)' )
 def LP_interactive_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -324,7 +328,7 @@ def LP_interactive_stream_p( ctx: Context, env: Environment, args: list[Any] ) -
    stream = args[0]
    if not isinstance(stream, IOBase):
       raise LRuntimeUsageError( LP_interactive_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
-   return L_T if stream.isatty() else L_NIL
+   return T_SYM if stream.isatty() else L_NIL
 
 @primitive( 'input-stream-p', '(stream)' )
 def LP_input_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -332,7 +336,7 @@ def LP_input_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    stream = args[0]
    if not isinstance(stream, IOBase):
       raise LRuntimeUsageError( LP_input_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
-   return L_T if stream.readable() else L_NIL
+   return T_SYM if stream.readable() else L_NIL
 
 @primitive( 'output-stream-p', '(stream)' )
 def LP_output_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -340,7 +344,7 @@ def LP_output_stream_p( ctx: Context, env: Environment, args: list[Any] ) -> Any
    stream = args[0]
    if not isinstance(stream, IOBase):
       raise LRuntimeUsageError( LP_output_stream_p, f'Invalid argument 1. STREAM expected{got_str(stream)}.' )
-   return L_T if stream.writable() else L_NIL
+   return T_SYM if stream.writable() else L_NIL
 
 @primitive( 'stdin', '()' )
 def LP_stdin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -723,11 +727,11 @@ Type '(help "substring" :substring t)' to search all names by substring."""
       if not isinstance( target, str ):
          raise LRuntimeUsageError( LP_help, f':substring t requires a string target{got_str(target)}.' )
       printHelpListings( ctx.outStrm, env, find=target )
-      return L_T
+      return T_SYM
 
    if isinstance( target, list ) and not target:   # NIL - no target given
       printHelpListings( ctx.outStrm, env )
-      return L_T
+      return T_SYM
 
    pos_arg = target
 
@@ -749,7 +753,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
          print( topicTxt.read_text( encoding='utf-8' ), file=ctx.outStrm )
       else:
          print( f'Unknown topic: "{topicName}"', file=ctx.outStrm )
-      return L_T
+      return T_SYM
 
    # If passed a symbol, resolve it to its global value
    if isinstance(pos_arg, LSymbol):
@@ -760,7 +764,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
 
    if is_struct_descriptor(pos_arg):
       print_struct_help( pos_arg, ctx.outStrm )
-      return L_T
+      return T_SYM
 
    if not isinstance(pos_arg, LCallable):
       raise LRuntimeUsageError( LP_help, 'First argument expected to be a callable or struct type.' )
@@ -780,7 +784,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
       valueStr = prettyPrint( callableObj.docString )
       print( valueStr, file=outStrm )
 
-   return L_T
+   return T_SYM
 
 @primitive( 'define-help-topic', '(name-string text-string &key (category ""))',
             mode=LambdaListMode.FULL_BINDING )
@@ -802,7 +806,7 @@ as a symbol.  An existing topic with the same name is overwritten.
    target_dir.mkdir( parents=True, exist_ok=True )
    topicFile  = target_dir / f'{name.upper()}.txt'
    topicFile.write_text( text, encoding='utf-8' )
-   return LSymbol( name )
+   return LSymbol.makeSymbol( name )
 
 @primitive( 'undefine-help-topic', '(name-string)' )
 def LP_undefine_help_topic( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -814,7 +818,7 @@ Returns T if the topic existed and was removed, NIL if the topic was not found."
    topicFile = next(HELP_DIR.glob(f'**/{name.upper()}.txt'), None)
    if topicFile is not None:
       topicFile.unlink()
-      return L_T
+      return T_SYM
    return L_NIL
 
 @primitive( 'directory-files', '(dir &optional extension)' )
@@ -899,7 +903,7 @@ the file does not exist."""
       return L_NIL
    try:
       _rl.read_history_file( path )
-      return L_T
+      return T_SYM
    except FileNotFoundError:
       return L_NIL
 
@@ -913,7 +917,7 @@ Has no effect if readline is not available.  Returns T on success."""
    if _rl is None:
       return L_NIL
    _rl.write_history_file( path )
-   return L_T
+   return T_SYM
 
 @primitive( 'columnize', '(list width &optional stream)' )
 def LP_columnize( ctx: Context, env: Environment, args: list[Any] ) -> Any:

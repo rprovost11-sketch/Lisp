@@ -16,9 +16,21 @@ LATOM   = (int,float,Fraction,str)
 
 class LSymbol:
    __slots__ = ('name', )
-   
+   _intern_table: dict[str, 'LSymbol'] = {}
+
    def __init__( self, name: str ) -> None:
-      self.name = name.upper()
+      raise TypeError( 'Use LSymbol.makeSymbol() to create symbols.' )
+
+   @classmethod
+   def makeSymbol( cls, name: str ) -> 'LSymbol':
+      """Return the canonical interned LSymbol for name, creating it if needed."""
+      key = name.upper()
+      sym = cls._intern_table.get(key)
+      if sym is None:
+         sym = cls.__new__(cls)
+         sym.name = key
+         cls._intern_table[key] = sym
+      return sym
 
    def __str__( self ) -> str:
       return self.name
@@ -27,17 +39,13 @@ class LSymbol:
       return self.name
 
    def __eq__( self, other: Any ) -> bool:
-      if isinstance(other, LSymbol):
-         return self.name == other.name
-      return False
+      return self is other
 
    def __hash__( self ) -> int:
-      return hash(self.name)
+      return id(self)
 
    def __ne__( self, other: Any ) -> bool:
-      if isinstance(other, LSymbol):
-         return self.name != other.name
-      return True
+      return self is not other
    
    def startswith( self, asubstr:str ) -> bool:
       return self.name.startswith(asubstr)
@@ -236,7 +244,7 @@ Used by type-of and got_str for error messages."""
    if isinstance(val, LSymbol):
       return 'SYMBOL'
    if isinstance(val, dict):
-      struct_type = val.get( LSymbol('STRUCT-TYPE') )
+      struct_type = val.get( STRUCT_TYPE_SYM )
       if isinstance(struct_type, LSymbol):
          return struct_type.name
       return 'DICT'
@@ -306,9 +314,9 @@ def prettyPrint( sExpr: Any ) -> str:
 
 
 def eql( a: Any, b: Any ) -> bool:
-   """CL eql: symbols by name, numbers by type+value, everything else by identity."""
+   """CL eql: symbols by identity (interned), numbers by type+value, everything else by identity."""
    if isinstance(a, LSymbol) and isinstance(b, LSymbol):
-      return a.name == b.name
+      return a is b
    if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
       return a == b
    return a is b
@@ -423,5 +431,64 @@ def arity_mismatch_msg( min_a: int, max_a: int | None, n_provided: int ) -> str:
 
 
 # Canonical Lisp constants - defined here so AST has no upstream deps
-L_T: LSymbol = LSymbol('T')
-L_NIL: LNil = LNil()
+L_NIL: LNil  = LNil()
+
+# Interned symbol constants — use makeSymbol so each name has exactly one object.
+# Naming convention: <LISP-NAME>_SYM with hyphens replaced by underscores.
+
+T_SYM                = LSymbol.makeSymbol('T')
+
+# Special operators
+IF_SYM               = LSymbol.makeSymbol('IF')
+QUOTE_SYM            = LSymbol.makeSymbol('QUOTE')
+LET_SYM              = LSymbol.makeSymbol('LET')
+LETSTAR_SYM          = LSymbol.makeSymbol('LET*')
+PROGN_SYM            = LSymbol.makeSymbol('PROGN')
+SETQ_SYM             = LSymbol.makeSymbol('SETQ')
+COND_SYM             = LSymbol.makeSymbol('COND')
+CASE_SYM             = LSymbol.makeSymbol('CASE')
+FUNCALL_SYM          = LSymbol.makeSymbol('FUNCALL')
+APPLY_SYM            = LSymbol.makeSymbol('APPLY')
+LAMBDA_SYM           = LSymbol.makeSymbol('LAMBDA')
+DEFMACRO_SYM         = LSymbol.makeSymbol('DEFMACRO')
+QUASIQUOTE_SYM       = LSymbol.makeSymbol('QUASIQUOTE')
+UNQUOTE_SYM          = LSymbol.makeSymbol('UNQUOTE')
+UNQUOTE_SPLICING_SYM = LSymbol.makeSymbol('UNQUOTE-SPLICING')
+TRACE_SYM            = LSymbol.makeSymbol('TRACE')
+UNTRACE_SYM          = LSymbol.makeSymbol('UNTRACE')
+BLOCK_SYM            = LSymbol.makeSymbol('BLOCK')
+RETURN_FROM_SYM      = LSymbol.makeSymbol('RETURN-FROM')
+RETURN_SYM           = LSymbol.makeSymbol('RETURN')
+CATCH_SYM            = LSymbol.makeSymbol('CATCH')
+HANDLER_CASE_SYM     = LSymbol.makeSymbol('HANDLER-CASE')
+MV_BIND_SYM          = LSymbol.makeSymbol('MULTIPLE-VALUE-BIND')
+MV_LIST_SYM          = LSymbol.makeSymbol('MULTIPLE-VALUE-LIST')
+NTH_VALUE_SYM        = LSymbol.makeSymbol('NTH-VALUE')
+MAKE_DICT_SYM        = LSymbol.makeSymbol('MAKE-DICT')
+COLON_SYM            = LSymbol.makeSymbol(':')
+CALL_CC_SYM          = LSymbol.makeSymbol('CALL/CC')
+DYNAMIC_WIND_SYM     = LSymbol.makeSymbol('DYNAMIC-WIND')
+
+# Condition handling
+ERROR_SYM            = LSymbol.makeSymbol('ERROR')
+UNKNOWN_SYM          = LSymbol.makeSymbol('UNKNOWN')
+
+# Struct dict keys
+STRUCT_TYPE_SYM       = LSymbol.makeSymbol('STRUCT-TYPE')
+STRUCT_INCLUDES_SYM   = LSymbol.makeSymbol('STRUCT-INCLUDES')
+STRUCT_DESCRIPTOR_SYM = LSymbol.makeSymbol('%STRUCT-DESCRIPTOR%')
+STRUCT_NAME_SYM       = LSymbol.makeSymbol('NAME')
+STRUCT_DOCSTRING_SYM  = LSymbol.makeSymbol('DOCSTRING')
+STRUCT_FIELDS_SYM     = LSymbol.makeSymbol('FIELDS')
+
+# IO open keywords
+KW_INPUT_SYM     = LSymbol.makeSymbol(':INPUT')
+KW_OUTPUT_SYM    = LSymbol.makeSymbol(':OUTPUT')
+KW_SUPERSEDE_SYM = LSymbol.makeSymbol(':SUPERSEDE')
+KW_APPEND_SYM    = LSymbol.makeSymbol(':APPEND')
+KW_ERROR_SYM     = LSymbol.makeSymbol(':ERROR')
+
+# Miscellaneous
+STAR_SYM         = LSymbol.makeSymbol('*')
+MODULE_SYM       = LSymbol.makeSymbol('MODULE')
+ANONYMOUS_SYM    = LSymbol.makeSymbol('')

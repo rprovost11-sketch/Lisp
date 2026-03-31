@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LMacro, LList, L_NIL, prettyPrintSExpr
+from pythonslisp.AST import LSymbol, LMacro, LList, L_NIL, prettyPrintSExpr, PROGN_SYM, QUOTE_SYM, QUASIQUOTE_SYM
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LArgBindingError, LRuntimeError
 
@@ -40,7 +40,7 @@ class Expander:
          return sexpr
 
       # Don't expand or normalize inside QUOTE or QUASIQUOTE - they are data / templates
-      if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'QUASIQUOTE'):
+      if sexpr[0] is QUOTE_SYM or sexpr[0] is QUASIQUOTE_SYM:
          return sexpr
 
       # --- Step 1: macro expand at this level (top-down, fixed-point) ---
@@ -83,7 +83,7 @@ class Expander:
          bindings = expanded[1]
          if isinstance(bindings, list) and len(bindings) == 0:
             body = expanded[2:]
-            return [LSymbol('PROGN')] + body
+            return [PROGN_SYM] + body
 
       return expanded
 
@@ -148,7 +148,7 @@ class Expander:
 
          if isinstance(sexpr, list) and len(sexpr) > 0:
             # Don't expand inside quote or quasiquote - content is literal data/template
-            if isinstance(sexpr[0], LSymbol) and sexpr[0].name in ('QUOTE', 'QUASIQUOTE'):
+            if sexpr[0] is QUOTE_SYM or sexpr[0] is QUASIQUOTE_SYM:
                return sexpr
             head = sexpr[0]
             if isinstance(head, LSymbol):

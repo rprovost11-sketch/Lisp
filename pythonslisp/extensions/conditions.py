@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, L_T, L_NIL, got_str
+from pythonslisp.AST import LSymbol, T_SYM, L_NIL, got_str
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimeUsageError, Signaled
 from pythonslisp.extensions import primitive
@@ -39,7 +39,7 @@ optional message string are used to construct the condition."""
 def LP_conditionp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns T if obj is a condition object (created by make-condition or
 signal), NIL otherwise."""
-   return L_T if (isinstance( args[0], dict ) and 'CONDITION-TYPE' in args[0]) else L_NIL
+   return T_SYM if (isinstance( args[0], dict ) and 'CONDITION-TYPE' in args[0]) else L_NIL
 
 @primitive( 'condition-type', '(condition)' )
 def LP_condition_type( ctx: Context, env: Environment, args: list[Any] ) -> Any:
