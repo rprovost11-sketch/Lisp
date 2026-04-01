@@ -13,15 +13,15 @@ from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, LRuntimeUsageError
 from pythonslisp.Parser import ParseError
-from pythonslisp.ltk.Utils import columnize
+from pythonslisp.Utils import columnize
 from pythonslisp.extensions import LambdaListMode, primitive
-from pythonslisp.ltk.Highlighter import render_markdown
+from pythonslisp.Highlighter import render_markdown
 
 # Platform-specific readline module (same logic as Listener)
 _rl = None
 if sys.platform == 'win32':
    try:
-      import pythonslisp.ltk.readline_win as _rl
+      import pythonslisp.readline_win as _rl
    except ImportError:
       pass
 else:
@@ -754,7 +754,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    # If passed a symbol, resolve it to its global value
    if isinstance(pos_arg, LSymbol):
       try:
-         pos_arg = env.lookupGlobal(pos_arg.name)
+         pos_arg = env.lookupGlobalSym(pos_arg)
       except KeyError:
          raise LRuntimePrimError( LP_help, f'Unbound variable: {pos_arg.name}.')
 

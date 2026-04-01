@@ -2,7 +2,7 @@ import os
 import sys
 
 from pythonslisp import __version__
-from pythonslisp.ltk.Listener import Listener
+from pythonslisp.Listener import Listener
 from pythonslisp.Interpreter import Interpreter
 from pythonslisp.Exceptions import LRuntimeError
 

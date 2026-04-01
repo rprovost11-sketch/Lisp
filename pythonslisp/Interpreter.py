@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from pythonslisp.Parser import Parser
-from pythonslisp.ltk.Listener import InterpreterBase
+from pythonslisp.Listener import InterpreterBase
 from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LMacro,
                               LMultipleValues, prettyPrintSExpr, derive_arity )
 from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
@@ -281,9 +281,9 @@ Used by extension .py files that need to register macros via @macro."""
          compiledLL   = compileLambdaList( params_ast, destructuring=True )
          macro_obj    = LMacro( name_sym, params_ast, docstring, body_ast, compiledLambdaList=compiledLL )
          if _target_env is not None:
-            _target_env.bindLocal( name_sym.name, macro_obj )
+            _target_env.bindLocalSym( name_sym, macro_obj )
          else:
-            interpreter._env.bindGlobal( name_sym.name, macro_obj )
+            interpreter._env.bindGlobalSym( name_sym, macro_obj )
 
       return bind_macro
 

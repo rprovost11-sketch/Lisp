@@ -3,7 +3,7 @@ import ast as _ast_module
 from fractions import Fraction
 from typing import Any
 
-from pythonslisp.ltk.ParserBase import LexerBase, LexerState, ParserBase, ParseError
+from pythonslisp.ParserBase import LexerBase, LexerState, ParserBase, ParseError
 from pythonslisp.AST import LSymbol, LList
 
 
@@ -24,8 +24,8 @@ Lexemes
    Character Classes
       SIGN:         '+-'
       DIGIT:        '0123456789'
-      SYMBOL_FIRST: 'a..zA..Z+-~!$%^&*_=\/?<>:#|'
-      SYMBOL_REST:  'a..zA..Z+-~!$%^&*_=\/?<>:#|0..9'
+      SYMBOL_FIRST: 'a..zA..Z+-~!$%^&*_=\\/?<>:#|'
+      SYMBOL_REST:  'a..zA..Z+-~!$%^&*_=\\/?<>:#|0..9'
    
    Comments
       Comments extend from ';' through '\n'.

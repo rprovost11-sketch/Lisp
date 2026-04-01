@@ -18,4 +18,4 @@ from pythonslisp.Environment import Environment
 from pythonslisp.AST import *
 from pythonslisp.Interpreter import *
 from pythonslisp.Parser import *
-from pythonslisp.ltk.ParserBase import *
+from pythonslisp.ParserBase import *

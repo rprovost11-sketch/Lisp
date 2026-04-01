@@ -8,8 +8,8 @@ import atexit
 from abc import ABC, abstractmethod
 from typing import Any
 
-import pythonslisp.ltk.ParserBase as ParserBase
-from pythonslisp.ltk.Utils import columnize, retrieveFileList, writeln_multiFile
+import pythonslisp.ParserBase as ParserBase
+from pythonslisp.Utils import columnize, retrieveFileList, writeln_multiFile
 
 
 ### The Listener Implementation
@@ -78,7 +78,7 @@ class Listener( object ):
       if not Listener._rl:
          if sys.platform == 'win32':
             try:
-               import pythonslisp.ltk.readline_win as _rl_mod
+               import pythonslisp.readline_win as _rl_mod
                Listener._rl = _rl_mod
                Listener._rl.read_history_file(Listener._HIST_FILE)
                Listener._rl.set_history_length(Listener._historyMax)
