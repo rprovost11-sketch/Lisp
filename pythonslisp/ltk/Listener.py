@@ -117,7 +117,16 @@ class Listener( object ):
             inputExprLineList = [ ]
             continue
 
-         if (lineInput == '') and (len(inputExprLineList) != 0):
+         submit = False
+         if lineInput == '':
+            if inputExprLineList:
+               submit = True
+         else:
+            inputExprLineList.append( lineInput )
+            if Listener._paren_depth( '\n'.join(inputExprLineList) ) == 0:
+               submit = True
+
+         if submit:
             inputExprStr = '\n'.join( inputExprLineList ).strip()
             if self._rl and inputExprStr:
                self._rl.add_history(inputExprStr)
@@ -147,15 +156,9 @@ class Listener( object ):
 
             except Exception as ex:   # Unknowns raised by the interpreter
                self._writeErrorMsg( str(ex) if ex.args else '' )
-               #exceptInfo = sys.exc_info( )
-               #sys.excepthook( *exceptInfo )
 
             self._writeLn( )
             inputExprLineList = [ ]
-
-         else:
-            if lineInput != '':
-               inputExprLineList.append( lineInput )
 
    def sessionLog_restore( self, filename: str, verbosity: int=0 ) -> None:
       '''Read in and restore/execute a session log.
@@ -655,6 +658,35 @@ class Listener( object ):
       if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
          self._logFile.write( f'{prompt}{inputStr}' )
       return inputStr
+
+   @staticmethod
+   def _paren_depth( text: str ) -> int:
+      '''Count net open parentheses in text, ignoring string contents and ; comments.'''
+      depth     = 0
+      in_string = False
+      escape    = False
+      i         = 0
+      while i < len(text):
+         ch = text[i]
+         if escape:
+            escape = False
+         elif in_string:
+            if ch == '\\':
+               escape = True
+            elif ch == '"':
+               in_string = False
+         else:
+            if ch == '"':
+               in_string = True
+            elif ch == ';':
+               while i < len(text) and text[i] != '\n':
+                  i += 1
+            elif ch == '(':
+               depth += 1
+            elif ch == ')':
+               depth -= 1
+         i += 1
+      return depth
 
    @staticmethod
    def _parseLog( inputText: str ) -> list[tuple[str, str, str, str]]:
