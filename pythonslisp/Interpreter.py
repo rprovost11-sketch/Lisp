@@ -7,7 +7,7 @@ from typing import Any
 
 from pythonslisp.Parser import Parser
 from pythonslisp.Listener import InterpreterBase
-from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LMacro,
+from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LSpecialOperator, LMacro,
                               LMultipleValues, prettyPrintSExpr, derive_arity )
 from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
                                      ReturnFrom, Thrown, Signaled )
@@ -215,10 +215,11 @@ instead of the global environment."""
             return f'{min_args} or {max_args} arguments expected.'
          return f'{min_args} to {max_args} arguments expected.'
 
-      class primitive:
+      class _PrimBinder:
          def __init__( self, primitiveSymbolString: str, params: str = '',
                        mode: LambdaListMode = LambdaListMode.ARITY_ONLY,
-                       min_args=_UNSET, max_args=_UNSET ) -> None:
+                       min_args=_UNSET, max_args=_UNSET,
+                       special: bool = False ) -> None:
             self._name        = primitiveSymbolString.upper()
             if mode is LambdaListMode.FULL_BINDING:
                ll_ast = interpreter._parser.parse( params )[1]
@@ -250,13 +251,15 @@ instead of the global environment."""
                self._min_args = 0    if min_args is _UNSET else min_args
                self._max_args = None if max_args is _UNSET else max_args
             self._arity_msg = _make_arity_msg( self._min_args, self._max_args )
+            self._special   = special
 
          def __call__( self, pythonFn ):
             docString    = pythonFn.__doc__ if pythonFn.__doc__ is not None else ''
-            lPrimitivObj = LPrimitive( pythonFn, self._name, self._paramsString, docString,
-                                       min_args=self._min_args, max_args=self._max_args,
-                                       arity_msg=self._arity_msg,
-                                       compiledLambdaList=self._compiledLambdaList )
+            cls          = LSpecialOperator if self._special else LPrimitive
+            lPrimitivObj = cls( pythonFn, self._name, self._paramsString, docString,
+                                min_args=self._min_args, max_args=self._max_args,
+                                arity_msg=self._arity_msg,
+                                compiledLambdaList=self._compiledLambdaList )
             if _target_env is not None:
                _target_env.bindLocal( self._name, lPrimitivObj )
             else:
@@ -264,7 +267,7 @@ instead of the global environment."""
             pythonFn.primitive = lPrimitivObj
             return pythonFn
 
-      return primitive
+      return _PrimBinder
 
    def _makeBindMacro( self, targetEnv=None ):
       """Returns a function that parses and registers a Lisp macro.

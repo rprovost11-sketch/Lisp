@@ -60,7 +60,7 @@ def resolve_module_path( name_arg, global_env, ctx, prim_for_error ):
 
 
 @primitive( ':', '(module-or-pkg &rest path)',
-            mode=LambdaListMode.DOC_ONLY, min_args=2 )
+            mode=LambdaListMode.DOC_ONLY, min_args=2, special=True )
 def LP_colon( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Navigate a module or package hierarchy and return the named value.
 The first argument is evaluated to obtain the root module or package.

@@ -149,6 +149,15 @@ class LMacro( LCallable ):
       return f'(MACRO {self.name} {prettyPrintSExpr(self.lambdaListAST)} ...)'
 
 
+class LSpecialOperator( LPrimitive ):
+   """A Lisp special operator — like a built-in function but args are NOT
+pre-evaluated; the CEK machine handles evaluation itself."""
+   __slots__ = ()
+
+   def typeLabel( self ):
+      return 'Special Operator'
+
+
 class LMultipleValues:
    """Wrapper for zero or more values returned by (values ...).
 In scalar context the primary (first) value is used; extra values are discarded.

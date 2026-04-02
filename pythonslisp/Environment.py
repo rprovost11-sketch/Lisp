@@ -41,28 +41,54 @@ class Environment:
    def updateLocals( self, newValues: dict[str, Any] ):
       self._bindings.update( newValues )
 
+   def updateLocalsSym( self, newValues: dict[LSymbol, Any] ):
+      self._bindings.update( {k.name: v for k, v in newValues.items()} )
+
    def bindLocal( self, key: str, value: Any ) -> Any:
       self._bindings[ key ] = value
+      return value
+
+   def bindLocalSym( self, sym: LSymbol, value: Any ) -> Any:
+      self._bindings[ sym.name ] = value
       return value
 
    def bindGlobal( self, key: str, value: Any ) -> Any:
       self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
+   def bindGlobalSym( self, sym: LSymbol, value: Any ) -> Any:
+      self._GLOBAL_ENV._bindings[ sym.name ] = value
+      return value
+
    def lookupLocal( self, key: str ) -> Any:
       return self._bindings[ key ]
+
+   def lookupLocalSym( self, sym: LSymbol ) -> Any:
+      return self._bindings[ sym.name ]
 
    def lookupGlobal( self, key: str ) -> Any:
       return self._GLOBAL_ENV._bindings[ key ]
 
+   def lookupGlobalSym( self, sym: LSymbol ) -> Any:
+      return self._GLOBAL_ENV._bindings[ sym.name ]
+
    def lookupLocalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
       return self._bindings.get( key, dfltVal )
+
+   def lookupLocalWithDefaultSym( self, sym: LSymbol, dfltVal: Any = None ) -> Any:
+      return self._bindings.get( sym.name, dfltVal )
 
    def lookupGlobalWithDefault( self, key: str, dfltVal: Any = None ) -> Any:
       return self._GLOBAL_ENV._bindings.get( key, dfltVal )
 
+   def lookupGlobalWithDefaultSym( self, sym: LSymbol, dfltVal: Any = None ) -> Any:
+      return self._GLOBAL_ENV._bindings.get( sym.name, dfltVal )
+
    def unbind( self, key: str ) -> None:
       self._bindings.pop( key, None )
+
+   def unbindSym( self, sym: LSymbol ) -> None:
+      self._bindings.pop( sym.name, None )
 
    def getGlobalEnv( self ) -> Environment:
       return self._GLOBAL_ENV
@@ -83,6 +109,15 @@ class Environment:
          scope = scope._parent
       return scope
 
+   def findDefSym( self, sym: LSymbol ) -> (Environment|None):
+      name = sym.name
+      scope: (Environment|None) = self
+      while scope:
+         if name in scope._bindings:
+            break
+         scope = scope._parent
+      return scope
+
    def bind( self, key: str, value: Any ) -> Any:
       '''Bind using Lisp semantics: update existing binding in nearest enclosing
       scope; if not found, bind at global scope.'''
@@ -95,12 +130,32 @@ class Environment:
       self._GLOBAL_ENV._bindings[ key ] = value
       return value
 
+   def bindSym( self, sym: LSymbol, value: Any ) -> Any:
+      name = sym.name
+      scope = self
+      while scope:
+         if name in scope._bindings:
+            scope._bindings[ name ] = value
+            return value
+         scope = scope._parent
+      self._GLOBAL_ENV._bindings[ name ] = value
+      return value
+
    def lookup( self, key: str ) -> Any:
       '''Lookup using Lisp semantics: walk the scope chain.'''
       scope: (Environment|None) = self
       while scope:
          if key in scope._bindings:
             return scope._bindings[ key ]
+         scope = scope._parent
+      raise KeyError
+
+   def lookupSym( self, sym: LSymbol ) -> Any:
+      name = sym.name
+      scope: (Environment|None) = self
+      while scope:
+         if name in scope._bindings:
+            return scope._bindings[ name ]
          scope = scope._parent
       raise KeyError
 
@@ -280,6 +335,10 @@ class ModuleEnvironment(Environment):
       Environment instances and use the standard walk-up bind(), which
       correctly finds and updates module-level bindings via the parent chain.'''
       self._bindings[key] = value
+      return value
+
+   def bindSym( self, sym: LSymbol, value: Any ) -> Any:
+      self._bindings[sym.name] = value
       return value
 
    def __repr__( self ) -> str:

@@ -68,12 +68,7 @@ class Listener( object ):
       self._logFile: Any  = None
       self._instrumenting = False
       print( )
-      print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
-      print( 'Enter any expression to have it evaluated by the interpreter.' )
-      print( f'For online lisp help evaluate \'{CYAN}(help){RESET}\'.' )
-      print( f'Use \'{CYAN}]traces on{RESET}\' to enable call-stack traces on errors.' )
-      print( f'Use \'{CYAN}Ctrl+C{RESET}\' to interrupt a running evaluation.' )
-      print( f'{BOLD_GREEN}Welcome!{RESET}' )
+      Listener.printWelcomeBanner( )
       print( )
       if not Listener._rl:
          if sys.platform == 'win32':
@@ -122,8 +117,20 @@ class Listener( object ):
             if inputExprLineList:
                submit = True
          else:
+            # Super-bracket: trailing ] closes all open parens
+            if lineInput.endswith( ']' ):
+               tentative    = lineInput[:-1]
+               combined     = '\n'.join( inputExprLineList + ([tentative] if tentative else []) )
+               sb_depth, sb_in_string = Listener._paren_state( combined )
+               if sb_depth > 0 and not sb_in_string:
+                  lineInput = tentative + ')' * sb_depth
+            # Log the (possibly expanded) line
+            if self._logFile and lineInput and lineInput[0] != ']':
+               log_prompt = '>>> ' if len(inputExprLineList) == 0 else '... '
+               self._logFile.write( f'{log_prompt}{lineInput}' )
             inputExprLineList.append( lineInput )
-            if Listener._paren_depth( '\n'.join(inputExprLineList) ) == 0:
+            depth, _ = Listener._paren_state( '\n'.join(inputExprLineList) )
+            if depth == 0:
                submit = True
 
          if submit:
@@ -477,12 +484,7 @@ class Listener( object ):
       print( f'{DIM}- Loading Runtime library{RESET}' )
       self._interp.reboot( )                     # boot/Reboot the interpreter
       print( )
-      print( f'Enter \'{CYAN}]help{RESET}\' for listener commands.' )
-      print( 'Enter any expression to have it evaluated by the interpreter.' )
-      print( f'For online help type \'{CYAN}(help){RESET}\' to begin.' )
-      print( f'Use \'{CYAN}]traces on{RESET}\' to enable call-stack traces on errors.' )
-      print( f'Use \'{CYAN}Ctrl+C{RESET}\' to interrupt a running evaluation.' )
-      print( f'{BOLD_GREEN}Welcome!{RESET}' )
+      Listener.printWelcomeBanner( )
       print( )
 
    def _cmd_test( self, args: list[str] ) -> None:
@@ -655,13 +657,12 @@ class Listener( object ):
          inputStr = self._rl.input_line( prompt, continuation_prompt='... ' ).rstrip()
       else:
          inputStr = input( prompt ).rstrip()
-      if self._logFile and (len(inputStr) != 0) and (inputStr[0] != ']'):
-         self._logFile.write( f'{prompt}{inputStr}' )
       return inputStr
 
    @staticmethod
-   def _paren_depth( text: str ) -> int:
-      '''Count net open parentheses in text, ignoring string contents and ; comments.'''
+   def _paren_state( text: str ) -> tuple[int, bool]:
+      '''Count net open parentheses in text, ignoring string contents and ; comments.
+      Returns (depth, in_string) where in_string is True if the scan ends inside a string.'''
       depth     = 0
       in_string = False
       escape    = False
@@ -686,8 +687,19 @@ class Listener( object ):
             elif ch == ')':
                depth -= 1
          i += 1
-      return depth
+      return depth, in_string
 
+   @staticmethod
+   def printWelcomeBanner( ):
+      useColor   = sys.stdout.isatty()
+      BOLD_GREEN = '\033[1;92m' if useColor else ''
+      CYAN       = '\033[96m'   if useColor else ''
+      RESET      = '\033[0m'    if useColor else ''
+      print( 'Enter any expression to have it evaluated by the interpreter.' )
+      print( f'Evaluate \'{CYAN}(help){RESET}\' for online help.' )
+      print( f'Evaluate \'{CYAN}(help "listener"){RESET}\' for Listener features.' )
+      print( f'{BOLD_GREEN}Welcome!{RESET}' )
+   
    @staticmethod
    def _parseLog( inputText: str ) -> list[tuple[str, str, str, str]]:
       lineIter = iter(inputText.splitlines(keepends=True))

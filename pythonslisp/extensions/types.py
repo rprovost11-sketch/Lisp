@@ -123,7 +123,7 @@ spec may be an LSymbol (atomic) or a list (compound)."""
    if op == 'SATISFIES':
       if len(rest) != 1 or not isinstance(rest[0], LSymbol):
          raise LRuntimeError('typep: SATISFIES requires a function-name symbol.')
-      fn     = env.lookup(rest[0].name)
+      fn     = env.lookupSym(rest[0])
       result = ctx.lApply(ctx, env, fn, [obj])
       return result is not L_NIL
    if op == 'INTEGER':

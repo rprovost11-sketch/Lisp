@@ -37,7 +37,7 @@ def lEval( expr, env ):
    # 'if' must NOT evaluate both branches -- only the one that is taken.
    if head == 'if':
       condValue = lEval( expr[1], env )
-      return lEval( expr[ 2 if condValue else 3 ], env )
+      return lEval( expr[2] if condValue else expr[3], env )
 
    elif head == 'progn':
       for sub in expr[1:-1]:

@@ -8,7 +8,7 @@ from typing import Any
 from io import IOBase, StringIO
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LFunction, LMacro, prettyPrint, prettyPrintSExpr, got_str
+from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LSpecialOperator, LFunction, LMacro, prettyPrint, prettyPrintSExpr, got_str
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, LRuntimeUsageError
@@ -772,7 +772,8 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    CYAN  = '\033[96m' if useColor else ''
    RESET = '\033[0m'  if useColor else ''
 
-   print( f'{callableObj.typeLabel()}  |  args: pre-evaluated', file=outStrm )
+   args_label = 'args: unevaluated' if isinstance(callableObj, (LMacro, LSpecialOperator)) else 'args: pre-evaluated'
+   print( f'{callableObj.typeLabel()}  |  {args_label}', file=outStrm )
    print( file=outStrm )
    print( f'   {CYAN}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
    print( file=outStrm )

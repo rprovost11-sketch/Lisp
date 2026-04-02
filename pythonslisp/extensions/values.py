@@ -29,13 +29,13 @@ equivalent to (values a b c)."""
       return lst[0]
    return LMultipleValues( list(lst) )
 
-@primitive( 'multiple-value-list', '(values-form)' )
+@primitive( 'multiple-value-list', '(values-form)', special=True )
 def LP_multiple_value_list( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Evaluates values-form and returns all its values as a list.
 A single non-multiple value is returned as a one-element list."""
    raise LRuntimeUsageError( LP_multiple_value_list, 'Handled by CEK machine.' )
 
-@primitive( 'nth-value', '(n values-form)' )
+@primitive( 'nth-value', '(n values-form)', special=True )
 def LP_nth_value( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns the nth value (0-based) produced by values-form.  Returns NIL
 if n is out of range.  A non-multiple-values result is treated as a single

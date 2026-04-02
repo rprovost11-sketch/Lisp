@@ -19,7 +19,7 @@ examples file my_extension.py.
 ```python
 from __future__ import annotations
 from typing import Any
-from pythonslisp.ltk.EnvironmentBase import EnvironmentBase
+from pythonslisp.Environment import Environment
 from pythonslisp.AST import L_NIL, L_T, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError
@@ -32,7 +32,7 @@ Add any other imports your primitives need (e.g. `import os`, `import math`).
 
 ```python
 @primitive( 'my-func', '(x y)' )
-def LP_my_func( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_my_func( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     """Documentation string shown by (help my-func)."""
     x, y = args
     return x + y
@@ -59,7 +59,7 @@ mode for most new primitives.
 
 ```python
 @primitive( 'greet', '(name &optional (greeting "Hello"))' )
-def LP_greet( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_greet( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     """Returns a greeting string."""
     name     = args[0]
     greeting = args[1] if len(args) > 1 else "Hello"
@@ -79,7 +79,7 @@ performance of the interpreter.
 ```python
 @primitive( 'repeat-string', '(string &key (count 2) (separator ""))',
             mode=LambdaListMode.FULL_BINDING )
-def LP_repeat_string( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_repeat_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     """Returns STRING repeated COUNT times, joined by SEPARATOR."""
     string    = env.lookup('STRING')
     count     = env.lookup('COUNT')
@@ -96,7 +96,7 @@ arity check.
 ```python
 @primitive( 'comment', '(&rest forms)', preEvalArgs=False,
             mode=LambdaListMode.DOC_ONLY, min_args=0, max_args=None )
-def LP_comment( ctx: Context, env: EnvironmentBase, args: list[Any] ) -> Any:
+def LP_comment( ctx: Context, env: Environment, args: list[Any] ) -> Any:
     """Ignores all its arguments and returns NIL."""
     return L_NIL
 ```
@@ -116,6 +116,34 @@ Use `LRuntimeError` for errors not attributed to a specific primitive.
 A fully annotated example covering all three `LambdaListMode` cases is
 available in `pythonslisp/examples/my_extension.py`.  It includes the
 complete set of imports and can be copied for use as a starting point.
+
+### The @macro decorator
+
+A Python extension file can also register Lisp macros using the `@macro`
+decorator.  This is useful when a macro is tightly coupled to its companion
+primitives and you want to keep everything in one file rather than splitting
+across a `.py` and a `.lisp` file.
+
+```python
+from pythonslisp.extensions import primitive, macro, LambdaListMode
+```
+
+```python
+@macro( 'my-macro', '(x &rest body)', '`(progn ,x ,@body)' )
+def _my_macro():
+    """Documentation string shown by (help my-macro)."""
+    pass
+```
+
+The three arguments to `@macro` are:
+
+1. The macro name (case-insensitive, converted to upper case).
+2. The lambda-list string — same syntax as `defmacro`.
+3. The macro body as a Lisp source string — a single expression.
+
+The decorated Python function is never called.  It exists solely as a
+docstring carrier; its body is ignored.  The actual macro logic must be
+expressed entirely in the Lisp body string.
 
 ---
 

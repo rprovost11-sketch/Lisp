@@ -100,7 +100,7 @@ class Expander:
 
       if isinstance(head, LSymbol):
          try:
-            callableObj = env.lookup(head.name)
+            callableObj = env.lookupSym(head)
             if isinstance(callableObj, LMacro):
                args = sexpr[1:]
                try:
@@ -153,7 +153,7 @@ class Expander:
             head = sexpr[0]
             if isinstance(head, LSymbol):
                try:
-                  fn = env.lookup(head.name)
+                  fn = env.lookupSym(head)
                   if isinstance(fn, LMacro):
                      if iterationsRemaining[0] <= 0:
                         raise RuntimeError("Macro expansion limit exceeded - possible infinite macro loop.")

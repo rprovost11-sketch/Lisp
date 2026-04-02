@@ -23,7 +23,7 @@ from __future__ import annotations
 from typing import Any
 
 from pythonslisp.AST import ( LSymbol, L_NIL, L_T,
-                               LCallable, LFunction, LPrimitive, LMacro, LContinuation,
+                               LCallable, LFunction, LPrimitive, LSpecialOperator, LMacro, LContinuation,
                                LMultipleValues, LList, eql, prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LArgBindingError,
                                       ContinuationInvoked, ReturnFrom,
@@ -63,15 +63,15 @@ def _lTrue( x: Any ) -> bool:
 
 
 def _extract_vardefs( vardefs ) -> list:
-   """Convert a LET/LET* vardef list to [(name_str, init_form), ...] pairs."""
+   """Convert a LET/LET* vardef list to [(LSymbol, init_form), ...] pairs."""
    pairs = []
    for varSpec in vardefs:
       if type(varSpec) is LSymbol:
-         pairs.append( (varSpec.name, L_NIL) )
+         pairs.append( (varSpec, L_NIL) )
       elif len(varSpec) == 1:
-         pairs.append( (varSpec[0].name, L_NIL) )
+         pairs.append( (varSpec[0], L_NIL) )
       else:
-         pairs.append( (varSpec[0].name, varSpec[1]) )
+         pairs.append( (varSpec[0], varSpec[1]) )
    return pairs
 
 
@@ -196,7 +196,7 @@ class LetFrame:
       return LetFrame( self.current_name, list(self.pending), dict(self.bound), self.body, self.outer_env )
 
    def step( self, value, E, K, ctx ):
-      self.bound[self.current_name] = _primary(value)
+      self.bound[self.current_name.name] = _primary(value)
       if self.pending:
          name, form    = self.pending[0]
          self.current_name = name
@@ -223,7 +223,7 @@ class LetStarFrame:
       return LetStarFrame( self.current_name, list(self.pending), self.inner_env, self.body )
 
    def step( self, value, E, K, ctx ):
-      self.inner_env.bindLocal( self.current_name, _primary(value) )
+      self.inner_env.bindLocalSym( self.current_name, _primary(value) )
       if self.pending:
          name, form    = self.pending[0]
          self.current_name = name
@@ -248,8 +248,8 @@ class SetqFrame:
    def step( self, value, E, K, ctx ):
       rval = _primary(value)
       if (type(rval) is LMacro or type(rval) is LFunction) and rval.name == '':
-         rval.name = self.lval_name
-      self.env.bind( self.lval_name, rval )
+         rval.name = self.lval_name.name
+      self.env.bindSym( self.lval_name, rval )
       if self.pending:
          name, form = self.pending[0]
          self.lval_name = name
@@ -352,7 +352,7 @@ class ArgFrame:
                return self.pending[0], self.env   # expression
             if type(fn) is LMacro:
                raise LRuntimeError( f'Invalid argument 1. CALLABLE expected; macros are not callable via FUNCALL.' )
-            if type(fn) is LPrimitive and fn.name in _SPECIAL_OPERATOR_SET:
+            if isinstance(fn, LSpecialOperator):
                raise LRuntimeError( 'Invalid argument 1. CALLABLE expected; special forms are not callable.' )
 
 
@@ -361,7 +361,7 @@ class ArgFrame:
                pass
             elif type(fn) is LSymbol:
                try:
-                  fn = self.env.lookup(fn.name)
+                  fn = self.env.lookupSym(fn)
                except KeyError:
                   raise LRuntimeError( f'APPLY: "{fn}" is not bound to a callable.' )
                if not isinstance(fn, LCallable):
@@ -561,7 +561,7 @@ class MVBindFrame:
       vals = value.values if type(value) is LMultipleValues else [value]
       new_env = Environment(self.outer_env, evalFn=ctx.lEval)
       for i, var in enumerate(self.var_list):
-         new_env.bindLocal(var.name, vals[i] if i < len(vals) else L_NIL)
+         new_env.bindLocalSym(var, vals[i] if i < len(vals) else L_NIL)
       return _eval_body(self.body, new_env, K)
 
 
@@ -674,7 +674,7 @@ class CallCCProcFrame:
          raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       if type(proc) is LMacro:
          raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; macros are not callable.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
-      if type(proc) is LPrimitive and proc.name in _SPECIAL_OPERATOR_SET:
+      if isinstance(proc, LSpecialOperator):
          raise LRuntimeError( "ERROR 'CALL/CC': Invalid argument 1. CALLABLE expected; special forms are not callable.\nSPECIAL OPERATOR USAGE: (CALL/CC procedure)" )
       K.append( ArgFrame(None, [_Val(self.cont)], [], E, 'funcall') )
       return _Val(proc), E
@@ -834,7 +834,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
          tracer.setMaxTraceDepth( depth + 1 )
 
    try:
-      if type(fn) is LPrimitive:
+      if isinstance(fn, LPrimitive):
          if fn.compiledLambdaList:
             kw_env = Environment( env, evalFn=ctx.lEval )
             kw_env.bindArguments( fn.compiledLambdaList, args )
@@ -901,7 +901,7 @@ def _run_loop( C, E, K, ctx ) -> Any:
 
       if type(C) is LSymbol:
          try:
-            C = _Val( E.lookup(C.name) )
+            C = _Val( E.lookupSym(C) )
          except KeyError:
             if C.isKeyword():
                C = _Val(C)
@@ -985,7 +985,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          # ----------------------------------------------------------------
          if type(C) is LSymbol:
             try:
-               C = _Val( E.lookup(C.name) )
+               C = _Val( E.lookupSym(C) )
             except KeyError:
                if C.isKeyword():
                   C = _Val(C)
@@ -1070,7 +1070,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          if headStr == 'SETQ':
             pairs = []
             for i in range(1, len(C), 2):
-               pairs.append( (C[i].name, C[i + 1]) )
+               pairs.append( (C[i], C[i + 1]) )
             first_name, first_form = pairs[0]
             K.append( SetqFrame(first_name, pairs[1:], E) )
             C = first_form
@@ -1135,7 +1135,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                docString = ''
             compiledLL = compileLambdaList( funcParams, destructuring=True )
             macro = LMacro(fnName, funcParams, docString, funcBody, compiledLambdaList=compiledLL)
-            E.bindGlobal(fnName.name, macro)
+            E.bindGlobalSym(fnName, macro)
             C = _Val(macro)
             continue
 
@@ -1325,7 +1325,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          del K[handler_idx:]
          new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
          if var is not None:
-            new_env.bindLocal(var.name, e.condition)
+            new_env.bindLocalSym(var, e.condition)
          C, E = _eval_body(body, new_env, K)
          continue
 
@@ -1363,7 +1363,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
          cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': e.args[0] if e.args else ''}
          if var is not None:
-            new_env.bindLocal(var.name, cond)
+            new_env.bindLocalSym(var, cond)
          C, E = _eval_body(body, new_env, K)
          continue
 

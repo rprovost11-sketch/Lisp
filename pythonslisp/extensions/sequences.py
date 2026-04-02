@@ -60,7 +60,7 @@ def _validate_count( count: Any, fn: Any ):
 # ── Existing non-keyword primitives ────────────────────────────────────────
 
 @primitive( 'make-dict', '((key1 val1) (key2 val2) ...)',
-            mode=LambdaListMode.DOC_ONLY )
+            mode=LambdaListMode.DOC_ONLY, special=True )
 def LP_make_dict( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Constructs and returns a dict of key-value pairs."""
    raise LRuntimeUsageError( LP_make_dict, 'Handled by CEK machine.' )

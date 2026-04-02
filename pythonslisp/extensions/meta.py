@@ -14,7 +14,7 @@ from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.extensions.modules import resolve_module_path
 
 
-@primitive( 'defmacro', '(symbol lambda-list &rest body)' )
+@primitive( 'defmacro', '(symbol lambda-list &rest body)', special=True )
 def LP_defmacro( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Defines and returns a new globally named macro.  The first sexpr of the body
 can be an optional documentation string."""
@@ -32,7 +32,7 @@ longer headed by a macro.  Non-macro and non-list forms are returned unchanged."
       if not isinstance(head, LSymbol):
          break
       try:
-         macroDef = env.lookup( head.name )
+         macroDef = env.lookupSym( head )
       except KeyError:
          break
       if not isinstance( macroDef, LMacro ):
@@ -53,7 +53,7 @@ not a macro call."""
    if not isinstance(head, LSymbol):
       return form
    try:
-      macroDef = env.lookup( head.name )
+      macroDef = env.lookupSym( head )
    except KeyError:
       return form
    if not isinstance( macroDef, LMacro ):
@@ -88,7 +88,7 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    return newval
 
 @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
-            mode=LambdaListMode.DOC_ONLY )
+            mode=LambdaListMode.DOC_ONLY, special=True )
 def LP_setq( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Updates one or more variables' values', returns value.  The search for
 the variable begins locally and proceeds to search ever less local scopes until
@@ -106,7 +106,7 @@ The argument is evaluated: (makunbound 'x) unbinds X."""
    key = args[0]
    if not isinstance(key, LSymbol):
       raise LRuntimeUsageError( LP_makunbound, f'Invalid argument 1. SYMBOL expected{got_str(key)}.' )
-   env.getGlobalEnv().unbind( key.name )
+   env.getGlobalEnv().unbindSym( key )
    return L_NIL
 
 @primitive( 'symtab!', '()', max_args=0 )
@@ -123,13 +123,13 @@ is last."""
       scope = scope.parentEnv( )
    return L_NIL
 
-@primitive( 'trace', '(&rest fn-names)' )
+@primitive( 'trace', '(&rest fn-names)', special=True )
 def LP_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Enables call tracing for the named functions and returns the updated
 trace list.  With no arguments, returns the list of currently traced functions."""
    raise LRuntimeUsageError( LP_trace, 'Handled by CEK machine.' )
 
-@primitive( 'untrace', '(&rest fn-names)' )
+@primitive( 'untrace', '(&rest fn-names)', special=True )
 def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
@@ -142,7 +142,7 @@ every call to a user-defined function is reported with its arguments and
 return value.  Returns T if tracing is now on, NIL if now off."""
    return L_T if ctx.tracer.toggle_global() else L_NIL
 
-@primitive( 'call/cc', '(procedure)' )
+@primitive( 'call/cc', '(procedure)', special=True )
 def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Calls procedure with one argument: a first-class continuation object.
 Invoking the continuation with a value restores the captured computation
@@ -158,7 +158,7 @@ def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if not isinstance( sym, LSymbol ):
       raise LRuntimeUsageError( LP_boundp, f'Invalid argument 1. SYMBOL expected{got_str(sym)}.' )
    try:
-      env.lookup( sym.name )
+      env.lookupSym( sym )
       return L_T
    except KeyError:
       return L_NIL

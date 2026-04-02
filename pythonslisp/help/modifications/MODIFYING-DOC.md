@@ -75,5 +75,5 @@ primary classes you will interact with are `pythonslisp.Interpreter`,
 `pythonslisp.AST`, and `pythonslisp.Parser`.
 
 Note that the public interface for `pythonslisp.Parser.Lexer` is found in
-its base class `pythonslisp.ltk.ParserBase.LexerBase`; `Lexer` itself only
+its base class `pythonslisp.ParserBase.LexerBase`; `Lexer` itself only
 implements private methods required by the base class.
