@@ -1,15 +1,15 @@
 # The Listener
 
-The Listener is the interactive Read-Eval-Print Loop (REPL) that reads
-expressions, evaluates them, and prints results.  Each expression is entered
-at the `>>> ` prompt.  Continuation lines are shown with the `... ` prompt.
+The Listener is a smart Read-Eval-Print Loop (REPL) that reads expressions,
+evaluates them, and prints results.  Each expression is entered at the `>>> `
+prompt.  Continuation lines are shown with the `... ` prompt.
 
 ---
 
 ## Auto-Submission
 
 The Listener tracks parenthesis depth as you type.  When the depth returns
-to zero — meaning all open parentheses have been closed — the expression is
+to zero - meaning all open parentheses have been closed - the expression is
 submitted automatically without requiring a blank line.
 
 A blank line at the `... ` continuation prompt also submits the accumulated
@@ -39,6 +39,44 @@ Previously entered expressions are saved in a history file
 (`~/.lisp_history`).  Use the **Up** and **Down** arrow keys to navigate
 through history at the `>>> ` or `... ` prompt.  History persists across
 sessions.
+
+---
+
+## Ctrl-R: Incremental History Search
+
+Press **Ctrl-R** to enter reverse incremental search mode.  Type any
+substring to search backwards through history — the matching entry is shown
+as you type.  Press **Ctrl-R** again to find the next older match.
+**Enter** accepts the match and returns it to the prompt for editing or
+immediate submission.  **Escape** or **Ctrl-C** cancels and restores your
+current input.
+
+---
+
+## Auto-Indent
+
+When entering a multi-line expression, each continuation line is
+automatically pre-filled with 3 spaces of indentation per open parenthesis
+depth.  The prefilled indent can be overridden by editing the line before
+pressing Enter.
+
+---
+
+## Last-Result Variables
+
+The three most recent top-level results are always available as `%`, `%%`,
+and `%%%`.  `%` holds the result of the last expression evaluated; `%%` the
+one before that; `%%%` the one before that.
+
+    >>> (+ 1 2)
+    ==> 3
+    >>> (* 4 5)
+    ==> 20
+    >>> (+ % %%)
+    ==> 23
+
+These variables are updated after every successful evaluation.  They are
+not updated when an error occurs.
 
 ---
 

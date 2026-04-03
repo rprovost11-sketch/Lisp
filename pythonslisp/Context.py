@@ -26,3 +26,4 @@ class Context:
       self.loadExt:          Callable = None   # set by Interpreter after construction
       self.loadExtDir:       Callable = None   # set by Interpreter after construction
       self.reboot:           Callable = None   # set by Interpreter after construction
+      self.nested_repl:      Callable = None   # set by Listener after construction

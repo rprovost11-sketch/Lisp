@@ -69,6 +69,36 @@ def columnize( lst: list[str], displayWidth: int=80, file=None, itemColor=None )
             texts[col]  = padded
       print(str("  ".join(texts)), file=file )
 
+def paren_state( text: str ) -> tuple[int, bool]:
+   """Count net open parentheses in text, ignoring string contents and ; comments.
+   Returns (depth, in_string) where in_string is True if the scan ends inside a string."""
+   depth     = 0
+   in_string = False
+   escape    = False
+   i         = 0
+   while i < len(text):
+      ch = text[i]
+      if escape:
+         escape = False
+      elif in_string:
+         if ch == '\\':
+            escape = True
+         elif ch == '"':
+            in_string = False
+      else:
+         if ch == '"':
+            in_string = True
+         elif ch == ';':
+            while i < len(text) and text[i] != '\n':
+               i += 1
+         elif ch == '(':
+            depth += 1
+         elif ch == ')':
+            depth -= 1
+      i += 1
+   return depth, in_string
+
+
 def writeln_multiFile( outputString: str, *fileList, flush=False ):
    """Write output to multiple output streams using print.
    fileList is a python list containing output file objects.

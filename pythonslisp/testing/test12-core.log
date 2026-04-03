@@ -1162,3 +1162,34 @@ C
 
 >>> (nth-value 1 (floor 17 5))
 ==> 2
+
+; --- result history: %, %%, %%% ---
+
+; % captures the primary value of the last eval
+>>> 77
+==> 77
+
+>>> %
+==> 77
+
+; %% is the value from two interactions back
+; After (+ 11 0) -> 11, %% = 77; then querying %% gives 77
+>>> (+ 11 0)
+==> 11
+
+>>> %%
+==> 77
+
+; %%% is three interactions back
+; Sequence: eval 111, eval 222, eval 333 -> %%% = 111
+>>> 111
+==> 111
+
+>>> 222
+==> 222
+
+>>> 333
+==> 333
+
+>>> %%%
+==> 111

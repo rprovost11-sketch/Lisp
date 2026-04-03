@@ -25,7 +25,9 @@ _KEY_DOWN      = 'DOWN'
 _KEY_HOME      = 'HOME'
 _KEY_END       = 'END'
 _KEY_CTRL_C    = 'CTRL_C'
+_KEY_CTRL_R    = 'CTRL_R'
 _KEY_EOF       = 'EOF'
+_KEY_ESCAPE    = 'ESCAPE'
 
 # Second-byte map for \xe0-prefixed extended key sequences.
 _EXTENDED_KEYS = {
@@ -64,6 +66,10 @@ def _read_key():
         return _KEY_BACKSPACE
     if ch == '\x03':
         return _KEY_CTRL_C
+    if ch == '\x12':
+        return _KEY_CTRL_R
+    if ch == '\x1b':
+        return _KEY_ESCAPE
     if ch in ('\x04', '\x1a'):
         return _KEY_EOF
     return ch
@@ -72,20 +78,22 @@ def _read_key():
 # Public API
 # ---------------------------------------------------------------------------
 
-def input_line(prompt: str = '', continuation_prompt: str = '... ') -> str:
+def input_line(prompt: str = '', continuation_prompt: str = '... ', prefill: str = '') -> str:
     """Read one line of input with full line editing and history navigation.
 
     Multi-line history entries (containing newlines) are displayed across
     multiple lines using continuation_prompt for lines after the first.
+    prefill pre-populates the buffer (used for auto-indent).
 
     Raises KeyboardInterrupt on Ctrl-C.
     Raises EOFError on Ctrl-D or Ctrl-Z when the buffer is empty.
     """
-    buf:          list = []
-    cursor:       int  = 0
+    buf:          list = list(prefill)
+    cursor:       int  = len(prefill)
     hist_idx:     int  = -1   # -1 = editing current input; 0 = newest history entry
     hist_pending: str  = ''   # saves in-progress line while navigating history
     prev_extra:   int  = 0    # extra display lines drawn in the previous redraw
+    pending_key         = None  # key requeued after exiting search mode
 
     def redraw() -> None:
         nonlocal prev_extra
@@ -149,7 +157,8 @@ def input_line(prompt: str = '', continuation_prompt: str = '... ') -> str:
     redraw()
 
     while True:
-        key = _read_key()
+        key         = pending_key if pending_key is not None else _read_key()
+        pending_key = None
 
         if key is None:
             pass   # unrecognised escape sequence - ignore
@@ -218,6 +227,89 @@ def input_line(prompt: str = '', continuation_prompt: str = '... ') -> str:
                 buf      = list(hist_pending)
                 cursor   = len(buf)
                 redraw()
+
+        elif key == _KEY_CTRL_R:
+            # Reverse incremental history search
+            search_str = ''
+            found_idx  = -1
+            found_buf  = []
+            saved_buf  = buf[:]
+            saved_curs = cursor
+
+            def do_search(from_idx=None):
+                start = len(_history) - 1 if from_idx is None else from_idx
+                for i in range(start, -1, -1):
+                    if search_str in _history[i]:
+                        return i, list(_history[i])
+                return -1, []
+
+            def search_draw():
+                nonlocal prev_extra
+                first = ''.join(found_buf).split('\n')[0] if found_idx >= 0 else ''
+                spfx  = f"(reverse-i-search)'{search_str}': "
+                if prev_extra > 0:
+                    sys.stdout.write(f'\033[{prev_extra}A')
+                    prev_extra = 0
+                sys.stdout.write('\r' + spfx + first + '\033[K')
+                sys.stdout.flush()
+
+            search_draw()
+
+            while True:
+                skey = _read_key()
+
+                if skey == _KEY_CTRL_R:
+                    if search_str:
+                        if found_idx > 0:
+                            found_idx, found_buf = do_search(found_idx - 1)
+                        elif found_idx == -1:
+                            found_idx, found_buf = do_search()
+                    search_draw()
+
+                elif skey == _KEY_BACKSPACE:
+                    if search_str:
+                        search_str = search_str[:-1]
+                        if search_str:
+                            found_idx, found_buf = do_search()
+                        else:
+                            found_idx, found_buf = -1, []
+                    search_draw()
+
+                elif skey == _KEY_ENTER:
+                    buf    = found_buf if found_idx >= 0 else saved_buf
+                    cursor = len(buf)
+                    prev_extra = 0
+                    sys.stdout.write('\n')
+                    sys.stdout.flush()
+                    return ''.join(buf)
+
+                elif skey == _KEY_CTRL_C:
+                    buf    = saved_buf
+                    cursor = saved_curs
+                    prev_extra = 0
+                    move_to_end_and_newline()
+                    raise KeyboardInterrupt
+
+                elif skey in (_KEY_ESCAPE, None):
+                    buf    = saved_buf
+                    cursor = saved_curs
+                    prev_extra = 0
+                    redraw()
+                    break
+
+                elif isinstance(skey, str) and skey.isprintable():
+                    search_str += skey
+                    found_idx, found_buf = do_search()
+                    search_draw()
+
+                else:
+                    # Any other key: accept match, requeue key for normal handling
+                    buf         = found_buf if found_idx >= 0 else saved_buf
+                    cursor      = len(buf)
+                    prev_extra  = 0
+                    pending_key = skey
+                    redraw()
+                    break
 
         elif isinstance(key, str) and key.isprintable():
             buf.insert(cursor, key)

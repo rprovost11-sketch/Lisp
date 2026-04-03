@@ -3,13 +3,12 @@ import io
 import os
 import sys
 import datetime
-import time
 import atexit
 from abc import ABC, abstractmethod
 from typing import Any
 
 import pythonslisp.ParserBase as ParserBase
-from pythonslisp.Utils import columnize, retrieveFileList, writeln_multiFile
+from pythonslisp.Utils import columnize, retrieveFileList, writeln_multiFile, paren_state
 
 
 ### The Listener Implementation
@@ -94,6 +93,9 @@ class Listener( object ):
             except ImportError:
                pass
 
+      if hasattr( self._interp, 'set_nested_repl' ):
+         self._interp.set_nested_repl( self._run_nested_repl )
+
    def readEvalPrintLoop( self ) -> None:
       '''Execute a read-eval-print-loop.  Handles all exceptions internally.'''
       inputExprLineList: list[str] = [ ]
@@ -104,7 +106,8 @@ class Listener( object ):
             if len(inputExprLineList) == 0:
                lineInput = self._prompt( '>>> ' )
             else:
-               lineInput = self._prompt( '... ' )
+               indent    = Listener._compute_indent( inputExprLineList )
+               lineInput = self._prompt( '... ', prefill=indent )
          except EOFError:
             break
          except KeyboardInterrupt:
@@ -117,13 +120,16 @@ class Listener( object ):
             if inputExprLineList:
                submit = True
          else:
-            # Super-bracket: trailing ] closes all open parens
-            if lineInput.endswith( ']' ):
+            # Super-bracket: trailing ] closes all open parens.
+            # Lines that start with ] followed by text are listener commands — skip.
+            if lineInput.endswith( ']' ) and not (lineInput.startswith( ']' ) and len(lineInput) > 1):
                tentative    = lineInput[:-1]
                combined     = '\n'.join( inputExprLineList + ([tentative] if tentative else []) )
                sb_depth, sb_in_string = Listener._paren_state( combined )
                if sb_depth > 0 and not sb_in_string:
                   lineInput = tentative + ')' * sb_depth
+               elif lineInput == ']' and sb_depth == 0 and not sb_in_string:
+                  continue
             # Log the (possibly expanded) line
             if self._logFile and lineInput and lineInput[0] != ']':
                log_prompt = '>>> ' if len(inputExprLineList) == 0 else '... '
@@ -652,42 +658,132 @@ class Listener( object ):
          colorLine = f'{RED}{plainLine}{RESET}'
          self._writeLn( colorLine if useColor else plainLine, file=None, flush=True )
 
-   def _prompt( self, prompt: str='' ) -> str:
+   def _prompt( self, prompt: str='', prefill: str='' ) -> str:
       if sys.platform == 'win32' and self._rl and sys.stdin.isatty():
-         inputStr = self._rl.input_line( prompt, continuation_prompt='... ' ).rstrip()
+         inputStr = self._rl.input_line( prompt, continuation_prompt='... ', prefill=prefill ).rstrip()
       else:
-         inputStr = input( prompt ).rstrip()
+         if prefill and self._rl and hasattr( self._rl, 'set_startup_hook' ):
+            self._rl.set_startup_hook( lambda: self._rl.insert_text( prefill ) )
+            try:
+               inputStr = input( prompt ).rstrip()
+            finally:
+               self._rl.set_startup_hook( None )
+         else:
+            inputStr = input( prompt ).rstrip()
       return inputStr
 
    @staticmethod
    def _paren_state( text: str ) -> tuple[int, bool]:
-      '''Count net open parentheses in text, ignoring string contents and ; comments.
-      Returns (depth, in_string) where in_string is True if the scan ends inside a string.'''
+      return paren_state( text )
+
+   def _run_nested_repl( self, env ) -> Any:
+      """Run a nested debug REPL with brk>>> prompts.
+      Returns the value passed to ]continue (or NIL).
+      Raises LRuntimeError on ]abort or EOF."""
+      from pythonslisp.AST import L_NIL, prettyPrintSExpr
+      from pythonslisp.Exceptions import LRuntimeError
+      ctx            = self._interp._ctx
+      inputExprLines = []
+
+      while True:
+         try:
+            if not inputExprLines:
+               lineInput = self._prompt( 'brk>>> ' )
+            else:
+               indent    = Listener._compute_indent( inputExprLines )
+               lineInput = self._prompt( 'brk... ', prefill=indent )
+         except EOFError:
+            print()
+            raise LRuntimeError( 'break: end of input in debug REPL' )
+         except KeyboardInterrupt:
+            print()
+            inputExprLines = []
+            continue
+
+         # ]continue and ]abort commands
+         if not inputExprLines and lineInput.startswith( ']' ):
+            parts = lineInput[1:].split( None, 1 )
+            cmd   = parts[0] if parts else ''
+            rest  = parts[1].strip() if len(parts) > 1 else ''
+            if cmd == 'continue':
+               if rest:
+                  try:
+                     ast    = ctx.parse( rest )
+                     result = L_NIL
+                     for form in ast[1:]:
+                        form   = ctx.expand( env, form )
+                        ctx.analyze( env, form )
+                        result = ctx.lEval( env, form )
+                     return result
+                  except Exception as ex:
+                     print( f'%%% {ex}' )
+                     continue
+               return L_NIL
+            elif cmd == 'abort':
+               raise LRuntimeError( 'Aborted from (break).' )
+            else:
+               print( f"Unknown command '{cmd}'.  Use ]continue or ]abort." )
+               continue
+
+         # Super-bracket
+         if lineInput.endswith( ']' ) and not (lineInput.startswith( ']' ) and len(lineInput) > 1):
+            tentative = lineInput[:-1]
+            combined  = '\n'.join( inputExprLines + ([tentative] if tentative else []) )
+            sb_depth, sb_in_str = paren_state( combined )
+            if sb_depth > 0 and not sb_in_str:
+               lineInput = tentative + ')' * sb_depth
+            elif lineInput == ']' and sb_depth == 0 and not sb_in_str:
+               continue
+
+         if lineInput == '' and not inputExprLines:
+            continue
+
+         inputExprLines.append( lineInput )
+         depth, _ = paren_state( '\n'.join( inputExprLines ) )
+
+         if lineInput == '' or depth == 0:
+            src            = '\n'.join( inputExprLines ).strip()
+            inputExprLines = []
+            if not src:
+               continue
+            try:
+               ast    = ctx.parse( src )
+               result = L_NIL
+               for form in ast[1:]:
+                  form   = ctx.expand( env, form )
+                  ctx.analyze( env, form )
+                  result = ctx.lEval( env, form )
+               print( f'\n==> {prettyPrintSExpr( result )}\n' )
+            except Exception as ex:
+               print( f'%%% {ex}\n' )
+
+   @staticmethod
+   def _compute_indent( lines: list ) -> str:
+      """Return whitespace to auto-indent the next continuation line.
+      Indents 3 spaces per unclosed paren depth."""
       depth     = 0
       in_string = False
       escape    = False
-      i         = 0
-      while i < len(text):
-         ch = text[i]
-         if escape:
-            escape = False
-         elif in_string:
-            if ch == '\\':
-               escape = True
-            elif ch == '"':
-               in_string = False
-         else:
-            if ch == '"':
-               in_string = True
-            elif ch == ';':
-               while i < len(text) and text[i] != '\n':
-                  i += 1
-            elif ch == '(':
-               depth += 1
-            elif ch == ')':
-               depth -= 1
-         i += 1
-      return depth, in_string
+      for line in lines:
+         for ch in line:
+            if escape:
+               escape = False
+            elif in_string:
+               if ch == '\\':
+                  escape = True
+               elif ch == '"':
+                  in_string = False
+            else:
+               if ch == '"':
+                  in_string = True
+               elif ch == ';':
+                  break
+               elif ch == '(':
+                  depth += 1
+               elif ch == ')':
+                  if depth > 0:
+                     depth -= 1
+      return ' ' * (depth * 3)
 
    @staticmethod
    def printWelcomeBanner( ):
@@ -698,7 +794,7 @@ class Listener( object ):
       print( 'Enter any expression to have it evaluated by the interpreter.' )
       print( f'Evaluate \'{CYAN}(help){RESET}\' for online help.' )
       print( f'Evaluate \'{CYAN}(help "listener"){RESET}\' for Listener features.' )
-      print( f'{BOLD_GREEN}Welcome!{RESET}' )
+      print( f'{BOLD_GREEN}Welcome! to the Python\'s Lisp Listener{RESET}' )
    
    @staticmethod
    def _parseLog( inputText: str ) -> list[tuple[str, str, str, str]]:

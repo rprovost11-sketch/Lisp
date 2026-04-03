@@ -34,11 +34,12 @@ class Interpreter( InterpreterBase ):
 
    def __init__( self, ext_dir=None, outStrm=None ) -> None:
       sys.setrecursionlimit( 3000 )
-      self._parser:       Parser           = Parser()
-      self._tracer:       Tracer           = Tracer()
-      self._setf_registry: dict[str, str]  = {}
-      self._ctx:          Context          = None
-      self._env:          Environment      = None
+      self._parser:           Parser           = Parser()
+      self._tracer:           Tracer           = Tracer()
+      self._setf_registry:    dict[str, str]   = {}
+      self._ctx:              Context          = None
+      self._env:              Environment      = None
+      self._nested_repl_fn                     = None
       self.reboot( ext_dir=ext_dir, outStrm=outStrm )
 
    def reboot( self, ext_dir=None, outStrm=None ) -> None:
@@ -48,7 +49,7 @@ class Interpreter( InterpreterBase ):
 
       # Bootstrap: create the global environment env; initialize with T and NIL;
       #    bind extensions into it.
-      primitiveDict: dict[str, Any] = {'T': L_T, 'NIL': L_NIL}
+      primitiveDict: dict[str, Any] = {'T': L_T, 'NIL': L_NIL, '%': L_NIL, '%%': L_NIL, '%%%': L_NIL}
       self._ctx = self._makeContext( outStrm )
       self._env = Environment( parent=None, initialBindings=primitiveDict,
                                evalFn=self._ctx.lEval )
@@ -104,6 +105,11 @@ class Interpreter( InterpreterBase ):
          _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
+      _old_pct2 = self._env._bindings.get( '%%', L_NIL )
+      _old_pct1 = self._env._bindings.get( '%',  L_NIL )
+      self._env.bindGlobal( '%%%', _old_pct2 )
+      self._env.bindGlobal( '%%',  _old_pct1 )
+      self._env.bindGlobal( '%',   _primary( returnVal ) )
       return returnVal
 
    def rawEval_instrumented( self, source: str, outStrm=None ) -> Any:
@@ -144,6 +150,11 @@ class Interpreter( InterpreterBase ):
          _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
+      _old_pct2 = self._env._bindings.get( '%%', L_NIL )
+      _old_pct1 = self._env._bindings.get( '%',  L_NIL )
+      self._env.bindGlobal( '%%%', _old_pct2 )
+      self._env.bindGlobal( '%%',  _old_pct1 )
+      self._env.bindGlobal( '%',   _primary( returnVal ) )
       totTime = time.perf_counter() - startTotTime
       metrics = { 'parse': parseTime, 'expand': expandTime, 'analyze': analyzeTime, 'eval': evalTime, 'total': totTime }
       return returnVal, metrics
@@ -175,6 +186,12 @@ class Interpreter( InterpreterBase ):
       """Enable or disable call-stack tracking in the evaluator."""
       _set_stack_traces( enabled )
 
+   def set_nested_repl( self, fn ) -> None:
+      """Register the Listener's nested-REPL callback on the context.
+      Called by Listener after construction so (break) can use the real REPL."""
+      self._nested_repl_fn    = fn
+      self._ctx.nested_repl   = fn
+
    def _makeContext( self, outStrm ) -> Context:
       from pythonslisp.Evaluator import cek_apply as _cek_apply
       ctx = Context( outStrm, self._tracer, self._setf_registry )
@@ -188,6 +205,7 @@ class Interpreter( InterpreterBase ):
       ctx.loadExt          = lambda path, targetEnv=None: self._loadExtFile( Path(path), ctx.outStrm, targetEnv )
       ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
       ctx.reboot           = lambda: self.reboot( outStrm=ctx.outStrm )
+      ctx.nested_repl      = self._nested_repl_fn
       return ctx
 
    def _makeLispFunction( self, targetEnv=None ):

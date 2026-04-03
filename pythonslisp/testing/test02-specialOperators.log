@@ -1749,10 +1749,18 @@ Y
 ; --------------------------------------------------------
 
 >>> (dynamic-wind (lambda () nil) (lambda () nil))
-%%% dynamic-wind: requires exactly 3 arguments (before thunk after).
+%%% Runtime Error: "<repl>" (1,2)
+%%% (dynamic-wind (lambda () nil) (lambda () nil))
+%%%  ^
+%%% ERROR 'DYNAMIC-WIND': 2 arguments provided; 3 expected.
+%%% PRIMITIVE USAGE: (DYNAMIC-WIND before thunk after)
 
 >>> (dynamic-wind (lambda () nil) (lambda () nil) (lambda () nil) (lambda () nil))
-%%% dynamic-wind: requires exactly 3 arguments (before thunk after).
+%%% Runtime Error: "<repl>" (1,2)
+%%% (dynamic-wind (lambda () nil) (lambda () nil) (lambda () nil) (lambda () nil))
+%%%  ^
+%%% ERROR 'DYNAMIC-WIND': 4 arguments provided; 3 expected.
+%%% PRIMITIVE USAGE: (DYNAMIC-WIND before thunk after)
 
 >>> (dynamic-wind 42 (lambda () nil) (lambda () nil))
 %%% Invalid before argument. CALLABLE expected.
@@ -2614,7 +2622,8 @@ Y
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
-%%% Invalid argument 1. CALLABLE expected; special forms cannot be applied.
+%%% ERROR 'IF': Expression evaluated in main eval loop.
+%%% PRIMITIVE USAGE: (IF cond conseq &optional alt)
 ==>
 
 ; --- funcall errors ---
@@ -2650,7 +2659,8 @@ Y
 >>> ;;; Error: apply with a special form
 ... (apply 'if '(t 1 2))
 
-%%% Invalid argument 1. CALLABLE expected; special forms cannot be applied.
+%%% ERROR 'IF': Expression evaluated in main eval loop.
+%%% PRIMITIVE USAGE: (IF cond conseq &optional alt)
 ==>
 
 ; --- IF error paths ---

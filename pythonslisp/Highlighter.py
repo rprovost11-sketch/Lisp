@@ -205,13 +205,14 @@ def _visible_len(s: str) -> int:
 
 
 def _parse_table_row(line: str) -> list[str]:
-   """Split a Markdown table row '| a | b | c |' into a list of cell strings."""
+   """Split a Markdown table row '| a | b | c |' into a list of cell strings.
+   Escaped pipes (\\|) are treated as literal '|' characters, not separators."""
    s = line.strip()
    if s.startswith('|'):
       s = s[1:]
-   if s.endswith('|'):
+   if s.endswith('|') and not s.endswith('\\|'):
       s = s[:-1]
-   return s.split('|')
+   return re.split(r'(?<!\\)\|', s)
 
 
 def _is_separator_row(cells: list[str]) -> bool:
@@ -229,7 +230,8 @@ def _render_table(rows: list[list[str]], use_color: bool) -> list[str]:
    data   = rows[2:]
 
    def render_cell(cell: str) -> str:
-      return _render_inline(cell.strip()) if use_color else cell.strip()
+      text = cell.strip().replace('\\|', '|')
+      return _render_inline(text) if use_color else text
 
    rendered_header = [render_cell(c) for c in header]
    rendered_data   = [[render_cell(c) for c in row] for row in data]
