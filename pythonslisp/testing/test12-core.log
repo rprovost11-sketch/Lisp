@@ -321,14 +321,6 @@ Type '(help "substring" :substring t)' to search all names by substring.
 
 ==> (10 20)
 
-; --- toggle-global-trace ---
-
-; toggle on then immediately off; verify first return is T
->>> (let ((result (toggle-global-trace)))
-...   (toggle-global-trace)
-...   result)
-==> T
-
 ; --- eval-for-display ---
 
 ; single value wrapped in a one-element list

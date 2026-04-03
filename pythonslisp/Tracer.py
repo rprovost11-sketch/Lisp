@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
-from pythonslisp.AST import LCallable, LFunction, prettyPrintSExpr
+from pythonslisp.AST import LCallable, prettyPrintSExpr
 
 
 class Tracer:
@@ -9,14 +9,12 @@ class Tracer:
 
    def __init__( self ) -> None:
       self._fnsToTrace:    set[str] = set()
-      self._global:        bool     = False
       self._maxTraceDepth: int      = 0
-      self._active:        bool     = False
+      self._active:        bool     = False   # accessed directly by Evaluator for performance
 
    def reset( self ) -> None:
       """Clear all tracing state.  Called on interpreter reboot."""
       self._fnsToTrace    = set()
-      self._global        = False
       self._maxTraceDepth = 0
       self._active        = False
 
@@ -30,31 +28,16 @@ class Tracer:
    def removeFnTrace( self, name: str ) -> None:
       """Remove a function name from tracing.  Called by (untrace fn)."""
       self._fnsToTrace.discard( name )
-      self._active = self._global or bool( self._fnsToTrace )
+      self._active = bool( self._fnsToTrace )
 
    def removeAll( self ) -> None:
       """Remove all named functions.  Called by (untrace) with no args."""
       self._fnsToTrace.clear()
-      self._active = self._global
+      self._active = False
 
    def getFnsToTrace( self ) -> frozenset:
       """Read-only view of currently traced function names."""
       return frozenset( self._fnsToTrace )
-
-   # --- Global toggle ---
-
-   def getGlobalEnabled( self ) -> bool:
-      return self._global
-
-   def setGlobalEnabled( self, value: bool ) -> None:
-      self._global = value
-      self._active = value or bool( self._fnsToTrace )
-
-   def toggle_global( self ) -> bool:
-      """Toggle global tracing on/off.  Returns new state.  Called by ]trace."""
-      self._global = not self._global
-      self._active = self._global or bool( self._fnsToTrace )
-      return self._global
 
    # --- Depth ---
 
@@ -63,12 +46,6 @@ class Tracer:
 
    def setMaxTraceDepth( self, value: int ) -> None:
       self._maxTraceDepth = value
-
-   # --- Active check ---
-
-   def isActive( self ) -> bool:
-      """True when any tracing is enabled.  Cheap check in the eval hot path."""
-      return self._active
 
    # --- Hook ---
 
@@ -81,8 +58,7 @@ class Tracer:
       Returns True if a line was printed (caller uses this to manage depth).
       """
       isNamed  = function.name in self._fnsToTrace
-      isUserFn = isinstance( function, LFunction )
-      if not isNamed and not ( self._global and isUserFn ):
+      if not isNamed:
          return False
       name   = function.name or 'LAMBDA'
       indent = '  ' * depth

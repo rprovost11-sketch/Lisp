@@ -135,13 +135,6 @@ def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 trace list.  With no arguments, clears all named function tracing."""
    raise LRuntimeUsageError( LP_untrace, 'Handled by CEK machine.' )
 
-@primitive( 'toggle-global-trace', '()' )
-def LP_toggle_global_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Toggles global function tracing on or off.  When global tracing is on,
-every call to a user-defined function is reported with its arguments and
-return value.  Returns T if tracing is now on, NIL if now off."""
-   return L_T if ctx.tracer.toggle_global() else L_NIL
-
 @primitive( 'call/cc', '(procedure)', special=True )
 def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Calls procedure with one argument: a first-class continuation object.

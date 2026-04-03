@@ -577,25 +577,6 @@ class Listener( object ):
       print( f'Total test cases: {totalTestsRun}.' )
       print( f'\nTest output: {runFilename}' )
 
-   def _cmd_trace( self, args: list[str] ) -> None:
-      '''Usage:  trace
-      Toggle global function tracing on or off.  When on, every call to a
-      user-defined function is reported with its arguments and return value.
-      Use (trace fn) and (untrace fn) in Lisp to trace specific functions only.
-      '''
-      if len(args) != 0:
-         raise ListenerCommandError( self._cmd_trace.__doc__ )
-
-      state = self._interp._tracer.toggle_global()
-
-      useColor   = sys.stdout.isatty()
-      GREEN      = '\033[92m' if useColor else ''
-      YELLOW     = '\033[93m' if useColor else ''
-      RESET      = '\033[0m'  if useColor else ''
-      stateColor = GREEN if state else YELLOW
-      stateStr   = 'ON' if state else 'OFF'
-      print( f'Tracing is now {stateColor}{stateStr}{RESET}.' )
-
    def _cmd_traces( self, args: list[str] ) -> None:
       '''Usage:  traces [on|off]
       Enable or disable call-stack tracing on errors from file-loaded code.

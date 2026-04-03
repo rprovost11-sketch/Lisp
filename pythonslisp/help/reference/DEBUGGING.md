@@ -48,18 +48,6 @@ function call form; exit lines show the return value.
 
 ---
 
-## Global Tracing
-
-`]trace` (a listener command) toggles global tracing on or off.  When on,
-*every* call to any user-defined function is traced — equivalent to having
-traced all functions at once.  This is useful for getting an overview of
-execution flow without knowing in advance which functions to trace.
-
-Named function traces set with `(trace fn)` are independent of global
-tracing: they remain in effect when global tracing is off.
-
----
-
 ## Error Stack Traces
 
 `]traces on|off` enables or disables call-stack traces on errors.  With no
@@ -132,7 +120,6 @@ call in the surrounding code.
 | `(untrace fn...)` | Remove named functions from trace list |
 | `(untrace)` | Clear all named-function tracing |
 | `(trace)` | Return list of currently traced functions |
-| `]trace` | Toggle global tracing for all user-defined functions |
 | `]traces on\|off` | Enable/disable call-stack traces on errors (slower) |
 | `(break)` | Drop into a nested debug REPL at the call site |
 | `(break "msg")` | Same, with an identifying message |

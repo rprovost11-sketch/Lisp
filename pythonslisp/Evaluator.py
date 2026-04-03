@@ -827,7 +827,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
    LFunction results are expressions (body to evaluate) - no wrapping."""
    tracer  = ctx.tracer
    printed = False
-   if tracer.isActive():
+   if tracer._active:   # inlined for performance; see Tracer._active
       depth   = tracer.getMaxTraceDepth()
       printed = tracer.trace( 'enter', fn, args, depth, ctx.outStrm )
       if printed:

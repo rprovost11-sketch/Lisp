@@ -103,7 +103,6 @@ evaluating Lisp.  Type `]help` for a full list.  Key commands include:
 | `]readlog <file>` | Replay a session log |
 | `]readsrc <file>` | Load and evaluate a Lisp source file |
 | `]reboot` | Reboot the interpreter to a clean state |
-| `]trace` | Toggle global function call tracing on/off |
 | `]traces on\|off` | Enable/disable call-stack traces on errors |
 | `]test [file]` | Run a test log file, or the full test suite |
 | `]exit` / `]quit` | Exit the Listener |
