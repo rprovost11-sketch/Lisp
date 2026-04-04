@@ -1,7 +1,7 @@
 ; test04-string-library.log  --  string library tests
 
 ; --------------------------------------------------------
-; string / ustring — basic conversion
+; string / ustring - basic conversion
 ; --------------------------------------------------------
 
 >>> (string 3.5 "Hello" 1/2 )
@@ -29,7 +29,7 @@
 
 ==> "\"hello\""
 
-; string of a string wraps with quotes — length of "hello" is 7
+; string of a string wraps with quotes - length of "hello" is 7
 >>> (= (length (string "hello")) 7)
 ...
 
@@ -57,7 +57,7 @@
 >>> (ustring 'a 'b 'c :sep "->")
 ==> "A->B->C"
 
-; :sep defaults to "" — existing behaviour preserved
+; :sep defaults to "" - existing behaviour preserved
 >>> (ustring "x" "y")
 ==> "xy"
 
@@ -249,7 +249,7 @@
 ; string-split
 ; --------------------------------------------------------
 
-; whitespace split — runs of spaces collapsed, empties omitted
+; whitespace split - runs of spaces collapsed, empties omitted
 >>> (string-split "hello world")
 ==> ("hello" "world")
 
@@ -441,7 +441,7 @@
 ==>
 
 ; ============================================================
-; String escape sequences — actual-character storage model
+; String escape sequences - actual-character storage model
 ; ============================================================
 
 >>> ;;; \n is 1 character (actual newline), not 2

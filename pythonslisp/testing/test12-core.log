@@ -235,15 +235,9 @@ Unknown topic: "UNKNOWN-TOPIC"
 Predefined Symbols
 ==================
 
-Primitives
-==========
-CAR  MAPCAR
-
-Functions
+Sequences
 =========
-
-Macros
-======
+CAR  MAPCAR
 
 Types
 =====
@@ -1040,7 +1034,7 @@ T
 ; ============================================================
 
 
-; Basic values — single value passes through unchanged
+; Basic values - single value passes through unchanged
 >>> (values 42)
 ==> 42
 
@@ -1060,17 +1054,17 @@ C
 ==>
 
 
-; values-list — converts list to multiple values
+; values-list - converts list to multiple values
 >>> (multiple-value-bind (a b c) (values-list '(10 20 30))
 ...   (+ a b c))
 ==> 60
 
-; values-list — single element
+; values-list - single element
 >>> (values-list '(99))
 ==> 99
 
 
-; floor, ceiling, round, truncate — multiple-value returns
+; floor, ceiling, round, truncate - multiple-value returns
 
 ; floor 1-arg: quotient and remainder
 >>> (floor 7)
@@ -1098,7 +1092,7 @@ C
 ...   (list q r))
 ==> (-4 3)
 
-; floor scalar context — primary value only
+; floor scalar context - primary value only
 >>> (+ (floor 7.9) 1)
 ==> 8
 

@@ -5,7 +5,7 @@ that avoids re-traversing the raw AST on every function call.
 
 compileLambdaList() converts a validated lambda list AST (as produced by
 Analyzer.analyzeLambdaList) into a CompiledLambdaList.  It assumes the
-input is structurally valid — call Analyzer.analyzeLambdaList first.
+input is structurally valid - call Analyzer.analyzeLambdaList first.
 """
 from __future__ import annotations
 
@@ -22,14 +22,14 @@ class CompiledLambdaList:
                    Each entry is either a parameter name (str) or a nested
                    CompiledLambdaList for a destructuring sub-pattern.
    optional      : list[(varName: str, initForm: Any, pvarName: str|None)]
-   rest          : str | None       — name of the &rest / &body variable
+   rest          : str | None       - name of the &rest / &body variable
    keys          : dict[str, (varName: str, pvarName: str|None, initForm: Any)] | None
                    None means no &KEY section was present.
-   key_order     : list[str] | None — declaration order for incremental eval
+   key_order     : list[str] | None - declaration order for incremental eval
    allow_other_keys : bool
    aux           : list[(varName: str, initForm: Any)]
    min_args      : int
-   max_args      : int | None       — None when the list is unbounded
+   max_args      : int | None       - None when the list is unbounded
    """
    __slots__ = ('positional', 'optional', 'rest', 'keys', 'key_order',
                 'allow_other_keys', 'aux', 'min_args', 'max_args')

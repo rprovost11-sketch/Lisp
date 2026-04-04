@@ -16,6 +16,7 @@ class Context:
       self.tracer:           Any      = tracer
       self.setfRegistry:     dict     = setfRegistry
       self.wind_stack:       list     = []
+      self.loading_source:   (str | None) = None
       self.lEval:            Callable = None   # set by Interpreter after construction
       self.lApply:           Callable = None   # set by Interpreter after construction
       self.parse:            Callable = None   # set by Interpreter after construction

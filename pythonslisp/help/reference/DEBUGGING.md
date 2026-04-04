@@ -54,10 +54,10 @@ function call form; exit lines show the return value.
 argument, it reports the current state.
 
 When stack traces are on, a runtime error prints a call stack showing each
-active function call at the time of the error — one frame per line, with the
+active function call at the time of the error - one frame per line, with the
 source line and a caret indicating the position of the call.
 
-**Performance note:** Stack-trace mode makes the evaluator roughly 20–30%
+**Performance note:** Stack-trace mode makes the evaluator roughly 20-30%
 slower.  It is off by default.  Turn it on when diagnosing errors in
 file-loaded code, and off again for normal use.
 

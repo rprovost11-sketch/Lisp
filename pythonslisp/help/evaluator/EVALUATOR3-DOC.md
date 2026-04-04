@@ -124,58 +124,311 @@ Notice that Case 1 both consumes values **and** resumes the next computation.
 There is no separate "return" path - every value flows through the same
 delivery mechanism.  When K empties, delivery becomes the final return.
 
-## Step-by-Step: Evaluating `(let ((x 2)) (+ x 1))`
+## Step-by-Step: Six Evaluation Paths
 
-The best way to understand the machine is to watch it run.  The table below
-shows the state at the start of each loop iteration.  E is abbreviated;
-`{x:2}->g` means a scope with `x=2` whose parent is the global environment.
+The best way to understand the machine is to watch it run.  Each block shows
+the complete machine state at the start of that loop iteration.  E is shown
+only when it changes.
 
-| Step | C | K |
-|---|---|---|
-| 1 | `(let ((x 2)) (+ x 1))` | `[]` |
-| 2 | `2` | `[LetFrame(current=x)]` |
-| 3 | `(+ x 1)` | `[]` |
-| 4 | `'+'` | `[ArgFrame(fn=?, pending=[x,1])]` |
-| 5 | `Val(fn_+)` | `[ArgFrame(fn=?, pending=[x,1])]` |
-| 6 | `'x'` | `[ArgFrame(fn=fn_+, pending=[1])]` |
-| 7 | `Val(2)` | `[ArgFrame(fn=fn_+, pending=[1])]` |
-| 8 | `1` | `[ArgFrame(fn=fn_+, done=[2])]` |
-| 9 | `Val(3)` | `[]` |
+---
 
-**Step 1** - Case 4, `head = 'let'`.  The machine extracts the vardef pairs,
-pushes `LetFrame(current='x', pending=[], bound={}, body=[(+ x 1)])`, and
-sets C = `2` (the init expression for `x`).
+### Example 1 - Constant: `42`
 
-**Step 2** - Case 1, `2` is a value.  Pop `LetFrame`, call `LetFrame.step(2)`.
-The frame stores `bound['x'] = 2`, sees no more pending bindings, opens a new
-scope `{x:2}->global`, and calls `_begin_body`.  The body has one form so no
-`PrognFrame` is pushed; it returns `(['+', 'x', 1], new_env)`.  C and E are
-updated.  K is now empty - `let` consumed no permanent K space.
+```
+C: 42
+E: {}
+K: []
+```
 
-**Step 3** - Case 4, function call `(+ x 1)`.  Push
-`ArgFrame(fn=None, pending=['x', 1], done=[])`, set C = `'+'`.
+**Step 1** - C is a number.  `is_value` returns True.  K is empty: return `42`.
 
-**Step 4** - Case 2, `'+'` is a symbol.  Look it up in E, get `fn_+`,
-wrap: C = `Val(fn_+)`.
+**Result: 42**
 
-**Step 5** - Case 1, `Val(fn_+)` is a value.  Pop `ArgFrame`, call
-`ArgFrame.step(fn_+)`.  **Phase 1**: the frame records `self.fn = fn_+`,
-takes `'x'` from pending (leaving `[1]`), pushes itself back onto K,
-returns `('x', E)`.
+---
 
-**Step 6** - Case 2, symbol `'x'`.  Look up in `{x:2}->global`, get `2`,
-wrap: C = `Val(2)`.
+### Example 2 - Variable lookup: `x` where `x = 7`
 
-**Step 7** - Case 1, `Val(2)`.  Pop `ArgFrame`, call `ArgFrame.step(2)`.
-**Phase 2**: append `2` to `done = [2]`, take `1` from pending (leaving `[]`),
-push itself back, return `(1, E)`.
+```
+C: x
+E: {x: 7}
+K: []
+```
 
-**Step 8** - Case 1, `1` is a self-evaluating number.  Pop `ArgFrame`,
-call `ArgFrame.step(1)`.  Phase 2: append `1`, `done = [2, 1]`, pending
-empty - call `do_apply(fn_+, [2, 1])`.  `fn_+` is a Python callable, so
-it returns `Val(3)`.
+**Step 1** - Case 2: C is a symbol.  Look up `x` in E, get `7`, wrap in Val.
 
-**Step 9** - Case 1, `Val(3)`.  K is empty - return `3`.
+```
+C: Val(7)
+K: []
+```
+
+**Step 2** - Case 1: C is a value.  K is empty: return `7`.
+
+**Result: 7**
+
+---
+
+### Example 3 - Primitive call: `(+ x 1)` where `x = 2`
+
+```
+C: (+ x 1)
+E: {x: 2}
+K: []
+```
+
+**Step 1** - Case 4: non-empty list, head is not a special form.  Push `ArgFrame`,
+set `C = +`.
+
+```
+C: +
+K: [ArgFrame(fn=None, pending=[x, 1], done=[])]
+```
+
+**Step 2** - Case 2: symbol.  Look up `+`, wrap: `C = Val(fn_+)`.
+
+```
+C: Val(fn_+)
+K: [ArgFrame(fn=None, pending=[x, 1], done=[])]
+```
+
+**Step 3** - Case 1: value.  Pop `ArgFrame`.  **Phase 1**: record `fn = fn_+`,
+take `x` from pending, push self back, return `C = x`.
+
+```
+C: x
+K: [ArgFrame(fn=fn_+, pending=[1], done=[])]
+```
+
+**Step 4** - Case 2: symbol.  Look up `x`, get `2`, wrap: `C = Val(2)`.
+
+```
+C: Val(2)
+K: [ArgFrame(fn=fn_+, pending=[1], done=[])]
+```
+
+**Step 5** - Case 1: value.  Pop `ArgFrame`.  **Phase 2**: append `2` to done,
+take `1` from pending, push self back, return `C = 1`.
+
+```
+C: 1
+K: [ArgFrame(fn=fn_+, pending=[], done=[2])]
+```
+
+**Step 6** - Case 1: `1` is a self-evaluating number.  Pop `ArgFrame`.
+Phase 2: `done = [2, 1]`, pending empty.  Call `do_apply(fn_+, [2, 1])`,
+return `Val(3)`.
+
+```
+C: Val(3)
+K: []
+```
+
+**Step 7** - Case 1: value.  K is empty: return `3`.
+
+**Result: 3**
+
+---
+
+### Example 4 - Nested calls: `(+ (* 2 3) 1)` - K grows to depth 2
+
+The outer `+` call cannot proceed until `(* 2 3)` is resolved.  Both calls
+push `ArgFrame` instances, stacking K to depth 2 before any unwinding begins.
+
+```
+C: (+ (* 2 3) 1)
+E: global
+K: []
+```
+
+**Step 1** - Case 4: push `ArgFrame_outer`, set `C = +`.
+
+```
+C: +
+K: [ArgFrame_outer(fn=None, pending=[(* 2 3), 1], done=[])]
+```
+
+**Step 2** - Symbol `+` -> `Val(fn_+)`.  Pop `ArgFrame_outer`.  Phase 1:
+`fn = fn_+`, next pending is `(* 2 3)`, push self back, return `C = (* 2 3)`.
+
+```
+C: (* 2 3)
+K: [ArgFrame_outer(fn=fn_+, pending=[1], done=[])]
+```
+
+**Step 3** - Case 4: `(* 2 3)` is a function call.  Push `ArgFrame_inner`.
+**K is now at depth 2.**
+
+```
+C: *
+K: [ArgFrame_outer(fn=fn_+,  pending=[1],    done=[]),
+    ArgFrame_inner(fn=None,   pending=[2, 3], done=[])]
+```
+
+**Steps 4-7** - Evaluate `*`, `2`, and `3` the same way example 3 showed.
+After `3` is delivered: `done = [2, 3]`, pending empty.
+`do_apply(fn_*, [2, 3])` returns `Val(6)`.  `ArgFrame_inner` is consumed.
+**K shrinks back to depth 1.**
+
+```
+C: Val(6)
+K: [ArgFrame_outer(fn=fn_+, pending=[1], done=[])]
+```
+
+**Step 8** - Pop `ArgFrame_outer`.  Phase 2: `done = [6]`, take `1` from
+pending, push self back, return `C = 1`.
+
+```
+C: 1
+K: [ArgFrame_outer(fn=fn_+, pending=[], done=[6])]
+```
+
+**Step 9** - `1` is self-evaluating.  Pop `ArgFrame_outer`.  `done = [6, 1]`,
+pending empty.  `do_apply(fn_+, [6, 1])` -> `Val(7)`.
+
+```
+C: Val(7)
+K: []
+```
+
+**Step 10** - K empty: return `7`.
+
+**Result: 7**
+
+Nested calls require no special handling - they fall out naturally.  Each
+pending argument that is itself a call pushes its own `ArgFrame` on top of
+the existing stack.  K depth equals the current expression nesting depth.
+
+---
+
+### Example 5 - Branching: `(if (= x 0) 42 99)` where `x = 0`
+
+An `if` pushes an `IfFrame` to remember the two branches, then sets C to the
+condition expression.  The condition is itself a function call, so K holds
+two different frame types at the same time.
+
+```
+C: (if (= x 0) 42 99)
+E: {x: 0}
+K: []
+```
+
+**Step 1** - Case 4, `head = if`.  Push `IfFrame(then=42, else=99)`, set `C`
+to the condition.
+
+```
+C: (= x 0)
+K: [IfFrame(then=42, else=99)]
+```
+
+**Step 2** - Case 4: `(= x 0)` is a function call.  Push `ArgFrame`.
+K now holds **two different frame types**.
+
+```
+C: =
+K: [IfFrame(then=42, else=99),
+    ArgFrame(fn=None, pending=[x, 0], done=[])]
+```
+
+**Steps 3-6** - Evaluate `=`, `x`, and `0` exactly as in example 3.
+`do_apply(fn_=, [0, 0])` returns `Val(T)`.  `ArgFrame` is consumed.
+
+```
+C: Val(T)
+K: [IfFrame(then=42, else=99)]
+```
+
+**Step 7** - Case 1: pop `IfFrame`.  `T` is truthy: return `(42, E)` as an
+unwrapped expression.  **No frame is pushed** - both branches are in tail
+position inside `if`.
+
+```
+C: 42
+K: []
+```
+
+**Step 8** - `42` is self-evaluating.  K empty: return `42`.
+
+**Result: 42**
+
+`IfFrame.step` never pushes anything onto K.  It simply returns one branch
+as the next expression.  Whatever computation surrounds the `if` - or nothing,
+if K was already empty - is unaffected.
+
+---
+
+### Example 6 - User-defined function and TCO: `((lambda (x) (* x 2)) 5)`
+
+A user-defined function call does not execute immediately.  `do_apply` opens
+a new environment and returns the body expression **without wrapping it in
+`Val`**.  The loop sees an unwrapped expression and evaluates it as code.
+No frame was pushed for "what to do with the return value."  This is TCO.
+
+```
+C: ((lambda (x) (* x 2)) 5)
+E: global
+K: []
+```
+
+**Step 1** - Case 4: function call.  Push `ArgFrame`, set `C` to the head of
+the list - the lambda form itself.
+
+```
+C: (lambda (x) (* x 2))
+K: [ArgFrame(fn=None, pending=[5], done=[])]
+```
+
+**Step 2** - Case 4, `head = lambda`.  Construct
+`Function(params=[x], body=[(* x 2)], closure_env=global)`,
+wrap: `C = Val(fn_user)`.  No frame pushed.
+
+```
+C: Val(fn_user)
+K: [ArgFrame(fn=None, pending=[5], done=[])]
+```
+
+**Step 3** - Case 1: pop `ArgFrame`.  Phase 1: `fn = fn_user`, take `5` from
+pending, push self back, return `C = 5`.
+
+```
+C: 5
+K: [ArgFrame(fn=fn_user, pending=[], done=[])]
+```
+
+**Step 4** - `5` is self-evaluating.  Pop `ArgFrame`.  `done = [5]`, pending
+empty.  Call `do_apply(fn_user, [5])`.
+
+`do_apply` sees a user-defined function: open `new_env = {x: 5} -> global`,
+call `_begin_body([(* x 2)], new_env, K)`.
+
+`_begin_body` returns `(* x 2)` **without a `Val` wrapper**.
+
+```
+C: (* x 2)           <- unwrapped body; next iteration treats it as code
+E: {x: 5} -> global
+K: []                <- ArgFrame was popped and NOT replaced
+```
+
+This is the TCO moment.  The frame that triggered the call has been consumed.
+K is empty.  The Python call stack has not grown.  The body evaluates exactly
+as if it had been written at the top level.
+
+**Steps 5-9** - `(* x 2)` evaluates exactly as in example 3:
+`*` -> `fn_*`, `x` -> `Val(5)`, `2` is self-eval.
+`do_apply(fn_*, [5, 2])` -> `Val(10)`.
+
+```
+C: Val(10)
+K: []
+```
+
+**Step 10** - K empty: return `10`.
+
+**Result: 10**
+
+If this function called itself in tail position - `(f (- n 1))` as the last
+form in a body - the same thing would happen on every recursive call: the
+caller's `ArgFrame` is consumed by `do_apply`, the recursive call's `ArgFrame`
+is the only frame ever on K, and K never grows past depth 1 regardless of
+how many iterations the recursion runs.
 
 ## K Is the Explicit Call Stack
 

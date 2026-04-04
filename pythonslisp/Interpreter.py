@@ -300,7 +300,8 @@ Used by extension .py files that need to register macros via @macro."""
          from pythonslisp.Analyzer import Analyzer
          Analyzer.analyzeLambdaList( params_ast, destructuring=True )
          compiledLL   = compileLambdaList( params_ast, destructuring=True )
-         macro_obj    = LMacro( name_sym, params_ast, docstring, body_ast, compiledLambdaList=compiledLL )
+         macro_obj             = LMacro( name_sym, params_ast, docstring, body_ast, compiledLambdaList=compiledLL )
+         macro_obj.source_file = interpreter._ctx.loading_source
          if _target_env is not None:
             _target_env.bindLocalSym( name_sym, macro_obj )
          else:
@@ -318,18 +319,23 @@ Used by extension .py files that need to register macros via @macro."""
          self._loadExtFile( lisp_file, outStrm )
 
    def _loadExtFile( self, path: Path, outStrm=None, targetEnv=None ) -> None:
-      path = Path(path)
-      if path.suffix == '.py':
-         spec   = importlib.util.spec_from_file_location( path.stem, path )
-         module = importlib.util.module_from_spec( spec )
-         spec.loader.exec_module( module )
-         _ext_primitive._flush( self._makeLispFunction( targetEnv ),
-                                bind_macro=self._makeBindMacro( targetEnv ) )
-      elif path.suffix == '.lisp':
-         if targetEnv is not None:
-            ast = self._parser.parseFile( str(path) )
-            _cek_eval( self._ctx, targetEnv, ast )
-         else:
-            self.evalFile( str(path), outStrm )
+      path        = Path(path)
+      prev_source = self._ctx.loading_source
+      self._ctx.loading_source = path.stem
+      try:
+         if path.suffix == '.py':
+            spec   = importlib.util.spec_from_file_location( path.stem, path )
+            module = importlib.util.module_from_spec( spec )
+            spec.loader.exec_module( module )
+            _ext_primitive._flush( self._makeLispFunction( targetEnv ),
+                                   bind_macro=self._makeBindMacro( targetEnv ) )
+         elif path.suffix == '.lisp':
+            if targetEnv is not None:
+               ast = self._parser.parseFile( str(path) )
+               _cek_eval( self._ctx, targetEnv, ast )
+            else:
+               self.evalFile( str(path), outStrm )
+      finally:
+         self._ctx.loading_source = prev_source
 
 

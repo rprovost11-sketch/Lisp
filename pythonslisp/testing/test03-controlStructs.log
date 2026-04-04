@@ -135,7 +135,7 @@ ABC
 
 ==> 3
 
-; loop variable is local — does not leak into outer scope
+; loop variable is local - does not leak into outer scope
 >>> (let ((i 99)) (for (i 0) (< i 3) (+ i 1) nil) i)
 ...
 

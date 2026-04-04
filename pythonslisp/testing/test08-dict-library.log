@@ -560,7 +560,7 @@
 )
 
 ; --------------------------------------------------------
-; at-set on dict — symbol and string keys
+; at-set on dict - symbol and string keys
 ; --------------------------------------------------------
 
 >>> (setf skmap (make-dict (x 10) (y 20)))

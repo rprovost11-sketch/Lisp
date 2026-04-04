@@ -1120,8 +1120,10 @@ def cek_eval( ctx, env, expr ) -> Any:
             else:
                docString = ''
             compiledLL = compileLambdaList( funcParams )
-            C = _Val( LFunction(LSymbol(''), funcParams, docString, funcBody,
-                                capturedEnvironment=E, compiledLambdaList=compiledLL) )
+            fn = LFunction( LSymbol(''), funcParams, docString, funcBody,
+                            capturedEnvironment=E, compiledLambdaList=compiledLL )
+            fn.source_file = ctx.loading_source
+            C = _Val( fn )
             continue
 
          if headStr == 'DEFMACRO':
@@ -1133,10 +1135,11 @@ def cek_eval( ctx, env, expr ) -> Any:
                funcBody  = funcBody[1:]
             else:
                docString = ''
-            compiledLL = compileLambdaList( funcParams, destructuring=True )
-            macro = LMacro(fnName, funcParams, docString, funcBody, compiledLambdaList=compiledLL)
-            E.bindGlobalSym(fnName, macro)
-            C = _Val(macro)
+            compiledLL    = compileLambdaList( funcParams, destructuring=True )
+            macro         = LMacro( fnName, funcParams, docString, funcBody, compiledLambdaList=compiledLL )
+            macro.source_file = ctx.loading_source
+            E.bindGlobalSym( fnName, macro )
+            C = _Val( macro )
             continue
 
          if headStr == 'QUASIQUOTE':

@@ -133,7 +133,7 @@ If no matching `catch` exists the throw is unhandled and an error is raised.
 ## call/cc - First-Class Continuations
 
 `call/cc` (call with current continuation) captures the current
-continuation — everything that still needs to happen — as a callable
+continuation - everything that still needs to happen - as a callable
 value and passes it to `procedure`.
 
 ```lisp
@@ -155,7 +155,7 @@ multiple times, each time restoring the saved computation state.
 ```
 
 `catch`/`throw` is simpler for plain early-exit patterns.  `call/cc`
-becomes essential when you need to store or resume a computation — for
+becomes essential when you need to store or resume a computation - for
 generators, coroutines, and similar patterns.
 
 See `(help "continuations-doc")` for the full guide with worked examples.

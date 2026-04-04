@@ -87,7 +87,7 @@ class LPrimitive( LCallable ):
       return f'(PRIMITIVE {self.name} {params} ...)'
 
 class LFunction( LCallable ):
-   __slots__ = ('lambdaListAST', 'compiledLambdaList', 'bodyAST', 'capturedEnvironment')
+   __slots__ = ('lambdaListAST', 'compiledLambdaList', 'bodyAST', 'capturedEnvironment', 'source_file')
 
    def __init__( self, name: (LSymbol|str), lambdaListAST: list, docString: str, bodyAST: list,
                  capturedEnvironment: Environment, compiledLambdaList: CompiledLambdaList ) -> None:
@@ -95,6 +95,7 @@ class LFunction( LCallable ):
       self.compiledLambdaList: CompiledLambdaList      = compiledLambdaList
       self.bodyAST: list                               = bodyAST
       self.capturedEnvironment: Environment            = capturedEnvironment
+      self.source_file: (str | None)                   = None
       super().__init__( name.name if isinstance(name, LSymbol) else name, docString )
 
    def typeLabel( self ):
@@ -119,13 +120,14 @@ class LFunction( LCallable ):
 
 
 class LMacro( LCallable ):
-   __slots__ = ('lambdaListAST', 'compiledLambdaList', 'bodyAST')
+   __slots__ = ('lambdaListAST', 'compiledLambdaList', 'bodyAST', 'source_file')
 
    def __init__( self, name: LSymbol, lambdaListAST: list, docString: str, bodyAST: list,
                  compiledLambdaList: CompiledLambdaList ) -> None:
       self.lambdaListAST: list                    = lambdaListAST
       self.compiledLambdaList: CompiledLambdaList = compiledLambdaList
       self.bodyAST: list                          = bodyAST
+      self.source_file: (str | None)              = None
       super().__init__( name.name, docString )
 
    def typeLabel( self ):
@@ -150,7 +152,7 @@ class LMacro( LCallable ):
 
 
 class LSpecialOperator( LPrimitive ):
-   """A Lisp special operator — like a built-in function but args are NOT
+   """A Lisp special operator - like a built-in function but args are NOT
 pre-evaluated; the CEK machine handles evaluation itself."""
    __slots__ = ()
 

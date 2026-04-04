@@ -28,8 +28,8 @@ def _collect_locals( env: Environment ) -> dict:
 def LP_break( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Drop into a nested debug REPL at the current call site.
 Displays all local variable bindings in scope.  Commands:
-  ]continue [expr]  — resume execution returning expr (default NIL)
-  ]abort            — abort execution to top level"""
+  ]continue [expr]  - resume execution returning expr (default NIL)
+  ]abort            - abort execution to top level"""
 
    if args:
       print( f'\n*** Break: {prettyPrintSExpr( args[0] )}' )

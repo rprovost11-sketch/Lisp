@@ -30,7 +30,7 @@
 spec is (var filespec &rest open-options) where open-options are keyword args
 passed directly to open.  Default direction is :input.
 Returns the value of the last body form.
-File is always closed — safe on throw, return-from, or error."
+File is always closed - safe on throw, return-from, or error."
    (let ((var      (car spec))
          (filespec (car (cdr spec)))
          (options  (cdr (cdr spec))))

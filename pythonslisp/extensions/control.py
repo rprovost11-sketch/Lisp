@@ -236,7 +236,7 @@ wrapping them in a condition with type ERROR."""
 @primitive( 'dynamic-wind', '(before thunk after)', special=True )
 def LP_dynamic_wind( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Calls thunk with dynamic wind protection.  before is called first, then
-thunk, then after — regardless of whether thunk exits normally, via a
+thunk, then after - regardless of whether thunk exits normally, via a
 non-local transfer (throw, return-from, continuation), or via an error.
 All three arguments must be zero-argument callables.  Returns the value
 of thunk.  The macro unwind-protect is built on dynamic-wind."""

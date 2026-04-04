@@ -7,7 +7,7 @@
 
 At any point during a computation, the **continuation** is "everything that
 still needs to happen to produce the final result."  Normally continuations
-are implicit — the runtime just keeps running.  `call/cc` makes the current
+are implicit - the runtime just keeps running.  `call/cc` makes the current
 continuation into a first-class value you can store, call, and call again.
 
 ```lisp
@@ -32,7 +32,7 @@ to the `call/cc` site.  If the lambda returns normally without calling `k`,
 `call/cc` returns that value instead.
 
 **Important**: `return`, `block`, `setq`, and other special forms cannot be
-used as parameter names — they are always interpreted as special operators.
+used as parameter names - they are always interpreted as special operators.
 Use names like `exit`, `abort`, or `k` for continuation parameters.
 
 
@@ -130,7 +130,7 @@ line.  The `log` list grows because `setf` updates the binding in the
 captured environment, which is shared across all re-entries.
 
 **Practical use:** checkpointing is useful for retry loops, backtracking
-search, and simulation rewind — any situation where you want to re-run a
+search, and simulation rewind - any situation where you want to re-run a
 block of code from a fixed starting state while retaining accumulated changes.
 
 
@@ -151,7 +151,7 @@ pausing between each one.  Full continuations make this straightforward.
       (caller-k val))))    ; jump back to the caller with val
 
   (defun gen-body ()
-    "The generator sequence — add more yield calls to extend it."
+    "The generator sequence - add more yield calls to extend it."
     (yield 10)
     (yield 20)
     (yield 30)
@@ -294,11 +294,11 @@ the previous `*fail*` is restored and backtracking continues further up.
 
 ---
 
-## Use Case 7: dynamic-wind — Guaranteed Cleanup
+## Use Case 7: dynamic-wind - Guaranteed Cleanup
 
 `(dynamic-wind before thunk after)` guarantees that `before` and `after` run
 on **every entry and exit** of the thunk, including non-local exits via
-`throw`, `return-from`, errors, and — crucially — continuation invocations.
+`throw`, `return-from`, errors, and - crucially - continuation invocations.
 
 ```lisp
 ; after always runs, even when the thunk throws
@@ -312,7 +312,7 @@ on **every entry and exit** of the thunk, including non-local exits via
 ;==> ("before" "after")
 ```
 
-**With continuations** — `dynamic-wind` tracks every boundary crossing:
+**With continuations** - `dynamic-wind` tracks every boundary crossing:
 
 ```lisp
 ; before and after run on each re-entry and re-exit via continuation
@@ -329,10 +329,10 @@ on **every entry and exit** of the thunk, including non-local exits via
 ```
 
 Each call to `resume` re-enters the dynamic-wind scope, triggering `before`
-again.  Each exit — whether via normal return or continuation jump — triggers
+again.  Each exit - whether via normal return or continuation jump - triggers
 `after`.
 
-**Nested `dynamic-wind`** — afters run innermost first, matching the structure
+**Nested `dynamic-wind`** - afters run innermost first, matching the structure
 of the dynamic extent:
 
 ```lisp
@@ -360,13 +360,13 @@ be symmetric even under non-local control flow.
 
 | | `call/cc` | `catch`/`throw` |
 |---|---|---|
-| Continuation is a value | Yes — storable, callable | No — implicit |
+| Continuation is a value | Yes - storable, callable | No - implicit |
 | Re-invocable | Yes | No |
 | Tag required | No | Yes |
 | Crosses function calls | Yes | Yes |
 | Typical use | Generators, coroutines, backtracking | Simple cross-function abort |
 
-For **simple early exit** prefer `catch`/`throw` — the intent is clearer.
+For **simple early exit** prefer `catch`/`throw` - the intent is clearer.
 Reach for `call/cc` when you need to *store* or *resume* a computation.
 
 
@@ -380,7 +380,7 @@ Reach for `call/cc` when you need to *store* or *resume* a computation.
 | `(k value)` | Deliver value to the call/cc site; resume saved computation |
 | `(setf saved k)` | Store continuation for later use |
 | `(saved value)` | Re-instate saved computation, delivering value |
-| `(dynamic-wind before thunk after)` | Run before; run thunk; run after — even on non-local exit or re-entry |
+| `(dynamic-wind before thunk after)` | Run before; run thunk; run after - even on non-local exit or re-entry |
 
 See also: `(help "control-transfer-doc")` for `block`/`return-from`,
 `catch`/`throw`, and `handler-case`.

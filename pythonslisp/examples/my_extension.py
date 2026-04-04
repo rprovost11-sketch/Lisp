@@ -48,7 +48,7 @@ from pythonslisp.Environment import Environment, ModuleEnvironment
 # Exceptions - raise these to signal errors back to the interpreter
 from pythonslisp.Exceptions import (
     LRuntimeError,     # general runtime error
-    LRuntimeUsageError, # usage error: wrong type/arity — includes PRIMITIVE USAGE hint
+    LRuntimeUsageError, # usage error: wrong type/arity - includes PRIMITIVE USAGE hint
 )
 
 # primitive - decorator for defining Lisp primitives

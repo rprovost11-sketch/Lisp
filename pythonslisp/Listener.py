@@ -121,7 +121,7 @@ class Listener( object ):
                submit = True
          else:
             # Super-bracket: trailing ] closes all open parens.
-            # Lines that start with ] followed by text are listener commands — skip.
+            # Lines that start with ] followed by text are listener commands - skip.
             if lineInput.endswith( ']' ) and not (lineInput.startswith( ']' ) and len(lineInput) > 1):
                tentative    = lineInput[:-1]
                combined     = '\n'.join( inputExprLineList + ([tentative] if tentative else []) )

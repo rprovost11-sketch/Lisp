@@ -413,7 +413,7 @@ ab
 ==> T
 
 ; ============================================================
-; open :if-exists :append — appends to existing file
+; open :if-exists :append - appends to existing file
 ; ============================================================
 
 >>> ;;; use open :direction :output to create a fresh file
@@ -849,7 +849,7 @@ ab
 ==> 42
 
 ; ============================================================
-; make-string-output-stream / get-output-stream-string — happy paths
+; make-string-output-stream / get-output-stream-string - happy paths
 ; ============================================================
 
 >>> ;;; make-string-output-stream returns a stream object
@@ -911,7 +911,7 @@ ab
 >>> (get-output-stream-string ss14)
 ==> "second"
 
->>> ;;; write! uses programmer format — strings get extra surrounding quotes
+>>> ;;; write! uses programmer format - strings get extra surrounding quotes
 ... (write! ss14 "quoted")
 ==> "quoted"
 
@@ -984,7 +984,7 @@ ab
 ==> "second"
 
 ; ============================================================
-; make-string-output-stream / get-output-stream-string — error paths
+; make-string-output-stream / get-output-stream-string - error paths
 ; ============================================================
 
 >>> ;;; make-string-output-stream takes no arguments
@@ -1058,7 +1058,7 @@ ab
 ==>
 
 ; ============================================================
-; make-string-input-stream — happy paths
+; make-string-input-stream - happy paths
 ; ============================================================
 
 >>> ;;; make-string-input-stream returns a readable stream
@@ -1102,7 +1102,7 @@ ab
 ==> "hello"
 
 ; ============================================================
-; make-string-input-stream — error paths
+; make-string-input-stream - error paths
 ; ============================================================
 
 >>> ;;; arity: requires at least 1 argument
@@ -1157,13 +1157,13 @@ ab
 ; close with :abort keyword (CL compatibility)
 ; ============================================================
 
->>> ;;; close with :abort nil (default) — same as plain close
+>>> ;;; close with :abort nil (default) - same as plain close
 ... (let ((s (make-string-output-stream)))
 ...    (close s :abort nil)
 ...    (open-stream-p s))
 ==> NIL
 
->>> ;;; close with :abort t — accepted, ignored; stream still closed
+>>> ;;; close with :abort t - accepted, ignored; stream still closed
 ... (let ((s (make-string-output-stream)))
 ...    (close s :abort t)
 ...    (open-stream-p s))
@@ -1264,7 +1264,7 @@ ab
 ==> NIL
 
 ; ============================================================
-; read-line — CL-compatible: no trailing newline
+; read-line - CL-compatible: no trailing newline
 ; ============================================================
 
 >>> ;;; read-line from a string stream returns line without trailing newline
@@ -1315,7 +1315,7 @@ ab
 ==>
 
 ; ============================================================
-; read-char — reads one character at a time
+; read-char - reads one character at a time
 ; ============================================================
 
 >>> ;;; read-char returns a one-character string
@@ -1346,7 +1346,7 @@ ab
 ==>
 
 ; ============================================================
-; read — reads one s-expression from a stream
+; read - reads one s-expression from a stream
 ; ============================================================
 
 >>> ;;; read parses a symbol

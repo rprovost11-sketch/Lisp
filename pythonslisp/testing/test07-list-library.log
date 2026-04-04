@@ -1035,7 +1035,7 @@
 
 ; ── find ──────────────────────────────────────────────────────────────────────
 
-; :from-end — rightmost match
+; :from-end - rightmost match
 >>> (find 2 '(1 2 3 2 1) :from-end t)
 ...
 
@@ -1101,7 +1101,7 @@
 
 ==> NIL
 
-; :from-end — rightmost index
+; :from-end - rightmost index
 >>> (position 'a '(a b a c a))
 ...
 
@@ -1238,13 +1238,13 @@
 
 ==> (B C A)
 
-; :from-end with :count — remove from right
+; :from-end with :count - remove from right
 >>> (remove 'a '(a b a c a) :count 2 :from-end t)
 ...
 
 ==> (A B C)
 
-; :start / :end — only consider bounded region
+; :start / :end - only consider bounded region
 >>> (remove 'a '(a b a c a) :start 1 :end 4)
 ...
 
@@ -1392,7 +1392,7 @@
 >>> (search "xyz" "hello world")
 ==> NIL
 
-; string: :from-end — rightmost "l"
+; string: :from-end - rightmost "l"
 >>> (search "l" "hello world" :from-end t)
 ==> 9
 

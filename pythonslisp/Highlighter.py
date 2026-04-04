@@ -270,7 +270,7 @@ def _render_table(rows: list[list[str]], use_color: bool) -> list[str]:
 def render_markdown(text: str, use_color: bool = True) -> str:
    """Render a Markdown string for terminal display.
 
-   Handles: headings (h1–h4), **bold**, *italic*, `inline code`, fenced code
+   Handles: headings (h1-h4), **bold**, *italic*, `inline code`, fenced code
    blocks (tagged with 'python' or 'lisp'), GFM pipe tables, horizontal rules,
    and unordered/ordered lists.
 

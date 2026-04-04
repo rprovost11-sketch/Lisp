@@ -193,7 +193,7 @@ class Environment:
                f'Too few arguments. {arity_mismatch_msg(compiledLL.min_args, compiledLL.max_args, argNum)}' )
          if type( paramSpec ) is str:
             self._bindings[paramSpec] = argVal
-         else:   # nested CompiledLambdaList — destructuring sub-pattern
+         else:   # nested CompiledLambdaList - destructuring sub-pattern
             self._destructuringBind( paramSpec, argVal )
          argNum += 1
       return argNum
@@ -242,7 +242,7 @@ class Environment:
                      skip_non_keywords: bool = False ) -> None:
       '''Syntax:  &key {var | ({var | (:keyword var)} [initForm [pvar]])}* [&allow-other-keys]
       skip_non_keywords: when True (after &rest), non-keyword args in the arg list are
-      silently skipped rather than raising an error — they are already captured by &rest.'''
+      silently skipped rather than raising an error - they are already captured by &rest.'''
       keys      = compiledLL.keys        # dict[keyStr -> (varName, pvarName, initForm)]
       key_order = compiledLL.key_order
       argListLength = len(argList)
@@ -276,7 +276,7 @@ class Environment:
             argVal = argList[argNum]
          except IndexError:
             # No value follows this keyword symbol.  When skip_non_keywords is True
-            # an undeclared keyword with no value was already captured by &rest —
+            # an undeclared keyword with no value was already captured by &rest -
             # treat it as data and skip rather than raising an error.
             if skip_non_keywords and keyArgStr not in keys:
                continue

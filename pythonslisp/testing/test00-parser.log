@@ -1,7 +1,7 @@
 ; ============================================================
 ; test00-parser.log
 ; Lexer/parser subsystem: happy-path parsing and syntax errors.
-; The (parse string) primitive returns (PROGN expr...) — the AST
+; The (parse string) primitive returns (PROGN expr...) - the AST
 ; exactly as produced by the parser, before evaluation.
 ; ============================================================
 
@@ -32,7 +32,7 @@
 
 ==> (PROGN 1/3)
 
->>> ;;; symbol — case-folded to upper
+>>> ;;; symbol - case-folded to upper
 ... (parse "foo")
 
 ==> (PROGN FOO)
@@ -93,7 +93,7 @@
 
 ==> (PROGN)
 
->>> ;;; string with embedded quotes — requires actual-character storage
+>>> ;;; string with embedded quotes - requires actual-character storage
 ... (parse "\"hello\"")
 
 ==> (PROGN "hello")

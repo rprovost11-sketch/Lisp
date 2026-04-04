@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 from io import IOBase, StringIO
 
-from pythonslisp.Environment import Environment
+from pythonslisp.Environment import Environment, ModuleEnvironment
 from pythonslisp.AST import LSymbol, LCallable, LPrimitive, LSpecialOperator, LFunction, LMacro, prettyPrint, prettyPrintSExpr, got_str
 from pythonslisp.AST import L_T, L_NIL
 from pythonslisp.Context import Context
@@ -32,6 +32,31 @@ else:
 
 
 HELP_DIR = Path(__file__).parent.parent / 'help'
+
+# Display order and labels for categories derived from extension/module names.
+# Covers both .py and .lisp extension files; same stem merges into one section.
+_EXT_ORDER = [
+    'control', 'meta', 'math', 'sequences', 'strings',
+    'types', 'io', 'modules', 'values', 'conditions', 'debug',
+    'core', 'predicates', 'datatypes',
+]
+
+_EXT_LABELS = {
+    'control':    'Control',
+    'meta':       'Meta',
+    'math':       'Math',
+    'sequences':  'Sequences',
+    'strings':    'Strings',
+    'types':      'Types & Predicates',
+    'io':         'I/O',
+    'modules':    'Modules',
+    'values':     'Multiple Values',
+    'conditions': 'Conditions',
+    'debug':      'Debugging',
+    'core':       'Core Library',
+    'predicates': 'Predicates Library',
+    'datatypes':  'Data Types Library',
+}
 
 
 def lwrite( outStrm, *values, end='' ):
@@ -106,32 +131,35 @@ def print_struct_help( descriptor, outStrm ) -> None:
    print( f'Copier:      (copy-{nameLow} inst)', file=outStrm )
 
 def printHelpListings( outStrm, env, find: str | None = None ) -> None:
-   # Create bins to sort symbols into
-   variablesList = []
-   primitivesList = []
-   functionsList  = []
-   macrosList     = []
-   typesList    = []
+   from collections import defaultdict
+
+   # categories: stem -> list of (symbol_name, type_tag)
+   # type_tag: 'special' | 'prim' | 'fn' | 'mac'
+   # '' key holds REPL-defined callables with no source file.
+   categories: dict[str, list] = defaultdict( list )
+   variablesList: list = []
+   typesList:     list = []
+
    findUpper = find.upper() if find is not None else None
+
    if HELP_DIR.exists():
-      from collections import defaultdict
-      raw_groups: dict[str, set] = defaultdict(set)
-      for f in list(HELP_DIR.glob('**/*.txt')) + list(HELP_DIR.glob('**/*.md')):
-         rel   = f.relative_to(HELP_DIR)
-         group = rel.parts[0] if len(rel.parts) > 1 else ''
-         raw_groups[group].add(f.stem.upper())
+      raw_groups: dict[str, set] = defaultdict( set )
+      for f in list( HELP_DIR.glob( '**/*.txt' ) ) + list( HELP_DIR.glob( '**/*.md' ) ):
+         rel   = f.relative_to( HELP_DIR )
+         group = rel.parts[0] if len( rel.parts ) > 1 else ''
+         raw_groups[group].add( f.stem.upper() )
       if findUpper is not None:
-         topic_groups = {g: sorted(s for s in stems if findUpper in s)
-                         for g, stems in raw_groups.items()}
-         topic_groups = {g: v for g, v in topic_groups.items() if v}
+         topic_groups = { g: sorted( s for s in stems if findUpper in s )
+                          for g, stems in raw_groups.items() }
+         topic_groups = { g: v for g, v in topic_groups.items() if v }
       else:
-         topic_groups = {g: sorted(stems) for g, stems in raw_groups.items()}
+         topic_groups = { g: sorted( stems ) for g, stems in raw_groups.items() }
    else:
       topic_groups = {}
-   outFile  = outStrm or sys.stdout
-   useColor = hasattr(outFile, 'isatty') and outFile.isatty()
 
-   # Define the color strings
+   outFile  = outStrm or sys.stdout
+   useColor = hasattr( outFile, 'isatty' ) and outFile.isatty()
+
    BOLD_WHITE = '\033[1;97m' if useColor else ''
    CYAN       = '\033[96m'   if useColor else ''
    GREEN      = '\033[92m'   if useColor else ''
@@ -139,52 +167,126 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
    YELLOW     = '\033[93m'   if useColor else ''
    RESET      = '\033[0m'    if useColor else ''
 
-   # Print a table header
-   def hdr( text ):
-      ul = '=' * len(text)
+   # Map type tag to display color (computed after useColor is known)
+   TYPE_COLOR = {
+      'special': YELLOW,   # special operators - args not pre-evaluated
+      'prim':    CYAN,     # built-in primitives
+      'fn':      GREEN,    # user-defined functions
+      'mac':     MAGENTA,  # macros
+   }
+
+   def hdr( text: str ) -> None:
+      ul = '=' * len( text )
       print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
       print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
 
-   # Bin the global symbols into the various lists, filtering by substring if requested
-   for symbolStr in env.getGlobalEnv().localSymbols():
-      if symbolStr.startswith('%') or symbolStr.endswith('-INTERNAL'):
+   def subhdr( text: str ) -> None:
+      ul = '-' * len( text )
+      print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
+      print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
+
+   def _tag( obj ) -> str | None:
+      if isinstance( obj, LSpecialOperator ):
+         return 'special'
+      if isinstance( obj, LPrimitive ):
+         return 'prim'
+      if isinstance( obj, LFunction ):
+         return 'fn'
+      if isinstance( obj, LMacro ):
+         return 'mac'
+      return None
+
+   def _cat_add( key: str, sym: str, tag: str ) -> None:
+      categories[key].append( (sym, tag) )
+
+   def _render_category( items: list ) -> None:
+      """Print one sorted, color-coded columnize block for a category's items."""
+      items_sorted = sorted( items )
+      names  = [ s   for s, _ in items_sorted ]
+      colors = [ TYPE_COLOR.get( t, '' ) or None for _, t in items_sorted ]
+      columnize( names, 78, file=outStrm, itemColors=colors )
+
+   globalEnv = env.getGlobalEnv()
+
+   # Bin global-level symbols into their source category
+   for symbolStr in globalEnv.localSymbols():
+      if symbolStr.startswith( '%' ) or symbolStr.endswith( '-INTERNAL' ):
          continue
       if findUpper is not None and findUpper not in symbolStr:
          continue
-      obj = env.lookupGlobal(symbolStr)
-      if isinstance(obj, LPrimitive):
-         primitivesList.append(symbolStr)
-      elif isinstance(obj, LFunction):
-         functionsList.append(symbolStr)
-      elif isinstance(obj, LMacro):
-         macrosList.append(symbolStr)
-      elif is_struct_descriptor(obj):
-         typesList.append(symbolStr)
-      else:
-         variablesList.append(symbolStr)
+      obj = env.lookupGlobal( symbolStr )
+      tag = _tag( obj )
+      if tag == 'special' or tag == 'prim':
+         mod = getattr( obj.pythonFn, '__module__', '' ) or ''
+         ext = mod.split( '.' )[-1]
+         _cat_add( ext, symbolStr, tag )
+      elif tag == 'fn':
+         _cat_add( obj.source_file or '', symbolStr, tag )
+      elif tag == 'mac':
+         _cat_add( obj.source_file or '', symbolStr, tag )
+      elif is_struct_descriptor( obj ):
+         typesList.append( symbolStr )
+      elif not isinstance( obj, ModuleEnvironment ):
+         variablesList.append( symbolStr )
 
-   # Print out the table
-   hdr( "Predefined Symbols" )
-   columnize( variablesList, 78, file=outStrm )
+   # Collect callables from loaded module environments
+   for symbolStr in globalEnv.localSymbols():
+      obj = globalEnv._bindings.get( symbolStr )
+      if not isinstance( obj, ModuleEnvironment ):
+         continue
+      modName = obj.name
+      for modSym in obj.localSymbols():
+         if modSym.startswith( '%' ) or modSym.endswith( '-INTERNAL' ):
+            continue
+         if findUpper is not None and findUpper not in modSym:
+            continue
+         modObj = obj._bindings.get( modSym )
+         tag    = _tag( modObj )
+         if tag:
+            _cat_add( modName, modSym, tag )
+
+   # --- Display ---
+
+   hdr( 'Predefined Symbols' )
+   columnize( sorted( variablesList ), 78, file=outStrm )
    print( file=outStrm )
-   hdr( "Primitives" )
-   columnize( primitivesList, 78, file=outStrm, itemColor=CYAN or None )
+
+   # Build ordered list of named categories (all keys except '')
+   named_keys = { k for k in categories if k }
+   seen:       set[str]            = set()
+   ordered:    list[tuple[str,str]] = []
+   for ext in _EXT_ORDER:
+      if ext in named_keys:
+         ordered.append( (ext, _EXT_LABELS.get( ext, ext.title() )) )
+         seen.add( ext )
+   for k in sorted( named_keys ):
+      if k not in seen:
+         ordered.append( (k, _EXT_LABELS.get( k, k.title() )) )
+
+   for key, label in ordered:
+      hdr( label )
+      _render_category( categories[key] )
+      print( file=outStrm )
+
+   # REPL-defined callables (no source file) in generic sections at the end
+   repl = categories.get( '', [] )
+   repl_fns  = [ (s, t) for s, t in repl if t == 'fn' ]
+   repl_macs = [ (s, t) for s, t in repl if t == 'mac' ]
+   if repl_fns:
+      hdr( 'Functions' )
+      _render_category( repl_fns )
+      print( file=outStrm )
+   if repl_macs:
+      hdr( 'Macros' )
+      _render_category( repl_macs )
+      print( file=outStrm )
+
+   hdr( 'Types' )
+   columnize( sorted( typesList ), 78, file=outStrm, itemColor=YELLOW or None )
    print( file=outStrm )
-   hdr( "Functions" )
-   columnize( functionsList, 78, file=outStrm, itemColor=GREEN or None )
-   print( file=outStrm )
-   hdr( "Macros" )
-   columnize( macrosList, 78, file=outStrm, itemColor=MAGENTA or None )
-   print( file=outStrm )
-   hdr( "Types" )
-   columnize( typesList, 78, file=outStrm, itemColor=YELLOW or None )
-   print( file=outStrm )
-   hdr( "TOPICS" )
-   def subhdr( text: str ) -> None:
-      ul = '-' * len(text)
-      print( f'{BOLD_WHITE}{text}{RESET}', file=outStrm )
-      print( f'{BOLD_WHITE}{ul}{RESET}',   file=outStrm )
-   for group in sorted(topic_groups):
+
+   hdr( 'TOPICS' )
+   for group in sorted( topic_groups ):
       label = group.title() if group else 'General'
       items = [f'"{s}"' for s in topic_groups[group]]
       print( file=outStrm )
@@ -769,13 +871,24 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    outStrm  = ctx.outStrm
    outFile  = outStrm or sys.stdout
    useColor = hasattr(outFile, 'isatty') and outFile.isatty()
-   CYAN  = '\033[96m' if useColor else ''
-   RESET = '\033[0m'  if useColor else ''
+   RESET   = '\033[0m'  if useColor else ''
+   if not useColor:
+      usageColor = ''
+   elif isinstance( callableObj, LSpecialOperator ):
+      usageColor = '\033[93m'   # yellow  - special operator
+   elif isinstance( callableObj, LPrimitive ):
+      usageColor = '\033[96m'   # cyan    - built-in primitive
+   elif isinstance( callableObj, LFunction ):
+      usageColor = '\033[92m'   # green   - user-defined function
+   elif isinstance( callableObj, LMacro ):
+      usageColor = '\033[95m'   # magenta - macro
+   else:
+      usageColor = ''
 
    args_label = 'args: unevaluated' if isinstance(callableObj, (LMacro, LSpecialOperator)) else 'args: pre-evaluated'
    print( f'{callableObj.typeLabel()}  |  {args_label}', file=outStrm )
    print( file=outStrm )
-   print( f'   {CYAN}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
+   print( f'   {usageColor}Usage: {callableObj.callForm()}{RESET}', file=outStrm )
    print( file=outStrm )
    if callableObj.docString != '':
       valueStr = prettyPrint( callableObj.docString )

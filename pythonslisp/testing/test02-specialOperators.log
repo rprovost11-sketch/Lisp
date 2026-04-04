@@ -149,7 +149,7 @@
 
 ==> "three"
 
-; case: list of keys — matches first key in group
+; case: list of keys - matches first key in group
 >>> (case 1
 ...    ((1 2 3) "low")
 ...    ((4 5 6) "high")
@@ -158,7 +158,7 @@
 
 ==> "low"
 
-; case: list of keys — matches second key in group
+; case: list of keys - matches second key in group
 >>> (case 5
 ...    ((1 2 3) "low")
 ...    ((4 5 6) "high")
@@ -167,7 +167,7 @@
 
 ==> "high"
 
-; case: list of keys — falls through to t
+; case: list of keys - falls through to t
 >>> (case 9
 ...    ((1 2 3) "low")
 ...    ((4 5 6) "high")
@@ -185,7 +185,7 @@
 
 ==> "ab"
 
-; case: list of symbol keys — no match, otherwise clause
+; case: list of symbol keys - no match, otherwise clause
 >>> (case 'z
 ...    ((a b)   "ab")
 ...    ((c d)   "cd")
@@ -756,21 +756,21 @@
 ; HANDLER-CASE
 ; ============================================================
 
-; test33-conditions.log — Condition system: make-condition, signal, handler-case,
+; test33-conditions.log - Condition system: make-condition, signal, handler-case,
 ;                          ignore-errors, condition-type, condition-message
 
-; make-condition — basic construction
+; make-condition - basic construction
 >>> (make-condition 'my-error "something went wrong")
 ==> (DICT
    ("CONDITION-TYPE" MY-ERROR)
    ("MESSAGE" "something went wrong")
 )
 
-; conditionp — recognizes condition objects
+; conditionp - recognizes condition objects
 >>> (conditionp (make-condition 'foo "bar"))
 ==> T
 
-; conditionp — rejects non-conditions
+; conditionp - rejects non-conditions
 >>> (conditionp "hello")
 ==> NIL
 
@@ -788,93 +788,93 @@
 >>> (condition-message (make-condition 'type-a "the message"))
 ==> "the message"
 
-; condition-message — empty message default
+; condition-message - empty message default
 >>> (condition-message (make-condition 'type-a))
 ==> ""
 
-; handler-case — catch by exact type
+; handler-case - catch by exact type
 >>> (handler-case (signal 'my-error "oops")
 ...   (my-error (e) (condition-message e)))
 ==> "oops"
 
-; handler-case — catch by T (catch-all)
+; handler-case - catch by T (catch-all)
 >>> (handler-case (signal 'anything "caught")
 ...   (t (e) 'caught-it))
 ==> CAUGHT-IT
 
-; handler-case — catch by ERROR (catch-all)
+; handler-case - catch by ERROR (catch-all)
 >>> (handler-case (signal 'whatever "msg")
 ...   (error (e) 'also-caught))
 ==> ALSO-CAUGHT
 
-; handler-case — first matching clause wins
+; handler-case - first matching clause wins
 >>> (handler-case (signal 'file-error "not found")
 ...   (file-error (e) 'file-clause)
 ...   (t          (e) 'catchall-clause))
 ==> FILE-CLAUSE
 
-; handler-case — non-matching type re-raises
+; handler-case - non-matching type re-raises
 >>> (handler-case (signal 'type-x "unhandled")
 ...   (type-y (e) 'wrong))
 %%% Unhandled condition TYPE-X: unhandled
 
-; handler-case — catches (error ...) primitive as ERROR condition
+; handler-case - catches (error ...) primitive as ERROR condition
 >>> (handler-case (error "something bad")
 ...   (error (e) (condition-message e)))
 ==> "something bad"
 
-; handler-case — catches error primitive via T
+; handler-case - catches error primitive via T
 >>> (handler-case (error "caught by t")
 ...   (t (e) 'got-it))
 ==> GOT-IT
 
-; handler-case — normal execution (no signal) returns form value
+; handler-case - normal execution (no signal) returns form value
 >>> (handler-case (* 6 7)
 ...   (t (e) 'should-not-run))
 ==> 42
 
-; handler-case — condition-type of a wrapped LRuntimeError is ERROR
+; handler-case - condition-type of a wrapped LRuntimeError is ERROR
 >>> (handler-case (error "test")
 ...   (error (e) (condition-type e)))
 ==> ERROR
 
-; handler-case — signal with condition object directly
+; handler-case - signal with condition object directly
 >>> (let ((c (make-condition 'my-type "direct")))
 ...   (handler-case (signal c)
 ...     (my-type (e) (condition-message e))))
 ==> "direct"
 
-; ignore-errors — suppresses errors, returns NIL
+; ignore-errors - suppresses errors, returns NIL
 >>> (ignore-errors (error "swallowed"))
 ==> NIL
 
-; ignore-errors — suppresses signaled conditions, returns NIL
+; ignore-errors - suppresses signaled conditions, returns NIL
 >>> (ignore-errors (signal 'bad-thing "swallowed"))
 ==> NIL
 
-; ignore-errors — returns normal value when no error
+; ignore-errors - returns normal value when no error
 >>> (ignore-errors (* 3 4))
 ==> 12
 
-; ignore-errors — returns last body form value
+; ignore-errors - returns last body form value
 >>> (ignore-errors
 ...   (setf _ign_test_ 1)
 ...   (* 5 5))
 ==> 25
 
-; handler-case — no var binding when var list is empty
+; handler-case - no var binding when var list is empty
 >>> (handler-case (signal 'oops "ignored")
 ...   (oops () 'no-var-needed))
 ==> NO-VAR-NEEDED
 
-; nested handler-case — inner catches first
+; nested handler-case - inner catches first
 >>> (handler-case
 ...   (handler-case (signal 'inner-err "inner")
 ...     (inner-err (e) 'inner-caught))
 ...   (t (e) 'outer-caught))
 ==> INNER-CAUGHT
 
-; nested handler-case — unmatched inner propagates to outer
+; nested handler-case - unmatched inner propagates to outer
 >>> (handler-case
 ...   (handler-case (signal 'unmatched "bubbles")
 ...     (other-type (e) 'wrong))
@@ -932,32 +932,32 @@
 ; MULTIPLE-VALUE-BIND
 ; ============================================================
 
-; multiple-value-bind — exact match
+; multiple-value-bind - exact match
 >>> (multiple-value-bind (q r) (values 7 3)
 ...   (list q r))
 ==> (7 3)
 
-; multiple-value-bind — fewer values than vars: extras get NIL
+; multiple-value-bind - fewer values than vars: extras get NIL
 >>> (multiple-value-bind (a b c) (values 10 20)
 ...   (list a b c))
 ==> (10 20 NIL)
 
-; multiple-value-bind — more values than vars: extras discarded
+; multiple-value-bind - more values than vars: extras discarded
 >>> (multiple-value-bind (x) (values 1 2 3)
 ...   x)
 ==> 1
 
-; multiple-value-bind — single non-multiple value
+; multiple-value-bind - single non-multiple value
 >>> (multiple-value-bind (p q) 99
 ...   (list p q))
 ==> (99 NIL)
 
-; multiple-value-bind — zero values: all vars get NIL
+; multiple-value-bind - zero values: all vars get NIL
 >>> (multiple-value-bind (a b) (values)
 ...   (list a b))
 ==> (NIL NIL)
 
-; multiple-value-bind — body with multiple forms
+; multiple-value-bind - body with multiple forms
 >>> (multiple-value-bind (x y) (values 3 4)
 ...   (setf _mv_sum_ (+ x y))
 ...   (* x y))
@@ -967,27 +967,27 @@
 ; NTH-VALUE
 ; ============================================================
 
-; nth-value — 0th value
+; nth-value - 0th value
 >>> (nth-value 0 (values 'a 'b 'c))
 ==> A
 
-; nth-value — 1st value
+; nth-value - 1st value
 >>> (nth-value 1 (values 'a 'b 'c))
 ==> B
 
-; nth-value — 2nd value
+; nth-value - 2nd value
 >>> (nth-value 2 (values 'a 'b 'c))
 ==> C
 
-; nth-value — out of range returns NIL
+; nth-value - out of range returns NIL
 >>> (nth-value 5 (values 1 2))
 ==> NIL
 
-; nth-value — single non-multiple value: 0 returns it
+; nth-value - single non-multiple value: 0 returns it
 >>> (nth-value 0 42)
 ==> 42
 
-; nth-value — single non-multiple value: >0 returns NIL
+; nth-value - single non-multiple value: >0 returns NIL
 >>> (nth-value 1 42)
 ==> NIL
 
@@ -995,15 +995,15 @@
 ; MULTIPLE-VALUE-LIST
 ; ============================================================
 
-; multiple-value-list — multiple values to list
+; multiple-value-list - multiple values to list
 >>> (multiple-value-list (values 1 2 3))
 ==> (1 2 3)
 
-; multiple-value-list — single value to one-element list
+; multiple-value-list - single value to one-element list
 >>> (multiple-value-list 42)
 ==> (42)
 
-; multiple-value-list — zero values to empty list
+; multiple-value-list - zero values to empty list
 >>> (multiple-value-list (values))
 ==> NIL
 ; --- scalar and tail contexts ---

@@ -138,8 +138,8 @@ def _my_macro():
 The three arguments to `@macro` are:
 
 1. The macro name (case-insensitive, converted to upper case).
-2. The lambda-list string — same syntax as `defmacro`.
-3. The macro body as a Lisp source string — a single expression.
+2. The lambda-list string - same syntax as `defmacro`.
+3. The macro body as a Lisp source string - a single expression.
 
 The decorated Python function is never called.  It exists solely as a
 docstring carrier; its body is ignored.  The actual macro logic must be

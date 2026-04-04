@@ -12,32 +12,44 @@ def retrieveFileList( dirname ) -> list[str]:
                     and testFileName.endswith('.log') ]
    return testFileList
 
-def columnize( lst: list[str], displayWidth: int=80, file=None, itemColor=None ) -> None:
+def columnize( lst: list[str], displayWidth: int=80, file=None,
+               itemColor=None, itemColors: list[str] | None=None ) -> None:
    """Display a list of strings as a compact set of columns.
 
    Each column is only as wide as necessary.
    Columns are separated by two spaces.
-   If itemColor is an ANSI escape string, each item is wrapped in that color.
+   itemColors: per-item ANSI color list (one entry per item in lst).
+   itemColor:  single ANSI color applied to all items (used when itemColors is None).
+   Column widths are computed from uncolored string lengths so color escapes do
+   not affect alignment.
    """
    RESET = '\033[0m'
-   size = len(lst)
-   if size == 1:
-      item = lst[0]
-      print( f'{itemColor}{item}{RESET}' if itemColor else item, file=file )
+   size  = len(lst)
+   if size == 0:
       return
-   # Try every row count from 1 upwards
+   # Build per-item color list
+   if itemColors is not None:
+      colors = itemColors
+   elif itemColor:
+      colors = [itemColor] * size
+   else:
+      colors = [None] * size
+   if size == 1:
+      c = colors[0]
+      print( f'{c}{lst[0]}{RESET}' if c else lst[0], file=file )
+      return
+   # Try every row count from 1 upwards until the layout fits displayWidth
    for nrows in range(1, len(lst)):
-      ncols = (size+nrows-1) // nrows
+      ncols    = (size + nrows - 1) // nrows
       colwidths = []
-      totwidth = -2
+      totwidth  = -2
       for col in range(ncols):
          colwidth = 0
          for row in range(nrows):
-            i = row + nrows*col
+            i = row + nrows * col
             if i >= size:
                break
-            x = lst[i]
-            colwidth = max(colwidth, len(x))
+            colwidth = max(colwidth, len(lst[i]))
          colwidths.append(colwidth)
          totwidth += colwidth + 2
          if totwidth > displayWidth:
@@ -45,29 +57,25 @@ def columnize( lst: list[str], displayWidth: int=80, file=None, itemColor=None )
       if totwidth <= displayWidth:
          break
    else:
-      nrows = len(lst)
-      ncols = 1
+      nrows     = len(lst)
+      ncols     = 1
       colwidths = [0]
    for row in range(nrows):
-      texts = []
+      cells = []
       for col in range(ncols):
-         i = row + nrows*col
-         if i >= size:
-            x = ""
+         i = row + nrows * col
+         cells.append( (lst[i], colors[i]) if i < size else ('', None) )
+      while cells and not cells[-1][0]:
+         del cells[-1]
+      rendered = []
+      for col, (content, c) in enumerate(cells):
+         padded = content.ljust(colwidths[col])
+         if c and content:
+            padding = padded[len(content):]
+            rendered.append( f'{c}{content}{RESET}{padding}' )
          else:
-            x = lst[i]
-         texts.append(x)
-      while texts and not texts[-1]:
-         del texts[-1]
-      for col in range(len(texts)):
-         content = texts[col]
-         padded  = content.ljust(colwidths[col])
-         if itemColor and content:
-            padding     = padded[len(content):]
-            texts[col]  = f'{itemColor}{content}{RESET}{padding}'
-         else:
-            texts[col]  = padded
-      print(str("  ".join(texts)), file=file )
+            rendered.append( padded )
+      print( '  '.join(rendered), file=file )
 
 def paren_state( text: str ) -> tuple[int, bool]:
    """Count net open parentheses in text, ignoring string contents and ; comments.

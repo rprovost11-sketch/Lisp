@@ -91,7 +91,7 @@
 
 ==> T
 
->>> ;;; strings are NOT case-folded — contrast with symbols
+>>> ;;; strings are NOT case-folded - contrast with symbols
 ... (is? "abc" "ABC")
 ...
 

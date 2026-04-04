@@ -45,7 +45,7 @@ sessions.
 ## Ctrl-R: Incremental History Search
 
 Press **Ctrl-R** to enter reverse incremental search mode.  Type any
-substring to search backwards through history — the matching entry is shown
+substring to search backwards through history - the matching entry is shown
 as you type.  Press **Ctrl-R** again to find the next older match.
 **Enter** accepts the match and returns it to the prompt for editing or
 immediate submission.  **Escape** or **Ctrl-C** cancels and restores your
