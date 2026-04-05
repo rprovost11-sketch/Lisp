@@ -440,9 +440,9 @@
 >>> (setf (point-x p1 p1) 5)
 ...
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (43,20)
-%%%                   (error "setf: struct accessor place must have exactly 1 instance argument"))
-%%%                    ^
+%%% Runtime Error: "" (22,17)
+%%%                (error "setf: struct accessor place must have exactly 1 instance argument"))
+%%%                 ^
 %%% setf: struct accessor place must have exactly 1 instance argument
 ==>
 

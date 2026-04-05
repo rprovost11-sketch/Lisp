@@ -3,10 +3,10 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from pythonslisp.AST import L_NIL, prettyPrintSExpr
+from pythonslisp.AST import L_NIL, prettyPrint, prettyPrintSExpr
 from pythonslisp.Context import Context
 from pythonslisp.Environment import Environment
-from pythonslisp.Exceptions import LRuntimeError
+from pythonslisp.Exceptions import LRuntimeError, LRuntimeUsageError
 from pythonslisp.Utils import paren_state
 from pythonslisp.extensions import primitive
 
@@ -123,3 +123,30 @@ Displays all local variable bindings in scope.  Commands:
             print( f'\n==> {prettyPrintSExpr( result )}\n' )
          except Exception as ex:
             print( f'%%% {ex}\n' )
+
+
+@primitive( 'symtab!', '()', max_args=0 )
+def LP_symtab( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Prints the entire environment stack and returns nil.  Each scope is printed
+in a separate list and begins on a new line.  The local scope is first; global
+is last."""
+   print( 'Symbol Table Dump:  Inner-Most Scope First')
+   print( '------------------------------------------')
+   scope: (Environment | None) = env
+   while scope:
+      symList = scope.localSymbols()
+      print( '   ', prettyPrint( symList ) )
+      scope = scope.parentEnv( )
+   return L_NIL
+
+@primitive( 'trace', '(&rest fn-names)', special=True )
+def LP_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Enables call tracing for the named functions and returns the updated
+trace list.  With no arguments, returns the list of currently traced functions."""
+   raise LRuntimeUsageError( LP_trace, 'Handled by CEK machine.' )
+
+@primitive( 'untrace', '(&rest fn-names)', special=True )
+def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Disables call tracing for the named functions and returns the updated
+trace list.  With no arguments, clears all named function tracing."""
+   raise LRuntimeUsageError( LP_untrace, 'Handled by CEK machine.' )

@@ -1,18 +1,203 @@
 from __future__ import annotations
-import datetime
-import time
 from typing import Any
 
 from pythonslisp.Environment import Environment
-from pythonslisp.AST import LSymbol, LMacro, got_str
-from pythonslisp.AST import L_T, L_NIL, prettyPrint, prettyPrintSExpr
+from pythonslisp.AST import ( LSymbol, LMacro, LMultipleValues, got_str,
+                               L_T, L_NIL, prettyPrintSExpr )
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeUsageError
+from pythonslisp.Exceptions import ( LRuntimeError, LRuntimeUsageError, LArgBindingError,
+                                      Thrown, Signaled, ContinuationInvoked )
 from pythonslisp.Parser import ParseError
 from pythonslisp.Expander import Expander
-from pythonslisp.extensions import LambdaListMode, primitive
+from pythonslisp.extensions import LambdaListMode, primitive, macro
 from pythonslisp.extensions.modules import resolve_module_path
 
+
+# ── Core definition macros (registered from Python so they are available
+#    before any .lisp extension file loads) ─────────────────────────────────
+
+@macro( 'defun', '(fnName lambda-list &rest body)',
+        '`(setf ,fnName (lambda (,@lambda-list) ,@body))' )
+def _defun():
+   """Define and return a new globally named function.  The first expr in the body can be an optional documentation string."""
+
+@macro( 'alias', '(new old)',
+        '`(setf ,new ,old)' )
+def _alias():
+   """Define an alias for an existing named object."""
+
+@macro( 'setf', '(place value &rest more)', '''
+(let ((single
+       (cond
+          ((symbolp place)
+           `(setq ,place ,value))
+          ((not place)
+           (error "setf: lvalue cannot be NIL or ()"))
+          ((listp place)
+           (cond
+              ((= (car place) 'at)
+               (if (/= (length place) 3)
+                   (error "setf: (at ...) place form expected 3 elements")
+                   `(at-set ,(car (cdr place)) ,(car (cdr (cdr place))) ,value)))
+              ((= (car place) ':)
+               (let ((path (cdr place)))
+                  (if (< (length path) 2)
+                      (error "setf: (: ...) place form requires at least 2 path elements")
+                      (if (= (length path) 2)
+                          `(module-set! ,(car path) ',(cadr path) ,value)
+                          `(module-set! (: ,@(butlast path)) ',(car (last path)) ,value)))))
+              ((/= (length place) 2)
+               (error "setf: struct accessor place must have exactly 1 instance argument"))
+              (t
+               `(set-accessor! ',(car place) ,(car (cdr place)) ,value))))
+          (t
+           (error "setf: unrecognized place form")))))
+   (if more
+       `(progn ,single (setf ,@more))
+       single))''' )
+def _setf():
+   """Generalized assignment.
+(setf sym val)               -> setq  (handles lambda auto-naming)
+(setf (at key coll) val)     -> at-set  (mutates list or map in place)
+(setf (accessor inst) val)   -> set-accessor!  (struct field via registry)
+Multiple (place value) pairs expand to a progn of individual setfs."""
+
+
+# ── Evaluation primitives ─────────────────────────────────────────────────
+
+@primitive( 'lambda', '(lambda-list &rest body)', special=True )
+def LP_lambda( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Creates and returns an unnamed lambda function.  When evaluating such a
+function the body exprs are evaluated within a nested scope.  This primitive
+captures the environment it is defined in to allow for closures.  The first body
+expression can be a documentation string."""
+   raise LRuntimeUsageError( LP_lambda, 'Handled by CEK machine.' )
+
+@primitive( 'quote', '(sexpr)', special=True )
+def LP_quote( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns expr without evaluating it."""
+   return args[0]
+
+@primitive( 'quasiquote', '(sexpr)', special=True )
+def LP_quasiquote( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Similar to quote but allows unquote and unquote-splicing expressions within expr.
+Quasiquotes may be nested; each level of unquote belongs to the nearest enclosing quasiquote."""
+   raise LRuntimeUsageError( LP_quasiquote, 'Handled by CEK machine.' )
+
+@primitive( 'unquote', '(sexpr)', special=True )
+def LP_unquote( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Must occur within a quasiquote expr or it's an error."""
+   raise LRuntimeUsageError( LP_unquote, 'UNQUOTE can only occur inside a QUASIQUOTE.')
+
+@primitive( 'unquote-splicing', '(sexpr)', special=True )
+def LP_unquote_splicing( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Must occur within a quasiquote expr or it's an error."""
+   raise LRuntimeUsageError( LP_unquote_splicing, 'UNQUOTE-SPLICING can only occur inside a QUASIQUOTE.')
+
+@primitive( 'funcall', '(callable &rest args)', mode=LambdaListMode.DOC_ONLY, min_args=1, special=True )
+def LP_funcall( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Calls a function with the args listed."""
+   raise LRuntimeUsageError( LP_funcall, 'Evaluation handled by main eval loop.' )
+
+@primitive( 'apply', '(function &rest args)',
+            mode=LambdaListMode.DOC_ONLY, min_args=2, special=True )
+def LP_apply( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Applies function to the args.  The last argument must be a list whose
+elements are appended to any preceding individual args.  Returns the result of
+that function application.  function is any callable that is not a special form."""
+   raise LRuntimeUsageError( LP_apply, 'Evaluation handled by main eval loop.' )
+
+@primitive( 'eval', '(sexpr)' )
+def LP_eval( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Evaluates expr in the current scope."""
+   return ctx.lEval( env, args[0] )
+
+@primitive( 'eval-for-display', '(sexpr)' )
+def LP_eval_for_display( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Evaluates sexpr (a pre-parsed AST, typically from parse) and returns a
+list of all result values suitable for display in a REPL.  A normal single-value
+result returns a one-element list.  Multiple values return a list of all values.
+An empty multiple-values object returns NIL.
+Use as (eval-for-display (parse input)) in a REPL loop to correctly display
+(values ...) forms without losing values to multiple-value stripping."""
+   result = ctx.lEval( env, args[0] )
+   if type(result) is LMultipleValues:
+      return result.values if result.values else L_NIL
+   return [result]
+
+@primitive( 'raweval-for-display', '(string &optional stream)', min_args=1, max_args=2 )
+def LP_raweval_for_display( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Parses string as Lisp, runs the full pipeline (macro-expand, analyze, eval),
+and returns a list of all result values suitable for display in a REPL.  A normal
+single-value result returns a one-element list.  Multiple values return a list of
+all values.  An empty multiple-values object returns NIL.
+If stream is supplied, ctx.outStrm is set to it for the duration of the call so
+that all output (including from user-defined functions with captured environments)
+goes to that stream.
+Use as (raweval-for-display input-string) or (raweval-for-display input-string stream)."""
+   source = args[0]
+   if not isinstance( source, str ):
+      raise LRuntimeUsageError( LP_raweval_for_display, 'Invalid argument 1. STRING expected.' )
+   from io import IOBase
+   _UNSET = object()   # sentinel distinct from None so we can detect "did we change ctx.outStrm?"
+   stream_val = args[1] if len(args) > 1 else None
+   if isinstance( stream_val, IOBase ) and stream_val.writable():
+      old_outStrm = ctx.outStrm   # save old value - may be None if Python listener set it so
+      ctx.outStrm = stream_val
+   else:
+      old_outStrm = _UNSET        # sentinel: we did NOT change ctx.outStrm
+   result = L_NIL
+   try:
+      ast       = ctx.parse( source )   # [PROGN, form1, ...]
+      top_forms = ast[1:]               # strip PROGN wrapper
+      for form in top_forms:
+         form   = ctx.expand( env, form )
+         ctx.analyze( env, form )
+         result = ctx.lEval( env, form )
+   except LArgBindingError as e:
+      # Convert to plain LRuntimeError so CEK's outer except-LArgBindingError
+      # (in _do_apply) does not re-wrap this with "RAWEVAL-FOR-DISPLAY" as the
+      # function name.  The error originated inside expand/eval, not in our own
+      # argument binding.
+      raise LRuntimeError( str(e) ) from e
+   except LRuntimeError:
+      raise
+   except Signaled as e:
+      _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
+      _cm = e.condition.get('MESSAGE', '')
+      raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' ) from e
+   except Thrown as e:
+      raise LRuntimeError( f'throw: no catch for tag {prettyPrintSExpr(e.tag)}.' ) from e
+   except ContinuationInvoked:
+      raise LRuntimeError( 'Continuation invoked outside its dynamic extent.' )
+   except Exception as e:
+      raise LRuntimeError( str(e) ) from e
+   finally:
+      if old_outStrm is not _UNSET:
+         ctx.outStrm = old_outStrm
+   if type(result) is LMultipleValues:
+      return result.values if result.values else L_NIL
+   return [result]
+
+@primitive( 'python', '(string)' )
+def LP_python( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Executes some python code from Lisp."""
+   thePythonCode = args[0]
+   if not isinstance(thePythonCode, str):
+      raise LRuntimeUsageError( LP_python, f'Invalid argument 1. STRING expected{got_str(thePythonCode)}.' )
+   theReturnVal = eval( thePythonCode, globals(), locals() )
+   return theReturnVal
+
+@primitive( 'parse', '(string)' )
+def LP_parse( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Parses the string as a Lisp sexpression and returns the resulting expression tree."""
+   theExprStr = args[0]
+   if not isinstance(theExprStr, str):
+      raise LRuntimeUsageError( LP_parse, f'Invalid argument 1. STRING expected{got_str(theExprStr)}.' )
+   return ctx.parse( theExprStr )
+
+
+# ── Macro definition and expansion ───────────────────────────────────────
 
 @primitive( 'defmacro', '(symbol lambda-list &rest body)', special=True )
 def LP_defmacro( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -61,6 +246,9 @@ not a macro call."""
 
    return Expander.expandMacroCall( ctx, env, macroDef, form[1:] )
 
+
+# ── Struct/setf registry ──────────────────────────────────────────────────
+
 @primitive( 'defsetf-internal', '(accessor-symbol field-symbol)' )
 def LP_defsetf_internal( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Register a struct field accessor as a valid setf target."""
@@ -87,6 +275,9 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    instance[ field_key ] = newval
    return newval
 
+
+# ── Variable operations ───────────────────────────────────────────────────
+
 @primitive( 'setq', '(symbol1 sexpr1 symbol2 sexpr2 ...)',
             mode=LambdaListMode.DOC_ONLY, special=True )
 def LP_setq( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -109,52 +300,8 @@ The argument is evaluated: (makunbound 'x) unbinds X."""
    env.getGlobalEnv().unbindSym( key )
    return L_NIL
 
-@primitive( 'symtab!', '()', max_args=0 )
-def LP_symtab( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Prints the entire environment stack and returns nil.  Each scope is printed
-in a separate list and begins on a new line.  The local scope is first; global
-is last."""
-   print( 'Symbol Table Dump:  Inner-Most Scope First')
-   print( '------------------------------------------')
-   scope: (Environment | None) = env
-   while scope:
-      symList = scope.localSymbols()
-      print( '   ', prettyPrint( symList ) )
-      scope = scope.parentEnv( )
-   return L_NIL
 
-@primitive( 'trace', '(&rest fn-names)', special=True )
-def LP_trace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Enables call tracing for the named functions and returns the updated
-trace list.  With no arguments, returns the list of currently traced functions."""
-   raise LRuntimeUsageError( LP_trace, 'Handled by CEK machine.' )
-
-@primitive( 'untrace', '(&rest fn-names)', special=True )
-def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Disables call tracing for the named functions and returns the updated
-trace list.  With no arguments, clears all named function tracing."""
-   raise LRuntimeUsageError( LP_untrace, 'Handled by CEK machine.' )
-
-@primitive( 'call/cc', '(procedure)', special=True )
-def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Calls procedure with one argument: a first-class continuation object.
-Invoking the continuation with a value restores the captured computation
-state and delivers that value as the result of the original call/cc expression.
-Continuations are fully re-invocable: the same continuation may be called
-multiple times, reinstating the saved state each time."""
-   raise LRuntimeUsageError( LP_callcc, 'Handled by CEK machine.' )
-
-@primitive( 'boundp', '(symbol)' )
-def LP_boundp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Returns T if the symbol has a value bound in the environment, NIL otherwise."""
-   sym = args[0]
-   if not isinstance( sym, LSymbol ):
-      raise LRuntimeUsageError( LP_boundp, f'Invalid argument 1. SYMBOL expected{got_str(sym)}.' )
-   try:
-      env.lookupSym( sym )
-      return L_T
-   except KeyError:
-      return L_NIL
+# ── Reflection and introspection ──────────────────────────────────────────
 
 @primitive( 'gensym', '(&optional x)' )
 def LP_gensym( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -187,31 +334,8 @@ non-negative integer it is used as the numeric suffix directly and
       return LSymbol( f'G{x}' )
    raise LRuntimeUsageError( LP_gensym, 'Invalid argument 1. STRING, SYMBOL, or NON-NEGATIVE INTEGER expected.' )
 
-_ITUPS = 1_000_000
 
-@primitive( 'internal-time-units-per-second', '()' )
-def LP_itups( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Returns the number of internal time units per second (1,000,000)."""
-   return _ITUPS
-
-@primitive( 'get-internal-real-time', '()' )
-def LP_get_internal_real_time( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Returns a high-resolution timestamp as an integer in units of
-internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
-   return int( time.perf_counter() * _ITUPS )
-
-@primitive( 'now-string', '(&optional format)' )
-def LP_now_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Returns the current date and time as a string.
-With no argument, returns an ISO 8601 string (e.g. \"2026-03-14T10:30:00.123456\").
-With a format string, uses strftime formatting (e.g. \"%Y-%m-%d-%H%M%S\")."""
-   now = datetime.datetime.now()
-   if len(args) == 0:
-      return now.isoformat()
-   fmt = args[0]
-   if not isinstance( fmt, str ):
-      raise LRuntimeUsageError( LP_now_string, 'Invalid argument 1. FORMAT STRING expected.' )
-   return now.strftime( fmt )
+# ── Extension loading and interpreter management ──────────────────────────
 
 @primitive( 'load-extension', '(&rest files &key name)',
                mode=LambdaListMode.DOC_ONLY, min_args=0 )

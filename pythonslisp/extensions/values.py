@@ -5,7 +5,7 @@ from pythonslisp.Environment import Environment
 from pythonslisp.AST import L_NIL, LMultipleValues, got_str
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeUsageError
-from pythonslisp.extensions import primitive
+from pythonslisp.extensions import LambdaListMode, primitive
 
 
 @primitive( 'values', '(&rest vals)' )
@@ -41,3 +41,13 @@ def LP_nth_value( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 if n is out of range.  A non-multiple-values result is treated as a single
 value: n=0 returns it, n>0 returns NIL."""
    raise LRuntimeUsageError( LP_nth_value, 'Handled by CEK machine.' )
+
+@primitive( 'multiple-value-bind',
+            '((var1 var2 ...) values-form &rest body)',
+            mode=LambdaListMode.DOC_ONLY, special=True )
+def LP_multiple_value_bind( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Evaluates values-form and binds its multiple return values to the listed
+variables in a new scope.  Extra variables beyond the number of values are bound
+to NIL; extra values beyond the number of variables are discarded.  Evaluates
+body forms in sequence and returns the result of the last."""
+   raise LRuntimeUsageError( LP_multiple_value_bind, 'Handled by CEK machine.' )

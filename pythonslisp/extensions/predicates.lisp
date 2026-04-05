@@ -40,10 +40,6 @@
 ; list-length is the legacy name; length is the CL-compatible primary name
 (alias list-length length)
 
-; CL-compatible string output aliases
-(alias princ-to-string ustring)
-(alias prin1-to-string string)
-
 ; CL-compatible string comparison aliases (= /= < <= > >= already handle strings)
 (alias string=  =)
 (alias string/= /=)
@@ -51,4 +47,32 @@
 (alias string<= <=)
 (alias string>  >)
 (alias string>= >=)
+
+;;; Logical connectives
+
+(defmacro and (&rest forms)
+   "Evaluates forms left to right.  Returns nil at the first nil form.
+Returns the value of the last form if all are truthy.  (and) returns t."
+   (cond ((not forms) 't)
+         ((not (cdr forms)) (car forms))
+         (t `(if ,(car forms) (and ,@(cdr forms)) nil))))
+
+(defmacro or (&rest forms)
+   "Evaluates forms left to right.  Returns the first truthy value found.
+Returns nil if all forms are nil.  (or) returns nil."
+   (cond ((not forms) 'nil)
+         ((not (cdr forms)) (car forms))
+         (t (let ((var (gensym "OR")))
+               `(let ((,var ,(car forms)))
+                   (if ,var ,var (or ,@(cdr forms))))))))
+
+;;; Sequence predicates
+
+(defun notany (pred lst)
+   "Returns T if no element of lst satisfies pred, NIL otherwise."
+   (not (some pred lst)))
+
+(defun notevery (pred lst)
+   "Returns T if not every element of lst satisfies pred, NIL otherwise."
+   (not (every pred lst)))
 

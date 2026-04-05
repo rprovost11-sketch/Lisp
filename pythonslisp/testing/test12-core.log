@@ -797,18 +797,18 @@ T
 >>> ;;; setf with NIL lvalue
 ... (setf () 5)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (28,16)
-%%%               (error "setf: lvalue cannot be NIL or ()"))
-%%%                ^
+%%% Runtime Error: "" (7,13)
+%%%            (error "setf: lvalue cannot be NIL or ()"))
+%%%             ^
 %%% setf: lvalue cannot be NIL or ()
 ==>
 
 >>> ;;; setf (at ...) form with wrong element count
 ... (setf (at 1) 5)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (33,24)
-%%%                       (error "setf: (at ...) place form expected 3 elements")
-%%%                        ^
+%%% Runtime Error: "" (12,21)
+%%%                    (error "setf: (at ...) place form expected 3 elements")
+%%%                     ^
 %%% setf: (at ...) place form expected 3 elements
 ==>
 

@@ -1927,7 +1927,7 @@
 >>> ;;; nth with out-of-range index
 ... (nth 10 '(1 2 3))
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (60,5)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\sequences.lisp" (5,5)
 %%%    (at index lst))
 %%%     ^
 %%% ERROR 'AT': Invalid argument 1. Key/index out of range or wrong type.

@@ -1,27 +1,20 @@
-;;; Python's Lisp system startup script
-;;; Loaded automatically by Interpreter.__init__ (via reboot()) after the standard library.
-;;; Contains system-level initialization that is not part of the reusable library.
-
-;;; Standard CL special variables
-(setq *gensym-counter* 0)
-
 ;;; Standard CL stream variables
-(setf *standard-input*  (stdin))
-(setf *standard-output* (stdout))
-(setf *error-output*    (stderr))
-(setf *terminal-io*     (stdout))
-(setf *debug-io*        (stderr))
-(setf *query-io*        (stdout))
-(setf *trace-output*    (stdout))
+(setq *standard-input*  (stdin))
+(setq *standard-output* (stdout))
+(setq *error-output*    (stderr))
+(setq *terminal-io*     (stdout))
+(setq *debug-io*        (stderr))
+(setq *query-io*        (stdout))
+(setq *trace-output*    (stdout))
 
 ;;; Stream predicate aliases (backward compatibility)
-(alias readable  input-stream-p)
-(alias writable  output-stream-p)
-(alias isatty    interactive-stream-p)
+(setq readable  input-stream-p)
+(setq writable  output-stream-p)
+(setq isatty    interactive-stream-p)
 
-(defun closed (s)
+(setq closed (lambda (s)
    "Returns T if the stream is closed, NIL if it is open."
-   (not (open-stream-p s)))
+   (not (open-stream-p s))))
 
 ;;; CL file and string stream macros
 
@@ -59,11 +52,9 @@ var-spec is (var string), (var string start), or (var string start end)."
              (when ,var (close ,var))
              _wifs_result_))))
 
-;;; Condition system convenience macros
+;;; Interactive I/O
 
-(defmacro ignore-errors (&rest body)
-   "Evaluates body forms.  If any error or condition is signaled, returns NIL.
-Returns the value of the last body form if no error occurs."
-   `(handler-case (progn ,@body)
-      (t (_ign_e_) nil)))
-
+(setq read-prompt (lambda (promptStr)
+   "Prompt the user for input and return the user input as a string."
+   (write! promptStr)
+   (read-line)))

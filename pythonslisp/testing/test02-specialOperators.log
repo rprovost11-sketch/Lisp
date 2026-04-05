@@ -2448,36 +2448,36 @@ Y
 >>> ;;; NIL lvalue
 ... (setf () 5)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (28,16)
-%%%               (error "setf: lvalue cannot be NIL or ()"))
-%%%                ^
+%%% Runtime Error: "" (7,13)
+%%%            (error "setf: lvalue cannot be NIL or ()"))
+%%%             ^
 %%% setf: lvalue cannot be NIL or ()
 ==>
 
 >>> ;;; (at ...) form with wrong element count
 ... (setf (at 0) 5)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (33,24)
-%%%                       (error "setf: (at ...) place form expected 3 elements")
-%%%                        ^
+%%% Runtime Error: "" (12,21)
+%%%                    (error "setf: (at ...) place form expected 3 elements")
+%%%                     ^
 %%% setf: (at ...) place form expected 3 elements
 ==>
 
 >>> ;;; struct accessor with extra instance argument
 ... (setf (sf-fn sf-a sf-b) 5)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (43,20)
-%%%                   (error "setf: struct accessor place must have exactly 1 instance argument"))
-%%%                    ^
+%%% Runtime Error: "" (22,17)
+%%%                (error "setf: struct accessor place must have exactly 1 instance argument"))
+%%%                 ^
 %%% setf: struct accessor place must have exactly 1 instance argument
 ==>
 
 >>> ;;; non-symbol non-list lvalue
 ... (setf 99 5)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (47,16)
-%%%               (error "setf: unrecognized place form")))))
-%%%                ^
+%%% Runtime Error: "" (26,13)
+%%%            (error "setf: unrecognized place form")))))
+%%%             ^
 %%% setf: unrecognized place form
 ==>
 

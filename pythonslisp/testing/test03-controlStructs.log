@@ -170,14 +170,14 @@ ABC
 
 ; Error: loop variable not a symbol
 >>> (for (42 0) (< 42 5) (+ 42 1) nil)
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (356,9)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\control.lisp" (103,9)
 %%%        (error "for: loop variable must be a symbol"))
 %%%         ^
 %%% for: loop variable must be a symbol
 
 ; Error: no body forms
 >>> (for (i 0) (< i 5) (+ i 1))
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (358,9)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\control.lisp" (105,9)
 %%%        (error "for: at least one body expression is required"))
 %%%         ^
 %%% for: at least one body expression is required
@@ -262,7 +262,7 @@ ABC
 >>> ;;; while with no body
 ... (while t)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (278,9)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\control.lisp" (25,9)
 %%%        (error "while: at least one body expression is required")
 %%%         ^
 %%% while: at least one body expression is required
@@ -303,7 +303,7 @@ ABC
 >>> ;;; dotimes variable must be a symbol
 ... (dotimes (1 3) 1)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (293,9)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\control.lisp" (40,9)
 %%%        (error "dotimes: loop variable must be a symbol")
 %%%         ^
 %%% dotimes: loop variable must be a symbol
@@ -339,7 +339,7 @@ ABC
 >>> ;;; dolist variable must be a symbol
 ... (dolist (1 '(a b)) (write! 1))
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\core.lisp" (315,9)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\control.lisp" (62,9)
 %%%        (error "dolist: control spec variable must be a symbol")
 %%%         ^
 %%% dolist: control spec variable must be a symbol

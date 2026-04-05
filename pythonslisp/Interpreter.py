@@ -61,11 +61,6 @@ class Interpreter( InterpreterBase ):
       if ext_dir is not None:
          self._loadExtDir( Path(ext_dir), outStrm )
 
-      # Load system startup script (always, from package directory)
-      startup_path = Path(__file__).parent / 'startup.lisp'
-      if startup_path.exists():
-         self.evalFile( str(startup_path), outStrm )
-
       # Load user startup script if present (~/.pythonslisp_rc)
       user_startup = Path.home() / '.pythonslisp_rc'
       if user_startup.exists():
