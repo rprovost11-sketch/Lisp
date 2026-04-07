@@ -80,35 +80,34 @@ When `(break)` is reached, output similar to the following appears:
       A = 10
       B = 0
 
-      ]cont [expr]  resume execution (returning expr or NIL)
-      ]abort        abort to top level
-
-    brk>>>
-
-You can evaluate any Lisp expression at the `brk>>> ` prompt to inspect or
-modify program state.  Multi-line expressions and the super-bracket are
-supported.
+    break>
 
 `(break "message")` displays *message* alongside the break notification,
 which is useful for distinguishing multiple breakpoints.
 
 ### Break Commands
 
+The break prompt uses the same command set as `(step)`:
+
 | Command | Effect |
 |---|---|
-| `]cont` | Resume execution, returning NIL to the call site |
-| `]cont expr` | Resume execution, returning the value of *expr* |
-| `]abort` | Abort execution and return to the top-level `>>> ` prompt |
+| `c` | Resume execution, returning NIL to the call site |
+| `c expr` | Resume execution, returning the value of *expr* |
+| `s` | Step into the next expression after the break |
+| `n` | Step over the next expression after the break |
+| `abort` | Abort execution and return to the top-level `>>> ` prompt |
+| `e expr` | Evaluate *expr* in the current environment |
+| `v` | Show local variables |
 
 ### Example Session
 
-    brk>>> (+ a b)
+    break> e (+ a b)
     ==> 10
-    brk>>> ]cont 42
-    ==> 42
+    break> c 42
 
-The value passed to `]cont` becomes the return value of the `(break)`
-call in the surrounding code.
+The value passed to `c` becomes the return value of the `(break)`
+call in the surrounding code.  Using `s` or `n` transitions into
+stepping mode for the code that follows the break point.
 
 ---
 

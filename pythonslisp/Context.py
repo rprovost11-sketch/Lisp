@@ -30,3 +30,4 @@ class Context:
       self.nested_repl:      Callable = None   # set by Listener after construction
       self.start_dribble:    Callable = None   # set by Listener via Interpreter
       self.stop_dribble:     Callable = None   # set by Listener via Interpreter
+      self.step_hook:        Any      = None   # set by (step) special operator

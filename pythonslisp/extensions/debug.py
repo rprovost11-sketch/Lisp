@@ -41,12 +41,53 @@ def _collect_locals( env: Environment ) -> dict:
    return result
 
 
+def _print_scoped_locals( env, max_depth=None ):
+   """Print local variable bindings grouped by scope (shared by break and step).
+   Optional max_depth limits how many scopes to display."""
+   current    = env
+   global_env = env._GLOBAL_ENV
+   scope_num  = 0
+   while current is not None and current is not global_env:
+      if max_depth is not None and scope_num >= max_depth:
+         break
+      bindings = current._bindings
+      if bindings:
+         print( f'--- scope {scope_num} ---' )
+         for name in sorted( bindings ):
+            print( f'{name}:   {prettyPrintSExpr( bindings[name] )}' )
+         scope_num += 1
+      current = current._parent
+
+
+def _safe_eval( ctx, env, source ):
+   """Evaluate a source string in env, printing the result or error.
+   Temporarily disables the step hook to avoid recursive stepping."""
+   saved_hook    = ctx.step_hook
+   ctx.step_hook = None
+   try:
+      ast    = ctx.parse( source )
+      result = L_NIL
+      for form in ast[1:]:
+         form   = ctx.expand( env, form )
+         ctx.analyze( env, form )
+         result = ctx.lEval( env, form )
+      print( f'==> {prettyPrintSExpr( result )}' )
+   except Exception as ex:
+      print( f'%%% {ex}' )
+   finally:
+      ctx.step_hook = saved_hook
+
+
 @primitive( 'break', '(&optional message)', min_args=0, max_args=1 )
 def LP_break( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Drop into a nested debug REPL at the current call site.
+   """Drop into an interactive debug prompt at the current call site.
 Displays all local variable bindings in scope.  Commands:
-  ]cont [expr]  - resume execution returning expr (default NIL)
-  ]abort        - abort execution to top level"""
+  c [expr]  - continue execution returning expr (default NIL)
+  s         - step into the next expression after the break
+  n         - step over the next expression after the break
+  abort     - abort execution to top level
+  e expr    - evaluate expr in the current environment
+  v [n]     - show local variables (optional n limits scope depth)"""
 
    if args:
       print( f'\n*** Break: {prettyPrintSExpr( args[0] )}' )
@@ -62,84 +103,57 @@ Displays all local variable bindings in scope.  Commands:
       print( 'Locals: (none)' )
 
    print()
-   print( '  ]cont [expr]  resume execution (returning expr or NIL)' )
-   print( '  ]abort        abort to top level' )
-   print()
 
    if ctx.nested_repl is not None:
       return ctx.nested_repl( env )
 
    # Fallback: plain input() loop for use outside a Listener session.
-   expr_lines: list[str] = []
-
    while True:
       try:
-         prompt   = 'brk>>> ' if not expr_lines else 'brk... '
-         line     = input( prompt ).rstrip()
+         line = input( 'break> ' ).strip()
       except EOFError:
          print()
          raise LRuntimeError( 'break: end of input in debug REPL' )
       except KeyboardInterrupt:
          print()
-         expr_lines = []
          continue
 
-      # ]cont and ]abort commands
-      if not expr_lines and line.startswith( ']' ):
-         parts = line[1:].split( None, 1 )
-         cmd   = parts[0] if parts else ''
-         rest  = parts[1].strip() if len(parts) > 1 else ''
-         if cmd == 'cont':
-            if rest:
-               try:
-                  ast    = ctx.parse( rest )
-                  result = L_NIL
-                  for form in ast[1:]:
-                     form   = ctx.expand( env, form )
-                     ctx.analyze( env, form )
-                     result = ctx.lEval( env, form )
-                  return result
-               except Exception as ex:
-                  print( f'%%% {ex}' )
-                  continue
-            return L_NIL
-         elif cmd == 'abort':
-            raise LRuntimeError( 'Aborted from (break).' )
-         else:
-            print( f"Unknown command '{cmd}'.  Use ]cont or ]abort." )
-            continue
-
-      # Super-bracket support
-      if line.endswith( ']' ) and not (line.startswith( ']' ) and len(line) > 1):
-         tentative = line[:-1]
-         combined  = '\n'.join( expr_lines + ([tentative] if tentative else []) )
-         sb_depth, sb_in_str = paren_state( combined )
-         if sb_depth > 0 and not sb_in_str:
-            line = tentative + ')' * sb_depth
-         elif line == ']' and sb_depth == 0 and not sb_in_str:
-            continue
-
-      if line == '' and not expr_lines:
+      if line == '' :
          continue
-
-      expr_lines.append( line )
-      depth, _ = paren_state( '\n'.join( expr_lines ) )
-
-      if line == '' or depth == 0:
-         src        = '\n'.join( expr_lines ).strip()
-         expr_lines = []
-         if not src:
-            continue
+      elif line == 'c' :
+         return L_NIL
+      elif line.startswith( 'c ' ):
+         rest = line[2:].strip()
          try:
-            ast    = ctx.parse( src )
+            ast    = ctx.parse( rest )
             result = L_NIL
             for form in ast[1:]:
                form   = ctx.expand( env, form )
                ctx.analyze( env, form )
                result = ctx.lEval( env, form )
-            print( f'\n==> {prettyPrintSExpr( result )}\n' )
+            return result
          except Exception as ex:
-            print( f'%%% {ex}\n' )
+            print( f'%%% {ex}' )
+      elif line == 's':
+         ctx.step_hook = StepHook( ctx )
+         return L_NIL
+      elif line == 'n':
+         hook = StepHook( ctx )
+         hook._step_over_first = True
+         ctx.step_hook = hook
+         return L_NIL
+      elif line == 'abort':
+         raise LRuntimeError( 'Aborted from (break).' )
+      elif line == 'v' or line.startswith( 'v ' ):
+         rest = line[1:].strip()
+         depth = int(rest) if rest.isdigit() else None
+         _print_scoped_locals( env, depth )
+      elif line.startswith( 'e ' ):
+         expr = line[2:].strip()
+         if expr:
+            _safe_eval( ctx, env, expr )
+      else:
+         print( 'Commands: s(tep) n(ext) c(ontinue) [expr] abort e <expr> v [n]' )
 
 
 @primitive( 'symtab!', '()', max_args=0 )
@@ -167,6 +181,82 @@ def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Disables call tracing for the named functions and returns the updated
 trace list.  With no arguments, clears all named function tracing."""
    raise LRuntimeUsageError( LP_untrace, 'Handled by CEK machine.' )
+
+@primitive( 'step', '(form)', special=True )
+def LP_step( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Evaluates form one step at a time with an interactive debugger.
+Before each sub-expression is evaluated, the stepper pauses and shows
+what is about to be evaluated.  Commands:
+  s       - step into (evaluate one sub-step)
+  n       - step over (evaluate this form completely, then pause)
+  c       - continue (run to completion without pausing)
+  abort   - abandon execution
+  e expr  - evaluate expr in the current environment
+  v [n]   - show local variables (optional n limits scope depth)"""
+   raise LRuntimeUsageError( LP_step, 'Handled by CEK machine.' )
+
+
+# ── Step hook ────────────────────────────────────────────────────────────
+
+class StepHook:
+   """Interactive step debugger hook.  Installed by the STEP special operator
+   and called by the CEK loop before each list expression is evaluated."""
+
+   def __init__( self, ctx ):
+      self._ctx              = ctx
+      self._skip_until_depth = None    # None = always pause; int = step-over depth
+      self._step_over_first  = False   # True when entering from break's 'n' command
+
+   def on_expr( self, C, E, K ):
+      """Called by the CEK loop with the current expression C, environment E,
+      and continuation stack K.  Returns 'step', 'continue', or 'abort'."""
+      depth = len(K)
+
+      # Step-over: skip if deeper than target
+      if self._skip_until_depth is not None:
+         if depth > self._skip_until_depth:
+            return 'step'
+         self._skip_until_depth = None
+
+      # Auto step-over from break's 'n' command
+      if self._step_over_first:
+         self._step_over_first = False
+         self._skip_until_depth = depth
+         indent = '  ' * min( depth, 20 )
+         print( f'{indent}{prettyPrintSExpr( C )}' )
+         return 'step'
+
+      # Display current expression
+      indent = '  ' * min( depth, 20 )
+      print( f'{indent}{prettyPrintSExpr( C )}' )
+
+      # Interactive prompt
+      while True:
+         try:
+            line = input( 'step> ' ).strip()
+         except (EOFError, KeyboardInterrupt):
+            print()
+            return 'abort'
+
+         if line in ('s', ''):
+            return 'step'
+         elif line == 'n':
+            self._skip_until_depth = depth
+            return 'step'
+         elif line == 'c':
+            return 'continue'
+         elif line == 'abort':
+            return 'abort'
+         elif line == 'v' or line.startswith( 'v ' ):
+            rest = line[1:].strip()
+            depth = int(rest) if rest.isdigit() else None
+            _print_scoped_locals( E, depth )
+         elif line.startswith( 'e ' ):
+            expr = line[2:].strip()
+            if expr:
+               _safe_eval( self._ctx, E, expr )
+         else:
+            print( 'Commands: s(tep) n(ext) c(ontinue) abort e <expr> v [n]' )
 
 
 @primitive( '%time-report', '(elapsed-usec)' )

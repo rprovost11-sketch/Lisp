@@ -948,6 +948,21 @@ def set_stack_traces( enabled: bool ) -> None:
    _stack_traces_enabled = enabled
 
 
+class StepDoneFrame:
+   """Clears the step hook when the stepped expression finishes."""
+   __slots__ = ('saved_hook',)
+
+   def __init__( self, saved_hook ):
+      self.saved_hook = saved_hook
+
+   def copy( self ):
+      return StepDoneFrame( self.saved_hook )
+
+   def step( self, value, E, K, ctx ):
+      ctx.step_hook = self.saved_hook
+      return _Val(value), E
+
+
 _SPECIAL_OPERATOR_SET = frozenset({
    # existing
    'IF', 'QUOTE', 'LET', 'LET*', 'PROGN', 'SETQ', 'COND', 'CASE',
@@ -962,6 +977,7 @@ _SPECIAL_OPERATOR_SET = frozenset({
    'MULTIPLE-VALUE-BIND', 'MULTIPLE-VALUE-LIST', 'NTH-VALUE',
    'MAKE-DICT',
    ':', 'CALL/CC', 'DYNAMIC-WIND',
+   'STEP',
 })
 
 
@@ -1007,6 +1023,18 @@ def cek_eval( ctx, env, expr ) -> Any:
          if len(C) == 0:
             C = L_NIL
             continue
+
+         # ----------------------------------------------------------------
+         # Step hook - pause before evaluating a non-empty list expression
+         # ----------------------------------------------------------------
+         _sh = ctx.step_hook
+         if _sh is not None:
+            action = _sh.on_expr( C, E, K )
+            if action == 'continue':
+               ctx.step_hook = None
+            elif action == 'abort':
+               ctx.step_hook = None
+               raise LRuntimeError( 'Stepped execution aborted.' )
 
          # ----------------------------------------------------------------
          # Non-empty list - expression to reduce
@@ -1287,6 +1315,15 @@ def cek_eval( ctx, env, expr ) -> Any:
                raise LRuntimeError( 'dynamic-wind: requires exactly 3 arguments (before thunk after).' )
             K.append( DynWindCollectFrame( [C[2], C[3]], [], E ) )
             C = C[1]   # eval before first
+            continue
+
+         if headStr == 'STEP':
+            if len(C) != 2:
+               raise LRuntimeError( 'step: requires exactly 1 argument.' )
+            from pythonslisp.extensions.debug import StepHook
+            K.append( StepDoneFrame( ctx.step_hook ) )
+            ctx.step_hook = StepHook( ctx )
+            C = C[1]
             continue
 
       except ReturnFrom as e:

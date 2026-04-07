@@ -682,85 +682,66 @@ class Listener( object ):
       return paren_state( text )
 
    def _run_nested_repl( self, env ) -> Any:
-      """Run a nested debug REPL with brk>>> prompts.
-      Returns the value passed to ]cont (or NIL).
-      Raises LRuntimeError on ]abort or EOF."""
+      """Run a nested debug REPL with break> prompts.
+      Returns the value passed to c (or NIL).
+      Raises LRuntimeError on abort or EOF."""
       from pythonslisp.AST import L_NIL, prettyPrintSExpr
       from pythonslisp.Exceptions import LRuntimeError
-      ctx            = self._interp._ctx
-      inputExprLines = []
+      from pythonslisp.extensions.debug import StepHook, _print_scoped_locals, _safe_eval
+      ctx = self._interp._ctx
 
       while True:
          try:
-            if not inputExprLines:
-               lineInput = self._prompt( 'brk>>> ' )
-            else:
-               indent    = Listener._compute_indent( inputExprLines )
-               lineInput = self._prompt( 'brk... ', prefill=indent )
+            lineInput = self._prompt( 'break> ' )
          except EOFError:
             print()
             raise LRuntimeError( 'break: end of input in debug REPL' )
          except KeyboardInterrupt:
             print()
-            inputExprLines = []
             continue
 
-         # ]cont and ]abort commands
-         if not inputExprLines and lineInput.startswith( ']' ):
-            parts = lineInput[1:].split( None, 1 )
-            cmd   = parts[0] if parts else ''
-            rest  = parts[1].strip() if len(parts) > 1 else ''
-            if cmd == 'cont':
-               if rest:
-                  try:
-                     ast    = ctx.parse( rest )
-                     result = L_NIL
-                     for form in ast[1:]:
-                        form   = ctx.expand( env, form )
-                        ctx.analyze( env, form )
-                        result = ctx.lEval( env, form )
-                     return result
-                  except Exception as ex:
-                     print( f'%%% {ex}' )
-                     continue
-               return L_NIL
-            elif cmd == 'abort':
-               raise LRuntimeError( 'Aborted from (break).' )
-            else:
-               print( f"Unknown command '{cmd}'.  Use ]cont or ]abort." )
-               continue
-
-         # Super-bracket
-         if lineInput.endswith( ']' ) and not (lineInput.startswith( ']' ) and len(lineInput) > 1):
-            tentative = lineInput[:-1]
-            combined  = '\n'.join( inputExprLines + ([tentative] if tentative else []) )
-            sb_depth, sb_in_str = paren_state( combined )
-            if sb_depth > 0 and not sb_in_str:
-               lineInput = tentative + ')' * sb_depth
-            elif lineInput == ']' and sb_depth == 0 and not sb_in_str:
-               continue
-
-         if lineInput == '' and not inputExprLines:
+         line = lineInput.strip()
+         if line == '':
             continue
-
-         inputExprLines.append( lineInput )
-         depth, _ = paren_state( '\n'.join( inputExprLines ) )
-
-         if lineInput == '' or depth == 0:
-            src            = '\n'.join( inputExprLines ).strip()
-            inputExprLines = []
-            if not src:
-               continue
+         elif line == 'c':
+            return L_NIL
+         elif line.startswith( 'c ' ):
+            rest = line[2:].strip()
+            saved_hook    = ctx.step_hook
+            ctx.step_hook = None
             try:
-               ast    = ctx.parse( src )
+               ast    = ctx.parse( rest )
                result = L_NIL
                for form in ast[1:]:
                   form   = ctx.expand( env, form )
                   ctx.analyze( env, form )
                   result = ctx.lEval( env, form )
-               print( f'\n==> {prettyPrintSExpr( result )}\n' )
+               return result
             except Exception as ex:
-               print( f'%%% {ex}\n' )
+               print( f'%%% {ex}' )
+               continue
+            finally:
+               ctx.step_hook = saved_hook
+         elif line == 's':
+            ctx.step_hook = StepHook( ctx )
+            return L_NIL
+         elif line == 'n':
+            hook = StepHook( ctx )
+            hook._step_over_first = True
+            ctx.step_hook = hook
+            return L_NIL
+         elif line == 'abort':
+            raise LRuntimeError( 'Aborted from (break).' )
+         elif line == 'v' or line.startswith( 'v ' ):
+            rest = line[1:].strip()
+            depth = int(rest) if rest.isdigit() else None
+            _print_scoped_locals( env, depth )
+         elif line.startswith( 'e ' ):
+            expr = line[2:].strip()
+            if expr:
+               _safe_eval( ctx, env, expr )
+         else:
+            print( 'Commands: s(tep) n(ext) c(ontinue) [expr] abort e <expr> v [n]' )
 
    @staticmethod
    def _compute_indent( lines: list ) -> str:
