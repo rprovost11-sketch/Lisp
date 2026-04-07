@@ -1,19 +1,17 @@
-"""Debug extension: break, trace, timing, inspection primitives."""
+"""Debug extension: debugger, trace, timing, inspection primitives."""
 from __future__ import annotations
 
 LISP_DOCUMENTATION_TITLE = 'Debugging'
-import sys
 from fractions import Fraction
 from io import IOBase, StringIO
 from typing import Any
 
-from pythonslisp.AST import ( L_NIL, L_T, LSymbol, LCallable, LPrimitive, LSpecialOperator,
+from pythonslisp.AST import ( L_NIL, LSymbol, LPrimitive, LSpecialOperator,
                                LFunction, LMacro, LContinuation, LMultipleValues,
                                lisp_type_name, prettyPrint, prettyPrintSExpr )
 from pythonslisp.Context import Context
 from pythonslisp.Environment import Environment, ModuleEnvironment
-from pythonslisp.Exceptions import LRuntimeError, LRuntimeUsageError
-from pythonslisp.Utils import paren_state
+from pythonslisp.Exceptions import LRuntimeUsageError
 from pythonslisp.extensions import primitive
 
 
@@ -27,133 +25,6 @@ def _resolve_trace_output( env: Environment, ctx: Context ):
    except Exception:
       return ctx.outStrm
 
-
-def _collect_locals( env: Environment ) -> dict:
-   """Return all non-global bindings visible from env, innermost scope first."""
-   result     = {}
-   current    = env
-   global_env = env._GLOBAL_ENV
-   while current is not None and current is not global_env:
-      for name, val in current._bindings.items():
-         if name not in result:
-            result[name] = val
-      current = current._parent
-   return result
-
-
-def _print_scoped_locals( env, max_depth=None ):
-   """Print local variable bindings grouped by scope (shared by break and step).
-   Optional max_depth limits how many scopes to display."""
-   current    = env
-   global_env = env._GLOBAL_ENV
-   scope_num  = 0
-   while current is not None and current is not global_env:
-      if max_depth is not None and scope_num >= max_depth:
-         break
-      bindings = current._bindings
-      if bindings:
-         print( f'--- scope {scope_num} ---' )
-         for name in sorted( bindings ):
-            print( f'{name}:   {prettyPrintSExpr( bindings[name] )}' )
-         scope_num += 1
-      current = current._parent
-
-
-def _safe_eval( ctx, env, source ):
-   """Evaluate a source string in env, printing the result or error.
-   Temporarily disables the step hook to avoid recursive stepping."""
-   saved_hook    = ctx.step_hook
-   ctx.step_hook = None
-   try:
-      ast    = ctx.parse( source )
-      result = L_NIL
-      for form in ast[1:]:
-         form   = ctx.expand( env, form )
-         ctx.analyze( env, form )
-         result = ctx.lEval( env, form )
-      print( f'==> {prettyPrintSExpr( result )}' )
-   except Exception as ex:
-      print( f'%%% {ex}' )
-   finally:
-      ctx.step_hook = saved_hook
-
-
-@primitive( 'break', '(&optional message)', min_args=0, max_args=1 )
-def LP_break( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Drop into an interactive debug prompt at the current call site.
-Displays all local variable bindings in scope.  Commands:
-  c [expr]  - continue execution returning expr (default NIL)
-  s         - step into the next expression after the break
-  n         - step over the next expression after the break
-  abort     - abort execution to top level
-  e expr    - evaluate expr in the current environment
-  v [n]     - show local variables (optional n limits scope depth)"""
-
-   if args:
-      print( f'\n*** Break: {prettyPrintSExpr( args[0] )}' )
-   else:
-      print( '\n*** Break ***' )
-
-   locals_map = _collect_locals( env )
-   if locals_map:
-      print( 'Locals:' )
-      for name, val in sorted( locals_map.items() ):
-         print( f'  {name} = {prettyPrintSExpr( val )}' )
-   else:
-      print( 'Locals: (none)' )
-
-   print()
-
-   if ctx.nested_repl is not None:
-      return ctx.nested_repl( env )
-
-   # Fallback: plain input() loop for use outside a Listener session.
-   while True:
-      try:
-         line = input( 'break> ' ).strip()
-      except EOFError:
-         print()
-         raise LRuntimeError( 'break: end of input in debug REPL' )
-      except KeyboardInterrupt:
-         print()
-         continue
-
-      if line == '' :
-         continue
-      elif line == 'c' :
-         return L_NIL
-      elif line.startswith( 'c ' ):
-         rest = line[2:].strip()
-         try:
-            ast    = ctx.parse( rest )
-            result = L_NIL
-            for form in ast[1:]:
-               form   = ctx.expand( env, form )
-               ctx.analyze( env, form )
-               result = ctx.lEval( env, form )
-            return result
-         except Exception as ex:
-            print( f'%%% {ex}' )
-      elif line == 's':
-         ctx.step_hook = StepHook( ctx )
-         return L_NIL
-      elif line == 'n':
-         hook = StepHook( ctx )
-         hook._step_over_first = True
-         ctx.step_hook = hook
-         return L_NIL
-      elif line == 'abort':
-         raise LRuntimeError( 'Aborted from (break).' )
-      elif line == 'v' or line.startswith( 'v ' ):
-         rest = line[1:].strip()
-         depth = int(rest) if rest.isdigit() else None
-         _print_scoped_locals( env, depth )
-      elif line.startswith( 'e ' ):
-         expr = line[2:].strip()
-         if expr:
-            _safe_eval( ctx, env, expr )
-      else:
-         print( 'Commands: s(tep) n(ext) c(ontinue) [expr] abort e <expr> v [n]' )
 
 
 @primitive( 'symtab!', '()', max_args=0 )
@@ -182,82 +53,8 @@ def LP_untrace( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 trace list.  With no arguments, clears all named function tracing."""
    raise LRuntimeUsageError( LP_untrace, 'Handled by CEK machine.' )
 
-@primitive( 'step', '(form)', special=True )
-def LP_step( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Evaluates form one step at a time with an interactive debugger.
-Before each sub-expression is evaluated, the stepper pauses and shows
-what is about to be evaluated.  Commands:
-  s       - step into (evaluate one sub-step)
-  n       - step over (evaluate this form completely, then pause)
-  c       - continue (run to completion without pausing)
-  abort   - abandon execution
-  e expr  - evaluate expr in the current environment
-  v [n]   - show local variables (optional n limits scope depth)"""
-   raise LRuntimeUsageError( LP_step, 'Handled by CEK machine.' )
 
-
-# ── Step hook ────────────────────────────────────────────────────────────
-
-class StepHook:
-   """Interactive step debugger hook.  Installed by the STEP special operator
-   and called by the CEK loop before each list expression is evaluated."""
-
-   def __init__( self, ctx ):
-      self._ctx              = ctx
-      self._skip_until_depth = None    # None = always pause; int = step-over depth
-      self._step_over_first  = False   # True when entering from break's 'n' command
-
-   def on_expr( self, C, E, K ):
-      """Called by the CEK loop with the current expression C, environment E,
-      and continuation stack K.  Returns 'step', 'continue', or 'abort'."""
-      depth = len(K)
-
-      # Step-over: skip if deeper than target
-      if self._skip_until_depth is not None:
-         if depth > self._skip_until_depth:
-            return 'step'
-         self._skip_until_depth = None
-
-      # Auto step-over from break's 'n' command
-      if self._step_over_first:
-         self._step_over_first = False
-         self._skip_until_depth = depth
-         indent = '  ' * min( depth, 20 )
-         print( f'{indent}{prettyPrintSExpr( C )}' )
-         return 'step'
-
-      # Display current expression
-      indent = '  ' * min( depth, 20 )
-      print( f'{indent}{prettyPrintSExpr( C )}' )
-
-      # Interactive prompt
-      while True:
-         try:
-            line = input( 'step> ' ).strip()
-         except (EOFError, KeyboardInterrupt):
-            print()
-            return 'abort'
-
-         if line in ('s', ''):
-            return 'step'
-         elif line == 'n':
-            self._skip_until_depth = depth
-            return 'step'
-         elif line == 'c':
-            return 'continue'
-         elif line == 'abort':
-            return 'abort'
-         elif line == 'v' or line.startswith( 'v ' ):
-            rest = line[1:].strip()
-            depth = int(rest) if rest.isdigit() else None
-            _print_scoped_locals( E, depth )
-         elif line.startswith( 'e ' ):
-            expr = line[2:].strip()
-            if expr:
-               _safe_eval( self._ctx, E, expr )
-         else:
-            print( 'Commands: s(tep) n(ext) c(ontinue) abort e <expr> v [n]' )
-
+# ── Timing ──────────────────────────────────────────────────────────────
 
 @primitive( '%time-report', '(elapsed-usec)' )
 def LP_time_report( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -503,23 +300,14 @@ def _print_inspect( obj: Any, out ) -> None:
          print( f'  {i}: {prettyPrintSExpr( v )}', file=out )
 
 
-@primitive( 'inspect', '(object)' )
-def LP_inspect( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Interactively inspect a structured object.  For lists, dicts, and
-structs, displays numbered elements and lets you navigate into them.
-Commands:
-  <number>   - dive into the element at that index
-  ]up        - go back to the parent object
-  ]quit      - exit the inspector
-For non-structured objects, prints a description and returns immediately."""
-   obj     = args[0]
-   out     = ctx.outStrm
+def _run_inspect( obj, out ):
+   """Run the interactive inspect loop on obj.  Returns when the user exits."""
    history = []
 
    children = _inspectable_children( obj )
    if children is None:
       _describe_object( obj, out )
-      return L_NIL
+      return
 
    while True:
       _print_inspect( obj, out )
@@ -553,4 +341,15 @@ For non-structured objects, prints a description and returns immediately."""
       else:
          print( 'Enter a number, ]up, or ]quit', file=out )
 
+
+@primitive( 'inspect', '(object)' )
+def LP_inspect( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Interactively inspect a structured object.  For lists, dicts, and
+structs, displays numbered elements and lets you navigate into them.
+Commands:
+  <number>   - dive into the element at that index
+  ]up        - go back to the parent object
+  ]quit      - exit the inspector
+For non-structured objects, prints a description and returns immediately."""
+   _run_inspect( args[0], ctx.outStrm )
    return L_NIL

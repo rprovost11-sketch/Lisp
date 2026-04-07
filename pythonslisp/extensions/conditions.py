@@ -7,7 +7,8 @@ from typing import Any
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, L_T, L_NIL, got_str
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, LRuntimeUsageError, Signaled
+from pythonslisp.Exceptions import ( LRuntimeError, LRuntimePrimError, LRuntimeUsageError,
+                                      Signaled, RestartInvoked )
 from pythonslisp.extensions import LambdaListMode, primitive
 
 
@@ -133,3 +134,91 @@ Output goes to *error-output* if locally rebound, otherwise to standard output."
       out = ctx.outStrm
    print( f'WARNING: {message}', file=out )
    return L_NIL
+
+
+# ── Restarts ────────────────────────────────────────────────────────────
+
+@primitive( 'restart-case',
+            '(form (name1 (params) body1...) ...)',
+            mode=LambdaListMode.DOC_ONLY, special=True )
+def LP_restart_case( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Establishes named restarts around the evaluation of form.  If a restart
+is invoked via invoke-restart, control transfers to the matching restart
+clause and the clause body's value becomes the result of restart-case.
+
+  (restart-case (risky-op)
+    (use-value (v) v)
+    (skip () nil))"""
+   raise LRuntimeUsageError( LP_restart_case, 'Handled by CEK machine.' )
+
+
+@primitive( 'handler-bind',
+            '(((type handler-fn) ...) body...)',
+            mode=LambdaListMode.DOC_ONLY, special=True )
+def LP_handler_bind( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Binds condition handlers that run WITHOUT unwinding the stack.  The
+handler function is called in the dynamic context of the signaler.  If the
+handler invokes a restart, control transfers to the matching restart-case.
+If the handler returns normally, the condition continues to propagate.
+
+  (handler-bind ((error (lambda (c) (invoke-restart 'use-value 0))))
+    (risky-op))"""
+   raise LRuntimeUsageError( LP_handler_bind, 'Handled by CEK machine.' )
+
+
+@primitive( 'invoke-restart', '(restart-name &rest args)' )
+def LP_invoke_restart( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Invokes the restart designated by restart-name, transferring control to
+the restart-case that established it.  Any additional arguments are passed to
+the restart's parameter list."""
+   name = args[0]
+   if isinstance( name, LSymbol ):
+      raise RestartInvoked( name.name, args[1:] )
+   if isinstance( name, dict ) and 'RESTART-NAME' in name:
+      raise RestartInvoked( name['RESTART-NAME'], args[1:] )
+   raise LRuntimeUsageError( LP_invoke_restart,
+      f'Invalid argument 1. SYMBOL or RESTART expected{got_str(name)}.' )
+
+
+@primitive( 'find-restart', '(restart-name)' )
+def LP_find_restart( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns a restart object for restart-name if a restart with that name
+is currently active, or NIL otherwise."""
+   name = args[0]
+   if not isinstance( name, LSymbol ):
+      raise LRuntimeUsageError( LP_find_restart,
+         f'Invalid argument 1. SYMBOL expected{got_str(name)}.' )
+   from pythonslisp.Evaluator import RestartCaseBodyFrame
+   for K in reversed( ctx._restart_stack ):
+      for frame in reversed( K ):
+         if isinstance( frame, RestartCaseBodyFrame ):
+            params, body = frame.find_restart( name.name )
+            if body is not None:
+               return { 'RESTART-NAME': name.name, 'RESTART-PARAMS': params }
+   return L_NIL
+
+
+@primitive( 'compute-restarts', '()', max_args=0 )
+def LP_compute_restarts( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns a list of all restart objects currently available."""
+   from pythonslisp.Evaluator import RestartCaseBodyFrame
+   result = []
+   seen   = set()
+   for K in reversed( ctx._restart_stack ):
+      for frame in reversed( K ):
+         if isinstance( frame, RestartCaseBodyFrame ):
+            for rname, params, body in frame.clauses:
+               if rname.name not in seen:
+                  seen.add( rname.name )
+                  result.append( { 'RESTART-NAME': rname.name, 'RESTART-PARAMS': params } )
+   return result if result else L_NIL
+
+
+@primitive( 'restart-name', '(restart)' )
+def LP_restart_name( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the name of a restart object as a symbol."""
+   r = args[0]
+   if isinstance( r, dict ) and 'RESTART-NAME' in r:
+      return LSymbol( r['RESTART-NAME'] )
+   raise LRuntimeUsageError( LP_restart_name,
+      f'Invalid argument 1. RESTART expected{got_str(r)}.' )

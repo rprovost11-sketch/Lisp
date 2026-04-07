@@ -256,6 +256,130 @@ want to log the error, recover specifically, or distinguish condition types.
 
 ---
 
+## Restarts
+
+Restarts let code that detects a problem offer named recovery strategies.
+A handler higher up the call stack can then choose which strategy to use -
+without the detecting code needing to know what the right recovery is.
+
+This is the key difference from `handler-case`: with `handler-case`, the
+handler runs *after* the stack is unwound - the signaling code is gone.
+With restarts, the handler runs *before* unwinding, and can direct control
+to a recovery point established by the signaling code.
+
+### restart-case
+
+`restart-case` evaluates a body form with named restarts established.  If a
+restart is invoked, the matching clause runs and its value becomes the result
+of the `restart-case`.
+
+```lisp
+(restart-case body-form
+  (restart-name-1 (params...) body...)
+  (restart-name-2 (params...) body...)
+  ...)
+```
+
+If no restart is invoked, the body's value is returned normally:
+
+```lisp
+(restart-case (* 6 7)
+  (use-value (v) v))
+;==> 42
+```
+
+### invoke-restart
+
+`invoke-restart` transfers control to a matching restart.  Arguments after
+the name are passed to the restart's parameter list:
+
+```lisp
+(restart-case (invoke-restart 'use-value 42)
+  (use-value (v) v))
+;==> 42
+```
+
+### handler-bind
+
+`handler-bind` is like `handler-case` but runs the handler *without
+unwinding* the stack.  The handler executes in the dynamic context of the
+signaler, which means restarts established at the signal point are still
+active.
+
+```lisp
+(handler-bind ((type handler-fn) ...)
+  body...)
+```
+
+If the handler returns normally (without invoking a restart), the condition
+continues to propagate.
+
+### The Restart Pattern
+
+The typical pattern combines all three: `restart-case` establishes recovery
+options around risky code, and `handler-bind` higher up decides which
+recovery to use.
+
+```lisp
+(defun safe-parse-int (str)
+  (restart-case
+    (let ((n (read-from-string str)))
+      (if (integerp n) n
+        (signal 'parse-error (ustring "not an integer: " str))))
+    (use-value (v) v)
+    (use-zero  ()  0)))
+
+;; Caller decides the recovery strategy:
+(handler-bind ((parse-error
+                (lambda (c) (invoke-restart 'use-zero))))
+  (safe-parse-int "abc"))
+;==> 0
+
+(handler-bind ((parse-error
+                (lambda (c) (invoke-restart 'use-value -1))))
+  (safe-parse-int "abc"))
+;==> -1
+```
+
+The power is that `safe-parse-int` does not need to know what the right
+default is.  Different callers can make different choices.
+
+### find-restart and compute-restarts
+
+```lisp
+;; Check if a restart is available before invoking it
+(restart-case
+  (if (find-restart 'fix) 'available 'not-available)
+  (fix () 'fixed))
+;==> AVAILABLE
+
+;; List all active restarts
+(restart-case (length (compute-restarts))
+  (a () nil) (b () nil))
+;==> 2
+
+;; Get the name of a restart object
+(restart-name (find-restart 'fix))
+;==> FIX
+```
+
+### Debugger Integration
+
+When a breakpoint fires during `rd` execution, available restarts are
+listed automatically.  Use `:r` to invoke them:
+
+```
+*** Breakpoint: VALIDATE ***
+  (VALIDATE X)
+Restarts:
+  0: [USE-VALUE]
+  1: [SKIP]
+
+break> :r 0
+```
+
+---
+
 ## Quick Reference
 
 | Expression | Meaning |
@@ -266,10 +390,15 @@ want to log the error, recover specifically, or distinguish condition types.
 | `(condition-message cond)` | Message string of condition |
 | `(signal 'type "msg")` | Signal a condition by type and message |
 | `(signal cond)` | Signal a pre-built condition object |
-| `(handler-case form (type (var) body...))` | Evaluate form, catch condition by type |
+| `(handler-case form (type (var) body...))` | Catch condition (unwinds stack) |
 | `(handler-case form (t (var) body...))` | Catch-all: any condition or error |
-| `(handler-case form (error (var) body...))` | Catch-all: same as T |
+| `(handler-bind ((type fn) ...) body...)` | Bind handlers without unwinding |
 | `(ignore-errors body...)` | Suppress all errors, return NIL on failure |
+| `(restart-case form (name (params) body...))` | Establish named restarts |
+| `(invoke-restart 'name args...)` | Transfer to matching restart |
+| `(find-restart 'name)` | Restart object if active, NIL otherwise |
+| `(compute-restarts)` | List all active restart objects |
+| `(restart-name restart)` | Name symbol of a restart object |
 
 ---
 

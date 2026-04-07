@@ -420,3 +420,75 @@ ABC
 ...
 
 ==> NIL
+
+; ────────────────────────────────────────────────
+; restart-case / handler-bind / invoke-restart
+; ────────────────────────────────────────────────
+
+>>> ;;; restart-case normal completion returns body value
+... (restart-case (+ 10 20) (fix () 0))
+==> 30
+
+>>> ;;; invoke-restart transfers to matching restart clause
+... (restart-case (invoke-restart 'use-value 42) (use-value (v) v))
+==> 42
+
+>>> ;;; restart clause with no params
+... (restart-case (invoke-restart 'skip) (skip () 'skipped))
+==> SKIPPED
+
+>>> ;;; handler-bind + restart-case with error
+... (handler-bind ((error (lambda (c) (invoke-restart 'recover))))
+...   (restart-case (error "boom")
+...     (recover () 99)))
+==> 99
+
+>>> ;;; handler-bind + restart-case with signal
+... (handler-bind ((my-err (lambda (c) (invoke-restart 'use-val (condition-message c)))))
+...   (restart-case (signal 'my-err "hello")
+...     (use-val (v) (list 'got v))))
+==> (GOT "hello")
+
+>>> ;;; handler-bind handler returns normally - condition propagates to handler-case
+... (handler-case
+...   (handler-bind ((error (lambda (c) nil)))
+...     (error "fall through"))
+...   (error (e) 'caught))
+==> CAUGHT
+
+>>> ;;; nested restart-case - inner restart wins
+... (restart-case
+...   (restart-case (invoke-restart 'r) (r () 'inner))
+...   (r () 'outer))
+==> INNER
+
+>>> ;;; find-restart returns non-NIL inside restart-case
+... (restart-case (if (find-restart 'fix) 'found 'not-found) (fix () nil))
+==> FOUND
+
+>>> ;;; find-restart returns NIL when no matching restart
+... (if (find-restart 'nonexistent) 'found 'not-found)
+==> NOT-FOUND
+
+>>> ;;; compute-restarts returns list of restart objects
+... (restart-case (length (compute-restarts)) (a () nil) (b () nil))
+==> 2
+
+>>> ;;; restart-name returns name symbol
+... (restart-case (restart-name (find-restart 'my-restart)) (my-restart () nil))
+==> MY-RESTART
+
+>>> ;;; restart with multiple params
+... (restart-case (invoke-restart 'use-pair 10 20) (use-pair (a b) (+ a b)))
+==> 30
+
+>>> ;;; invoke-restart with no matching restart signals error
+... (invoke-restart 'nonexistent)
+%%% invoke-restart: no restart named NONEXISTENT is active.
+
+>>> ;;; handler-bind with multiple handler types
+... (handler-bind ((type-a (lambda (c) (invoke-restart 'r 'a)))
+...               (type-b (lambda (c) (invoke-restart 'r 'b))))
+...   (restart-case (signal 'type-b "test")
+...     (r (v) v)))
+==> B

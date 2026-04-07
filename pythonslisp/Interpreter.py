@@ -11,7 +11,8 @@ from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LSpecialOperator,
                               LMultipleValues, prettyPrintSExpr, derive_arity,
                               sync_print_controls )
 from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
-                                     ReturnFrom, Thrown, Signaled )
+                                     ReturnFrom, Thrown, Signaled,
+                                     RestartInvoked )
 from pythonslisp.Environment import Environment
 from pythonslisp.Expander import Expander
 from pythonslisp.Analyzer import Analyzer
@@ -40,7 +41,8 @@ class Interpreter( InterpreterBase ):
       self._setf_registry:    dict[str, str]   = {}
       self._ctx:              Context          = None
       self._env:              Environment      = None
-      self._nested_repl_fn                     = None
+      self._debug_input_fn                     = None
+      self._debug_rl                           = None
       self._dribble_start_fn                   = None
       self._dribble_stop_fn                    = None
       self.reboot( ext_dir=ext_dir, outStrm=outStrm )
@@ -106,6 +108,8 @@ class Interpreter( InterpreterBase ):
          _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
+      except RestartInvoked as e:
+         raise LRuntimeError( f'invoke-restart: no restart named {e.name} is active.' )
       _old_pct2 = self._env._bindings.get( '%%', L_NIL )
       _old_pct1 = self._env._bindings.get( '%',  L_NIL )
       self._env.bindGlobal( '%%%', _old_pct2 )
@@ -151,6 +155,8 @@ class Interpreter( InterpreterBase ):
          _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
+      except RestartInvoked as e:
+         raise LRuntimeError( f'invoke-restart: no restart named {e.name} is active.' )
       _old_pct2 = self._env._bindings.get( '%%', L_NIL )
       _old_pct1 = self._env._bindings.get( '%',  L_NIL )
       self._env.bindGlobal( '%%%', _old_pct2 )
@@ -181,17 +187,21 @@ class Interpreter( InterpreterBase ):
          _ct = prettyPrintSExpr( e.condition.get('CONDITION-TYPE', LSymbol('UNKNOWN')) )
          _cm = e.condition.get('MESSAGE', '')
          raise LRuntimeError( f'Unhandled condition {_ct}: {_cm}' if _cm else f'Unhandled condition {_ct}' )
+      except RestartInvoked as e:
+         raise LRuntimeError( f'invoke-restart: no restart named {e.name} is active.' )
       return returnVal
 
    def set_tracing( self, enabled: bool ) -> None:
       """Enable or disable call-stack tracking in the evaluator."""
       _set_stack_traces( enabled )
 
-   def set_nested_repl( self, fn ) -> None:
-      """Register the Listener's nested-REPL callback on the context.
-      Called by Listener after construction so (break) can use the real REPL."""
-      self._nested_repl_fn    = fn
-      self._ctx.nested_repl   = fn
+   def set_debug_input_fn( self, fn, rl=None ) -> None:
+      """Register the Listener's prompt function for debug REPLs.
+      Called by Listener after construction so debugger prompts use readline."""
+      self._debug_input_fn          = fn
+      self._debug_rl                = rl
+      self._ctx.debugger.input_fn   = fn
+      self._ctx.debugger._rl        = rl
 
    def set_dribble_fns( self, start_fn, stop_fn ) -> None:
       """Register the Listener's dribble callbacks on the context."""
@@ -202,6 +212,7 @@ class Interpreter( InterpreterBase ):
 
    def _makeContext( self, outStrm ) -> Context:
       from pythonslisp.Evaluator import cek_apply as _cek_apply
+      from pythonslisp.Debugger import Debugger
       ctx = Context( outStrm, self._tracer, self._setf_registry )
       ctx.lEval            = lambda env, sexpr: _cek_eval( ctx, env, sexpr )
       ctx.lApply           = lambda ctx_, env_, fn, args: _cek_apply( ctx_, env_, fn, args )
@@ -213,9 +224,12 @@ class Interpreter( InterpreterBase ):
       ctx.loadExt          = lambda path, targetEnv=None: self._loadExtFile( Path(path), ctx.outStrm, targetEnv )
       ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
       ctx.reboot           = lambda: self.reboot( outStrm=ctx.outStrm )
-      ctx.nested_repl      = self._nested_repl_fn
       ctx.start_dribble    = self._dribble_start_fn
       ctx.stop_dribble     = self._dribble_stop_fn
+      ctx.debugger         = Debugger()
+      if self._debug_input_fn is not None:
+         ctx.debugger.input_fn = self._debug_input_fn
+         ctx.debugger._rl     = self._debug_rl
       return ctx
 
    def _makeLispFunction( self, targetEnv=None ):

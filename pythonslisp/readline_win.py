@@ -357,3 +357,14 @@ def write_history_file(path: str) -> None:
         for entry in entries:
             f.write(entry.replace('\n', '\\n') + '\n')
 
+
+def get_history() -> list[str]:
+    """Return a copy of the current history list."""
+    return list(_history)
+
+
+def set_history(entries: list[str]) -> None:
+    """Replace the history list with entries."""
+    global _history
+    _history = list(entries)
+

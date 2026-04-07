@@ -93,8 +93,8 @@ class Listener( object ):
             except ImportError:
                pass
 
-      if hasattr( self._interp, 'set_nested_repl' ):
-         self._interp.set_nested_repl( self._run_nested_repl )
+      if hasattr( self._interp, 'set_debug_input_fn' ):
+         self._interp.set_debug_input_fn( self._prompt, rl=Listener._rl )
       if hasattr( self._interp, 'set_dribble_fns' ):
          self._interp.set_dribble_fns( self._dribble_start, self._dribble_stop )
 
@@ -319,6 +319,18 @@ class Listener( object ):
       self._writeLn( '==> 0')
       self._logFile.close( )
       self._logFile = None
+
+   def _cmd_debug( self, args: list[str] ) -> None:
+      '''Usage:  debug
+      Open the interactive debugger.  Set breakpoints and watches,
+      then use rd to run expressions with debugging active.  Type h
+      at the debug> prompt for a full command reference.
+      '''
+      if len( args ) != 0:
+         raise ListenerCommandError( self._cmd_debug.__doc__ )
+      ctx = self._interp._ctx
+      env = self._interp._env
+      ctx.debugger.run_debugger_repl( ctx, env )
 
    def _cmd_resume( self, args: list[str] ) -> None:
       '''Usage:  resume <filename> [V|v]
@@ -680,68 +692,6 @@ class Listener( object ):
    @staticmethod
    def _paren_state( text: str ) -> tuple[int, bool]:
       return paren_state( text )
-
-   def _run_nested_repl( self, env ) -> Any:
-      """Run a nested debug REPL with break> prompts.
-      Returns the value passed to c (or NIL).
-      Raises LRuntimeError on abort or EOF."""
-      from pythonslisp.AST import L_NIL, prettyPrintSExpr
-      from pythonslisp.Exceptions import LRuntimeError
-      from pythonslisp.extensions.debug import StepHook, _print_scoped_locals, _safe_eval
-      ctx = self._interp._ctx
-
-      while True:
-         try:
-            lineInput = self._prompt( 'break> ' )
-         except EOFError:
-            print()
-            raise LRuntimeError( 'break: end of input in debug REPL' )
-         except KeyboardInterrupt:
-            print()
-            continue
-
-         line = lineInput.strip()
-         if line == '':
-            continue
-         elif line == 'c':
-            return L_NIL
-         elif line.startswith( 'c ' ):
-            rest = line[2:].strip()
-            saved_hook    = ctx.step_hook
-            ctx.step_hook = None
-            try:
-               ast    = ctx.parse( rest )
-               result = L_NIL
-               for form in ast[1:]:
-                  form   = ctx.expand( env, form )
-                  ctx.analyze( env, form )
-                  result = ctx.lEval( env, form )
-               return result
-            except Exception as ex:
-               print( f'%%% {ex}' )
-               continue
-            finally:
-               ctx.step_hook = saved_hook
-         elif line == 's':
-            ctx.step_hook = StepHook( ctx )
-            return L_NIL
-         elif line == 'n':
-            hook = StepHook( ctx )
-            hook._step_over_first = True
-            ctx.step_hook = hook
-            return L_NIL
-         elif line == 'abort':
-            raise LRuntimeError( 'Aborted from (break).' )
-         elif line == 'v' or line.startswith( 'v ' ):
-            rest = line[1:].strip()
-            depth = int(rest) if rest.isdigit() else None
-            _print_scoped_locals( env, depth )
-         elif line.startswith( 'e ' ):
-            expr = line[2:].strip()
-            if expr:
-               _safe_eval( ctx, env, expr )
-         else:
-            print( 'Commands: s(tep) n(ext) c(ontinue) [expr] abort e <expr> v [n]' )
 
    @staticmethod
    def _compute_indent( lines: list ) -> str:

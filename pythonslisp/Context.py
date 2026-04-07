@@ -27,7 +27,9 @@ class Context:
       self.loadExt:          Callable = None   # set by Interpreter after construction
       self.loadExtDir:       Callable = None   # set by Interpreter after construction
       self.reboot:           Callable = None   # set by Interpreter after construction
-      self.nested_repl:      Callable = None   # set by Listener after construction
       self.start_dribble:    Callable = None   # set by Listener via Interpreter
       self.stop_dribble:     Callable = None   # set by Listener via Interpreter
-      self.step_hook:        Any      = None   # set by (step) special operator
+      self.step_hook:        Any      = None   # set by breakpoint s/n commands
+      self._debugging:       bool     = False  # True during rd; single eval-loop gate
+      self.debugger:         Any      = None   # set by Interpreter after construction
+      self._restart_stack:   list     = []     # stack of K refs for find-restart/compute-restarts

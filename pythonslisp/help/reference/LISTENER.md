@@ -104,5 +104,6 @@ evaluating Lisp.  Type `]help` for a full list.  Key commands include:
 | `]readsrc <file>` | Load and evaluate a Lisp source file |
 | `]reboot` | Reboot the interpreter to a clean state |
 | `]traces on\|off` | Enable/disable call-stack traces on errors |
+| `]debug` | Open the interactive debugger |
 | `]test [file]` | Run a test log file, or the full test suite |
 | `]exit` / `]quit` | Exit the Listener |

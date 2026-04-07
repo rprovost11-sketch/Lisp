@@ -27,7 +27,7 @@ from pythonslisp.AST import ( LSymbol, L_NIL, L_T,
                                LMultipleValues, LList, eql, prettyPrintSExpr )
 from pythonslisp.Exceptions import ( LRuntimeError, LArgBindingError,
                                       ContinuationInvoked, ReturnFrom,
-                                      Thrown, Signaled )
+                                      Thrown, Signaled, RestartInvoked )
 from pythonslisp.Environment  import Environment, ModuleEnvironment
 from pythonslisp.Expander     import Expander
 from pythonslisp.LambdaList   import compileLambdaList
@@ -554,6 +554,80 @@ class HandlerCaseBodyFrame:
       return _Val(_primary(value)), E
 
 
+class RestartCaseBodyFrame:
+   """K-stack marker for restart-case; catches RestartInvoked for matching restarts."""
+   __slots__ = ('clauses', 'env')
+   def __init__( self, clauses, env ):
+      # clauses: list of (name_sym, param_list, body_forms)
+      self.clauses = clauses
+      self.env     = env
+
+   def copy( self ):
+      return self
+
+   def find_restart( self, name: str ):
+      """Return (param_list, body) for the first restart matching name, or (None, None)."""
+      for rname, params, body in self.clauses:
+         if rname.name == name:
+            return params, body
+      return None, None
+
+   def step( self, value, E, K, ctx ):
+      return _Val( _primary( value ) ), E
+
+
+class HandlerBindBodyFrame:
+   """K-stack marker for handler-bind.  Handlers run without unwinding."""
+   __slots__ = ('handlers', 'env')
+   def __init__( self, handlers, env ):
+      # handlers: list of (type_sym, handler_callable)
+      self.handlers = handlers
+      self.env      = env
+
+   def copy( self ):
+      return self
+
+   def find_handler( self, type_name ):
+      """Return the handler callable for the first matching type, or None."""
+      for ctype, handler_fn in self.handlers:
+         if type( ctype ) is LSymbol:
+            if ctype.name in ( 'T', 'ERROR' ):
+               return handler_fn
+            if ctype.name == type_name:
+               return handler_fn
+      return None
+
+   def step( self, value, E, K, ctx ):
+      return _Val( _primary( value ) ), E
+
+
+class HandlerBindCollectFrame:
+   """Collects evaluated handler functions for handler-bind, then pushes the body frame."""
+   __slots__ = ('type_syms', 'remaining_forms', 'collected', 'body', 'env')
+   def __init__( self, type_syms, remaining_forms, collected, body, env ):
+      self.type_syms       = type_syms
+      self.remaining_forms = remaining_forms
+      self.collected       = collected
+      self.body            = body
+      self.env             = env
+
+   def copy( self ):
+      return HandlerBindCollectFrame(
+         list( self.type_syms ), list( self.remaining_forms ),
+         list( self.collected ), self.body, self.env )
+
+   def step( self, value, E, K, ctx ):
+      self.collected.append( _primary( value ) )
+      if self.remaining_forms:
+         nxt = self.remaining_forms[0]
+         self.remaining_forms = self.remaining_forms[1:]
+         K.append( self )
+         return nxt, self.env
+      handlers = list( zip( self.type_syms, self.collected ) )
+      K.append( HandlerBindBodyFrame( handlers, self.env ) )
+      return _eval_body( self.body, self.env, K )
+
+
 class MVBindFrame:
    """Receives values-form result (NOT primary-stripped); binds vars, evals body."""
    __slots__ = ('var_list', 'body', 'outer_env')
@@ -722,6 +796,24 @@ def _unwind_dynwind_above( K: list, from_idx: int, ctx, env ) -> None:
       if frame.wind_entry in ctx.wind_stack:
          ctx.wind_stack.remove( frame.wind_entry )
       cek_apply( ctx, env, frame.after_fn, [] )
+
+
+def _dispatch_restart( K, e, ctx, E ):
+   """Handle RestartInvoked: find matching RestartCaseBodyFrame, unwind, return (C, E)."""
+   for i in reversed( range( len(K) ) ):
+      if isinstance( K[i], RestartCaseBodyFrame ):
+         params, body = K[i].find_restart( e.name )
+         if body is not None:
+            handler_env = K[i].env
+            _unwind_dynwind_above( K, i + 1, ctx, E )
+            del K[i:]
+            new_env = Environment( handler_env, evalFn=ctx.lEval )
+            for j, param in enumerate( params ):
+               new_env.bindLocalSym( param, e.args[j] if j < len( e.args ) else L_NIL )
+            return _eval_body( body, new_env, K )
+   _unwind_dynwind_above( K, 0, ctx, E )
+   ctx._restart_stack.pop()
+   raise e
 
 
 def _do_wind_transition( ctx, target_wind_stack: list, env ) -> None:
@@ -948,21 +1040,6 @@ def set_stack_traces( enabled: bool ) -> None:
    _stack_traces_enabled = enabled
 
 
-class StepDoneFrame:
-   """Clears the step hook when the stepped expression finishes."""
-   __slots__ = ('saved_hook',)
-
-   def __init__( self, saved_hook ):
-      self.saved_hook = saved_hook
-
-   def copy( self ):
-      return StepDoneFrame( self.saved_hook )
-
-   def step( self, value, E, K, ctx ):
-      ctx.step_hook = self.saved_hook
-      return _Val(value), E
-
-
 _SPECIAL_OPERATOR_SET = frozenset({
    # existing
    'IF', 'QUOTE', 'LET', 'LET*', 'PROGN', 'SETQ', 'COND', 'CASE',
@@ -977,7 +1054,7 @@ _SPECIAL_OPERATOR_SET = frozenset({
    'MULTIPLE-VALUE-BIND', 'MULTIPLE-VALUE-LIST', 'NTH-VALUE',
    'MAKE-DICT',
    ':', 'CALL/CC', 'DYNAMIC-WIND',
-   'STEP',
+   'RESTART-CASE', 'HANDLER-BIND',
 })
 
 
@@ -989,6 +1066,7 @@ def cek_eval( ctx, env, expr ) -> Any:
    E = env
    K = []
    _last_call_form = None   # most recent non-special function call form; used for error annotation
+   ctx._restart_stack.append( K )
 
    while True:
       try:
@@ -999,6 +1077,7 @@ def cek_eval( ctx, env, expr ) -> Any:
          if type(C) is not LSymbol and not (isinstance(C, list) and C):
             v = C.v if type(C) is _Val else C
             if not K:
+               ctx._restart_stack.pop()
                return v
             frame = K.pop()
             C, E  = frame.step(v, E, K, ctx)
@@ -1025,16 +1104,21 @@ def cek_eval( ctx, env, expr ) -> Any:
             continue
 
          # ----------------------------------------------------------------
-         # Step hook - pause before evaluating a non-empty list expression
+         # Debugging - single gate for breakpoints and stepping
          # ----------------------------------------------------------------
-         _sh = ctx.step_hook
-         if _sh is not None:
-            action = _sh.on_expr( C, E, K )
-            if action == 'continue':
+         if ctx._debugging:
+            _bp_result = ctx.debugger.breakpoint_hook.check( C, E, K, ctx )
+            if _bp_result == 'abort':
                ctx.step_hook = None
-            elif action == 'abort':
-               ctx.step_hook = None
-               raise LRuntimeError( 'Stepped execution aborted.' )
+               raise LRuntimeError( 'Aborted from breakpoint.' )
+            _sh = ctx.step_hook
+            if _sh is not None:
+               action = _sh.on_expr( C, E, K )
+               if action == 'continue':
+                  ctx.step_hook = None
+               elif action == 'abort':
+                  ctx.step_hook = None
+                  raise LRuntimeError( 'Stepped execution aborted.' )
 
          # ----------------------------------------------------------------
          # Non-empty list - expression to reduce
@@ -1268,6 +1352,47 @@ def cek_eval( ctx, env, expr ) -> Any:
             C = form
             continue
 
+         if headStr == 'RESTART-CASE':
+            if len(C) < 2:
+               raise LRuntimeError( 'restart-case: requires a body form.' )
+            form    = C[1]
+            clauses = []
+            for clause in C[2:]:
+               if not isinstance( clause, list ) or len( clause ) < 2:
+                  raise LRuntimeError( 'restart-case: malformed restart clause.' )
+               rname = clause[0]
+               if type( rname ) is not LSymbol:
+                  raise LRuntimeError( 'restart-case: restart name must be a symbol.' )
+               params = clause[1]
+               if not isinstance( params, list ):
+                  raise LRuntimeError( 'restart-case: restart parameters must be a list.' )
+               body = clause[2:]
+               clauses.append( ( rname, params, body ) )
+            K.append( RestartCaseBodyFrame( clauses, E ) )
+            C = form
+            continue
+
+         if headStr == 'HANDLER-BIND':
+            if len(C) < 2:
+               raise LRuntimeError( 'handler-bind: requires binding list and body.' )
+            bindings = C[1]
+            if not isinstance( bindings, list ):
+               raise LRuntimeError( 'handler-bind: first argument must be a binding list.' )
+            body = C[2:]
+            if not bindings:
+               C, E = _eval_body( body, E, K )
+               continue
+            type_syms     = []
+            handler_forms = []
+            for binding in bindings:
+               if not isinstance( binding, list ) or len( binding ) != 2:
+                  raise LRuntimeError( 'handler-bind: each binding must be (type handler-fn).' )
+               type_syms.append( binding[0] )
+               handler_forms.append( binding[1] )
+            K.append( HandlerBindCollectFrame( type_syms, handler_forms[1:], [], body, E ) )
+            C = handler_forms[0]
+            continue
+
          if headStr == 'MULTIPLE-VALUE-BIND':
             var_list    = C[1]
             values_form = C[2]
@@ -1317,15 +1442,6 @@ def cek_eval( ctx, env, expr ) -> Any:
             C = C[1]   # eval before first
             continue
 
-         if headStr == 'STEP':
-            if len(C) != 2:
-               raise LRuntimeError( 'step: requires exactly 1 argument.' )
-            from pythonslisp.extensions.debug import StepHook
-            K.append( StepDoneFrame( ctx.step_hook ) )
-            ctx.step_hook = StepHook( ctx )
-            C = C[1]
-            continue
-
       except ReturnFrom as e:
          handler_idx = None
          for i in reversed(range(len(K))):
@@ -1334,6 +1450,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                break
          if handler_idx is None:
             _unwind_dynwind_above(K, 0, ctx, E)
+            ctx._restart_stack.pop()
             raise   # no block in this machine - propagate to outer cek_eval or rawEval
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
          del K[handler_idx:]
@@ -1348,6 +1465,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                break
          if handler_idx is None:
             _unwind_dynwind_above(K, 0, ctx, E)
+            ctx._restart_stack.pop()
             raise   # no catch in this machine - propagate to outer cek_eval or rawEval
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
          del K[handler_idx:]
@@ -1357,6 +1475,24 @@ def cek_eval( ctx, env, expr ) -> Any:
       except Signaled as e:
          ctype_sym   = e.condition.get('CONDITION-TYPE', LSymbol('ERROR'))
          type_name   = ctype_sym.name if type(ctype_sym) is LSymbol else 'ERROR'
+         # Try handler-bind handlers first (non-unwinding).
+         # If a handler invokes a restart, RestartInvoked is caught here
+         # and dispatched to the matching restart-case frame on K.
+         _restarted = False
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], HandlerBindBodyFrame):
+               handler_fn = K[i].find_handler(type_name)
+               if handler_fn is not None:
+                  try:
+                     cek_apply(ctx, E, handler_fn, [e.condition])
+                  except RestartInvoked as ri:
+                     C, E = _dispatch_restart(K, ri, ctx, E)
+                     _restarted = True
+                     break
+                  # Handler returned normally - continue searching
+         if _restarted:
+            continue
+         # Fall through to handler-case (unwinding)
          handler_idx = None
          handler_frame = None
          for i in reversed(range(len(K))):
@@ -1368,6 +1504,7 @@ def cek_eval( ctx, env, expr ) -> Any:
                   break
          if handler_idx is None:
             _unwind_dynwind_above(K, 0, ctx, E)
+            ctx._restart_stack.pop()
             raise
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
          del K[handler_idx:]
@@ -1377,10 +1514,30 @@ def cek_eval( ctx, env, expr ) -> Any:
          C, E = _eval_body(body, new_env, K)
          continue
 
+      except RestartInvoked as e:
+         C, E = _dispatch_restart(K, e, ctx, E)
+         continue
+
       except LRuntimeError as e:
          if e.source_info is None and isinstance( _last_call_form, LList ) and _last_call_form.has_source_info():
             e.source_info = ( _last_call_form.filename, _last_call_form.line_num,
                                _last_call_form.col_num, _last_call_form.source_line )
+         # Try handler-bind handlers first (non-unwinding)
+         cond = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': e.args[0] if e.args else ''}
+         _restarted = False
+         for i in reversed(range(len(K))):
+            if isinstance(K[i], HandlerBindBodyFrame):
+               handler_fn = K[i].find_handler('ERROR')
+               if handler_fn is not None:
+                  try:
+                     cek_apply(ctx, E, handler_fn, [cond])
+                  except RestartInvoked as ri:
+                     C, E = _dispatch_restart(K, ri, ctx, E)
+                     _restarted = True
+                     break
+         if _restarted:
+            continue
+         # Fall through to handler-case (unwinding)
          handler_idx   = None
          handler_frame = None
          for i in reversed(range(len(K))):
@@ -1405,11 +1562,11 @@ def cek_eval( ctx, env, expr ) -> Any:
                      frames.append( f'  {fn_name}  "{cf.filename}" ({cf.line_num},{cf.col_num})\n  {cf.source_line}\n  {indent}^' )
                e.call_stack = frames
             _unwind_dynwind_above(K, 0, ctx, E)
+            ctx._restart_stack.pop()
             raise
          _unwind_dynwind_above(K, handler_idx + 1, ctx, E)
          del K[handler_idx:]
          new_env = Environment(handler_frame.env, evalFn=ctx.lEval)
-         cond    = {'CONDITION-TYPE': LSymbol('ERROR'), 'MESSAGE': e.args[0] if e.args else ''}
          if var is not None:
             new_env.bindLocalSym(var, cond)
          C, E = _eval_body(body, new_env, K)

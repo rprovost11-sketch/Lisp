@@ -83,3 +83,14 @@ class Signaled( Exception ):
    def __init__( self, condition ) -> None:
       self.condition = condition
       super().__init__()
+
+
+class RestartInvoked( Exception ):
+   """Raised by invoke-restart.  Propagates up to the nearest enclosing
+   restart-case with a matching restart name."""
+   __slots__ = ('name', 'args')
+
+   def __init__( self, name: str, args: list ) -> None:
+      self.name = name    # uppercased restart name
+      self.args = args    # arguments passed to the restart
+      super().__init__()
