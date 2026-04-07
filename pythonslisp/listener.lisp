@@ -2,7 +2,7 @@
 ;;;
 ;;; To start: load this file (it auto-starts at the bottom), or call (lsl-start)
 ;;;   From Python listener:  ]readsrc pythonslisp/listener.lisp
-;;;   From Lisp:             (eval (load "pythonslisp/listener.lisp"))
+;;;   From Lisp:             (load "pythonslisp/listener.lisp")
 ;;;
 ;;; LIMITATIONS:
 ;;;   - ]reboot exits this REPL and reboots the interpreter.  Reload this file
@@ -422,7 +422,7 @@ Returns (result-msg num-tests) list."
   (let ((filename (%lsl-rstrip (car args))))
     (handler-case
         (progn
-          (eval (load filename))
+          (eval (parse-file filename))
           (%lsl-println-screen (%lsl-green (ustring "Source file read: " filename))))
       (t (e)
          (%lsl-println-screen (ustring "Error loading file: " (condition-message e)))))))

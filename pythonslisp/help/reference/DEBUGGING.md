@@ -80,8 +80,8 @@ When `(break)` is reached, output similar to the following appears:
       A = 10
       B = 0
 
-      ]continue [expr]  resume execution (returning expr or NIL)
-      ]abort            abort to top level
+      ]cont [expr]  resume execution (returning expr or NIL)
+      ]abort        abort to top level
 
     brk>>>
 
@@ -96,18 +96,18 @@ which is useful for distinguishing multiple breakpoints.
 
 | Command | Effect |
 |---|---|
-| `]continue` | Resume execution, returning NIL to the call site |
-| `]continue expr` | Resume execution, returning the value of *expr* |
+| `]cont` | Resume execution, returning NIL to the call site |
+| `]cont expr` | Resume execution, returning the value of *expr* |
 | `]abort` | Abort execution and return to the top-level `>>> ` prompt |
 
 ### Example Session
 
     brk>>> (+ a b)
     ==> 10
-    brk>>> ]continue 42
+    brk>>> ]cont 42
     ==> 42
 
-The value passed to `]continue` becomes the return value of the `(break)`
+The value passed to `]cont` becomes the return value of the `(break)`
 call in the surrounding code.
 
 ---

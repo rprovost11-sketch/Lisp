@@ -16,10 +16,14 @@
    (integer (sqrt num)))
 
 (defun abs (num)
-   "Returns the absolute value of the argument."
-   (if (>= num 0)
-      num
-      (- num)))
+   "Returns the absolute value of the argument.
+For complex numbers, returns the magnitude."
+   (if (complexp num)
+      (sqrt (+ (* (realpart num) (realpart num))
+               (* (imagpart num) (imagpart num))))
+      (if (>= num 0)
+         num
+         (- num))))
 
 (defun exp (num)
    "Returns e raised to a number."

@@ -11,8 +11,26 @@ if TYPE_CHECKING:
 # Lisp Function API
 # ###############################
 # Lisp Runtime Object Definitions
-LNUMBER = (int,float,Fraction)
-LATOM   = (int,float,Fraction,str)
+LNUMBER = (int,float,Fraction,complex)
+LATOM   = (int,float,Fraction,complex,str)
+
+# Print control - synced from *print-length* and *print-level* by the evaluator
+_print_length = None   # None = unlimited; int = max list elements to print
+_print_level  = None   # None = unlimited; int = max nesting depth to print
+
+def sync_print_controls( env ) -> None:
+   """Sync _print_length and _print_level from the Lisp environment."""
+   global _print_length, _print_level
+   try:
+      val = env.lookupGlobalWithDefault( '*PRINT-LENGTH*', None )
+      _print_length = val if isinstance(val, int) else None
+   except Exception:
+      _print_length = None
+   try:
+      val = env.lookupGlobalWithDefault( '*PRINT-LEVEL*', None )
+      _print_level = val if isinstance(val, int) else None
+   except Exception:
+      _print_level = None
 
 class LSymbol:
    __slots__ = ('name', )
@@ -192,35 +210,52 @@ class LContinuation( LCallable ):
       return '#<CONTINUATION>'
 
 
-def prettyPrintSExpr( sExpr: Any ) -> str:
+def prettyPrintSExpr( sExpr: Any, _depth: int = 0 ) -> str:
    '''Return a printable, formatted string representation
    of a lisp object.'''
    if isinstance(sExpr, str):
       escaped = sExpr.encode( 'unicode_escape' ).decode( 'ascii' ).replace( '"', '\\"' )
       return f'"{escaped}"'
+   elif isinstance(sExpr, complex):
+      r = int(sExpr.real) if sExpr.real == int(sExpr.real) else sExpr.real
+      i = int(sExpr.imag) if sExpr.imag == int(sExpr.imag) else sExpr.imag
+      return f'#C({prettyPrintSExpr(r)} {prettyPrintSExpr(i)})'
    elif isinstance(sExpr, Fraction):
       return f'{sExpr.numerator}/{sExpr.denominator}'
    elif isinstance(sExpr, list):
       if len(sExpr) == 0:
          return 'NIL'
-
-      mbrList = [ prettyPrintSExpr(mbr) for mbr in sExpr ]
-      mbrListStr = ' '.join(mbrList)
-      resultStr = f'({mbrListStr})'
-      return resultStr
+      if _print_level is not None and _depth >= _print_level:
+         return '#'
+      nd = _depth + 1
+      if _print_length is not None:
+         mbrList = [ prettyPrintSExpr(mbr, nd) for mbr in sExpr[:_print_length] ]
+         if len(sExpr) > _print_length:
+            mbrList.append( '...' )
+      else:
+         mbrList = [ prettyPrintSExpr(mbr, nd) for mbr in sExpr ]
+      return f'({" ".join(mbrList)})'
    elif isinstance(sExpr, dict):
+      if _print_level is not None and _depth >= _print_level:
+         return '#'
+      nd = _depth + 1
       resultStrLines = [ '(DICT' ]
-      for key in sorted(sExpr.keys(), key=lambda k: k.name if isinstance(k, LSymbol) else k):
+      items = sorted(sExpr.keys(), key=lambda k: k.name if isinstance(k, LSymbol) else k)
+      if _print_length is not None:
+         items = items[:_print_length]
+      for key in items:
          value = sExpr[ key ]
-         key = prettyPrintSExpr(key)
-         value = prettyPrintSExpr( value )
+         key = prettyPrintSExpr(key, nd)
+         value = prettyPrintSExpr( value, nd )
          resultStrLines.append( f'   ({key} {value})')
+      if _print_length is not None and len(sExpr) > _print_length:
+         resultStrLines.append( '   ...')
       resultStrLines.append(')')
       return '\n'.join(resultStrLines)
    elif isinstance(sExpr, LMultipleValues):
       if not sExpr.values:
          return '#<VALUES>'
-      parts = ' '.join( prettyPrintSExpr(v) for v in sExpr.values )
+      parts = ' '.join( prettyPrintSExpr(v, _depth) for v in sExpr.values )
       return f'#<VALUES {parts}>'
    elif isinstance(sExpr, LCallable):
       return sExpr.idString()
@@ -240,6 +275,8 @@ Used by type-of and got_str for error messages."""
       return 'INTEGER'
    if isinstance(val, float):
       return 'FLOAT'
+   if isinstance(val, complex):
+      return 'COMPLEX'
    if isinstance(val, Fraction):
       return 'RATIO'
    if isinstance(val, str):
@@ -281,32 +318,49 @@ The value is truncated to _MAX_GOT_LEN characters."""
    return f', got {type_name} {display}'
 
 
-def prettyPrint( sExpr: Any ) -> str:
+def prettyPrint( sExpr: Any, _depth: int = 0 ) -> str:
    '''Return a printable, formatted string representation
    of a lisp object.'''
+   if isinstance(sExpr, complex):
+      r = int(sExpr.real) if sExpr.real == int(sExpr.real) else sExpr.real
+      i = int(sExpr.imag) if sExpr.imag == int(sExpr.imag) else sExpr.imag
+      return f'#C({prettyPrintSExpr(r)} {prettyPrintSExpr(i)})'
    if isinstance(sExpr, Fraction):
       return f'{sExpr.numerator}/{sExpr.denominator}'
    elif isinstance(sExpr, list):
       if len(sExpr) == 0:
          return 'NIL'
-
-      mbrList = [ prettyPrint(mbr) for mbr in sExpr ]
-      mbrListStr = ' '.join(mbrList)
-      resultStr = f'({mbrListStr})'
-      return resultStr
+      if _print_level is not None and _depth >= _print_level:
+         return '#'
+      nd = _depth + 1
+      if _print_length is not None:
+         mbrList = [ prettyPrint(mbr, nd) for mbr in sExpr[:_print_length] ]
+         if len(sExpr) > _print_length:
+            mbrList.append( '...' )
+      else:
+         mbrList = [ prettyPrint(mbr, nd) for mbr in sExpr ]
+      return f'({" ".join(mbrList)})'
    elif isinstance(sExpr, dict):
+      if _print_level is not None and _depth >= _print_level:
+         return '#'
+      nd = _depth + 1
       resultStrLines = [ '(DICT' ]
-      for key in sorted(sExpr.keys(), key=lambda k: k.name if isinstance(k, LSymbol) else k):
+      items = sorted(sExpr.keys(), key=lambda k: k.name if isinstance(k, LSymbol) else k)
+      if _print_length is not None:
+         items = items[:_print_length]
+      for key in items:
          value = sExpr[ key ]
-         key = prettyPrint(key)
-         value = prettyPrint( value )
+         key = prettyPrint(key, nd)
+         value = prettyPrint( value, nd )
          resultStrLines.append( f'   ({key} {value})')
+      if _print_length is not None and len(sExpr) > _print_length:
+         resultStrLines.append( '   ...')
       resultStrLines.append(')')
       return '\n'.join(resultStrLines)
    elif isinstance(sExpr, LMultipleValues):
       if not sExpr.values:
          return '#<VALUES>'
-      parts = ' '.join( prettyPrint(v) for v in sExpr.values )
+      parts = ' '.join( prettyPrint(v, _depth) for v in sExpr.values )
       return f'#<VALUES {parts}>'
    elif isinstance(sExpr, LCallable):
       return sExpr.idString()
@@ -320,7 +374,7 @@ def eql( a: Any, b: Any ) -> bool:
    """CL eql: symbols by name, numbers by type+value, everything else by identity."""
    if isinstance(a, LSymbol) and isinstance(b, LSymbol):
       return a.name == b.name
-   if type(a) is type(b) and isinstance(a, (int, float, Fraction)):
+   if type(a) is type(b) and isinstance(a, (int, float, Fraction, complex)):
       return a == b
    return a is b
 
@@ -341,7 +395,7 @@ def equalp( a: Any, b: Any ) -> bool:
       return len(a) == len(b) and all(equalp(x, y) for x, y in zip(a, b))
    if isinstance(a, str) and isinstance(b, str):
       return a.lower() == b.lower()
-   if isinstance(a, (int, float, Fraction)) and isinstance(b, (int, float, Fraction)):
+   if isinstance(a, (int, float, Fraction, complex)) and isinstance(b, (int, float, Fraction, complex)):
       return a == b
    if isinstance(a, dict) and isinstance(b, dict):
       return ( set(a.keys()) == set(b.keys()) and

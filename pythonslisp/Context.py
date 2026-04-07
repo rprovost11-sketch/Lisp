@@ -28,3 +28,5 @@ class Context:
       self.loadExtDir:       Callable = None   # set by Interpreter after construction
       self.reboot:           Callable = None   # set by Interpreter after construction
       self.nested_repl:      Callable = None   # set by Listener after construction
+      self.start_dribble:    Callable = None   # set by Listener via Interpreter
+      self.stop_dribble:     Callable = None   # set by Listener via Interpreter

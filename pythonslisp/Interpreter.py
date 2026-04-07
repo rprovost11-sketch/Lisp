@@ -8,7 +8,8 @@ from typing import Any
 from pythonslisp.Parser import Parser
 from pythonslisp.Listener import InterpreterBase
 from pythonslisp.AST import ( LSymbol, L_T, L_NIL, LPrimitive, LSpecialOperator, LMacro,
-                              LMultipleValues, prettyPrintSExpr, derive_arity )
+                              LMultipleValues, prettyPrintSExpr, derive_arity,
+                              sync_print_controls )
 from pythonslisp.Exceptions import ( LRuntimeError, ContinuationInvoked,
                                      ReturnFrom, Thrown, Signaled )
 from pythonslisp.Environment import Environment
@@ -40,6 +41,8 @@ class Interpreter( InterpreterBase ):
       self._ctx:              Context          = None
       self._env:              Environment      = None
       self._nested_repl_fn                     = None
+      self._dribble_start_fn                   = None
+      self._dribble_stop_fn                    = None
       self.reboot( ext_dir=ext_dir, outStrm=outStrm )
 
    def reboot( self, ext_dir=None, outStrm=None ) -> None:
@@ -81,6 +84,9 @@ class Interpreter( InterpreterBase ):
 
    def rawEval( self, source: str, outStrm=None ) -> Any:
       self._ctx.outStrm = outStrm
+      if outStrm is not None:
+         self._env.bindGlobal( '*TRACE-OUTPUT*', outStrm )
+      sync_print_controls( self._env )
       ctx = self._ctx
       try:
          ast = self._parser.parse( source, filename='<repl>' )   # (progn form1 form2 ...)
@@ -187,6 +193,13 @@ class Interpreter( InterpreterBase ):
       self._nested_repl_fn    = fn
       self._ctx.nested_repl   = fn
 
+   def set_dribble_fns( self, start_fn, stop_fn ) -> None:
+      """Register the Listener's dribble callbacks on the context."""
+      self._dribble_start_fn = start_fn
+      self._dribble_stop_fn  = stop_fn
+      self._ctx.start_dribble = start_fn
+      self._ctx.stop_dribble  = stop_fn
+
    def _makeContext( self, outStrm ) -> Context:
       from pythonslisp.Evaluator import cek_apply as _cek_apply
       ctx = Context( outStrm, self._tracer, self._setf_registry )
@@ -201,6 +214,8 @@ class Interpreter( InterpreterBase ):
       ctx.loadExtDir       = lambda path: self._loadExtDir( Path(path), ctx.outStrm )
       ctx.reboot           = lambda: self.reboot( outStrm=ctx.outStrm )
       ctx.nested_repl      = self._nested_repl_fn
+      ctx.start_dribble    = self._dribble_start_fn
+      ctx.stop_dribble     = self._dribble_stop_fn
       return ctx
 
    def _makeLispFunction( self, targetEnv=None ):
@@ -319,8 +334,10 @@ Used by extension .py files that need to register macros via @macro."""
       self._ctx.loading_source = path.stem
       try:
          if path.suffix == '.py':
-            spec   = importlib.util.spec_from_file_location( path.stem, path )
+            mod_name = f'pythonslisp.extensions.{path.stem}'
+            spec   = importlib.util.spec_from_file_location( mod_name, path )
             module = importlib.util.module_from_spec( spec )
+            sys.modules[mod_name] = module
             spec.loader.exec_module( module )
             _ext_primitive._flush( self._makeLispFunction( targetEnv ),
                                    bind_macro=self._makeBindMacro( targetEnv ) )

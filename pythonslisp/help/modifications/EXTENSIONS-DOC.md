@@ -171,6 +171,50 @@ environment (or in a named module, if one is specified).
 
 ---
 
+## How Extensions Appear in (help) Output
+
+When you evaluate `(help)`, the interpreter displays all globally defined
+symbols organized by category.  Each extension file (`.py` or `.lisp`)
+automatically defines its own category.
+
+### Automatic categorization
+
+Symbols are grouped by the file they were defined in.  The category key is
+the filename stem - for example, primitives defined in `math.py` and macros
+defined in `math.lisp` both appear under the same "Math" category.  Paired
+files with the same stem are merged into one section.
+
+Within each category, symbols are listed alphabetically and color-coded by
+type (primitive, function, macro, special operator).
+
+### Customizing the category title
+
+By default, the category title is the filename stem converted to title case
+(e.g., `strings.py` becomes "Strings").  If you need a different title,
+define a `LISP_DOCUMENTATION_TITLE` constant near the top of your `.py`
+file:
+
+```python
+"""My extension docstring."""
+from __future__ import annotations
+
+LISP_DOCUMENTATION_TITLE = 'My Custom Title'
+```
+
+The string you provide is used exactly as the section header in `(help)`
+output.  If no constant is defined, the title-cased stem is used.
+
+For `.lisp`-only extensions (no companion `.py` file), the title-cased stem
+is always used.
+
+### Display order
+
+Built-in extensions are displayed in a fixed order defined by the
+interpreter.  User extensions and loaded modules appear after the built-ins,
+sorted alphabetically by title.
+
+---
+
 ## How the Interpreter Loads Extensions
 
 ### Startup sequence

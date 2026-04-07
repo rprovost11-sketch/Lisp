@@ -7,6 +7,10 @@
 (setq *query-io*        (stdout))
 (setq *trace-output*    (stdout))
 
+;;; Print control variables (NIL = unlimited)
+(setq *print-length* nil)
+(setq *print-level*  nil)
+
 ;;; Stream predicate aliases (backward compatibility)
 (setq readable  input-stream-p)
 (setq writable  output-stream-p)

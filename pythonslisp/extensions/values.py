@@ -1,4 +1,7 @@
+"""Multiple values extension."""
 from __future__ import annotations
+
+LISP_DOCUMENTATION_TITLE = 'Multiple Values'
 from typing import Any
 
 from pythonslisp.Environment import Environment

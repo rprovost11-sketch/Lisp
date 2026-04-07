@@ -16,7 +16,26 @@ from pythonslisp.Exceptions import LRuntimePrimError, LRuntimeUsageError
 from pythonslisp.Utils import columnize
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.Highlighter import render_markdown
-from pythonslisp.extensions.io import _EXT_ORDER, _EXT_LABELS
+
+
+# Display order for built-in extension categories in (help) output.
+# Extensions not listed here (user extensions, modules) appear after
+# these in alphabetical order.  Titles come from each extension's
+# LISP_DOCUMENTATION_TITLE constant, falling back to stem.title().
+_BUILTIN_EXT_ORDER = [
+    'control', 'meta', 'math', 'sequences', 'strings',
+    'types', 'io', 'pathnames', 'system', 'modules', 'values', 'conditions', 'debug',
+    'predicates',
+]
+
+
+def _ext_title( stem: str ) -> str:
+   """Resolve the display title for an extension category."""
+   mod_name = f'pythonslisp.extensions.{stem}'
+   mod = sys.modules.get( mod_name )
+   if mod and hasattr( mod, 'LISP_DOCUMENTATION_TITLE' ):
+      return mod.LISP_DOCUMENTATION_TITLE
+   return stem.title()
 
 
 # ── Time ─────────────────────────────────────────────────────────────────
@@ -33,6 +52,28 @@ def LP_get_internal_real_time( ctx: Context, env: Environment, args: list[Any] )
    """Returns a high-resolution timestamp as an integer in units of
 internal-time-units-per-second (microseconds).  Backed by time.perf_counter()."""
    return int( time.perf_counter() * _ITUPS )
+
+@primitive( 'load', '(filespec)' )
+def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Loads and evaluates a file.  For .py files, loads as a Python extension.
+For all other files, reads and evaluates as Lisp source.  Returns T."""
+   filespec = args[0]
+   if not isinstance( filespec, str ):
+      raise LRuntimeUsageError( LP_load, f'Invalid argument 1. STRING expected{got_str(filespec)}.' )
+   if filespec.endswith( '.py' ):
+      ctx.loadExt( filespec )
+   else:
+      try:
+         with open( filespec, 'r', encoding='utf-8' ) as f:
+            content = f.read()
+      except FileNotFoundError:
+         raise LRuntimePrimError( LP_load, f'File not found "{filespec}".' )
+      ast = ctx.parse( content )
+      for form in ast[1:]:
+         form = ctx.expand( env, form )
+         ctx.analyze( env, form )
+         ctx.lEval( env, form )
+   return L_T
 
 @primitive( 'now-string', '(&optional format)' )
 def LP_now_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -123,6 +164,8 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
    GREEN      = '\033[92m'   if useColor else ''
    MAGENTA    = '\033[95m'   if useColor else ''
    YELLOW     = '\033[93m'   if useColor else ''
+   RED        = '\033[91m'   if useColor else ''
+   BLUE       = '\033[94m'   if useColor else ''
    RESET      = '\033[0m'    if useColor else ''
 
    # Map type tag to display color (computed after useColor is known)
@@ -213,13 +256,12 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
    named_keys = { k for k in categories if k }
    seen:       set[str]            = set()
    ordered:    list[tuple[str,str]] = []
-   for ext in _EXT_ORDER:
+   for ext in _BUILTIN_EXT_ORDER:
       if ext in named_keys:
-         ordered.append( (ext, _EXT_LABELS.get( ext, ext.title() )) )
+         ordered.append( (ext, _ext_title( ext )) )
          seen.add( ext )
-   for k in sorted( named_keys ):
-      if k not in seen:
-         ordered.append( (k, _EXT_LABELS.get( k, k.title() )) )
+   for k in sorted( named_keys - seen, key=_ext_title ):
+      ordered.append( (k, _ext_title( k )) )
 
    for key, label in ordered:
       hdr( label )
@@ -240,7 +282,7 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
       print( file=outStrm )
 
    hdr( 'Types' )
-   columnize( sorted( typesList ), 78, file=outStrm, itemColor=YELLOW or None )
+   columnize( sorted( typesList ), 78, file=outStrm, itemColor=RED or None )
    print( file=outStrm )
 
    hdr( 'TOPICS' )
@@ -249,11 +291,13 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
       items = [f'"{s}"' for s in topic_groups[group]]
       print( file=outStrm )
       subhdr( label )
-      columnize( items, 78, file=outStrm, itemColor=YELLOW or None )
+      columnize( items, 78, file=outStrm, itemColor=BLUE or None )
    print( file=outStrm )
    print( "Type '(help callable)' for available documentation on a callable.", file=outStrm )
    print( "Type '(help \"topic\")' for available documentation on the named topic.", file=outStrm )
-   print( "Type '(help \"substring\" :substring t)' to search all names by substring.", file=outStrm )
+   print( "Type '(apropos \"substring\")' to search all names by substring.", file=outStrm )
+   if useColor:
+      print( f'{YELLOW}special operator  {CYAN}primitive  {GREEN}function  {MAGENTA}macro  {RED}type  {BLUE}topic{RESET}', file=outStrm )
 
 
 @primitive( 'help', '(&optional target &key (substring nil))',
@@ -272,7 +316,7 @@ Type '(help "substring" :substring t)' to search all names by substring."""
    if substring is not L_NIL:
       if not isinstance( target, str ):
          raise LRuntimeUsageError( LP_help, f':substring t requires a string target{got_str(target)}.' )
-      printHelpListings( ctx.outStrm, env, find=target )
+      _apropos_search( target, env, ctx.outStrm )
       return L_T
 
    if isinstance( target, list ) and not target:   # NIL - no target given
@@ -378,3 +422,100 @@ Returns T if the topic existed and was removed, NIL if the topic was not found."
       topicFile.unlink()
       return L_T
    return L_NIL
+
+
+# ── Apropos ──────────────────────────────────────────────────────────────
+
+def _apropos_search( pattern: str, env: Environment, outStrm ) -> None:
+   """Core apropos logic: find and display all symbols matching pattern."""
+   pattern = pattern.upper()
+   globalEnv = env.getGlobalEnv()
+   matches: list[tuple[str,str]] = []
+
+   for sym in globalEnv.localSymbols():
+      if sym.startswith( '%' ) or sym.endswith( '-INTERNAL' ):
+         continue
+      if pattern not in sym:
+         continue
+      obj = globalEnv._bindings.get( sym )
+      if isinstance( obj, LSpecialOperator ):
+         tag = 'special operator'
+      elif isinstance( obj, LPrimitive ):
+         tag = 'primitive'
+      elif isinstance( obj, LFunction ):
+         tag = 'function'
+      elif isinstance( obj, LMacro ):
+         tag = 'macro'
+      elif isinstance( obj, ModuleEnvironment ):
+         tag = 'module'
+      else:
+         tag = 'variable'
+      matches.append( (sym, tag) )
+
+   for sym, tag in sorted( matches ):
+      print( f'{sym}  ({tag})', file=outStrm )
+
+
+@primitive( 'apropos', '(substring)' )
+def LP_apropos( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Lists all symbols whose names contain SUBSTRING.
+Each match is printed with its type (function, macro, primitive, variable, etc.).
+Returns NIL."""
+   pattern = args[0]
+   if not isinstance( pattern, str ):
+      raise LRuntimeUsageError( LP_apropos, f'Invalid argument 1. STRING expected{got_str(pattern)}.' )
+   _apropos_search( pattern, env, ctx.outStrm )
+   return L_NIL
+
+
+# ── Room ─────────────────────────────────────────────────────────────────
+
+@primitive( 'room', '()' )
+def LP_room( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Prints information about the interpreter's memory usage and state."""
+   import gc
+   globalEnv   = env.getGlobalEnv()
+   sym_count   = len( globalEnv.localSymbols() )
+   gc_counts   = gc.get_count()
+   proc_size   = None
+   try:
+      import psutil
+      proc_size = psutil.Process().memory_info().rss
+   except ImportError:
+      try:
+         import resource
+         proc_size = resource.getrusage( resource.RUSAGE_SELF ).ru_maxrss * 1024
+      except (ImportError, AttributeError):
+         pass
+
+   out = ctx.outStrm
+   print( f'Global symbols:      {sym_count}', file=out )
+   print( f'GC generation counts: {gc_counts[0]}, {gc_counts[1]}, {gc_counts[2]}', file=out )
+   print( f'Python version:      {sys.version.split()[0]}', file=out )
+   if proc_size is not None:
+      mb = proc_size / (1024 * 1024)
+      print( f'Process memory:      {mb:.1f} MB', file=out )
+   else:
+      print( f'Process memory:      (unavailable)', file=out )
+   return L_NIL
+
+
+# ── Dribble ──────────────────────────────────────────────────────────────
+
+@primitive( 'dribble', '(&optional pathname)' )
+def LP_dribble( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """With a pathname, starts recording the session to that file.
+With no arguments, stops recording and closes the file.
+Returns the pathname on success, NIL if there was nothing to stop."""
+   if args:
+      pathname = args[0]
+      if not isinstance( pathname, str ):
+         raise LRuntimeUsageError( LP_dribble, f'Invalid argument 1. STRING expected{got_str(pathname)}.' )
+      if ctx.start_dribble is None:
+         raise LRuntimePrimError( LP_dribble, 'Dribble requires a Listener session.' )
+      return ctx.start_dribble( pathname )
+   else:
+      if ctx.stop_dribble is None:
+         raise LRuntimePrimError( LP_dribble, 'Dribble requires a Listener session.' )
+      result = ctx.stop_dribble()
+      return result if result is not None else L_NIL

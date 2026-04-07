@@ -711,7 +711,7 @@
 >>> ;;; evenp type error on float
 ... (evenp 2.0)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\math.lisp" (39,8)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\math.lisp" (43,8)
 %%%       (error "evenp: argument must be an integer")
 %%%        ^
 %%% evenp: argument must be an integer
@@ -719,7 +719,7 @@
 >>> ;;; oddp type error on float
 ... (oddp 3.0)
 
-%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\math.lisp" (45,8)
+%%% Runtime Error: "D:\SWDEV\Python3\Lisp\pythonslisp\extensions\math.lisp" (49,8)
 %%%       (error "oddp: argument must be an integer")
 %%%        ^
 %%% oddp: argument must be an integer
@@ -1381,3 +1381,93 @@
 %%% ERROR 'RATIONAL': Invalid argument 1. NUMBER expected, got CONS (1).
 %%% PRIMITIVE USAGE: (RATIONAL number)
 ==>
+
+; --- complex numbers ---
+
+; #C literal syntax
+>>> #C(3 4)
+==> #C(3 4)
+
+; #C with floats
+>>> #C(1.5 2.7)
+==> #C(1.5 2.7)
+
+; #C with rationals
+>>> #C(1/2 3/4)
+==> #C(0.5 0.75)
+
+; complex constructor
+>>> (complex 3 4)
+==> #C(3 4)
+
+; complex with one arg (imaginary defaults to 0)
+>>> (complex 5)
+==> #C(5 0)
+
+; arithmetic with complex
+>>> (+ #C(1 2) #C(3 4))
+==> #C(4 6)
+
+; mixed arithmetic
+>>> (+ #C(1 2) 10)
+==> #C(11 2)
+
+; multiplication
+>>> (* #C(0 1) #C(0 1))
+==> #C(-1 0)
+
+; realpart
+>>> (realpart #C(3 4))
+==> 3
+
+; imagpart
+>>> (imagpart #C(3 4))
+==> 4
+
+; realpart of real number
+>>> (realpart 42)
+==> 42
+
+; imagpart of real number
+>>> (imagpart 42)
+==> 0
+
+; conjugate
+>>> (conjugate #C(3 4))
+==> #C(3 -4)
+
+; abs (magnitude)
+>>> (abs #C(3 4))
+==> 5.0
+
+; expt produces complex when needed
+>>> (expt -1 0.5)
+==> #C(6.123233995736766e-17 1)
+
+; type-of
+>>> (type-of #C(1 2))
+==> COMPLEX
+
+; numberp includes complex
+>>> (numberp #C(1 2))
+==> T
+
+; complexp
+>>> (complexp #C(1 2))
+==> T
+
+; complexp on real
+>>> (complexp 42)
+==> NIL
+
+; realp on complex
+>>> (realp #C(1 2))
+==> NIL
+
+; realp on integer
+>>> (realp 42)
+==> T
+
+; equality: complex with zero imag equals real
+>>> (= #C(3.0 0.0) 3)
+==> T

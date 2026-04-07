@@ -149,7 +149,7 @@ def LP_expt( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    except TypeError:
       _bad_number_arg([base, power], LP_expt)
 
-   return result.real if isinstance(result, complex) else result
+   return result
 
 @primitive( 'sin', '(radians)' )
 def LP_sin( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -299,3 +299,59 @@ For float n returns a random float in [0.0, n)."""
       return _random.uniform( 0.0, num )
    else:
       raise LRuntimeUsageError( LP_random, f'Invalid argument 1. INTEGER or FLOAT expected{got_str(num)}.' )
+
+
+# ── Complex numbers ──────────────────────────────────────────────────────
+
+@primitive( 'complex', '(real &optional imag)' )
+def LP_complex( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Creates a complex number from real and imaginary parts.
+With one argument, the imaginary part defaults to 0."""
+   real = args[0]
+   imag = args[1] if len(args) > 1 else 0
+   if not isinstance( real, (int, float, Fraction) ):
+      raise LRuntimeUsageError( LP_complex, f'Invalid argument 1. REAL NUMBER expected{got_str(real)}.' )
+   if not isinstance( imag, (int, float, Fraction) ):
+      raise LRuntimeUsageError( LP_complex, f'Invalid argument 2. REAL NUMBER expected{got_str(imag)}.' )
+   return complex( float(real), float(imag) )
+
+@primitive( 'realpart', '(number)' )
+def LP_realpart( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the real part of a number."""
+   num = args[0]
+   if isinstance( num, complex ):
+      r = num.real
+      return int(r) if r == int(r) else r
+   if isinstance( num, (int, float, Fraction) ):
+      return num
+   raise LRuntimeUsageError( LP_realpart, f'Invalid argument 1. NUMBER expected{got_str(num)}.' )
+
+@primitive( 'imagpart', '(number)' )
+def LP_imagpart( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the imaginary part of a number.  For real numbers, returns 0."""
+   num = args[0]
+   if isinstance( num, complex ):
+      i = num.imag
+      return int(i) if i == int(i) else i
+   if isinstance( num, (int, float, Fraction) ):
+      return 0
+   raise LRuntimeUsageError( LP_imagpart, f'Invalid argument 1. NUMBER expected{got_str(num)}.' )
+
+@primitive( 'conjugate', '(number)' )
+def LP_conjugate( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the complex conjugate of a number."""
+   num = args[0]
+   if isinstance( num, complex ):
+      return num.conjugate()
+   if isinstance( num, (int, float, Fraction) ):
+      return num
+   raise LRuntimeUsageError( LP_conjugate, f'Invalid argument 1. NUMBER expected{got_str(num)}.' )
+
+@primitive( 'phase', '(number)' )
+def LP_phase( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the phase angle (argument) of a complex number in radians."""
+   import cmath
+   num = args[0]
+   if not isinstance( num, LNUMBER ):
+      raise LRuntimeUsageError( LP_phase, f'Invalid argument 1. NUMBER expected{got_str(num)}.' )
+   return cmath.phase( num )

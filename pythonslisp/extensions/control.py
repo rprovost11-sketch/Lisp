@@ -95,18 +95,6 @@ extent, catch immediately returns value.  Otherwise returns the value of the
 last body form, or NIL if body is empty."""
    raise LRuntimeUsageError( LP_catch, 'Handled by CEK machine.' )
 
-@primitive( 'handler-case',
-            '(form (type1 (var) body1...) (type2 (var) body2...) ...)',
-            mode=LambdaListMode.DOC_ONLY, special=True )
-def LP_handler_case( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Evaluates form with condition handlers established.  If a condition is
-signaled that matches a clause type, the matching clause body is evaluated with
-var bound to the condition object and that result is returned.  If no clause
-matches the condition propagates.  Use T or ERROR as the type to match any
-condition.  handler-case also catches errors raised by the error primitive,
-wrapping them in a condition with type ERROR."""
-   raise LRuntimeUsageError( LP_handler_case, 'Handled by CEK machine.' )
-
 @primitive( 'call/cc', '(procedure)', special=True )
 def LP_callcc( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Calls procedure with one argument: a first-class continuation object.
@@ -125,26 +113,3 @@ All three arguments must be zero-argument callables.  Returns the value
 of thunk.  The macro unwind-protect is built on dynamic-wind."""
    raise LRuntimeUsageError( LP_dynamic_wind, 'Handled by CEK machine.' )
 
-@primitive( 'error', '(formatString &optional dictOrList)' )
-def LP_error( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Signals a runtime error with the given message string.
-The format string may optionally be followed by a list or map of values,
-in which case the message is formatted using Python str.format() before
-being raised.  With no second argument the format string is used as-is."""
-   formatString = args[0]
-   if not isinstance( formatString, str ):
-      raise LRuntimeUsageError( LP_error, f'Invalid argument 1. STRING expected{got_str(formatString)}.' )
-   if len(args) == 1:
-      raise LRuntimeError( formatString )
-   dictOrList = args[1]
-   try:
-      if isinstance( dictOrList, list ):
-         message = formatString.format( *dictOrList )
-      elif isinstance( dictOrList, dict ):
-         strDict = { (k.name if isinstance(k, LSymbol) else k): v for k, v in dictOrList.items() }
-         message = formatString.format( **strDict )
-      else:
-         raise LRuntimeUsageError( LP_error, f'Invalid argument 2. LIST or DICT expected{got_str(dictOrList)}.' )
-   except (IndexError, KeyError, ValueError) as e:
-      raise LRuntimePrimError( LP_error, f'Format error: {e}')
-   raise LRuntimeError( message )

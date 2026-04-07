@@ -65,7 +65,7 @@ class Lexer( LexerBase ):
    ALPHA_LOWER           = frozenset('abcdefghijklmnopqrstuvwxyz')
    ALPHA_UPPER           = frozenset('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
    ALPHA                 = ALPHA_LOWER | ALPHA_UPPER
-   SYMBOL_OTHER          = frozenset('~!$%^&*_=\\/?<>:#|')
+   SYMBOL_OTHER          = frozenset('~!$%^&*_=\\/?<>:|')
    SYMBOL_FIRST          = ALPHA | SIGN | SYMBOL_OTHER
    SYMBOL_REST           = ALPHA | SIGN | SYMBOL_OTHER | DIGIT
    ESCAPE_SIMPLE         = frozenset('\\\'"abfnrtv')
@@ -79,6 +79,7 @@ class Lexer( LexerBase ):
    INTEGER_TOK        = 121
    FLOAT_TOK          = 122
    FRAC_TOK           = 123
+   COMPLEX_TOK        = 124
 
    OPEN_PAREN_TOK     = 201    # Paired tokens
    CLOSE_PAREN_TOK    = 202
@@ -119,6 +120,14 @@ class Lexer( LexerBase ):
             buf.consume( )
             return Lexer.UNQUOTE_SPLICING_TOK
          return Lexer.UNQUOTE_TOK
+      elif nextChar == '#':
+         buf.markStartOfLexeme( )
+         buf.consume( )
+         nextChar = buf.peekNextChar( )
+         if nextChar in ('c', 'C'):
+            buf.consume( )
+            return Lexer.COMPLEX_TOK
+         raise ParseError( self, f'Unknown dispatch macro: #{nextChar}' )
       elif nextChar == '"':
          return self._scanStringLiteral( )
       elif nextChar in Lexer.SIGN_OR_DIGIT:
@@ -416,6 +425,10 @@ class Parser( ParserBase ):
          lex = self._scanner.getLexeme( )
          ast = Fraction( lex )
          self._scanner.consume( )
+      elif nextToken == Lexer.COMPLEX_TOK:
+         lex = '#C'
+         self._scanner.consume( )
+         ast = self._parseComplex( )
       elif nextToken == Lexer.STRING_TOK:
          lex = self._scanner.getLexeme( )
          ast = _parse_string_literal( lex )
@@ -458,6 +471,25 @@ class Parser( ParserBase ):
          raise ParseError( self._scanner, 'Object expected.' )
 
       return ast
+
+   def _parseComplex( self ) -> complex:
+      """Parse the (real imag) part of a #C(real imag) complex literal."""
+      scn = self._scanner
+      if scn.peekToken() != Lexer.OPEN_PAREN_TOK:
+         raise ParseError( scn, '#C must be followed by (real imag)' )
+      scn.consume( )
+      # Parse real part
+      real_obj = self._parseObject( )
+      if not isinstance( real_obj, (int, float, Fraction) ):
+         raise ParseError( scn, '#C real part must be a number' )
+      # Parse imaginary part
+      imag_obj = self._parseObject( )
+      if not isinstance( imag_obj, (int, float, Fraction) ):
+         raise ParseError( scn, '#C imaginary part must be a number' )
+      if scn.peekToken() != Lexer.CLOSE_PAREN_TOK:
+         raise ParseError( scn, '#C missing closing parenthesis' )
+      scn.consume( )
+      return complex( float(real_obj), float(imag_obj) )
 
    def _parseList( self ) -> LList:
       scn = self._scanner

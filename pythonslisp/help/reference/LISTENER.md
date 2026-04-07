@@ -1,6 +1,6 @@
 # The Listener
 
-The Listener is a smart Read-Eval-Print Loop (REPL) that reads expressions,
+The Listener is a smarter Read-Eval-Print Loop (REPL) that reads expressions,
 evaluates them, and prints results.  Each expression is entered at the `>>> `
 prompt.  Continuation lines are shown with the `... ` prompt.
 
@@ -8,7 +8,7 @@ prompt.  Continuation lines are shown with the `... ` prompt.
 
 ## Auto-Submission
 
-The Listener tracks parenthesis depth as you type.  When the depth returns
+The Listener tracks parentheses depth as you type.  When the depth returns
 to zero - meaning all open parentheses have been closed - the expression is
 submitted automatically without requiring a blank line.
 
@@ -99,7 +99,7 @@ evaluating Lisp.  Type `]help` for a full list.  Key commands include:
 | `]help [cmd]` | List all commands, or show help for a specific command |
 | `]log <file>` | Begin recording a session log |
 | `]close` | Close the current session log |
-| `]continue <file>` | Restore a log and continue appending to it |
+| `]resume <file>` | Restore a log and resume appending to it |
 | `]readlog <file>` | Replay a session log |
 | `]readsrc <file>` | Load and evaluate a Lisp source file |
 | `]reboot` | Reboot the interpreter to a clean state |

@@ -230,24 +230,10 @@ Returns the sum of numbers.
 Unknown topic: "UNKNOWN-TOPIC"
 ==> T
 
->>> ;;; help substring search returns T
+>>> ;;; help substring search returns T (now delegates to apropos)
 ... (help "car" :substring t)
-Predefined Symbols
-==================
-
-Sequences
-=========
-CAR  MAPCAR
-
-Types
-=====
-
-TOPICS
-======
-
-Type '(help callable)' for available documentation on a callable.
-Type '(help "topic")' for available documentation on the named topic.
-Type '(help "substring" :substring t)' to search all names by substring.
+CAR  (primitive)
+MAPCAR  (primitive)
 ==> T
 
 ; --- alias macro tests ---
@@ -1179,3 +1165,175 @@ C
 
 >>> %%%
 ==> 111
+
+; --- time macro ---
+
+; (time) returns the value of the evaluated form
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (time (+ 1 2)))
+==> 3
+
+; (time) composes transparently inside other expressions
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (+ 10 (time (* 3 4))))
+==> 22
+
+; (time) preserves multiple values
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (multiple-value-list (time (values 10 20 30))))
+==> (10 20 30)
+
+; time is a macro
+>>> (macrop time)
+==> T
+
+; --- trace-vars ---
+
+; prints variable names and values to *trace-output*
+>>> (let ((x 42) (y "hello"))
+...   (trace-vars x y))
+X:   42
+Y:   "hello"
+==> NIL
+
+; single variable
+>>> (let ((n 99))
+...   (trace-vars n))
+N:   99
+==> NIL
+
+; trace-vars is a macro
+>>> (macrop trace-vars)
+==> T
+
+; --- trace-locals ---
+
+; prints all local scopes, innermost first
+>>> (let ((a 1))
+...   (let ((b 2) (c 3))
+...     (trace-locals)))
+--- scope 0 ---
+B:   2
+C:   3
+--- scope 1 ---
+A:   1
+==> NIL
+
+; depth limits number of scopes shown
+>>> (let ((a 1))
+...   (let ((b 2) (c 3))
+...     (trace-locals 1)))
+--- scope 0 ---
+B:   2
+C:   3
+==> NIL
+
+; at global scope, nothing is printed
+>>> (trace-locals)
+==> NIL
+
+; trace-vars with label
+>>> (let ((x 10) (y 20))
+...   (trace-vars "checkpoint" x y))
+--- checkpoint ---
+X:   10
+Y:   20
+==> NIL
+
+; trace-locals with label
+>>> (let ((a 1) (b 2))
+...   (trace-locals "before update"))
+--- before update ---
+--- scope 0 ---
+A:   1
+B:   2
+==> NIL
+
+; trace-locals with label and depth
+>>> (let ((a 1))
+...   (let ((b 2))
+...     (trace-locals "inner only" 1)))
+--- inner only ---
+--- scope 0 ---
+B:   2
+==> NIL
+
+; --- trace-eval ---
+
+; prints expressions and results
+>>> (let ((x 3))
+...   (trace-eval (+ x 1) (* x 2)))
+(+ X 1):   4
+(* X 2):   6
+==> NIL
+
+; trace-eval is a macro
+>>> (macrop trace-eval)
+==> T
+
+; --- describe ---
+
+; describe integer
+>>> (describe 42)
+42 is an INTEGER
+==> NIL
+
+; describe string
+>>> (describe "hello")
+"hello" is a STRING
+  Length: 5
+==> NIL
+
+; describe list
+>>> (describe (list 1 2 3))
+(1 2 3) is a CONS
+  Length: 3
+==> NIL
+
+; describe nil
+>>> (describe nil)
+NIL is the empty list (NULL)
+==> NIL
+
+; describe primitive
+>>> (describe car)
+CAR is a PRIMITIVE
+  Usage: (CAR list)
+  Arity: 1
+  Documentation:
+    Returns the first item in a list.
+==> NIL
+
+; --- apropos ---
+
+; finds matching symbols
+>>> (apropos "MAPCA")
+MAPCAR  (primitive)
+==> NIL
+
+; --- warn ---
+
+; warn returns NIL and prints warning
+>>> (warn "low fuel")
+WARNING: low fuel
+==> NIL
+
+; warn with format args
+>>> (warn "value is {}" (list 42))
+WARNING: value is 42
+==> NIL
+
+; --- assert ---
+
+; assert on true condition is silent
+>>> (assert (= 1 1))
+==> NIL
+
+; assert on false condition signals error
+>>> (ignore-errors (assert (= 1 2)))
+==> NIL
+
+; assert is a macro
+>>> (macrop assert)
+==> T
+

@@ -494,8 +494,8 @@ ab
 ... (save (path-join (tmpdir) "test14-save.tmp") 99)
 ==> NIL
 
->>> ;;; load returns (PROGN expr1 expr2 ...)
-... (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
+>>> ;;; parse-file returns (PROGN expr1 expr2 ...)
+... (setf loaded14 (parse-file (path-join (tmpdir) "test14-save.tmp")))
 ==> (PROGN 99)
 
 >>> (first loaded14)
@@ -511,7 +511,7 @@ ab
 ... (save (path-join (tmpdir) "test14-save.tmp") 1 2 3)
 ==> NIL
 
->>> (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
+>>> (setf loaded14 (parse-file (path-join (tmpdir) "test14-save.tmp")))
 ==> (PROGN 1 2 3)
 
 >>> (length loaded14)
@@ -521,11 +521,22 @@ ab
 ... (save (path-join (tmpdir) "test14-save.tmp") '(a b c))
 ==> NIL
 
->>> (setf loaded14 (load (path-join (tmpdir) "test14-save.tmp")))
+>>> (setf loaded14 (parse-file (path-join (tmpdir) "test14-save.tmp")))
 ==> (PROGN (A B C))
 
 >>> (at 1 loaded14)
 ==> (A B C)
+
+; --- load (CL-compatible: parse and evaluate) ---
+
+>>> (save (path-join (tmpdir) "test14-load-cl.tmp") (list 'setf 'test-load-var 999))
+==> NIL
+
+>>> (load (path-join (tmpdir) "test14-load-cl.tmp"))
+==> T
+
+>>> test-load-var
+==> 999
 
 ; ============================================================
 ; Error cases: arity errors
@@ -603,13 +614,13 @@ ab
 %%% PRIMITIVE USAGE: (SAVE filename &rest objects)
 ==>
 
->>> (load)
+>>> (parse-file)
 
 %%% Runtime Error: "<repl>" (1,2)
-%%% (load)
+%%% (parse-file)
 %%%  ^
-%%% ERROR 'LOAD': 0 arguments provided; 1 expected.
-%%% PRIMITIVE USAGE: (LOAD fileName)
+%%% ERROR 'PARSE-FILE': 0 arguments provided; 1 expected.
+%%% PRIMITIVE USAGE: (PARSE-FILE fileName)
 ==>
 
 ; ============================================================
@@ -729,21 +740,21 @@ ab
 %%% PRIMITIVE USAGE: (SAVE filename &rest objects)
 ==>
 
->>> (load 42)
+>>> (parse-file 42)
 
 %%% Runtime Error: "<repl>" (1,2)
-%%% (load 42)
+%%% (parse-file 42)
 %%%  ^
-%%% ERROR 'LOAD': Invalid argument 1. STRING FILE PATH expected, got INTEGER 42.
-%%% PRIMITIVE USAGE: (LOAD fileName)
+%%% ERROR 'PARSE-FILE': Invalid argument 1. STRING FILE PATH expected, got INTEGER 42.
+%%% PRIMITIVE USAGE: (PARSE-FILE fileName)
 ==>
 
->>> (load "no-such-file-43.tmp")
+>>> (parse-file "no-such-file-43.tmp")
 
 %%% Runtime Error: "<repl>" (1,2)
-%%% (load "no-such-file-43.tmp")
+%%% (parse-file "no-such-file-43.tmp")
 %%%  ^
-%%% ERROR 'LOAD': File not found "no-such-file-43.tmp".
+%%% ERROR 'PARSE-FILE': File not found "no-such-file-43.tmp".
 ==>
 
 ; ============================================================

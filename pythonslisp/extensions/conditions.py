@@ -1,11 +1,14 @@
+"""Errors and conditions extension."""
 from __future__ import annotations
+
+LISP_DOCUMENTATION_TITLE = 'Errors & Conditions'
 from typing import Any
 
 from pythonslisp.Environment import Environment
 from pythonslisp.AST import LSymbol, L_T, L_NIL, got_str
 from pythonslisp.Context import Context
-from pythonslisp.Exceptions import LRuntimeError, LRuntimeUsageError, Signaled
-from pythonslisp.extensions import primitive
+from pythonslisp.Exceptions import LRuntimeError, LRuntimePrimError, LRuntimeUsageError, Signaled
+from pythonslisp.extensions import LambdaListMode, primitive
 
 
 @primitive( 'make-condition', '(type &optional message)' )
@@ -56,3 +59,77 @@ def LP_condition_message( ctx: Context, env: Environment, args: list[Any] ) -> A
    if not (isinstance( cond, dict ) and 'CONDITION-TYPE' in cond):
       raise LRuntimeUsageError( LP_condition_message, f'Invalid argument 1. CONDITION expected{got_str(cond)}.' )
    return cond.get( 'MESSAGE', '' )
+
+
+@primitive( 'error', '(formatString &optional dictOrList)' )
+def LP_error( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Signals a runtime error with the given message string.
+The format string may optionally be followed by a list or map of values,
+in which case the message is formatted using Python str.format() before
+being raised.  With no second argument the format string is used as-is."""
+   formatString = args[0]
+   if not isinstance( formatString, str ):
+      raise LRuntimeUsageError( LP_error, f'Invalid argument 1. STRING expected{got_str(formatString)}.' )
+   if len(args) == 1:
+      raise LRuntimeError( formatString )
+   dictOrList = args[1]
+   try:
+      if isinstance( dictOrList, list ):
+         message = formatString.format( *dictOrList )
+      elif isinstance( dictOrList, dict ):
+         strDict = { (k.name if isinstance(k, LSymbol) else k): v for k, v in dictOrList.items() }
+         message = formatString.format( **strDict )
+      else:
+         raise LRuntimeUsageError( LP_error, f'Invalid argument 2. LIST or DICT expected{got_str(dictOrList)}.' )
+   except (IndexError, KeyError, ValueError) as e:
+      raise LRuntimePrimError( LP_error, f'Format error: {e}')
+   raise LRuntimeError( message )
+
+
+@primitive( 'handler-case',
+            '(form (type1 (var) body1...) (type2 (var) body2...) ...)',
+            mode=LambdaListMode.DOC_ONLY, special=True )
+def LP_handler_case( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Evaluates form with condition handlers established.  If a condition is
+signaled that matches a clause type, the matching clause body is evaluated with
+var bound to the condition object and that result is returned.  If no clause
+matches the condition propagates.  Use T or ERROR as the type to match any
+condition.  handler-case also catches errors raised by the error primitive,
+wrapping them in a condition with type ERROR."""
+   raise LRuntimeUsageError( LP_handler_case, 'Handled by CEK machine.' )
+
+
+@primitive( 'warn', '(formatString &optional dictOrList)' )
+def LP_warn( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Issues a warning message and returns NIL.  Does not stop execution.
+The format string and optional dict/list work the same as (error).
+Output goes to *error-output* if locally rebound, otherwise to standard output."""
+   formatString = args[0]
+   if not isinstance( formatString, str ):
+      raise LRuntimeUsageError( LP_warn, f'Invalid argument 1. STRING expected{got_str(formatString)}.' )
+   if len(args) == 1:
+      message = formatString
+   else:
+      dictOrList = args[1]
+      try:
+         if isinstance( dictOrList, list ):
+            message = formatString.format( *dictOrList )
+         elif isinstance( dictOrList, dict ):
+            strDict = { (k.name if isinstance(k, LSymbol) else k): v for k, v in dictOrList.items() }
+            message = formatString.format( **strDict )
+         else:
+            raise LRuntimeUsageError( LP_warn, f'Invalid argument 2. LIST or DICT expected{got_str(dictOrList)}.' )
+      except (IndexError, KeyError, ValueError) as e:
+         raise LRuntimePrimError( LP_warn, f'Format error: {e}')
+   from io import IOBase
+   try:
+      local_val  = env.lookup( '*ERROR-OUTPUT*' )
+      global_val = env.lookupGlobalWithDefault( '*ERROR-OUTPUT*', None )
+      if local_val is not global_val and isinstance( local_val, IOBase ) and local_val.writable():
+         out = local_val
+      else:
+         out = ctx.outStrm
+   except Exception:
+      out = ctx.outStrm
+   print( f'WARNING: {message}', file=out )
+   return L_NIL

@@ -30,29 +30,7 @@ else:
       pass
 
 
-# Display order and labels for categories derived from extension/module names.
-# Covers both .py and .lisp extension files; same stem merges into one section.
-_EXT_ORDER = [
-    'control', 'meta', 'math', 'sequences', 'strings',
-    'types', 'io', 'system', 'modules', 'values', 'conditions', 'debug',
-    'predicates',
-]
-
-_EXT_LABELS = {
-    'control':    'Control',
-    'meta':       'Meta',
-    'math':       'Math',
-    'sequences':  'Sequences',
-    'strings':    'Strings',
-    'types':      'Types',
-    'io':         'I/O',
-    'system':     'System',
-    'modules':    'Modules',
-    'values':     'Multiple Values',
-    'conditions': 'Conditions',
-    'debug':      'Debugging',
-    'predicates': 'Predicates',
-}
+LISP_DOCUMENTATION_TITLE = 'I/O'
 
 
 def lwrite( outStrm, *values, end='' ):
@@ -264,19 +242,6 @@ def LP_stderr( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if sys.__stderr__ is not None:
       return sys.__stderr__
    return sys.stderr
-
-@primitive( 'tmpdir', '()' )
-def LP_tmpdir( ctx: Context, env: Environment, args: list[Any] ) -> str:
-   """Returns the system temporary directory as a string."""
-   return tempfile.gettempdir()
-
-@primitive( 'path-join', '(path-segment &rest more-segments)' )
-def LP_path_join( ctx: Context, env: Environment, args: list[Any] ) -> str:
-   """Joins path-segments using the OS path separator.  Returns the result as a string."""
-   for i, arg in enumerate(args):
-      if not isinstance(arg, str):
-         raise LRuntimeUsageError( LP_path_join, f'Invalid argument {i+1}. STRING expected{got_str(arg)}.' )
-   return os.path.join(*args)
 
 @primitive( 'writef', '(formatString &optional dictOrList stream)' )
 def LP_writef( ctx: Context, env: Environment, args: list[Any] ) -> str:
@@ -560,65 +525,21 @@ def LP_save( ctx: Context, env: Environment, args: list[Any] ) -> Any:
       st.writelines( lines )
    return L_NIL
 
-@primitive( 'load', '(fileName)' )
-def LP_load( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Loads a lisp source file.  Returns a progn of the parsed contents of the file."""
+@primitive( 'parse-file', '(fileName)' )
+def LP_parse_file( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Parses a lisp source file without evaluating it.  Returns the parsed
+AST as (PROGN form1 form2 ...).  Use (eval (parse-file path)) to parse
+and evaluate."""
    filename = args[0]
    if not isinstance(filename, str):
-      raise LRuntimeUsageError( LP_load, f'Invalid argument 1. STRING FILE PATH expected{got_str(filename)}.' )
+      raise LRuntimeUsageError( LP_parse_file, f'Invalid argument 1. STRING FILE PATH expected{got_str(filename)}.' )
    try:
       with open( filename, 'r', encoding='utf-8' ) as f:
          content = f.read()
    except FileNotFoundError:
-      raise LRuntimePrimError( LP_load, f'File not found "{filename}".')
+      raise LRuntimePrimError( LP_parse_file, f'File not found "{filename}".')
    return ctx.parse( content )   # (progn form1 form2 ...)
 
-
-@primitive( 'directory-files', '(dir &optional extension)' )
-def LP_directory_files( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Returns a sorted list of full file paths in dir.
-With an optional extension string (e.g. \".log\"), only files with that
-extension are returned.  Directories are excluded.  Returns NIL if dir
-does not exist or is empty."""
-   dirPath = args[0]
-   if not isinstance( dirPath, str ):
-      raise LRuntimeUsageError( LP_directory_files, f'Invalid argument 1. STRING expected{got_str(dirPath)}.' )
-   ext = None
-   if len(args) == 2:
-      ext = args[1]
-      if not isinstance( ext, str ):
-         raise LRuntimeUsageError( LP_directory_files, f'Invalid argument 2. STRING expected{got_str(ext)}.' )
-   if not os.path.isdir( dirPath ):
-      return L_NIL
-   entries = sorted( os.listdir( dirPath ) )
-   result = []
-   for name in entries:
-      fullPath = os.path.join( dirPath, name )
-      if not os.path.isfile( fullPath ):
-         continue
-      if ext is not None and not name.endswith( ext ):
-         continue
-      result.append( fullPath )
-   return result
-
-@primitive( 'make-directory', '(path)' )
-def LP_make_directory( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Creates the directory at path, including any missing parent directories.
-Does nothing if the directory already exists.  Returns the path string."""
-   path = args[0]
-   if not isinstance( path, str ):
-      raise LRuntimeUsageError( LP_make_directory, f'Invalid argument 1. STRING expected{got_str(path)}.' )
-   os.makedirs( path, exist_ok=True )
-   return path
-
-@primitive( 'file-basename', '(path)' )
-def LP_file_basename( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Returns the final component of a file path (the filename without
-the directory prefix).  E.g. (file-basename \"/foo/bar/baz.log\") => \"baz.log\"."""
-   path = args[0]
-   if not isinstance( path, str ):
-      raise LRuntimeUsageError( LP_file_basename, f'Invalid argument 1. STRING expected{got_str(path)}.' )
-   return os.path.basename( path )
 
 @primitive( 'readline-add-history', '(string)' )
 def LP_readline_add_history( ctx: Context, env: Environment, args: list[Any] ) -> Any:

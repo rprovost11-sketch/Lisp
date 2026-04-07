@@ -26,11 +26,13 @@ def _typep_atom( obj, tname: str ) -> bool:
       if isinstance(obj, LSymbol) and obj.name == 'T':
          return True
       return False
-   if tname in ('NUMBER', 'REAL'): return isinstance(obj, LNUMBER)
-   if tname == 'INTEGER':        return isinstance(obj, int)
-   if tname == 'FLOAT':          return isinstance(obj, float)
-   if tname == 'RATIO':          return isinstance(obj, Fraction)
-   if tname == 'RATIONAL':       return isinstance(obj, (int, Fraction))
+   if tname == 'NUMBER':           return isinstance(obj, LNUMBER)
+   if tname == 'REAL':             return isinstance(obj, (int, float, Fraction))
+   if tname == 'COMPLEX':          return isinstance(obj, complex)
+   if tname == 'INTEGER':          return isinstance(obj, int)
+   if tname == 'FLOAT':            return isinstance(obj, float)
+   if tname == 'RATIO':            return isinstance(obj, Fraction)
+   if tname == 'RATIONAL':         return isinstance(obj, (int, Fraction))
    if tname == 'STRING':         return isinstance(obj, str)
    if tname == 'SYMBOL':         return isinstance(obj, LSymbol)
    if tname == 'FUNCTION':       return isinstance(obj, LFunction)
@@ -107,7 +109,9 @@ spec may be an LSymbol (atomic) or a list (compound)."""
       return isinstance(obj, float) and _check_numeric_bounds(obj, rest)
    if op == 'RATIONAL':
       return isinstance(obj, (int, Fraction)) and _check_numeric_bounds(obj, rest)
-   if op in ('REAL', 'NUMBER'):
+   if op == 'REAL':
+      return isinstance(obj, (int, float, Fraction)) and _check_numeric_bounds(obj, rest)
+   if op == 'NUMBER':
       return isinstance(obj, LNUMBER) and _check_numeric_bounds(obj, rest)
    raise LRuntimeError(f'typep: unknown compound type operator {op}.')
 
@@ -131,6 +135,16 @@ def LP_integerp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
 def LP_rationalp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Returns t if expr is an integer or fraction otherwise nil."""
    return L_T if isinstance( args[0], (int,Fraction) ) else L_NIL
+
+@primitive( 'complexp', '(sexpr)' )
+def LP_complexp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns t if expr is a complex number otherwise nil."""
+   return L_T if isinstance( args[0], complex ) else L_NIL
+
+@primitive( 'realp', '(sexpr)' )
+def LP_realp( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns t if expr is a real number (integer, float, or ratio) otherwise nil."""
+   return L_T if isinstance( args[0], (int, float, Fraction) ) else L_NIL
 
 @primitive( 'floatp', '(sexpr)' )
 def LP_floatp( ctx: Context, env: Environment, args: list[Any] ) -> Any:

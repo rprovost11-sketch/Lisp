@@ -60,6 +60,14 @@ def _lTrue( x: Any ) -> bool:
    return True
 
 
+def _trace_output( env, fallback ):
+   """Resolve *TRACE-OUTPUT* stream for tracer output.
+   Uses the current binding of *trace-output*.  Falls back to the provided
+   stream only during early startup before io.lisp has defined *trace-output*."""
+   try:
+      return env.lookup( '*TRACE-OUTPUT*' )
+   except Exception:
+      return fallback
 
 
 def _extract_vardefs( vardefs ) -> list:
@@ -457,7 +465,7 @@ class BodyFrame:
          K.append(self)
          return nxt, self.env         # expression
       self.tracer.setMaxTraceDepth( self.depth )
-      self.tracer.trace( 'exit', self.fn, value, self.depth, ctx.outStrm )
+      self.tracer.trace( 'exit', self.fn, value, self.depth, _trace_output( self.env, ctx.outStrm ) )
       return _Val(value), E           # VALUE - wrap so it isn't re-evaluated
 
 
@@ -829,7 +837,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
    printed = False
    if tracer._active:   # inlined for performance; see Tracer._active
       depth   = tracer.getMaxTraceDepth()
-      printed = tracer.trace( 'enter', fn, args, depth, ctx.outStrm )
+      printed = tracer.trace( 'enter', fn, args, depth, _trace_output( env, ctx.outStrm ) )
       if printed:
          tracer.setMaxTraceDepth( depth + 1 )
 
@@ -843,7 +851,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
             result = fn.pythonFn( ctx, env, args )
          if printed:
             tracer.setMaxTraceDepth( depth )
-            tracer.trace( 'exit', fn, result, depth, ctx.outStrm )
+            tracer.trace( 'exit', fn, result, depth, _trace_output( env, ctx.outStrm ) )
          return _Val(result), env   # VALUE - wrap; LMultipleValues preserved for frames to strip
 
       else:  # LFunction
@@ -853,7 +861,7 @@ def _do_apply( fn, args, env, K, ctx ) -> tuple:
          if not body:
             if printed:
                tracer.setMaxTraceDepth( depth )
-               tracer.trace( 'exit', fn, L_NIL, depth, ctx.outStrm )
+               tracer.trace( 'exit', fn, L_NIL, depth, _trace_output( env, ctx.outStrm ) )
             return L_NIL, env         # L_NIL → _is_value True, delivered as NIL
          if printed:
             # Traced: cannot TCO - BodyFrame observes the return value.

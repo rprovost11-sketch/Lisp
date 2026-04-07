@@ -95,6 +95,30 @@ class Listener( object ):
 
       if hasattr( self._interp, 'set_nested_repl' ):
          self._interp.set_nested_repl( self._run_nested_repl )
+      if hasattr( self._interp, 'set_dribble_fns' ):
+         self._interp.set_dribble_fns( self._dribble_start, self._dribble_stop )
+
+   def _dribble_start( self, filename: str ) -> str:
+      """Open a dribble (session logging) file.  Returns the pathname."""
+      import datetime as _dt
+      if self._logFile is not None:
+         self._logFile.close()
+         self._logFile = None
+      self._logFile = open( filename, 'w' )
+      self._logFile.write( f';;; Dribble started {_dt.datetime.now().isoformat()}\n' )
+      self._logFile.write( f';;; {filename}\n\n' )
+      return filename
+
+   def _dribble_stop( self ) -> str | None:
+      """Close the dribble file.  Returns the pathname or None."""
+      import datetime as _dt
+      if self._logFile is None:
+         return None
+      self._logFile.write( f'\n;;; Dribble stopped {_dt.datetime.now().isoformat()}\n' )
+      name = getattr( self._logFile, 'name', None )
+      self._logFile.close()
+      self._logFile = None
+      return name
 
    def readEvalPrintLoop( self ) -> None:
       '''Execute a read-eval-print-loop.  Handles all exceptions internally.'''
@@ -296,10 +320,10 @@ class Listener( object ):
       self._logFile.close( )
       self._logFile = None
 
-   def _cmd_continue( self, args: list[str] ) -> None:
-      '''Usage:  continue <filename> [V|v]
+   def _cmd_resume( self, args: list[str] ) -> None:
+      '''Usage:  resume <filename> [V|v]
       Read and execute a log file.  Keep the log file open to
-      continue a logging session where you left off.  V reads
+      resume a logging session where you left off.  V reads
       the file verbosely.
       '''
       if self._logFile:
@@ -308,7 +332,7 @@ class Listener( object ):
 
       numArgs = len(args)
       if numArgs not in ( 1, 2 ):
-         raise ListenerCommandError( self._cmd_continue.__doc__ )
+         raise ListenerCommandError( self._cmd_resume.__doc__ )
 
       self._cmd_readlog( args )
 
@@ -659,7 +683,7 @@ class Listener( object ):
 
    def _run_nested_repl( self, env ) -> Any:
       """Run a nested debug REPL with brk>>> prompts.
-      Returns the value passed to ]continue (or NIL).
+      Returns the value passed to ]cont (or NIL).
       Raises LRuntimeError on ]abort or EOF."""
       from pythonslisp.AST import L_NIL, prettyPrintSExpr
       from pythonslisp.Exceptions import LRuntimeError
@@ -681,12 +705,12 @@ class Listener( object ):
             inputExprLines = []
             continue
 
-         # ]continue and ]abort commands
+         # ]cont and ]abort commands
          if not inputExprLines and lineInput.startswith( ']' ):
             parts = lineInput[1:].split( None, 1 )
             cmd   = parts[0] if parts else ''
             rest  = parts[1].strip() if len(parts) > 1 else ''
-            if cmd == 'continue':
+            if cmd == 'cont':
                if rest:
                   try:
                      ast    = ctx.parse( rest )
@@ -703,7 +727,7 @@ class Listener( object ):
             elif cmd == 'abort':
                raise LRuntimeError( 'Aborted from (break).' )
             else:
-               print( f"Unknown command '{cmd}'.  Use ]continue or ]abort." )
+               print( f"Unknown command '{cmd}'.  Use ]cont or ]abort." )
                continue
 
          # Super-bracket
