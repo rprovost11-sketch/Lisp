@@ -1337,3 +1337,132 @@ WARNING: value is 42
 >>> (macrop assert)
 ==> T
 
+; --- benchmark macro ---
+
+; benchmark returns the result of the last evaluation
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (benchmark 10 (+ 2 3)))
+==> 5
+
+; benchmark is a macro
+>>> (macrop benchmark)
+==> T
+
+; benchmark report is printed to *trace-output*
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (benchmark 5 (* 6 7))
+...   (let ((out (get-output-stream-string *trace-output*)))
+...     (search "5 iterations in" out)))
+==> 2
+
+; --- profile ---
+
+; (profile) with no args returns empty list initially
+>>> (profile)
+==> NIL
+
+; define a test function for profiling
+>>> (defun %prof-test (n) (* n n))
+==> (FUNCTION %PROF-TEST (N) ...)
+
+; profile a function - returns list of profiled names
+>>> (profile '%prof-test)
+==> (%PROF-TEST)
+
+; (profile) returns currently profiled function names
+>>> (profile)
+==> (%PROF-TEST)
+
+; profiled function still works correctly
+>>> (%prof-test 7)
+==> 49
+
+; profile-report shows function name in output
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (profile-report)
+...   (let ((out (get-output-stream-string *trace-output*)))
+...     (integerp (search "%PROF-TEST" out))))
+==> T
+
+; call a few more times to verify counting
+>>> (%prof-test 3)
+==> 9
+
+>>> (%prof-test 4)
+==> 16
+
+; profile-reset zeros counters
+>>> (profile-reset)
+==> T
+
+; profiling still works after reset
+>>> (%prof-test 5)
+==> 25
+
+; unprofile restores original function
+>>> (unprofile '%prof-test)
+==> NIL
+
+; (profile) is empty after unprofile
+>>> (profile)
+==> NIL
+
+; function still works after unprofile
+>>> (%prof-test 8)
+==> 64
+
+; profile error - non-symbol argument
+>>> (ignore-errors (profile 42))
+==> NIL
+
+; profile error - unbound name
+>>> (ignore-errors (profile 'no-such-fn-xyz))
+==> NIL
+
+; profile error - non-function value
+>>> (setf %prof-not-a-fn 42)
+==> 42
+
+>>> (ignore-errors (profile '%prof-not-a-fn))
+==> NIL
+
+; profile-report with nothing profiled
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (profile-report)
+...   (let ((out (get-output-stream-string *trace-output*)))
+...     (search "No functions" out)))
+==> 2
+
+; profiling a recursive function counts all calls
+>>> (defun %prof-fib (n) (if (<= n 1) n (+ (%prof-fib (- n 1)) (%prof-fib (- n 2)))))
+==> (FUNCTION %PROF-FIB (N) ...)
+
+>>> (profile '%prof-fib)
+==> (%PROF-FIB)
+
+>>> (%prof-fib 6)
+==> 8
+
+; fib(6) = 25 calls total (2*fib(7)-1 = 2*13-1 = 25)
+>>> (let ((*trace-output* (make-string-output-stream)))
+...   (profile-report)
+...   (let ((out (get-output-stream-string *trace-output*)))
+...     (integerp (search "25" out))))
+==> T
+
+>>> (unprofile)
+==> NIL
+
+; profiling already-profiled function is idempotent
+>>> (defun %prof-x () 1)
+==> (FUNCTION %PROF-X () ...)
+
+>>> (profile '%prof-x)
+==> (%PROF-X)
+
+>>> (profile '%prof-x)
+==> (%PROF-X)
+
+>>> (unprofile)
+==> NIL
+

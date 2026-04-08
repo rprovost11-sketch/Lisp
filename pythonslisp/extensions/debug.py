@@ -1,14 +1,15 @@
-"""Debug extension: debugger, trace, timing, inspection primitives."""
+"""Debug extension: debugger, trace, timing, profiling, inspection primitives."""
 from __future__ import annotations
 
-LISP_DOCUMENTATION_TITLE = 'Debugging'
+LISP_DOCUMENTATION_TITLE = 'Debugging & Profiling'
 from fractions import Fraction
 from io import IOBase, StringIO
+import time as time_mod
 from typing import Any
 
-from pythonslisp.AST import ( L_NIL, LSymbol, LPrimitive, LSpecialOperator,
+from pythonslisp.AST import ( L_NIL, L_T, LSymbol, LPrimitive, LSpecialOperator,
                                LFunction, LMacro, LContinuation, LMultipleValues,
-                               lisp_type_name, prettyPrint, prettyPrintSExpr )
+                               LCallable, lisp_type_name, prettyPrint, prettyPrintSExpr )
 from pythonslisp.Context import Context
 from pythonslisp.Environment import Environment, ModuleEnvironment
 from pythonslisp.Exceptions import LRuntimeUsageError
@@ -26,6 +27,14 @@ def _resolve_trace_output( env: Environment, ctx: Context ):
       return ctx.outStrm
 
 
+
+@primitive( 'debug', '()', max_args=0 )
+def LP_debug( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Opens the interactive debugger.  Equivalent to the ]debug listener
+command.  Set breakpoints and watches, then use rd to run expressions
+with debugging active.  Type h at the debug> prompt for help."""
+   ctx.debugger.run_debugger_repl( ctx, env )
+   return L_NIL
 
 @primitive( 'symtab!', '()', max_args=0 )
 def LP_symtab( ctx: Context, env: Environment, args: list[Any] ) -> Any:
@@ -56,15 +65,34 @@ trace list.  With no arguments, clears all named function tracing."""
 
 # ── Timing ──────────────────────────────────────────────────────────────
 
-@primitive( '%time-report', '(elapsed-usec)' )
+@primitive( '%time-setup', '()' )
+def LP_time_setup( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Capture GC generation counts before a timed evaluation.
+   Returns a list of three integers (gen0, gen1, gen2).
+   Used internally by the (time) macro."""
+   import gc
+   counts = gc.get_count()
+   return [ counts[0], counts[1], counts[2] ]
+
+@primitive( '%time-report', '(elapsed-usec gc-before)' )
 def LP_time_report( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    """Print timing report to *trace-output*.  Used internally by the (time) macro."""
+   import gc
    elapsed_usec = args[0]
+   gc_before    = args[1]
    if not isinstance( elapsed_usec, (int, float) ):
       raise LRuntimeUsageError( LP_time_report, 'Invalid argument 1. NUMBER expected.' )
    elapsed_sec = elapsed_usec / 1_000_000
    trace_out = _resolve_trace_output( env, ctx )
    print( f'; Evaluation took {elapsed_sec:.6f} seconds of real time.', file=trace_out )
+   if isinstance( gc_before, list ) and len( gc_before ) == 3:
+      gc_after = gc.get_count()
+      gen0 = gc_after[0] - gc_before[0]
+      gen1 = gc_after[1] - gc_before[1]
+      gen2 = gc_after[2] - gc_before[2]
+      total = gen0 + gen1 + gen2
+      if total > 0:
+         print( f'; {total} GC collections during evaluation (gen0={gen0}, gen1={gen1}, gen2={gen2}).', file=trace_out )
    return L_NIL
 
 
@@ -133,6 +161,144 @@ by the (trace-eval) macro."""
    for expr, val in zip( exprs, values ):
       print( f'{prettyPrintSExpr( expr )}:   {prettyPrintSExpr( val )}', file=trace_out )
    return L_NIL
+
+
+# ── Benchmarking ────────────────────────────────────────────────────────
+
+@primitive( '%benchmark-report', '(n total min-t max-t)' )
+def LP_benchmark_report( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Print benchmark results to *trace-output*.  Used internally by
+the (benchmark) macro.  Times are in internal time units (microseconds)."""
+   n     = args[0]
+   total = args[1]
+   min_t = args[2]
+   max_t = args[3]
+   trace_out = _resolve_trace_output( env, ctx )
+   total_sec = total / 1_000_000
+   avg_us    = total / n if n > 0 else 0
+   min_us    = min_t
+   max_us    = max_t
+   # Pick readable unit for per-iteration stats
+   def _fmt( us ):
+      if us >= 1_000_000:
+         return f'{us / 1_000_000:.4f} s'
+      if us >= 1_000:
+         return f'{us / 1_000:.4f} ms'
+      return f'{us:.1f} us'
+   print( f'; {n:,} iterations in {total_sec:.6f} seconds.', file=trace_out )
+   print( f'; Per iteration: avg {_fmt( avg_us )}, min {_fmt( min_us )}, max {_fmt( max_us )}.', file=trace_out )
+   return L_NIL
+
+
+# ── Profiling ───────────────────────────────────────────────────────────
+
+_profile_registry: dict[str, dict] = {}
+# name -> { 'original': LCallable, 'calls': int, 'total_time': float }
+
+
+def _make_profile_wrapper( name: str, original: LCallable, entry: dict ) -> LPrimitive:
+   """Create a wrapper primitive that times calls to *original*."""
+   def wrapper_fn( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+      start = time_mod.perf_counter()
+      try:
+         return ctx.lApply( ctx, env, original, args )
+      finally:
+         entry['calls'] += 1
+         entry['total_time'] += time_mod.perf_counter() - start
+   params = ''
+   if isinstance( original, LPrimitive ):
+      params = original.paramsString
+   elif isinstance( original, LFunction ):
+      if original.lambdaListAST:
+         params = prettyPrintSExpr( original.lambdaListAST )[1:-1]
+   return LPrimitive( wrapper_fn, name, params, min_args=0, max_args=None )
+
+
+@primitive( 'profile', '(&rest fn-names)', min_args=0 )
+def LP_profile( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Enables profiling for the named functions.  Each argument must be a
+symbol naming a function or primitive.  With no arguments, returns the
+list of currently profiled function names.
+  (profile 'fibonacci 'helper)"""
+   if not args:
+      return [ LSymbol( name ) for name in sorted( _profile_registry ) ]
+   for arg in args:
+      if not isinstance( arg, LSymbol ):
+         raise LRuntimeUsageError( LP_profile, f'Arguments must be symbols, got {lisp_type_name( arg )}.' )
+      name = arg.name
+      if name in _profile_registry:
+         continue
+      try:
+         fn = env.lookup( name )
+      except KeyError:
+         raise LRuntimeUsageError( LP_profile, f'Unbound function: {name}.' )
+      if not isinstance( fn, (LPrimitive, LFunction) ):
+         raise LRuntimeUsageError( LP_profile, f'{name} is not a function ({lisp_type_name( fn )}).' )
+      entry = { 'original': fn, 'calls': 0, 'total_time': 0.0 }
+      wrapper = _make_profile_wrapper( name, fn, entry )
+      _profile_registry[name] = entry
+      env.getGlobalEnv().bind( name, wrapper )
+   return [ LSymbol( name ) for name in sorted( _profile_registry ) ]
+
+
+@primitive( 'unprofile', '(&rest fn-names)', min_args=0 )
+def LP_unprofile( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Removes profiling from the named functions and restores the originals.
+With no arguments, unprofiles all currently profiled functions.
+  (unprofile 'fibonacci)"""
+   if not args:
+      names = list( _profile_registry.keys() )
+   else:
+      names = []
+      for arg in args:
+         if not isinstance( arg, LSymbol ):
+            raise LRuntimeUsageError( LP_unprofile, f'Arguments must be symbols, got {lisp_type_name( arg )}.' )
+         names.append( arg.name )
+   global_env = env.getGlobalEnv()
+   for name in names:
+      entry = _profile_registry.pop( name, None )
+      if entry is not None:
+         global_env.bind( name, entry['original'] )
+   return [ LSymbol( name ) for name in sorted( _profile_registry ) ]
+
+
+@primitive( 'profile-report', '()', max_args=0 )
+def LP_profile_report( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Prints a profiling report to *trace-output* showing call counts and
+timing for all profiled functions.  Returns NIL."""
+   trace_out = _resolve_trace_output( env, ctx )
+   if not _profile_registry:
+      print( '; No functions are currently profiled.', file=trace_out )
+      return L_NIL
+   # Sort by total time descending
+   entries = sorted( _profile_registry.items(), key=lambda kv: kv[1]['total_time'], reverse=True )
+   grand_total = sum( e['total_time'] for _, e in entries )
+   # Column widths
+   name_w = max( len( name ) for name, _ in entries )
+   name_w = max( name_w, 8 )
+   print( f'; {"Function":<{name_w}}  {"Calls":>8}  {"Total (s)":>12}  {"Avg (ms)":>10}  {"%":>6}', file=trace_out )
+   print( f'; {"-" * name_w}  {"-" * 8}  {"-" * 12}  {"-" * 10}  {"-" * 6}', file=trace_out )
+   total_calls = 0
+   for name, entry in entries:
+      calls = entry['calls']
+      total = entry['total_time']
+      avg_ms = (total / calls * 1000) if calls > 0 else 0.0
+      pct = (total / grand_total * 100) if grand_total > 0 else 0.0
+      total_calls += calls
+      print( f'; {name:<{name_w}}  {calls:>8}  {total:>12.6f}  {avg_ms:>10.4f}  {pct:>5.1f}%', file=trace_out )
+   print( f'; {"-" * name_w}  {"-" * 8}  {"-" * 12}  {"-" * 10}  {"-" * 6}', file=trace_out )
+   print( f'; {"Total":<{name_w}}  {total_calls:>8}  {grand_total:>12.6f}', file=trace_out )
+   return L_NIL
+
+
+@primitive( 'profile-reset', '()', max_args=0 )
+def LP_profile_reset( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Resets all profiling counters to zero without removing instrumentation.
+Returns T."""
+   for entry in _profile_registry.values():
+      entry['calls'] = 0
+      entry['total_time'] = 0.0
+   return L_T
 
 
 # ── Describe ─────────────────────────────────────────────────────────────

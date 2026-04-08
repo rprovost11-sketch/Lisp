@@ -287,7 +287,7 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
 
    hdr( 'TOPICS' )
    for group in sorted( topic_groups ):
-      label = group.title() if group else 'General'
+      label = 'Tutorials' if group == 'tutorial' else group.title() if group else 'General'
       items = [f'"{s}"' for s in topic_groups[group]]
       print( file=outStrm )
       subhdr( label )
@@ -465,38 +465,6 @@ Returns NIL."""
    if not isinstance( pattern, str ):
       raise LRuntimeUsageError( LP_apropos, f'Invalid argument 1. STRING expected{got_str(pattern)}.' )
    _apropos_search( pattern, env, ctx.outStrm )
-   return L_NIL
-
-
-# ── Room ─────────────────────────────────────────────────────────────────
-
-@primitive( 'room', '()' )
-def LP_room( ctx: Context, env: Environment, args: list[Any] ) -> Any:
-   """Prints information about the interpreter's memory usage and state."""
-   import gc
-   globalEnv   = env.getGlobalEnv()
-   sym_count   = len( globalEnv.localSymbols() )
-   gc_counts   = gc.get_count()
-   proc_size   = None
-   try:
-      import psutil
-      proc_size = psutil.Process().memory_info().rss
-   except ImportError:
-      try:
-         import resource
-         proc_size = resource.getrusage( resource.RUSAGE_SELF ).ru_maxrss * 1024
-      except (ImportError, AttributeError):
-         pass
-
-   out = ctx.outStrm
-   print( f'Global symbols:      {sym_count}', file=out )
-   print( f'GC generation counts: {gc_counts[0]}, {gc_counts[1]}, {gc_counts[2]}', file=out )
-   print( f'Python version:      {sys.version.split()[0]}', file=out )
-   if proc_size is not None:
-      mb = proc_size / (1024 * 1024)
-      print( f'Process memory:      {mb:.1f} MB', file=out )
-   else:
-      print( f'Process memory:      (unavailable)', file=out )
    return L_NIL
 
 

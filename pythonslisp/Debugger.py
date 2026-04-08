@@ -146,6 +146,7 @@ class Debugger:
       self.breakpoints:     dict = {}      # name -> condition_str or None
       self._inner_targets:  dict = {}      # id(ast_node) -> (display_name, cond_src, ast_node, fn_name, fn_obj)
       self._disabled:       set  = set()   # names/display_names of disabled breakpoints
+      self._bp_index:       list = []      # ordered breakpoint names from last listing
       self.watch_list:      list = []      # canonical expression strings
       self.break_on:        set  = set( _DEFAULT_BREAK_ON )   # auto-break during rd
       self.breakpoint_hook: BreakpointHook = BreakpointHook( self )
@@ -214,29 +215,40 @@ class Debugger:
       pass
    _cmd_abort._doc_only = True
 
+   def _resolve_bp_ref( self, ref: str ) -> str | None:
+      """Resolve a breakpoint reference (number or name) to a breakpoint name.
+      Returns the uppercase name, or None (with error printed) if not found."""
+      if ref.isdigit():
+         idx = int( ref )
+         if idx < 1 or idx > len( self._bp_index ):
+            print( f'No breakpoint #{idx}.  Use b to list breakpoints.' )
+            return None
+         return self._bp_index[idx - 1]
+      uname = ref.upper()
+      if uname in self.breakpoints:
+         return uname
+      for _nid, (display, *_r) in self._inner_targets.items():
+         if display == uname:
+            return uname
+      print( f'No breakpoint on {uname}.' )
+      return None
+
    def _cmd_b( self, cmd, rest, ctx, env ):
-      """b [*]          list all breakpoints
+      """b [*]          list all breakpoints (numbered)
       b name         break on function entry
       b name (cond)  conditional breakpoint
       b fn:call[:n]  break at nth call inside fn's body
-      b! name        toggle enable/disable
-      b- name        remove breakpoint
+      b! name|#      toggle enable/disable (by name or number)
+      b- name|#      remove breakpoint (by name or number)
       b- *           clear all breakpoints"""
 
       if cmd == 'b!':
          if rest == '':
-            print( 'Usage: b! <name>' )
+            print( 'Usage: b! <name-or-number>' )
             return
-         uname = rest.upper()
-         if uname not in self.breakpoints:
-            found = False
-            for _nid, (display, *_r) in self._inner_targets.items():
-               if display == uname:
-                  found = True
-                  break
-            if not found:
-               print( f'No breakpoint on {uname}.' )
-               return
+         uname = self._resolve_bp_ref( rest )
+         if uname is None:
+            return
          if uname in self._disabled:
             self._disabled.discard( uname )
             print( f'Breakpoint on {uname} enabled.' )
@@ -248,25 +260,31 @@ class Debugger:
       if cmd == 'b':
          if rest == '' or rest == '*':
             self._prune_stale_inner( env )
+            self._bp_index = []
             has_any = False
+            idx = 1
             if self.breakpoints:
                for name, cond in sorted( self.breakpoints.items() ):
                   has_any = True
+                  self._bp_index.append( name )
                   disabled = name in self._disabled
                   tag = '  :when ' + cond if cond else ''
                   if disabled:
-                     print( f'  {_DIM}{name}{tag}  [disabled]{_RESET}' )
+                     print( f'  {idx}: {_DIM}{name}{tag}  [disabled]{_RESET}' )
                   else:
-                     print( f'  {_BOLD}{name}{_RESET}{tag}' )
+                     print( f'  {idx}: {_BOLD}{name}{_RESET}{tag}' )
+                  idx += 1
             for node_id, (display_name, cond, _node, _fn_name, _fn_obj) in sorted(
                   self._inner_targets.items(), key=lambda x: x[1][0] ):
                has_any = True
+               self._bp_index.append( display_name )
                disabled = display_name in self._disabled
                tag = '  :when ' + cond if cond else ''
                if disabled:
-                  print( f'  {_DIM}{display_name}{tag}  [disabled]{_RESET}' )
+                  print( f'  {idx}: {_DIM}{display_name}{tag}  [disabled]{_RESET}' )
                else:
-                  print( f'  {_BOLD}{display_name}{_RESET}{tag}' )
+                  print( f'  {idx}: {_BOLD}{display_name}{_RESET}{tag}' )
+               idx += 1
             if self.break_on:
                has_any = True
                for name in sorted( self.break_on ):
@@ -296,14 +314,17 @@ class Debugger:
 
       # cmd == 'b-'
       if rest == '':
-         print( 'Usage: b- <name> or b- *' )
+         print( 'Usage: b- <name-or-number> or b- *' )
       elif rest == '*':
          self.breakpoints.clear()
          self._inner_targets.clear()
          self._disabled.clear()
+         self._bp_index.clear()
          print( 'All breakpoints cleared.' )
       else:
-         uname = rest.upper()
+         uname = self._resolve_bp_ref( rest )
+         if uname is None:
+            return
          if uname in self.breakpoints:
             del self.breakpoints[uname]
             self._disabled.discard( uname )
@@ -484,17 +505,24 @@ class Debugger:
          _print_named_vars( env, rest.split() )
 
    def _cmd_w( self, cmd, rest, ctx, env ):
-      """w [*]      show watch list
+      """w [*]      show watch list (numbered)
       w expr+    add watches (variables or expressions)
-      w- expr+   remove from watch list
+      w- expr|#  remove from watch list (by expression or number)
       w- *       clear watch list"""
 
       if cmd == 'w-':
          if rest == '':
-            print( 'Usage: w- <expr> or w- *' )
+            print( 'Usage: w- <expr-or-number> or w- *' )
          elif rest == '*':
             self.watch_list = []
             print( 'Watch list cleared.' )
+         elif rest.isdigit():
+            idx = int( rest )
+            if idx < 1 or idx > len( self.watch_list ):
+               print( f'No watch #{idx}.  Use w to list watches.' )
+            else:
+               removed = self.watch_list.pop( idx - 1 )
+               print( f'Removed watch: {removed}' )
          else:
             for canonical in self._parse_watch_args( rest, ctx ):
                if canonical in self.watch_list:
@@ -502,7 +530,8 @@ class Debugger:
                else:
                   print( f'{canonical} not in watch list.' )
             if self.watch_list:
-               print( f'Watching: {", ".join( self.watch_list )}' )
+               for i, expr in enumerate( self.watch_list, 1 ):
+                  print( f'  {i}: {expr}' )
             else:
                print( 'Watch list cleared.' )
          return
@@ -510,7 +539,8 @@ class Debugger:
       # cmd == 'w'
       if rest == '' or rest == '*':
          if self.watch_list:
-            print( f'Watching: {", ".join( self.watch_list )}' )
+            for i, expr in enumerate( self.watch_list, 1 ):
+               print( f'  {i}: {expr}' )
          else:
             print( 'Watch list is empty.' )
       else:
@@ -703,7 +733,7 @@ class Debugger:
 
    def run_debugger_repl( self, ctx, env ):
       """Run the debug> REPL.  Returns NIL."""
-      print( '\n*** Debugger ***' )
+      print( '\n*** Debugger ***\nType h for command help.' )
       if self.breakpoints:
          print( 'Breakpoints:' )
          for name, cond in sorted( self.breakpoints.items() ):
