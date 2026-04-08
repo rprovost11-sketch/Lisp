@@ -6,7 +6,7 @@ from pythonslisp.Context import Context
 from pythonslisp.Exceptions import LRuntimeUsageError
 from pythonslisp.extensions import LambdaListMode, primitive
 from pythonslisp.extensions.sequences import _validate_bounds
-from pythonslisp.AST import prettyPrint, prettyPrintSExpr, got_str
+from pythonslisp.AST import LSymbol, prettyPrint, prettyPrintSExpr, got_str
 
 
 @primitive( 'string-upcase', '(string)' )
@@ -133,3 +133,46 @@ stripped from each element.  An empty string returns NIL."""
    if not isinstance( s, str ):
       raise LRuntimeUsageError( LP_string_lines, f'Invalid argument 1. STRING expected{got_str(s)}.' )
    return s.splitlines()
+
+
+# ── Type Conversions ────────────────────────────────────────────────────
+
+def _filter_keyword_pairs( lst: list, declared_keys: set = None ) -> list:
+   """Strip keyword/value pairs from a &rest list that also has &key params.
+   In CL, &rest captures all args including keyword pairs; callers must filter.
+   When declared_keys is provided, only strips pairs whose keyword name (sans colon,
+   uppercased) is in declared_keys - leaving undeclared keyword symbols as data."""
+   result = []
+   i = 0
+   while i < len(lst):
+      if isinstance(lst[i], LSymbol) and lst[i].isKeyword():
+         key = lst[i].name[1:]   # strip leading colon; already uppercased
+         if declared_keys is None or key in declared_keys:
+            i += 2               # skip this declared key-value pair
+         else:
+            result.append(lst[i])
+            i += 1
+      else:
+         result.append(lst[i])
+         i += 1
+   return result
+
+@primitive( 'string', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
+def LP_string( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """PrettyPrints each argument into programmer readable form and returns the
+results joined by :sep (default \"\").  With :sep, acts like string-join in
+programmer mode: (string 1 2 3 :sep \", \") => \"1, 2, 3\"."""
+   objects = env.lookup( 'OBJECTS' )
+   sep     = env.lookup( 'SEP' )
+   filtered = _filter_keyword_pairs( objects, {'SEP'} )
+   return sep.join( prettyPrintSExpr(o) for o in filtered )
+
+@primitive( 'ustring', '(&rest objects &key (sep ""))', mode=LambdaListMode.FULL_BINDING, min_args=1 )
+def LP_ustring( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """PrettyPrints each argument into user readable form and returns the
+results joined by :sep (default \"\").  With :sep, acts like string-join in
+user mode: (ustring \"a\" \"b\" :sep \", \") => \"a, b\"."""
+   objects = env.lookup( 'OBJECTS' )
+   sep     = env.lookup( 'SEP' )
+   filtered = _filter_keyword_pairs( objects, {'SEP'} )
+   return sep.join( prettyPrint(o) for o in filtered )

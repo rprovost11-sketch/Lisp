@@ -355,3 +355,31 @@ def LP_phase( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if not isinstance( num, LNUMBER ):
       raise LRuntimeUsageError( LP_phase, f'Invalid argument 1. NUMBER expected{got_str(num)}.' )
    return cmath.phase( num )
+
+
+# ── Type Conversions ────────────────────────────────────────────────────
+
+@primitive( 'float', '(number)' )
+def LP_float( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns val as a float.  Val can be any number type or a string containing a valid lisp float."""
+   try:
+      return float(args[0])
+   except (ValueError, TypeError):
+      raise LRuntimeUsageError( LP_float, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
+
+@primitive( 'integer', '(number &optional (base 10))' )
+def LP_integer( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns val as an integer.  Val can be any number type or a string containing a valid lisp integer."""
+   try:
+      return int(*args)
+   except (TypeError, ValueError):
+      raise LRuntimeUsageError( LP_integer, f'Invalid argument 1. NUMBER or NUMERIC STRING expected{got_str(args[0])}.' )
+
+@primitive( 'rational', '(number)' )
+def LP_rational( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns its argument as a fraction.  Val can be any number or a string
+containing a valid lisp number that can be expressed as a fraction."""
+   try:
+      return Fraction(args[0])
+   except (IndexError, TypeError, ValueError):
+      raise LRuntimeUsageError( LP_rational, f'Invalid argument 1. NUMBER expected{got_str(args[0])}.' )

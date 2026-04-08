@@ -24,7 +24,7 @@ from pythonslisp.Highlighter import render_markdown
 # LISP_DOCUMENTATION_TITLE constant, falling back to stem.title().
 _BUILTIN_EXT_ORDER = [
     'control', 'meta', 'math', 'sequences', 'strings',
-    'types', 'io', 'pathnames', 'system', 'modules', 'values', 'conditions', 'debug',
+    'io', 'pathnames', 'system', 'modules', 'values', 'conditions', 'debug',
     'predicates',
 ]
 
@@ -281,9 +281,10 @@ def printHelpListings( outStrm, env, find: str | None = None ) -> None:
       _render_category( repl_macs )
       print( file=outStrm )
 
-   hdr( 'Types' )
-   columnize( sorted( typesList ), 78, file=outStrm, itemColor=RED or None )
-   print( file=outStrm )
+   if typesList:
+      hdr( 'Types' )
+      columnize( sorted( typesList ), 78, file=outStrm, itemColor=RED or None )
+      print( file=outStrm )
 
    hdr( 'TOPICS' )
    for group in sorted( topic_groups ):

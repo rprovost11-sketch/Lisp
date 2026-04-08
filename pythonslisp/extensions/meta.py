@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import Any
 
-from pythonslisp.Environment import Environment
+from pythonslisp.Environment import Environment, ModuleEnvironment
 from pythonslisp.AST import ( LSymbol, LMacro, LMultipleValues, got_str,
-                               L_T, L_NIL, prettyPrintSExpr )
+                               L_T, L_NIL, prettyPrintSExpr, lisp_type_name )
 from pythonslisp.Context import Context
 from pythonslisp.Exceptions import ( LRuntimeError, LRuntimeUsageError, LArgBindingError,
                                       Thrown, Signaled, ContinuationInvoked )
@@ -46,6 +46,10 @@ def _alias():
                       (if (= (length path) 2)
                           `(module-set! ,(car path) ',(cadr path) ,value)
                           `(module-set! (: ,@(butlast path)) ',(car (last path)) ,value)))))
+              ((= (car place) 'slot-value)
+               (if (/= (length place) 3)
+                   (error "setf: (slot-value ...) requires exactly 2 arguments")
+                   `(set-slot-value! ,(cadr place) ,(caddr place) ,value)))
               ((/= (length place) 2)
                (error "setf: struct accessor place must have exactly 1 instance argument"))
               (t
@@ -270,6 +274,17 @@ def LP_set_accessor( ctx: Context, env: Environment, args: list[Any] ) -> Any:
    if field_key is None:
       raise LRuntimeUsageError( LP_set_accessor,
                                   f'No setf expander registered for {accessor.name}.' )
+   from pythonslisp.AST import LInstance
+   if isinstance( instance, LInstance ):
+      sname = field_key.name
+      sd = instance._class.slots.get( sname )
+      if sd and sd.allocation == 'CLASS':
+         for c in instance._class.cpl:
+            if sname in c.class_slots:
+               c.class_slots[sname] = newval
+               return newval
+      instance._slots[sname] = newval
+      return newval
    if not isinstance( instance, dict ):
       raise LRuntimeUsageError( LP_set_accessor, f'Invalid argument 2. STRUCT INSTANCE expected{got_str(instance)}.' )
    instance[ field_key ] = newval
@@ -390,3 +405,28 @@ reloads the standard library, and re-runs startup.lisp.  Equivalent to the
 ]reboot listener command.  Returns T."""
    ctx.reboot()
    return L_T
+
+
+# ── Type Introspection ──────────────────────────────────────────────────
+
+@primitive( 'type-of', '(sexpr)' )
+def LP_typeof( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Returns the type of its argument as a symbol (CL type-of conventions)."""
+   arg = args[0]
+   if isinstance( arg, ModuleEnvironment ):
+      return LSymbol('MODULE')
+   return LSymbol( lisp_type_name(arg) )
+
+@primitive( 'make-symbol', '(string)' )
+def LP_make_symbol( ctx: Context, env: Environment, args: list[Any] ) -> Any:
+   """Takes a string and returns a new symbol whose print string is that string."""
+   arg = args[0]
+   if not isinstance(arg, str):
+      raise LRuntimeUsageError( LP_make_symbol, f'Invalid argument 1. STRING expected{got_str(arg)}.' )
+   try:
+      sym, _ = ctx.parseOne(arg)
+   except ParseError:
+      raise LRuntimeUsageError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
+   if not isinstance(sym, LSymbol):
+      raise LRuntimeUsageError( LP_make_symbol, f'Invalid argument 1. Valid symbol name expected; "{arg}" is not valid.' )
+   return sym
