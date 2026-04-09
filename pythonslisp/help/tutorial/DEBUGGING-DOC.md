@@ -7,7 +7,7 @@ debugger with breakpoints, watches, and stepping; function call tracing;
 trace output helpers; object inspection; and error stack traces.
 For performance profiling tools, see `(help "profiling-doc")`.
 
-All debugging commands at the `break>` and `step>` prompts share a unified
+All debugging commands at the `debug>` prompt share a unified
 interface.  Type `h` at any debug prompt for a full command reference,
 or `h cmd` for help on a specific command.
 
@@ -66,7 +66,7 @@ with breakpoints active.
       (FACT 5)
       [watch]
         N = 5
-    break> c
+    debug> c
     ...
     ==> 120
     debug> b- *
@@ -90,33 +90,33 @@ with breakpoints active.
 
 ### Restarting
 
-Typing `rd` alone at any debug prompt (`debug>`, `break>`, or `step>`)
+Typing `rd` alone at the `debug>` prompt
 restarts the most recent expression from the beginning.  This aborts
 the current execution and re-evaluates the expression with all breakpoints
 and watches intact.
 
     debug> rd (process-data big-list)
     *** Breakpoint: VALIDATE ***
-    break> rd
+    debug> rd
     Restarting: (PROCESS-DATA BIG-LIST)
     *** Breakpoint: VALIDATE ***
-    break>
+    debug>
 
 ---
 
 ## Stepping
 
-From the `break>` prompt, `s`, `n`, and `o` transition into stepping mode.
-The stepper pauses before each list expression is evaluated, showing
-what is about to be evaluated indented by nesting depth.
+At a breakpoint, `s`, `n`, and `o` enter stepping mode.  The stepper
+pauses before each list expression is evaluated, showing what is about
+to be evaluated indented by nesting depth.
 
     *** Breakpoint: FACT ***
       (FACT 5)
-    break> s
+    debug> s
         (IF (= N 0) 1 (* N (FACT (- N 1))))
-    step> n
+    debug> n
         (* N (FACT (- N 1)))
-    step> c
+    debug> c
     ==> 120
 
 - `s` stepped into the function body, revealing the `if` expression
@@ -130,18 +130,18 @@ interesting part.
 
 `o` continues execution until the current function returns, then pauses:
 
-    step> o
+    debug> o
         (PROCESS-ITEMS REMAINING)
-    step>
+    debug>
 
 This is useful when you have stepped too deep into a call chain and want
 to return to the caller.
 
 ### Backtrace
 
-`bt` shows the current call stack at any `break>` or `step>` prompt:
+`bt` shows the current call stack at the `debug>` prompt:
 
-    break> bt
+    debug> bt
       0: (FACT 3)
       1: (FACT 4)
       2: (FACT 5)
@@ -154,12 +154,12 @@ during `rd` execution.
 Use `e` to evaluate expressions, `i` to inspect a value, and `v` to view
 locals at any pause point:
 
-    step> v
+    debug> v
     --- scope 0 ---
     N:   5
-    step> e (+ n 1)
+    debug> e (+ n 1)
     ==> 6
-    step> v n
+    debug> v n
     N:   5
 
 The `v` command filters out bindings whose values are functions, primitives,
@@ -179,16 +179,16 @@ the watched values are printed automatically before the next prompt.
 
 Watches can be simple variable names or full expressions:
 
-    step> w n
+    debug> w n
     Watching: N
-    step> w (- n 1)
+    debug> w (- n 1)
     Watching: N, (- N 1)
     ...
       (FACT (- N 1))
       [watch]
         N = 3
         (- N 1) = 2
-    step>
+    debug>
 
 ### Managing the watch list
 
@@ -200,7 +200,7 @@ Watches can be simple variable names or full expressions:
     w- 2                 ; remove watch #2 (from numbered listing)
     w- *                 ; clear the watch list
 
-Watches are available from `break>`, `step>`, and `debug>` prompts.
+Watches are available at the `debug>` prompt.
 They carry over when transitioning between prompts.
 
 ---
@@ -208,7 +208,7 @@ They carry over when transitioning between prompts.
 ## Runtime Breakpoints
 
 Breakpoints pause execution without needing to edit source code.  Set them
-from any debug prompt (`step>`, `break>`, or `debug>`).
+from the `debug>` prompt.
 
 ### Function-entry breakpoints
 
@@ -266,12 +266,12 @@ in dim text with a `[disabled]` tag.
 ### When a breakpoint fires
 
 Execution pauses and shows the expression about to be evaluated.  You get
-a `break>` prompt with the full command set - `s` to step into, `n` to step
+a `debug>` prompt with the full command set - `s` to step into, `n` to step
 over, `o` to step out, `c` to continue, etc.
 
     *** Breakpoint: FOO ***
       (FOO 3 4)
-    break>
+    debug>
 
 Breakpoints persist across evaluations until explicitly removed.  They
 survive `c` (continue) and fire again on the next matching call.
@@ -315,12 +315,12 @@ context are displayed automatically:
       0: [USE-VALUE]
       1: [SKIP]
 
-    break>
+    debug>
 
 Use the `:r` command to invoke a restart by number or name:
 
-    break> :r 0
-    break> :r use-value
+    debug> :r 0
+    debug> :r use-value
 
 Restarts are established by `restart-case` in the program's code.  See
 `(help "conditions-doc")` for full documentation on the restart system.

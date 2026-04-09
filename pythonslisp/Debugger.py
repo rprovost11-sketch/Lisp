@@ -208,7 +208,7 @@ class Debugger:
    #
    # Methods marked with _doc_only = True exist solely for their
    # docstrings (used by _cmd_h).  They are skipped by _dispatch
-   # because the REPL loops handle them inline for flow control.
+   # because _prompt_loop handles them directly for flow control.
 
    def _cmd_abort( self, cmd, rest, ctx, env ):
       """abort  abort execution to top level"""
@@ -487,7 +487,29 @@ class Debugger:
       rd       re-run / restart the current rd expression"""
       if ctx._debugging and self._last_rd_expr is not None:
          raise _RestartRd()
-      print( 'No active rd session.' )
+      if not rest:
+         expr = self._last_rd_expr
+         if expr is None:
+            print( 'No previous rd expression.' )
+            return
+      else:
+         expr = rest
+         self._last_rd_expr = expr
+      from pythonslisp.Evaluator import set_stack_traces
+      ctx._debugging = True
+      set_stack_traces( True )
+      try:
+         while True:
+            try:
+               self.debug_eval( ctx, env, expr )
+               break
+            except _RestartRd:
+               print( f'Restarting: {expr}' )
+      finally:
+         ctx._debugging = False
+         ctx.step_hook  = None
+         set_stack_traces( False )
+         self._current_K = None
 
    def _cmd_s( self, cmd, rest, ctx, env ):
       """s  step into the next expression"""
@@ -729,6 +751,95 @@ class Debugger:
       except Exception as ex:
          print( f'%%% {ex}' )
 
+   # ── Unified prompt loop ────────────────────────────────────────────
+
+   def _prompt_loop( self, ctx, env, depth=None, step_hook=None ):
+      """Unified debug> prompt.  All debug interaction goes through here.
+
+      depth=None      : main debugger REPL (supports q/quit, rd)
+      depth=int       : breakpoint hit (s/n/o create a StepHook)
+      step_hook!=None : stepping mode (s/n/o configure existing hook)
+
+      Returns: 'step', 'continue', 'abort', or 'quit'.
+      May raise _RestartRd or RestartInvoked."""
+      in_execution = depth is not None
+
+      self._swap_history_in()
+      try:
+         while True:
+            try:
+               line = self.input_fn( 'debug> ' ).strip()
+            except EOFError:
+               print()
+               return 'abort' if in_execution else 'quit'
+            except KeyboardInterrupt:
+               print()
+               if in_execution:
+                  return 'abort'
+               continue
+
+            if line == '':
+               if in_execution:
+                  return 'step'
+               continue
+
+            if line in ( 'q', 'quit' ):
+               return 'abort' if in_execution else 'quit'
+
+            if line in ( 's', ):
+               if not in_execution:
+                  print( 'Not in execution.  Use rd to run.' )
+                  continue
+               if step_hook is None:
+                  ctx.step_hook = StepHook( ctx )
+               return 'step'
+
+            if line == 'n':
+               if not in_execution:
+                  print( 'Not in execution.  Use rd to run.' )
+                  continue
+               if step_hook:
+                  step_hook._skip_until_depth = depth
+               else:
+                  hook = StepHook( ctx )
+                  hook._skip_until_depth = depth
+                  ctx.step_hook = hook
+               return 'step'
+
+            if line == 'o':
+               if not in_execution:
+                  print( 'Not in execution.  Use rd to run.' )
+                  continue
+               if depth == 0:
+                  print( 'Already at top level.' )
+                  continue
+               if step_hook:
+                  step_hook._skip_until_depth = depth - 1
+               else:
+                  hook = StepHook( ctx )
+                  hook._skip_until_depth = depth - 1
+                  ctx.step_hook = hook
+               return 'step'
+
+            if line == 'c':
+               if not in_execution:
+                  print( 'Not in execution.  Use rd to run.' )
+                  continue
+               return 'continue'
+
+            if line == 'abort':
+               if not in_execution:
+                  print( 'Not in execution.' )
+                  continue
+               return 'abort'
+
+            if self._dispatch( line, ctx, env ):
+               pass
+            else:
+               print( 'Unknown command.  Type h for help.' )
+      finally:
+         self._swap_history_out()
+
    # ── Debugger REPL ────────────────────────────────────────────────────
 
    def run_debugger_repl( self, ctx, env ):
@@ -747,53 +858,10 @@ class Debugger:
          print( f'Break-on: {", ".join( sorted( self.break_on ) )}' )
       print()
 
-      self._swap_history_in()
-      try:
-         while True:
-            try:
-               line = self.input_fn( 'debug> ' ).strip()
-            except EOFError:
-               print()
-               break
-            except KeyboardInterrupt:
-               print()
-               continue
-
-            if line == '':
-               continue
-            elif line in ( 'q', 'quit' ):
-               break
-            elif _cmd_word( line ) == 'rd':
-               rest = _cmd_rest( line )
-               if not rest:
-                  expr = self._last_rd_expr
-                  if expr is None:
-                     print( 'No previous rd expression.' )
-                     continue
-               else:
-                  expr = rest
-                  self._last_rd_expr = expr
-               from pythonslisp.Evaluator import set_stack_traces
-               ctx._debugging = True
-               set_stack_traces( True )
-               try:
-                  while True:
-                     try:
-                        self.debug_eval( ctx, env, expr )
-                        break
-                     except _RestartRd:
-                        print( f'Restarting: {expr}' )
-               finally:
-                  ctx._debugging = False
-                  ctx.step_hook  = None
-                  set_stack_traces( False )
-                  self._current_K = None
-            elif self._dispatch( line, ctx, env ):
-               pass
-            else:
-               print( 'Unknown command.  Type h for help.' )
-      finally:
-         self._swap_history_out()
+      while True:
+         result = self._prompt_loop( ctx, env )
+         if result == 'quit':
+            break
 
       return L_NIL
 
@@ -828,43 +896,12 @@ class StepHook:
          dbg.print_watch( E, self._ctx )
          return 'step'
 
-      # Display current expression
+      # Display current expression and prompt
       indent = '  ' * min( depth, 20 )
       print( f'{indent}{prettyPrintSExpr( C )}' )
       dbg.print_watch( E, self._ctx )
-
-      # Interactive prompt
       dbg._current_K = K
-      dbg._swap_history_in()
-      try:
-         while True:
-            try:
-               line = dbg.input_fn( 'step> ' ).strip()
-            except ( EOFError, KeyboardInterrupt ):
-               print()
-               return 'abort'
-
-            if line in ( 's', '' ):
-               return 'step'
-            elif line == 'n':
-               self._skip_until_depth = depth
-               return 'step'
-            elif line == 'o':
-               if depth == 0:
-                  print( 'Already at top level.' )
-               else:
-                  self._skip_until_depth = depth - 1
-                  return 'step'
-            elif line == 'c':
-               return 'continue'
-            elif line == 'abort':
-               return 'abort'
-            elif dbg._dispatch( line, self._ctx, E ):
-               pass
-            else:
-               print( 'Unknown command.  Type h for help.' )
-      finally:
-         dbg._swap_history_out()
+      return dbg._prompt_loop( self._ctx, E, depth, step_hook=self )
 
 
 # ── BreakpointHook ──────────────────────────────────────────────────────
@@ -933,41 +970,8 @@ class BreakpointHook:
       print( f'\n*** Breakpoint: {bp_name} ***' )
       print( f'{indent}{prettyPrintSExpr( C )}' )
       dbg.print_watch( E, ctx )
-
-      # Interactive prompt
       dbg._current_K = K
-      dbg._swap_history_in()
-      try:
-         while True:
-            try:
-               line = dbg.input_fn( 'break> ' ).strip()
-            except ( EOFError, KeyboardInterrupt ):
-               print()
-               return 'abort'
-
-            if line in ( 's', '' ):
-               ctx.step_hook = StepHook( ctx )
-               return True
-            elif line == 'n':
-               hook = StepHook( ctx )
-               hook._skip_until_depth = depth
-               ctx.step_hook = hook
-               return True
-            elif line == 'o':
-               if depth == 0:
-                  print( 'Already at top level.' )
-               else:
-                  hook = StepHook( ctx )
-                  hook._skip_until_depth = depth - 1
-                  ctx.step_hook = hook
-                  return True
-            elif line == 'c':
-               return True
-            elif line == 'abort':
-               return 'abort'
-            elif dbg._dispatch( line, ctx, E ):
-               pass
-            else:
-               print( 'Unknown command.  Type h for help.' )
-      finally:
-         dbg._swap_history_out()
+      result = dbg._prompt_loop( ctx, E, depth )
+      if result == 'abort':
+         return 'abort'
+      return True

@@ -15,7 +15,7 @@
 | `(apropos "str")` | Search symbols by substring |
 | `]traces on\|off` | Toggle call-stack traces on errors |
 
-## Debugger commands (at break>, step>, debug> prompts)
+## Debugger commands (at debug> prompt)
 
 | Command | Effect |
 |---|---|
